@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devanagari Breitfeder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<style>
+/* Layout: single column workbench, canvas ink under an SVG overlay — letter picker, slate (Schiefertafel) as the hero, controls, stroke list, technique note */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --slate-edge:#3a4a47; --chalk:#eef2e9; --ghost:rgba(238,242,233,.13); --guide:rgba(238,242,233,.16);
+  --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.16);
+  --f-deva:"Tiro Devanagari Hindi","Noto Serif Devanagari","Kohinoor Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:22px}
+header{display:grid;gap:4px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+
+.picker{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.pick{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:10px;
+  padding:8px 0 6px;cursor:pointer;display:grid;justify-items:center;gap:0;font:inherit;transition:border-color .15s,background .15s}
+.pick b{font-family:var(--f-deva);font-weight:400;font-size:clamp(24px,6vw,32px);line-height:1.25}
+.pick span{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.pick:hover{border-color:var(--accent)}
+.pick[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.pick:focus-visible,.btn:focus-visible,.tog input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+
+.board{background:var(--slate);border:10px solid var(--slate-edge);border-radius:14px;position:relative;
+  box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+.board .stage svg{display:block;width:100%;height:auto;aspect-ratio:1200/1290}
+.board .tag{position:absolute;left:14px;top:10px;color:var(--chalk);opacity:.6;font-size:13px;letter-spacing:.06em}
+.board .count{position:absolute;right:14px;top:10px;color:var(--accent);font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.guide{stroke:var(--guide);stroke-width:3}
+.guide.dash{stroke-dasharray:14 14}
+.grid line{stroke:var(--chalk);opacity:.22;stroke-width:3;stroke-dasharray:12 12}
+.grid line.zone{opacity:.4;stroke-dasharray:26 10}
+.ghost{fill:var(--ghost)}
+.done{fill:var(--chalk)}
+.active{fill:var(--accent)}
+.center{fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:2 16;stroke-linecap:round;opacity:0;transition:opacity .2s}
+.show-center .center{opacity:.85}
+.marker{opacity:0;transition:opacity .25s}
+.marker.on{opacity:1}
+.marker circle{fill:var(--slate);stroke:var(--accent);stroke-width:5}
+.marker text{fill:var(--accent);font:600 40px var(--f-ui);text-anchor:middle;dominant-baseline:central}
+.hide-nums .marker{display:none}
+.pen{fill:var(--accent);opacity:0}
+.pen.on{opacity:1}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:9px 16px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--fg);display:inline-flex;gap:8px;align-items:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.speed{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted);font-size:14px}
+.speed input{width:110px;accent-color:var(--accent)}
+.speed output{font-variant-numeric:tabular-nums;min-width:4ch;color:var(--fg)}
+.toggles{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted)}
+.tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer}
+.tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:10px 12px;border-radius:10px;color:var(--muted);transition:background .2s,color .2s}
+.steps li::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;border:2px solid var(--line);
+  display:grid;place-items:center;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.steps li.now{background:var(--accent-soft);color:var(--fg)}
+.steps li.now::before{border-color:var(--accent);color:var(--accent)}
+.steps li.past{color:var(--fg)}
+.steps li.past::before{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+h2{margin:0 0 6px;font-size:18px;font-weight:600}
+.how{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px}
+.how p,.how li{margin:0;max-width:65ch;color:var(--muted)}
+.how ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.how code{font-family:var(--f-mono);font-size:.88em;color:var(--fg)}
+.note{font-size:13px;color:var(--muted)}
+@media (max-width:520px){.speed{margin-left:0;width:100%}.speed input{flex:1}}
+
+.stage{position:relative}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage svg{position:relative}
+.ghost{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:8 8;opacity:0;transition:opacity .2s}
+.show-ghost .ghost{opacity:.55}
+.pen-nib{stroke:var(--accent);stroke-width:7;stroke-linecap:round;opacity:0}
+.pen-nib.on{opacity:1}
+.sliders{display:flex;flex-wrap:wrap;gap:10px 24px}
+.sliders .speed{margin-left:0}
+@media (max-width:520px){.sliders .speed{width:100%}.sliders .speed input{flex:1}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Schreibübung · Breitfeder</div>
+    <h1>Devanagari mit Breitfeder <span class="deva">द्धि</span></h1>
+    <p class="lede">Nur die Mittellinien, gezogen mit einem flachen Pinsel im festen Winkel. Dick und dünn entstehen allein aus der Richtung des Strichs.</p>
+  </header>
+
+  <nav class="picker" id="picker" aria-label="Zeichen wählen"></nav>
+
+  <section class="board" id="board" aria-label="Schreibtafel">
+    <span class="tag" id="tag"></span>
+    <span class="count" id="count"></span>
+    <div class="stage">
+      <canvas id="cv"></canvas>
+      <svg id="svg" viewBox="0 -235 1200 1290" role="img"></svg>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="btn primary" id="play"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg><span>Abspielen</span></button>
+    <button class="btn" id="step"><svg viewBox="0 0 10 10"><path d="M1 1l5 4-5 4zM7 1h2v8H7z"/></svg>Nächster Strich</button>
+    <button class="btn" id="reset">Zurücksetzen</button>
+  </div>
+  <div class="sliders">
+    <label class="speed" for="ang">Federwinkel <input id="ang" type="range" min="-90" max="90" step="5" value="45"><output id="angOut">45°</output></label>
+    <label class="speed" for="nib">Federbreite <input id="nib" type="range" min="30" max="120" step="5" value="80"><output id="nibOut">80</output></label>
+    <label class="speed" for="thk">Federdicke <input id="thk" type="range" min="2" max="40" step="2" value="14"><output id="thkOut">14</output></label>
+    <label class="speed" for="spd">Tempo <input id="spd" type="range" min="0.25" max="2" step="0.25" value="1"><output id="spdOut">1×</output></label>
+  </div>
+  <div class="toggles">
+    <label class="tog" for="tNums"><input id="tNums" type="checkbox" checked><span>Startpunkte nummerieren</span></label>
+    <label class="tog" for="tGhost"><input id="tGhost" type="checkbox"><span>Schriftform zum Vergleich</span></label>
+    <label class="tog" for="tLoop"><input id="tLoop" type="checkbox"><span>Wiederholen</span></label>
+  </div>
+
+  <section>
+    <h2 id="stepsTitle">Striche</h2>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <section class="how">
+    <h2>So funktioniert der Pinsel</h2>
+    <ul>
+      <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
+      <li>Der Pinsel ist eine kurze Kante im festen Winkel. Zwischen zwei Punkten wird das Viereck gefüllt, das diese Kante überstreicht, auf einem <code>&lt;canvas&gt;</code>.</li>
+      <li>Das Raster folgt den vier Zonen der Schrift: oben Vokalzeichen wie i und e, in der Mitte zwei Zeilen für den Buchstaben, unten u, ū und ṛ. Die Kopflinie liegt auf der Grenze zwischen erster und zweiter Zeile.</li>
+      <li>Läuft der Strich quer zur Kante, wird er breit. Läuft er parallel zur Kante, wird er schmal, aber nie dünner als die Federdicke. Dafür werden die Vierecke zusätzlich mit dieser Dicke umrandet. Eine Maske gibt es nicht.</li>
+    </ul>
+    <p class="note">Die Reihenfolge folgt der verbreiteten Schulvariante mit der Kopflinie zuletzt.</p>
+  </section>
+</main>
+
+<script>
+const DATA = [{"ch":"क","tr":"ka","adv":763,"glyph":"M645 68H637L568 127Q603 168 627.5 216.0Q652 264 652 297Q652 323 637.5 336.5Q623 350 604 350Q583 350 556.0 336.5Q529 323 502.0 304.0Q475 285 453 268L454 -10H444L364 44L365 203Q330 177 307.5 163.0Q285 149 266.0 143.5Q247 138 224 138Q173 138 132.5 165.0Q92 192 68.5 233.5Q45 275 45 316Q45 359 68.0 390.0Q91 421 127.5 438.0Q164 455 203 455Q254 455 295.5 428.5Q337 402 367 365L369 545H6L-28 610V620H757L791 555V545H451L452 369Q485 392 516.5 408.5Q548 425 571 425Q589 425 613.5 413.5Q638 402 661.5 379.0Q685 356 700.5 322.0Q716 288 716 243Q716 197 697.5 156.0Q679 115 645 68ZM366 304V310Q340 338 304.0 358.0Q268 378 229 378Q186 378 151.5 352.0Q117 326 117 277Q117 239 137.0 220.5Q157 202 184 202Q208 202 238.5 217.5Q269 233 302.0 256.0Q335 279 366 304Z","strokes":["M 363 395 C 328 330 238 283 153 285 C 88 290 73 370 80 420 C 88 480 138 528 198 528 C 278 528 358 455 408 418 C 478 365 528 312 588 312 C 658 315 683 390 678 450 C 673 510 638 560 603 600","M405 117 L405 695","M5 117 L758 117"],"notes":["Bogen: in der Mitte ansetzen, links eine Schleife ziehen, dann durch die Mitte nach rechts oben und im Bogen nach unten auslaufen.","Senkrechte durch die Mitte, von oben nach unten.","Kopflinie (Shirorekha) von links nach rechts."]},{"ch":"ग","tr":"ga","adv":583,"glyph":"M611 545H494L496 -10H486L407 41L411 545H225L227 195Q227 170 204 170Q188 170 162.5 186.0Q137 202 112.0 226.5Q87 251 70.0 277.5Q53 304 53 324Q53 333 59.0 340.0Q65 347 78 347H142L143 545H6L-28 610V620H577L611 555Z","strokes":["M80 375 C100 440 150 500 192 512 C186 400 184 260 184 117","M443 117 L443 695","M5 117 L578 117"],"notes":["Links mit dem kleinen Haken beginnen, rund nach unten führen und senkrecht hinauf bis zur Kopflinie.","Rechte Senkrechte von oben nach unten.","Kopflinie von links nach rechts."]},{"ch":"र","tr":"ra","adv":394,"glyph":"M322 -20H312L114 223Q77 268 61.5 296.5Q46 325 46 342Q46 374 97 374Q112 374 138.0 372.0Q164 370 182 368Q187 393 188.5 425.5Q190 458 190 482Q190 503 189.5 518.0Q189 533 188 545H6L-28 610V620H388L422 555V545H271Q272 526 273.0 503.0Q274 480 274 471Q274 389 262.0 341.0Q250 293 225.5 269.0Q201 245 165 237L373 22Z","strokes":["M222 117 C224 260 228 350 200 385 C170 410 110 360 72 345 L335 700","M5 117 L389 117"],"notes":["Von der Kopflinie nach unten, nach links einrollen und schräg nach rechts unten auslaufen.","Kopflinie von links nach rechts. र hat keine Senkrechte."]},{"ch":"म","tr":"ma","adv":612,"glyph":"M78 310H132L133 545H6L-28 610V620H606L640 555V545H523L525 -10H515L435 42L436 235H217V163Q217 138 194 138Q179 138 155.5 153.5Q132 169 108.5 193.0Q85 217 69.0 242.5Q53 268 53 287Q53 296 59.0 303.0Q65 310 78 310ZM439 545H215L216 310H437Z","strokes":["M170 117 C172 300 178 480 182 520 C185 555 130 545 100 500 C80 470 68 435 80 425 C100 410 140 428 210 428 L477 428","M477 117 L477 695","M5 117 L607 117"],"notes":["Senkrecht nach unten, unten im Bogen nach links oben zurück (Schleife) und dann waagrecht nach rechts weiter.","Rechte Senkrechte von oben nach unten.","Kopflinie von links nach rechts."]},{"ch":"प","tr":"pa","adv":557,"glyph":"M278 168Q239 168 203.0 186.0Q167 204 138.0 232.0Q109 260 92.0 291.0Q75 322 74 347Q73 361 73.0 373.0Q73 385 73 396Q73 428 73.5 467.0Q74 506 74 545H6L-28 610V620H551L585 555V545H468L470 -10H460L380 42L381 200Q328 168 278 168ZM384 545H159L161 325Q161 277 183.0 255.0Q205 233 230 233Q260 233 297.5 252.0Q335 271 382 304Z","strokes":["M112 117 L112 380 C112 470 190 520 260 515 C320 510 380 450 445 405","M423 117 L423 695","M5 117 L552 117"],"notes":["Linke Senkrechte nach unten, im Bogen nach rechts hinauf bis zur Senkrechten.","Senkrechte von oben nach unten.","Kopflinie von links nach rechts."]},{"ch":"ङ","tr":"ṅa","adv":653,"glyph":"M355 7Q258 7 171.0 72.0Q84 137 26 259L64 281Q91 228 127.5 182.5Q164 137 214.0 109.5Q264 82 331 82Q387 82 416.5 99.5Q446 117 457.0 141.5Q468 166 468 187Q468 204 458.0 214.5Q448 225 430 225Q411 225 379.5 219.0Q348 213 318.0 207.0Q288 201 271 201Q246 201 218.5 216.5Q191 232 167.0 257.5Q143 283 128.0 314.5Q113 346 113 378Q113 415 142.0 437.5Q171 460 232 460H383V545H6L-28 610V620H647L681 555V545H465Q465 507 465.5 465.5Q466 424 466 393L454 385H250Q185 385 185 339Q185 308 202.5 290.5Q220 273 238 273Q247 273 268.0 277.0Q289 281 315.0 285.5Q341 290 365.0 294.0Q389 298 404 298Q432 298 462.5 275.0Q493 252 514.5 215.0Q536 178 536 137Q536 111 518.0 80.5Q500 50 460.0 28.5Q420 7 355 7ZM647 341 577 273 508 341 577 411Z","strokes":["M423 117 L423 279 L250 279 C185 279 148 300 150 340 C155 400 200 462 250 462 C320 458 380 440 430 440 C480 440 500 500 497 560 C490 620 420 650 346 650 C220 650 120 560 45 433","M560 343 L590 373","M5 117 L648 117"],"notes":["Von der Kopflinie nach unten, nach links, kleine Schleife und nach rechts, dann im großen Bogen nach links unten auslaufen.","Punkt: ein kurzer Schrägstrich nach rechts unten. Die 45°-Feder macht daraus eine Raute.","Kopflinie von links nach rechts."]},{"ch":"क्री","tr":"krī","adv":1030,"glyph":"M645 68H637L568 127Q603 168 627.5 216.0Q652 264 652 297Q652 323 637.5 336.5Q623 350 604 350Q572 350 533.5 325.0Q495 300 453 268L454 -10H444L364 44L366 204L111 16L53 74L173 157Q112 173 78.5 218.0Q45 263 45 316Q45 359 68.0 390.0Q91 421 127.5 438.0Q164 455 203 455Q254 455 295.5 428.5Q337 402 367 365L369 545H6L-28 610V620H757L791 555V545H451L452 368Q480 389 513.0 407.0Q546 425 571 425Q589 425 613.5 413.5Q638 402 661.5 379.0Q685 356 700.5 322.0Q716 288 716 243Q716 197 697.5 156.0Q679 115 645 68ZM366 303 367 310Q340 338 304.0 358.0Q268 378 229 378Q186 378 151.5 352.0Q117 326 117 277Q117 239 137.0 220.5Q157 202 184 202Q210 202 241.0 217.5Q272 233 304.0 256.5Q336 280 366 303ZM943 -15H933L853 37L857 545H769L735 610V620H862Q841 688 793.0 731.0Q745 774 682.0 794.5Q619 815 552 815Q463 815 427.0 785.0Q391 755 391 714Q391 701 394.5 687.5Q398 674 405 659L375 642Q350 667 337.5 696.0Q325 725 325 753Q325 788 345.5 819.5Q366 851 410.0 870.5Q454 890 526 890Q623 890 702.5 853.5Q782 817 840.0 755.5Q898 694 930 620H1024L1058 555V545H941Z","strokes":["M 363 395 C 328 330 238 283 153 285 C 88 290 73 370 80 420 C 88 480 138 528 198 528 C 278 528 358 455 408 418 C 478 365 528 312 588 312 C 658 315 683 390 678 450 C 673 510 638 560 603 600","M405 117 L405 695","M400 452 L88 660","M377 40 C345 -50 400 -135 528 -135 C650 -138 785 -80 835 -15 C878 45 895 90 895 140 L895 690","M5 117 L1025 117"],"notes":["Bogen wie beim क: in der Mitte ansetzen, links die Schleife, dann rechts im Bogen nach unten.","Senkrechte des क von oben nach unten.","Ra-Strich (र्) unter dem क: kurz und schräg von der Senkrechten nach links unten.","Langes ī (ी): links oben ansetzen, im Bogen über die Kopflinie nach rechts und senkrecht nach unten.","Kopflinie über die ganze Silbe, von links nach rechts."]},{"ch":"कृ","tr":"kṛ","adv":763,"glyph":"M645 68H637L568 127Q603 168 627.5 216.0Q652 264 652 297Q652 323 637.5 336.5Q623 350 604 350Q583 350 556.0 336.5Q529 323 502.0 304.0Q475 285 453 268L454 -10H444L364 44L365 203Q330 177 307.5 163.0Q285 149 266.0 143.5Q247 138 224 138Q173 138 132.5 165.0Q92 192 68.5 233.5Q45 275 45 316Q45 359 68.0 390.0Q91 421 127.5 438.0Q164 455 203 455Q254 455 295.5 428.5Q337 402 367 365L369 545H6L-28 610V620H757L791 555V545H451L452 369Q485 392 516.5 408.5Q548 425 571 425Q589 425 613.5 413.5Q638 402 661.5 379.0Q685 356 700.5 322.0Q716 288 716 243Q716 197 697.5 156.0Q679 115 645 68ZM366 304V310Q340 338 304.0 358.0Q268 378 229 378Q186 378 151.5 352.0Q117 326 117 277Q117 239 137.0 220.5Q157 202 184 202Q208 202 238.5 217.5Q269 233 302.0 256.0Q335 279 366 304ZM517 -170 565 -232Q549 -242 514.5 -256.5Q480 -271 433 -271Q375 -271 338.0 -247.5Q301 -224 283.0 -191.0Q265 -158 265 -132Q265 -100 286.5 -76.0Q308 -52 343.5 -37.0Q379 -22 420 -19L466 -79V-85Q414 -89 384.0 -102.0Q354 -115 341.5 -131.5Q329 -148 329 -163Q329 -177 342.5 -192.0Q356 -207 396 -207Q421 -207 450.5 -199.0Q480 -191 517 -170Z","strokes":["M 363 395 C 328 330 238 283 153 285 C 88 290 73 370 80 420 C 88 480 138 528 198 528 C 278 528 358 455 408 418 C 478 365 528 312 588 312 C 658 315 683 390 678 450 C 673 510 638 560 603 600","M405 117 L405 695","M445 752 C380 760 300 790 298 860 C296 920 370 940 430 935 C480 930 515 915 545 895","M5 117 L758 117"],"notes":["Bogen wie beim क: in der Mitte ansetzen, links die Schleife, dann rechts im Bogen nach unten.","Senkrechte des क von oben nach unten.","Vokalzeichen ṛ (ृ) im unteren Bereich: am Fuß der Senkrechten ansetzen, links herum und nach rechts auslaufen.","Kopflinie von links nach rechts."]},{"ch":"द्धि","tr":"ddhi","adv":907,"glyph":"M180 -15H170L90 37L94 545H6L-28 610V620H99Q80 650 72.5 677.0Q65 704 65 728Q65 796 119.5 839.0Q174 882 281 882Q383 882 505.0 835.0Q627 788 780 677L758 643Q691 688 615.0 725.0Q539 762 462.0 783.5Q385 805 314 805Q235 805 186.5 775.0Q138 745 138 686Q138 672 141.5 655.0Q145 638 155 620H261L295 555V545H178ZM905 -165H896L773 44Q759 -14 735.5 -50.5Q712 -87 684.5 -106.0Q657 -125 629.5 -132.5Q602 -140 580 -140Q542 -140 502.5 -124.5Q463 -109 436.0 -80.0Q409 -51 409 -13Q409 2 413 15Q390 24 363.0 39.0Q336 54 316.5 76.5Q297 99 297 131Q297 151 303.0 178.0Q309 205 309 219Q309 227 306.0 239.0Q303 251 292 264L296 271Q349 251 368.5 228.0Q388 205 388 179Q388 161 383.0 146.0Q378 131 378 116Q378 97 391.5 80.0Q405 63 436 50Q448 62 464.5 72.5Q481 83 501 93L560 33Q489 6 489 -42Q489 -64 503.5 -75.0Q518 -86 539 -86Q566 -86 598.0 -69.5Q630 -53 657.5 -19.5Q685 14 699 65Q697 65 695 65Q643 65 595.0 85.0Q547 105 510.0 140.5Q473 176 451.5 221.0Q430 266 430 316Q430 370 456.0 399.0Q482 428 529.5 439.5Q577 451 640 451H715V545H273L239 610V620H901L935 555V545H796Q797 506 797.5 460.5Q798 415 798 384L786 376H645Q581 376 543.0 351.5Q505 327 505 268Q505 226 524.5 195.5Q544 165 575.5 148.5Q607 132 643 132Q660 132 678.5 135.5Q697 139 715 148Q699 180 694.5 195.5Q690 211 690 221Q690 239 699.5 246.5Q709 254 725 254Q748 254 775.5 241.5Q803 229 823.5 208.5Q844 188 844 164Q844 149 834.5 129.5Q825 110 802 94L957 -132Z","strokes":["M756 117 L756 287 L600 287 C500 290 470 360 470 430 C470 530 545 605 640 605 C705 605 755 570 760 515 C763 475 738 458 715 470 C690 484 695 540 728 575 C762 612 800 640 832 695 L925 850","M294 440 C345 470 360 525 345 565 C330 605 345 655 405 690 C400 740 420 800 480 815 C560 835 640 800 700 700 C730 650 760 620 790 600","M765 40 C650 -40 450 -145 280 -145 C150 -145 85 -90 95 -20 C100 40 136 80 136 140 L136 695","M5 117 L902 117"],"notes":["द: von der Kopflinie nach unten, waagrecht nach links und im großen Bogen nach unten. Dann eine kleine Schleife (kurz hinauf, nach links, wieder hinunter) und schräg nach rechts unten bis in die untere Zone durchziehen.","Das untergestellte ध: links mit dem geschwungenen Haken beginnen, unten herum durch den Bauch und rechts hinauf.","Kurzes i (ि): rechts oben ansetzen, im Bogen nach links über die Kopflinie und senkrecht nach unten. Es steht vorne, wird aber nach dem Konsonanten gesprochen.","Kopflinie über die ganze Silbe, von links nach rechts."]}];
+const NS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const svg = $("svg"), board = $("board"), cv = $("cv"), ctx = cv.getContext("2d");
+const VB_Y = -235, VB_W = 1200, VB_H = 1290;
+let cur = 0, strokes = [], done = 0, running = null, speed = 1, angle = 45, nibW = 80, nibT = 14;
+let vbX = 0, activeIdx = -1, activeP = 0, pen = null;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+DATA.forEach((d,i)=>{
+  const b=document.createElement("button");
+  b.className="pick"; b.id="pick-"+d.tr; b.setAttribute("aria-pressed", i===0);
+  b.innerHTML=`<b>${d.ch}</b><span>${d.tr}</span>`;
+  b.addEventListener("click",()=>select(i,true));
+  $("picker").appendChild(b);
+});
+
+function build(){
+  const d=DATA[cur];
+  svg.innerHTML="";
+  const cx=d.adv/2; vbX=cx-600;
+  svg.setAttribute("viewBox",`${vbX} ${VB_Y} ${VB_W} ${VB_H}`);
+  svg.setAttribute("aria-label",`Strichfolge für ${d.ch} (${d.tr}) mit Breitfeder`);
+  // 3 × 4 practice grid. Rows = Devanagari zones: matras above (i, e), two rows for the letter body,
+  // matras below (u, ū, ṛ). The headline sits on the border between row 1 and 2, the baseline between row 3 and 4.
+  const HEAD=117, BASE=700, Z=(BASE-HEAD)/2;
+  const gx0=-40, gx1=d.adv+40, gy0=HEAD-Z, gy1=BASE+Z, grid=el("g",{class:"grid"},svg);
+  for(let c=0;c<=3;c++){ const x=gx0+(gx1-gx0)*c/3; el("line",{x1:x,x2:x,y1:gy0,y2:gy1},grid); }
+  for(let r=0;r<=4;r++){ const y=gy0+Z*r; el("line",{x1:gx0,x2:gx1,y1:y,y2:y,class:(r===1||r===3)?"zone":""},grid); }
+  el("path",{d:d.glyph,transform:"matrix(1 0 0 -1 0 700)",class:"ghost"},svg);
+  const helper=el("g",{visibility:"hidden"},svg);
+  strokes=d.strokes.map(p=>{
+    const hp=el("path",{d:p},helper);
+    const len=hp.getTotalLength(), n=Math.max(2,Math.ceil(len/3)), pts=[];
+    for(let k=0;k<=n;k++){ const q=hp.getPointAtLength(len*k/n); pts.push([q.x,q.y]); }
+    return {path:p,len,pts};
+  });
+  const marks=el("g",{},svg);
+  strokes.forEach((s,i)=>{
+    const a=s.pts[Math.min(15,s.pts.length-1)], b=s.pts[Math.min(28,s.pts.length-1)];
+    const ang=Math.atan2(b[1]-a[1],b[0]-a[0]);
+    let mx=a[0]-Math.cos(ang+Math.PI/2)*72, my=a[1]-Math.sin(ang+Math.PI/2)*72;
+    if(/^M5 117/.test(s.path)){ mx=20; my=200; }
+    if(/^M400 452/.test(s.path)){ mx=478; my=575; } // Ra-Strich: number right of the stem, clear of the loop
+    const g=el("g",{class:"marker"},marks);
+    el("circle",{cx:mx,cy:my,r:30},g);
+    el("text",{x:mx,y:my+2},g).textContent=i+1;
+    s.marker=g;
+  });
+  pen=el("line",{class:"pen-nib"},svg);
+  $("tag").textContent=`${d.ch} · ${d.tr}`;
+  $("stepsTitle").textContent=`Striche für ${d.ch}`;
+  $("steps").innerHTML=d.notes.map(n=>`<li>${n}</li>`).join("");
+  done=0; activeIdx=-1; paint(); resize();
+}
+
+// Canvas sizing: match the SVG's box, map viewBox units to pixels
+function resize(){
+  const r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
+  render();
+}
+new ResizeObserver(resize).observe(cv);
+
+// Broad-nib sweep: the nib is a rounded rectangle, nibW long and nibT thick.
+// Fill the quads its long edge covers, then stroke them with nibT so the nib never gets thinner than nibT.
+function nibStroke(pts, upto, color){
+  if(upto<1) return;
+  const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L;
+  ctx.fillStyle=color; ctx.strokeStyle=color;
+  ctx.lineWidth=nibT; ctx.lineCap="round"; ctx.lineJoin="round";
+  ctx.beginPath();
+  for(let k=1;k<=upto;k++){
+    const [x0,y0]=pts[k-1], [x1,y1]=pts[k];
+    ctx.moveTo(x0-hx,y0-hy); ctx.lineTo(x0+hx,y0+hy); ctx.lineTo(x1+hx,y1+hy); ctx.lineTo(x1-hx,y1-hy); ctx.closePath();
+  }
+  ctx.fill(); ctx.stroke();
+}
+
+function render(){
+  const s=cv.width/VB_W;
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.setTransform(s,0,0,s,-vbX*s,-VB_Y*s);
+  const chalk=css("--chalk"), acc=css("--accent");
+  strokes.forEach((st,i)=>{
+    if(i<done) nibStroke(st.pts, st.pts.length-1, chalk);
+    else if(i===activeIdx) nibStroke(st.pts, Math.round(activeP*(st.pts.length-1)), acc);
+  });
+  // nib indicator
+  if(activeIdx>=0 && pen){
+    const st=strokes[activeIdx], [x,y]=st.pts[Math.round(activeP*(st.pts.length-1))];
+    const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L;
+    pen.style.strokeWidth=Math.max(4,nibT*0.6);
+    pen.setAttribute("x1",x-hx); pen.setAttribute("y1",y-hy); pen.setAttribute("x2",x+hx); pen.setAttribute("y2",y+hy);
+    pen.classList.add("on");
+  } else if(pen) pen.classList.remove("on");
+}
+
+function paint(){
+  strokes.forEach((s,i)=>s.marker.classList.toggle("on", i<done || i===activeIdx || (i===done && activeIdx<0)));
+  [...$("steps").children].forEach((li,i)=>{
+    li.className = i<done ? "past" : (i===activeIdx || (activeIdx<0 && i===done) ? "now" : "");
+  });
+  $("count").textContent=`${done} / ${strokes.length}`;
+}
+
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function drawStroke(i, token){
+  const s=strokes[i];
+  activeIdx=i; activeP=0; paint();
+  const dur = reduced ? 1 : Math.max(450, s.len*1.9)/speed;
+  return new Promise(res=>{
+    const t0=performance.now();
+    function f(now){
+      if(token.cancel){ activeIdx=-1; render(); paint(); return res(false); }
+      const p=Math.min(1,(now-t0)/dur);
+      activeP=ease(p); render();
+      if(p<1) requestAnimationFrame(f);
+      else { done=i+1; activeIdx=-1; render(); paint(); res(true); }
+    }
+    requestAnimationFrame(f);
+  });
+}
+const wait=(ms,token)=>new Promise(r=>setTimeout(()=>r(!token.cancel),reduced?0:ms/speed));
+function stop(){ if(running){ running.cancel=true; running=null; } setPlayLabel(false); }
+function clearStrokes(){ done=0; activeIdx=-1; render(); paint(); }
+function setPlayLabel(on){ $("play").querySelector("span").textContent = on ? "Pause" : "Abspielen"; }
+
+async function play(){
+  if(running){ stop(); return; }
+  const token={cancel:false}; running=token; setPlayLabel(true);
+  if(done>=strokes.length){ clearStrokes(); if(!await wait(350,token)) return; }
+  do{
+    for(let i=done;i<strokes.length;i++){
+      if(!await drawStroke(i,token)) return;
+      if(!await wait(300,token)) return;
+    }
+    if($("tLoop").checked){ if(!await wait(1200,token)) return; clearStrokes(); if(!await wait(400,token)) return; }
+  } while($("tLoop").checked && !token.cancel);
+  if(running===token){ running=null; setPlayLabel(false); }
+}
+async function step(){
+  stop();
+  if(done>=strokes.length) clearStrokes();
+  const token={cancel:false}; running=token;
+  await drawStroke(done,token);
+  if(running===token) running=null;
+}
+function select(i,auto){
+  stop(); cur=i;
+  document.querySelectorAll(".pick").forEach((b,j)=>b.setAttribute("aria-pressed", j===i));
+  try{ localStorage.setItem("deva-nib-cur", i); }catch(e){}
+  build();
+  if(auto) play();
+}
+
+$("play").onclick=play;
+$("step").onclick=step;
+$("reset").onclick=()=>{ stop(); clearStrokes(); };
+$("spd").oninput=e=>{ speed=+e.target.value; $("spdOut").textContent=speed+"×"; };
+$("ang").oninput=e=>{ angle=+e.target.value; $("angOut").textContent=angle+"°"; render(); };
+$("nib").oninput=e=>{ nibW=+e.target.value; $("nibOut").textContent=nibW; render(); };
+$("thk").oninput=e=>{ nibT=+e.target.value; $("thkOut").textContent=nibT; render(); };
+$("tNums").onchange=e=>board.classList.toggle("hide-nums",!e.target.checked);
+$("tGhost").onchange=e=>board.classList.toggle("show-ghost",e.target.checked);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+document.addEventListener("keydown",e=>{
+  if(e.target.closest("input,button")&&e.key!=="ArrowRight") return;
+  if(e.key===" "){ e.preventDefault(); play(); }
+  if(e.key==="ArrowRight"){ e.preventDefault(); step(); }
+});
+
+let start=0; try{ start=+localStorage.getItem("deva-nib-cur")||0; }catch(e){}
+if(!(start>=0&&start<DATA.length)) start=0;
+select(start,false);
+done=strokes.length; render(); paint();
+setTimeout(()=>{ if(!running && done===strokes.length) play(); }, 900);
+</script>
+
+</body>
+</html>
