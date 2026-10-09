@@ -61,6 +61,8 @@ select{background:var(--surface-2);padding:6px 8px}
 .ch{background:#D85A30;color:#000;font-weight:500}
 .ch.ok{color:#fff}
 .wa{color:var(--water-fg);background:var(--water-bg)}
+.ent.gold{background:#EF9F27;color:#412402}
+.ent.jewel{background:#FFF8E1;color:#854F0B;box-shadow:inset 0 0 0 0.5px #FAC775}
 .dr{background:#E24B4A;color:#fff;font-weight:500}
 .dr.open{opacity:.45}
 .st{background:#B4B2A9;color:#000;font-weight:500}
@@ -215,7 +217,7 @@ E=[
 {g:'जलम्',n:2,x:4,y:16,k:'wa',t:'jalam',m:'water',d:2.0},
 {g:'फलम्',n:2,x:10,y:1,k:'it',t:'phalam',m:'fruit',fx:'+1 HP'},
 {g:'फलम्',n:2,x:17,y:18,k:'it',t:'phalam',m:'fruit',fx:'+1 HP'},
-{g:'स्वर्णम्',n:3,x:10,y:17,k:'it',t:'svarṇam',m:'gold'},
+{g:'स्वर्णम्',n:3,x:10,y:17,k:'it',t:'svarṇam',m:'gold',cls:'gold'},
 {g:'पुस्तकम्',n:3,x:22,y:2,k:'it',t:'pustakam',m:'book'},
 {g:'खड्गः',n:2,x:12,y:10,k:'it',t:'khaḍgaḥ',m:'sword',fx:'attack up'},
 {g:'पुष्पम्',n:2,x:26,y:14,k:'it',t:'puṣpam',m:'flower'},
@@ -232,7 +234,7 @@ ROOMCH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
 E.push({g:'द्वारम्',n:3,x:38,y:12,k:'dr',t:'dvāram',m:'door',id:'d1',need:['क','ग'],full:'द्वारम्'});
 E.push({g:'स्वरचिह्नानि',n:5,x:50,y:1,k:'sg',t:'svaracihnāni',m:'vowel signs, in the order of the vowels'},{g:'सेतुः',n:2,x:50,y:7,k:'sg',t:'setuḥ',m:'bridge: decipher each stone to step on it'});
 STONES.forEach(([g,x,y])=>E.push({g,n:1,x,y,k:'st',id:'s'+x+'_'+y,t:INFO[g].t,m:'stepping stone'}));
-E.push({g:'रत्नम्',n:2,x:53,y:17,k:'it',t:'ratnam',m:'jewel'},{g:'मुकुटम्',n:3,x:65,y:17,k:'it',t:'mukuṭam',m:'crown'});
+E.push({g:'रत्नम्',n:2,x:53,y:17,k:'it',t:'ratnam',m:'jewel',cls:'jewel'},{g:'मुकुटम्',n:3,x:65,y:17,k:'it',t:'mukuṭam',m:'crown',cls:'gold'});
 E.push({g:'स्वराः',n:3,x:30,y:1,k:'sg',t:'svarāḥ',m:'vowels, in order'},{g:'व्यञ्जनानि',n:4,x:30,y:7,k:'sg',t:'vyañjanāni',m:'consonants, the ka row'},{g:'मात्राः',n:3,x:30,y:13,k:'sg',t:'mātrāḥ',m:'vowel signs on ka, kha, ga, gha, ṅa'});
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
 const r=rng(7);
@@ -302,7 +304,7 @@ run(p,()=>{for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(occ(e,P.x+dx,P.y+
 function pickup(e,el){const g=e.g,root=document.getElementById('root').getBoundingClientRect(),a=el.getBoundingClientRect();
 if(e.k==='it'){E=E.filter(x=>x!==e);sel=null;selG=null;draw();}
 const chip=document.querySelector('.chip[data-g="'+g+'"]')||document.getElementById('bag'),b=chip.getBoundingClientRect();
-const f=document.createElement('div');f.className='fly '+e.k;f.textContent=g;
+const f=document.createElement('div');f.className='fly '+e.k+(e.cls?' ent '+e.cls:'');f.textContent=g;
 Object.assign(f.style,{left:(a.left-root.left)+'px',top:(a.top-root.top)+'px',width:a.width+'px',height:a.height+'px'});
 document.getElementById('root').appendChild(f);
 const tx=(chip.classList.contains('chip')?b.left:b.left+8)-a.left,ty=b.top-a.top;
@@ -321,7 +323,7 @@ else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.mi
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
-h+='<div class="c ent '+e.k+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k!=='ch'&&e.k!=='st'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
+h+='<div class="c ent '+e.k+(e.cls?' '+e.cls:'')+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k!=='ch'&&e.k!=='st'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
 h+='<div class="c ent pl'+(sel===P?' sel':'')+'" data-p="1" style="grid-column:'+(P.x-cx+1)+';grid-row:'+(P.y-cy+1)+'">अ</div>';
 document.getElementById('map').innerHTML=h;
 document.getElementById('hp').textContent='♥ '+hp;document.getElementById('sc').textContent=Object.values(K).filter(k=>k.seen).length;
