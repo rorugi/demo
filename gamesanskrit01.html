@@ -66,6 +66,15 @@ select{background:var(--surface-2);padding:6px 8px}
 .np{background:#E1F5EE;color:#085041}
 @media (prefers-color-scheme:dark){.np{background:#085041;color:#9FE1CB}}
 .np span{animation:live 3.4s ease-in-out infinite}
+.lp{background:#412402;color:#FAC775}
+.lp span{animation:glow 1.3s ease-in-out infinite}
+@keyframes glow{0%,100%{text-shadow:0 0 2px #EF9F27;transform:translateY(0)}30%{text-shadow:0 0 7px #FAC775,0 0 12px #EF9F27;transform:translateY(-1px)}60%{text-shadow:0 0 4px #EF9F27;transform:translateY(0) scale(1.03)}}
+.ent.divine{background:linear-gradient(110deg,#FAEEDA 0%,#FAEEDA 38%,#FFFDF4 50%,#FAEEDA 62%,#FAEEDA 100%);background-size:260% 100%;color:#854F0B;animation:shine 2.4s linear infinite;animation-delay:var(--dl,0s)}
+@media (prefers-color-scheme:dark){.ent.divine{background-image:linear-gradient(110deg,#633806 0%,#633806 38%,#BA7517 50%,#633806 62%,#633806 100%);color:#FAEEDA}}
+.ent.divine::before{content:'✦';position:absolute;top:0;right:3px;font-size:9px;line-height:1;color:#EF9F27;animation:twinkle 1.7s ease-in-out infinite;animation-delay:var(--dl,0s);pointer-events:none}
+.ent.divine span::after{content:'✧';position:absolute;bottom:1px;left:3px;font-size:8px;color:#EF9F27;animation:twinkle 2.3s ease-in-out infinite;animation-delay:calc(var(--dl,0s) - 0.8s)}
+@keyframes shine{0%{background-position:130% 0}100%{background-position:-130% 0}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(45deg)}}
 .dr{background:#E24B4A;color:#fff;font-weight:500}
 .dr.open{opacity:.45}
 .st{background:#B4B2A9;color:#000;font-weight:500}
@@ -161,7 +170,7 @@ const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
 const WALK=['tr','wa','it','ch','sg'];
 const WALL={g:'भ',full:'भित्तिः',n:1,k:'w',t:'bhittiḥ',m:'wall'};
 const DEEP={g:'ज',full:'जलम्',n:1,k:'dw',t:'jalam',m:'deep water, you can’t cross it'};
-const DUR={wa:3.2,hz:0.35,en:2.6,np:3.4};
+const DUR={wa:3.2,hz:0.35,en:2.6,np:3.4,lp:1.3};
 const POOL=['a','ā','i','ī','u','ū','ṛ','ṝ','ḷ','ḹ','e','ai','o','au','ṃ','ḥ','m̐','virāma'];
 const CH=[['◌ि','i','vowel sign i',4,1,'इ'],['◌ी','ī','vowel sign ī',15,2,'ई'],['◌ु','u','vowel sign u',14,8,'उ'],['◌ू','ū','vowel sign ū',3,10,'ऊ'],['◌े','e','vowel sign e',27,10,'ए'],['◌ो','o','vowel sign o',10,14,'ओ'],['◌ं','ṃ','anusvāra',12,13,'अनुस्वार'],['◌ः','ḥ','visarga',27,18,'विसर्ग'],['◌्','virāma','virāma, removes the inherent a',11,16,'विराम'],['◌ा','ā','vowel sign ā',20,10,'आ'],['इ','i','vowel i',5,20,'इ'],['ऋ','ṛ','vowel ṛ',26,5,'ऋ'],['◌ै','ai','vowel sign ai',13,7,'ऐ'],['◌ँ','m̐','candrabindu',9,20,'चन्द्रबिन्दु'],['◌ि','i','vowel sign i',9,13,'इ']];
 const INFO={};CH.forEach(([g,t,m,,,s])=>INFO[g]={t,m,s,grp:g[0]==='◌'?'m':'v'});
@@ -237,7 +246,7 @@ ROOMCH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
 E.push({g:'द्वारम्',n:3,x:38,y:12,k:'dr',t:'dvāram',m:'door',id:'d1',need:['क','ग'],full:'द्वारम्'});
 E.push({g:'स्वरचिह्नानि',n:5,x:50,y:1,k:'sg',t:'svaracihnāni',m:'vowel signs, in the order of the vowels'},{g:'सेतुः',n:2,x:50,y:7,k:'sg',t:'setuḥ',m:'bridge: decipher each stone to step on it'});
 STONES.forEach(([g,x,y])=>E.push({g,n:1,x,y,k:'st',id:'s'+x+'_'+y,t:INFO[g].t,m:'stepping stone'}));
-E.push({g:'मन्दिरम्',n:3,x:50,y:19,k:'sg',t:'mandiram',m:'temple'},{g:'नरः',n:2,x:52,y:21,k:'np',t:'naraḥ',m:'man',d:0.3},{g:'देवः',n:2,x:57,y:21,k:'np',t:'devaḥ',m:'god',d:1.4},{g:'देवी',n:2,x:62,y:21,k:'np',t:'devī',m:'goddess',d:2.2},{g:'योगी',n:2,x:54,y:23,k:'np',t:'yogī',m:'yogi',d:0.8},{g:'मित्रम्',n:3,x:60,y:23,k:'np',t:'mitram',m:'friend',d:1.9});
+E.push({g:'मन्दिरम्',n:3,x:52,y:19,k:'sg',t:'mandiram',m:'temple'},{g:'नरः',n:2,x:52,y:21,k:'np',t:'naraḥ',m:'man',d:0.3},{g:'देवः',n:2,x:56,y:21,k:'np',t:'devaḥ',m:'god',d:1.4,cls:'divine'},{g:'देवी',n:2,x:64,y:21,k:'np',t:'devī',m:'goddess',d:2.2,cls:'divine'},{g:'अग्निः',n:2,x:60,y:22,k:'hz',t:'agniḥ',m:'fire'},...[[50,19],[71,19],[50,24],[71,24]].map(([x,y],i)=>({g:'दीपः',n:2,x,y,k:'lp',t:'dīpaḥ',m:'lamp',d:i*0.31})),{g:'योगी',n:2,x:54,y:23,k:'np',t:'yogī',m:'yogi',d:0.8},{g:'मित्रम्',n:3,x:60,y:23,k:'np',t:'mitram',m:'friend',d:1.9});
 E.push({g:'रत्नम्',n:2,x:53,y:17,k:'it',t:'ratnam',m:'jewel',cls:'jewel'},{g:'मुकुटम्',n:3,x:65,y:17,k:'it',t:'mukuṭam',m:'crown',cls:'gold'});
 E.push({g:'स्वराः',n:3,x:30,y:1,k:'sg',t:'svarāḥ',m:'vowels, in order'},{g:'व्यञ्जनानि',n:4,x:30,y:7,k:'sg',t:'vyañjanāni',m:'consonants, the ka row'},{g:'मात्राः',n:3,x:30,y:13,k:'sg',t:'mātrāḥ',m:'vowel signs on ka, kha, ga, gha, ṅa'});
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
@@ -289,7 +298,8 @@ if(!b||walkE(b)){P.x=x;P.y=y;
 if(b&&(!was||was.k!==b.k)){if(b.k==='tr'){learned.add('vanam');say('You step into the वनम्'+sub('vanam — forest'));}else if(b.k==='wa')say('You wade through '+word(b));}
 return true;}
 sel=b;
-if(b.k==='np'){say(word(b)+(active(b.g)?' greets you · नमस्ते':''));}
+if(b.k==='lp'){say(word(b)+(active(b.g)?' glows softly':''));}
+else if(b.k==='np'){say(word(b)+(active(b.g)?' greets you · नमस्ते':''));}
 else if(b.k==='dr'){say(word(b)+' is locked · needs '+b.need.join(' and '));}
 else if(b.k==='hz'){hp--;say(word(b)+' burns you · −1 HP');}
 else if(b.k==='ex'){say(word(b)+' · you descend. Level complete.');}
@@ -328,7 +338,7 @@ else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.mi
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
-h+='<div class="c ent '+e.k+(e.cls?' '+e.cls:'')+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k!=='ch'&&e.k!=='st'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
+h+='<div class="c ent '+e.k+(e.cls?' '+e.cls:'')+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k!=='ch'&&e.k!=='st'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="'+(e.cls==='divine'?'--dl:'+(-((t+(e.d||0))%2.4)).toFixed(2)+'s;':'')+'grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
 h+='<div class="c ent pl'+(sel===P?' sel':'')+'" data-p="1" style="grid-column:'+(P.x-cx+1)+';grid-row:'+(P.y-cy+1)+'">अ</div>';
 document.getElementById('map').innerHTML=h;
 document.getElementById('hp').textContent='♥ '+hp;document.getElementById('sc').textContent=Object.values(K).filter(k=>k.seen).length;
