@@ -61,6 +61,7 @@ select{background:var(--surface-2);padding:6px 8px}
 .ch{background:#D85A30;color:#000;font-weight:500}
 .ch.ok{color:#fff}
 .wa{color:var(--water-fg);background:var(--water-bg)}
+.sg{color:var(--text-secondary);background:var(--surface-2);border:0.5px dashed var(--border-stronger)}
 .wa span{animation:flow 3.2s ease-in-out infinite}
 .hz span{animation:jit .35s steps(1) infinite}
 .en span{animation:live 2.6s ease-in-out infinite}
@@ -130,15 +131,27 @@ const M=["##############################",
 "#.......#.....#......#...#...#",
 "#.......#######......#####...#",
 "#............................#",
-"##############################"];
-const W=30,H=22,VW=15,VH=13,SHOW_MINI=false;
+"##############################"].map(r=>(r+'#'.repeat(20)).split(''));
+(function(){const room=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]='.';};
+room(30,48,1,5);room(30,48,7,11);room(30,48,13,20);
+for(const [x,y] of [[29,3],[29,9],[29,14],[39,6],[39,12]])M[y][x]='+';})();
+const W=M[0].length,H=M.length,VW=15,VH=13,SHOW_MINI=false;
 const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
-const WALK=['tr','wa','it','ch'];
+const WALK=['tr','wa','it','ch','sg'];
 const WALL={g:'भ',full:'भित्तिः',n:1,k:'w',t:'bhittiḥ',m:'wall'};
 const DUR={wa:3.2,hz:0.35,en:2.6};
-const POOL=['a','ā','i','ī','u','ū','ṛ','ṝ','ḷ','e','ai','o','au','ṃ','ḥ','m̐','virāma'];
+const POOL=['a','ā','i','ī','u','ū','ṛ','ṝ','ḷ','ḹ','e','ai','o','au','ṃ','ḥ','m̐','virāma'];
 const CH=[['◌ि','i','vowel sign i',4,1,'इ'],['◌ी','ī','vowel sign ī',15,2,'ई'],['◌ु','u','vowel sign u',14,8,'उ'],['◌ू','ū','vowel sign ū',3,10,'ऊ'],['◌े','e','vowel sign e',27,10,'ए'],['◌ो','o','vowel sign o',10,14,'ओ'],['◌ं','ṃ','anusvāra',12,13,'अनुस्वार'],['◌ः','ḥ','visarga',27,18,'विसर्ग'],['◌्','virāma','virāma, removes the inherent a',11,16,'विराम'],['◌ा','ā','vowel sign ā',20,10,'आ'],['इ','i','vowel i',5,20,'इ'],['ऋ','ṛ','vowel ṛ',26,5,'ऋ'],['◌ै','ai','vowel sign ai',13,7,'ऐ'],['◌ँ','m̐','candrabindu',9,20,'चन्द्रबिन्दु'],['◌ि','i','vowel sign i',9,13,'इ']];
-const INFO={};CH.forEach(([g,t,m,,,s])=>INFO[g]={t,m,s});
+const INFO={};CH.forEach(([g,t,m,,,s])=>INFO[g]={t,m,s,grp:g[0]==='◌'?'m':'v'});
+const VOW=[['अ','a'],['आ','ā'],['इ','i'],['ई','ī'],['उ','u'],['ऊ','ū'],['ऋ','ṛ'],['ॠ','ṝ'],['ऌ','ḷ'],['ॡ','ḹ'],['ए','e'],['ऐ','ai'],['ओ','o'],['औ','au']];
+const CONS=[['क','k'],['ख','kh'],['ग','g'],['घ','gh'],['ङ','ṅ']];
+const MARK=[['','a'],['ा','ā'],['ि','i'],['ी','ī'],['ु','u'],['ू','ū'],['ृ','ṛ'],['ॄ','ṝ'],['े','e'],['ै','ai'],['ो','o'],['ौ','au']];
+const ROOMCH=[];
+VOW.forEach(([g,t],i)=>ROOMCH.push([g,t,'vowel '+t,32+2*(i%7),i<7?2:4,g,'v']));
+CONS.forEach(([g,c],i)=>ROOMCH.push([g,c+'a','consonant '+c+'a',33+3*i,9,g,'c']));
+CONS.forEach(([c,ct],r)=>MARK.forEach(([m,v],i)=>{if(i)ROOMCH.push([c+m,ct+v,c+' + vowel sign '+v,34+i,15+r,c+m,'k',ct,v]);}));
+CONS.forEach(([c,ct],r)=>ROOMCH.push([c,ct+'a',c+' with inherent a',34,15+r,c,'c',ct,'a']));
+ROOMCH.forEach(([g,t,m,,,s,grp,ct,v])=>{if(!INFO[g])INFO[g]={t,m,s,grp,ct,v};});
 const IINFO={};
 const ZONES=[[1,7,13,20],[15,20,13,20],[19,28,1,5],[1,5,7,11]];
 let P,E,hp,learned,logs,atk,K={},bag={},warp=0,sel=null,selG=null,walk=null,target=null,quiz=null,voices=[],voiceName='';
@@ -180,13 +193,15 @@ E=[
 {g:'गजः',n:2,x:13,y:20,k:'en',t:'gajaḥ',m:'elephant',hp:4,d:2.1},
 {g:'सोपानम्',n:3,x:22,y:17,k:'ex',t:'sopānam',m:'stairs'}];
 CH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
+ROOMCH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
+E.push({g:'स्वराः',n:3,x:30,y:1,k:'sg',t:'svarāḥ',m:'vowels, in order'},{g:'व्यञ्जनानि',n:4,x:30,y:7,k:'sg',t:'vyañjanāni',m:'consonants, the ka row'},{g:'मात्राः',n:3,x:30,y:13,k:'sg',t:'mātrāḥ',m:'vowel signs on ka, kha, ga, gha, ṅa'});
 E.forEach(e=>{e.full=e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
 const r=rng(7);
 for(const [x0,x1,y0,y1] of ZONES)for(let y=y0;y<=y1;y++){let x=x0;while(x<x1){
 const ok=floor(x,y)&&floor(x+1,y)&&!entAt(x,y)&&!entAt(x+1,y)&&!(y===P.y&&(x===P.x||x+1===P.x));
 if(ok&&r()<0.62){E.push({g:'वृक्षः',full:'वृक्षः',n:2,x,y,k:'tr',t:'vṛkṣaḥ',m:'tree'});x+=2;}else x+=1;}}
 hp=6;atk=1;logs=[];sel=P;
-say('त्वम् अ असि — tap to walk. Tap an item or akṣara to read it, then use Pick up.');draw();}
+say('त्वम् अ असि — tap to walk. Stand beside new things to identify them. The learning rooms lie to the east.');draw();}
 const occ=(e,x,y)=>y===e.y&&x>=e.x&&x<e.x+e.n;
 const floor=(x,y)=>M[y]&&(M[y][x]==='.'||M[y][x]==='+');
 const entAt=(x,y)=>E.find(e=>occ(e,x,y));
@@ -195,9 +210,19 @@ function say(s){logs.unshift(s);logs=logs.slice(0,4);}
 const sub=s=>' <span class="muted">'+s+'</span>';
 function word(e){learned.add(e.t);return e.full+sub(e.t+' — '+e.m);}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function openQuiz(g){const t=INFO[g].t,n=4+Math.floor(Math.random()*3);quiz={g,choices:shuffle([t,...shuffle(POOL.filter(p=>p!==t)).slice(0,n-1)]),wrong:new Set()};}
+function openQuiz(g){const I=INFO[g],t=I.t;
+const pool=I.grp==='c'?CONS.map(([,c])=>c+'a'):I.grp==='k'?[...new Set([...CONS.map(([,c])=>c+I.v),...MARK.map(([,v])=>I.ct+v)])]:POOL;
+const n=Math.min(4+Math.floor(Math.random()*3),pool.filter(p=>p!==t).length+1);
+quiz={g,choices:shuffle([t,...shuffle(pool.filter(p=>p!==t)).slice(0,n-1)]),wrong:new Set()};}
+const nearAt=(e,x,y)=>Math.abs(y-e.y)<=1&&x>=e.x-1&&x<=e.x+e.n;
+const near=e=>nearAt(e,P.x,P.y);
+const isNew=e=>e.k==='ch'?!kn(e.g).seen:!learned.has(e.t);
+function identify(e){if(e.k==='ch'){if(!active(e.g))openQuiz(e.g);return}
+learned.add(e.t);speak(sayOf(e));say('You identify '+word(e));}
+function walkBeside(e,then){stopWalk();if(hp<=0)return;if(near(e)){then&&then();draw();return}
+const p=pathTo((x,y)=>nearAt(e,x,y));if(!p){say('No way leads to it');draw();return}run(p,then);}
 function answer(c){const g=quiz.g,k=kn(g),t=INFO[g].t;
-if(c===t){k.due=now()+INT[k.level];const lv=k.level;k.level=Math.min(5,k.level+1);say(g+' = '+t+sub('correct · level '+lv+' → '+k.level+' · next review in '+fmt(INT[lv])));quiz=null;selG=g;speak(INFO[g].s);}
+if(c===t){k.seen=true;k.due=now()+INT[k.level];const lv=k.level;k.level=Math.min(5,k.level+1);say(g+' = '+t+sub('correct · level '+lv+' → '+k.level+' · next review in '+fmt(INT[lv])));quiz=null;selG=g;speak(INFO[g].s);}
 else{k.level=0;k.due=0;quiz.wrong.add(c);say(c+' is not '+g+sub('level reset to 0 · try again'));}save();draw();}
 function move(dx,dy){if(hp<=0)return false;const x=P.x+dx,y=P.y+dy;
 if(!floor(x,y)){sel=WALL;learned.add(WALL.t);say('भित्तिः'+sub('bhittiḥ — a wall blocks you'));return false;}
@@ -232,7 +257,9 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.transform='translat
 setTimeout(()=>{f.remove();bag[g]=(bag[g]||0)+1;
 if(e.k==='it'){learned.add(e.t);if(e.m==='fruit')hp+=1;if(e.m==='sword')atk=2;}
 save();say('You pick up '+g+sub(e.t+(e.fx?' · '+e.fx:'')+' · '+bag[g]+' in the bag'));draw();const c=document.querySelector('.chip[data-g="'+g+'"]');if(c)c.classList.add('pop');},650);}
-const act=a=>a?'<button data-act="'+a+'" style="float:right;margin:-2px 0 4px 8px;font-size:13px;padding:3px 10px"><i class="ti ti-'+(a==='pick'?'hand-grab':'walk')+'" aria-hidden="true"></i> '+(a==='pick'?'Pick up':'Go there')+'</button>':'';
+const ACT={pick:['hand-grab','Pick up'],go:['walk','Go there'],near:['walk','Go closer'],id:['eye','Identify']};
+const act=a=>a?'<button data-act="'+a+'" style="float:right;margin:-2px 0 4px 8px;font-size:13px;padding:3px 10px"><i class="ti ti-'+ACT[a][0]+'" aria-hidden="true"></i> '+ACT[a][1]+'</button>':'';
+const unknownInfo=e=>act(near(e)?'id':'near')+'<span style="font-weight:500">'+e.g+'</span>'+sub('· unknown'+(e.k==='ch'?' akṣara':'')+' · '+(near(e)?'you are beside it':'go beside it to identify'));
 function draw(){let h='';const t=performance.now()/1000;
 const cx=Math.max(0,Math.min(W-VW,P.x-7)),cy=Math.max(0,Math.min(H-VH,P.y-6));
 for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
@@ -248,11 +275,13 @@ const gs=Object.keys(bag);
 document.getElementById('bag').innerHTML=gs.length?gs.map(g=>{if(!INFO[g])return '<span class="chip item" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+'</span>';const k=kn(g),a=active(g);return '<span class="chip'+(a?'':' fg')+'" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+' <span class="muted" style="font-size:12px">'+(a?'L'+k.level:'<i class="ti ti-refresh" aria-label="forgotten"></i>')+'</span></span>';}).join(''):'<span style="font-size:13px;color:var(--text-muted)">Empty</span>';
 const inf=document.getElementById('info');
 if(quiz){inf.innerHTML='<div style="margin-bottom:8px">Transliterate <span style="font-size:18px;font-weight:500">'+quiz.g+'</span>'+sub('level '+kn(quiz.g).level)+'</div><div class="row">'+quiz.choices.map(c=>'<button class="qb'+(quiz.wrong.has(c)?' no':'')+'" data-c="'+c+'">'+c+'</button>').join('')+'</div>';}
+else if(selG&&INFO[selG]&&sel&&sel.k==='ch'&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(selG&&INFO[selG]){const k=kn(selG),a=active(selG),onMap=sel&&sel.k==='ch'&&sel.g===selG&&E.includes(sel);
 inf.innerHTML=act(onMap&&a?'pick':'')+'<span style="font-weight:500">'+selG+' = '+INFO[selG].t+'</span>'+sub('· '+INFO[selG].m+' · level '+k.level+' · '+(a?'review in '+fmt(k.due-now()):'forgotten, tap to review'));}
 else if(selG&&IINFO[selG]){inf.innerHTML='<span style="font-weight:500">'+selG+'</span>'+sub('· '+IINFO[selG].t+' — '+IINFO[selG].m+' · in your bag');}
+else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(sel&&(sel===WALL||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
-const hint={tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up'}[sel.k]||'';
+const hint={tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',sg:' · a sign'}[sel.k]||'';
 const a={it:'pick',en:'go',hz:'go',ex:'go'}[sel.k]||'';
 inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+' · '+sel.n+' field'+(sel.n>1?'s':'')+hint+(u?' · standing on '+u.full:''));}
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
@@ -263,14 +292,18 @@ const cellOf=(c,e,ev)=>{const r=c.getBoundingClientRect();return +c.dataset.s+Ma
 document.getElementById('map').addEventListener('click',ev=>{
 if(ev.target.closest('[data-p]')){sel=P;selG=null;quiz=null;speak('अहम्');draw();return}
 if(ev.target.closest('[data-w]')){sel=WALL;selG=null;quiz=null;speakIfKnown(WALL);learned.add(WALL.t);draw();return}
-const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];speakIfKnown(e);
-if(e.k==='tr'||e.k==='wa'){sel=e;selG=null;quiz=null;learned.add(e.t);walkTo(cellOf(c,e,ev),e.y);return}
-if(e.k==='ch'){sel=e;selG=e.g;if(!active(e.g)){if(!quiz||quiz.g!==e.g)openQuiz(e.g);}else quiz=null;draw();return}
-sel=e;selG=null;quiz=null;learned.add(e.t);draw();return}
+const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keepQuiz=quiz&&e.k==='ch'&&quiz.g===e.g;
+sel=e;selG=e.k==='ch'?e.g:null;if(!keepQuiz)quiz=null;
+if(isNew(e)){if(near(e)&&!keepQuiz)identify(e);}
+else{speakIfKnown(e);if(e.k==='ch'&&!active(e.g)&&!keepQuiz)openQuiz(e.g);}
+if(e.k==='tr'||e.k==='wa'){walkTo(cellOf(c,e,ev),e.y);return}
+draw();return}
 const f=ev.target.closest('[data-x]');if(f){selG=null;quiz=null;walkTo(+f.dataset.x,+f.dataset.y);}});
 document.getElementById('info').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(b&&quiz){answer(b.dataset.c);return}
 const a=ev.target.closest('[data-act]');if(!a||!sel||!E.includes(sel))return;
 if(a.dataset.act==='go'){approach(sel);return}
+if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
+if(a.dataset.act==='id'){identify(sel);draw();return}
 const tile=document.querySelector('#map [data-id="'+E.indexOf(sel)+'"]');pickup(sel,tile||a);});
 document.getElementById('bag').addEventListener('click',ev=>{const c=ev.target.closest('[data-g]');if(!c)return;const g=c.dataset.g;sel=null;selG=g;
 if(INFO[g]){if(active(g))speak(INFO[g].s);}else speak(g);if(INFO[g]&&!active(g))openQuiz(g);else quiz=null;draw();});
