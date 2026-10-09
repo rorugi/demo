@@ -57,7 +57,9 @@ select{background:var(--surface-2);padding:6px 8px}
 .tr{color:#27500A;background:#C0DD97;font-size:14px}
 @media (prefers-color-scheme:dark){.tr{color:#EAF3DE;background:#3B6D11}}
 .ent.tr,.ent.tr::after{border-radius:12px}
-.f.wd{background:var(--bg-success);border-radius:0}
+.wd{background:var(--bg-success);color:var(--text-success);font-size:14px}
+.ent.wd,.ent.wd::after{border-radius:0}
+.ent.wd{margin:0}
 .en{color:var(--text-danger);background:var(--bg-danger)}
 .hz{color:var(--text-warning);background:var(--bg-warning)}
 .ex{color:var(--text-primary);background:var(--surface-1);border:0.5px solid var(--border-stronger)}
@@ -170,7 +172,7 @@ for(const [x,y] of [[56,18],[49,21],[59,6],[49,3],[29,3],[29,9],[39,6],[38,12],[
 const W=M[0].length,H=M.length,DWB={};for(let y=0;y<M.length;y++){let x=0;while(x<M[y].length){if(M[y][x]!=='~'){x++;continue}let e=x;while(M[y][e]==='~')e++;let L=e-x,a=x;while(L>0){const n=L===3?3:L>=2?2:1;for(let i=0;i<n;i++)DWB[y*M[0].length+a+i]=[a,n];a+=n;L-=n;}x=e;}}
 const VW=15,VH=13,SHOW_MINI=false;
 const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
-const WALK=['tr','wa','it','ch','sg'];
+const WALK=['tr','wa','it','ch','sg','wd'];
 const WALL={g:'भ',full:'भित्तिः',n:1,k:'w',t:'bhittiḥ',m:'wall'};
 const DEEP={g:'ज',full:'जलम्',n:1,k:'dw',t:'jalam',m:'deep water, you can’t cross it'};
 const DUR={wa:3.2,hz:0.35,en:2.6,np:3.4,lp:1.3};
@@ -253,10 +255,9 @@ E.push({g:'मन्दिरम्',n:3,x:52,y:19,k:'sg',t:'mandiram',m:'temple
 E.push({g:'रत्नम्',n:2,x:53,y:17,k:'it',t:'ratnam',m:'jewel',cls:'jewel'},{g:'मुकुटम्',n:3,x:65,y:17,k:'it',t:'mukuṭam',m:'crown',cls:'gold'});
 E.push({g:'स्वराः',n:3,x:30,y:1,k:'sg',t:'svarāḥ',m:'vowels, in order'},{g:'व्यञ्जनानि',n:4,x:30,y:7,k:'sg',t:'vyañjanāni',m:'consonants, the ka row'},{g:'मात्राः',n:3,x:30,y:13,k:'sg',t:'mātrāḥ',m:'vowel signs on ka, kha, ga, gha, ṅa'});
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
-const r=rng(7);
-for(const [x0,x1,y0,y1] of ZONES)for(let y=y0;y<=y1;y++){let x=x0;while(x<x1){
-const ok=floor(x,y)&&floor(x+1,y)&&!entAt(x,y)&&!entAt(x+1,y)&&!(y===P.y&&(x===P.x||x+1===P.x));
-if(ok&&r()<0.62){E.push({g:'वृक्षः',full:'वृक्षः',n:2,x,y,k:'tr',t:'vṛkṣaḥ',m:'tree'});x+=2;}else x+=1;}}
+[[23,13],[14,1],[26,7],[10,11]].forEach(([x,y])=>E.push({g:'वृक्षः',full:'वृक्षः',n:2,x,y,k:'tr',t:'vṛkṣaḥ',m:'tree'}));
+for(const [x0,x1,y0,y1] of ZONES)for(let y=y0;y<=y1;y++){let x=x0;while(x<=x1){if(!floor(x,y)||entAt(x,y)){x++;continue}
+let e=x;while(e<=x1&&floor(e,y)&&!entAt(e,y))e++;let L=e-x,a=x;while(L>0){const n=L===3?3:L>=2?2:1;if(n>1)E.push({g:'वनम्',full:'वनम्',n,x:a,y,k:'wd',t:'vanam',m:'wood, a whole region of trees'});a+=n;L-=n;}x=e;}}
 E.forEach(e=>{if(e.k!=='ch'&&e.k!=='st')WINFO[e.g]={t:e.t,m:e.m};});
 hp=6;atk=1;logs=[];sel=P;
 say('त्वम् अ असि — tap to walk. Stand beside new things to identify them. The learning rooms lie to the east.');draw();}
@@ -298,7 +299,7 @@ if(M[y]&&M[y][x]==='~'){sel=DEEP;learned.add(DEEP.t);say('जलम्'+sub('the
 if(!floor(x,y)){sel=WALL;learned.add(WALL.t);say('भित्तिः'+sub('bhittiḥ — a wall blocks you'));return false;}
 const b=entAt(x,y),was=entAt(P.x,P.y);
 if(!b||walkE(b)){P.x=x;P.y=y;
-if(b&&(!was||was.k!==b.k)){if(b.k==='tr'){learned.add('vanam');say('You step into the वनम्'+sub('vanam — forest'));}else if(b.k==='wa')say('You wade through '+word(b));}
+if(b&&(!was||was.k!==b.k)){if(b.k==='wd'){say('You step into the '+word(b));}else if(b.k==='wa')say('You wade through '+word(b));}
 return true;}
 sel=b;
 if(b.k==='lp'){say(word(b)+(active(b.g)?' glows softly':''));}
@@ -338,7 +339,7 @@ const cx=Math.max(0,Math.min(W-VW,P.x-7)),cy=Math.max(0,Math.min(H-VH,P.y-6));
 for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
 if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
 else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.min(a+n,cx+VW);h+='<div class="c dw" data-dw="1" style="grid-column:'+(vx+1)+' / span '+(en-x)+';grid-row:'+(vy+1)+'"><span style="animation-delay:'+(-((t+a*0.37+y*0.61)%2.1)).toFixed(2)+'s">'+(n>1?'जलम्':'ज')+'</span></div>';}}
-else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+(ZONES.some(([a,b,c,d])=>x>=a&&x<=b&&y>=c&&y<=d)?' wd':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
+else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
 h+='<div class="c ent '+e.k+(e.cls?' '+e.cls:'')+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k!=='ch'&&e.k!=='st'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="'+(e.cls==='divine'?'--dl:'+(-((t+(e.d||0))%2.4)).toFixed(2)+'s;':'')+'grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
@@ -358,7 +359,7 @@ else if(sel&&sel.k==='st'&&E.includes(sel)){inf.innerHTML=doors[sel.id]?'<span s
 else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(sel&&E.includes(sel)&&!active(sel.g)){inf.innerHTML=act('id')+'<span style="font-weight:500">'+sel.full+'</span>'+sub('· forgotten · identify it again');}
 else if(sel&&(sel===WALL||sel===DEEP||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
-const hint=sel.k==='dr'?(doors[sel.id]?' · open':' · locked · needs '+needTxt(sel)):({tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',sg:' · a sign'}[sel.k]||'');
+const hint=sel.k==='dr'?(doors[sel.id]?' · open':' · locked · needs '+needTxt(sel)):({tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',wd:' · walkable',sg:' · a sign'}[sel.k]||'');
 const a=sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'):({it:near(sel)?'pick':'near',en:'go',hz:'go',ex:'go'}[sel.k]||'');
 const lvl=E.includes(sel)?' · level '+kn(sel.g).level+' · review in '+fmt(kn(sel.g).due-now()):'';
 inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+hint+lvl+(u?' · standing on '+u.full:''));}
@@ -372,7 +373,7 @@ if(ev.target.closest('[data-p]')){sel=P;selG=null;quiz=null;speak('अहम्'
 if(ev.target.closest('[data-dw]')){sel=DEEP;selG=null;quiz=null;speakIfKnown(DEEP);learned.add(DEEP.t);draw();return}
 if(ev.target.closest('[data-w]')){sel=WALL;selG=null;quiz=null;speakIfKnown(WALL);learned.add(WALL.t);draw();return}
 const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keepQuiz=quiz&&quiz.g===e.g;
-const walkOn=e.k==='tr'||e.k==='wa'||e.k==='sg'||((e.k==='dr'||e.k==='st')&&doors[e.id]);
+const walkOn=e.k==='tr'||e.k==='wa'||e.k==='wd'||e.k==='sg'||((e.k==='dr'||e.k==='st')&&doors[e.id]);
 if(sel===e&&!walkOn&&!near(e)){walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
 if(e.k==='st'&&!doors[e.id]){sel=e;selG=null;if(!keepQuiz)quiz=null;if(near(e)&&!keepQuiz)openQuiz(e.g);draw();return}
 sel=e;selG=e.k==='ch'?e.g:null;if(!keepQuiz)quiz=null;
