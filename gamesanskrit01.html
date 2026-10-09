@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sanskrit Roguelike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --font-sans:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --radius:8px;
+  --page:#F7F6F3;--surface-1:#F1EFE8;--surface-2:#FFFFFF;
+  --text-primary:#1F1E1C;--text-secondary:#5F5E5A;--text-muted:#9A988F;
+  --border:rgba(0,0,0,.10);--border-strong:rgba(0,0,0,.18);--border-stronger:rgba(0,0,0,.40);
+  --fill-control-hover:#D3D1C7;
+  --bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;
+  --bg-pro:#EEEDFE;--text-pro:#534AB7;
+  --bg-success:#EAF3DE;--text-success:#3B6D11;
+  --bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;
+  --bg-warning:#FAEEDA;--text-warning:#854F0B;
+  --water-fg:#0C447C;--water-bg:#B5D4F4;
+}
+@media (prefers-color-scheme:dark){:root{
+  --page:#1A1A19;--surface-1:#262624;--surface-2:#2C2C2A;
+  --text-primary:#EEEDE8;--text-secondary:#B4B2A9;--text-muted:#7A7973;
+  --border:rgba(255,255,255,.10);--border-strong:rgba(255,255,255,.18);--border-stronger:rgba(255,255,255,.40);
+  --fill-control-hover:#444441;
+  --bg-accent:#0C447C;--text-accent:#B5D4F4;--border-accent:#85B7EB;
+  --bg-pro:#3C3489;--text-pro:#CECBF6;
+  --bg-success:#27500A;--text-success:#C0DD97;
+  --bg-danger:#791F1F;--text-danger:#F7C1C1;--border-danger:#F09595;
+  --bg-warning:#633806;--text-warning:#FAC775;
+  --water-fg:#B5D4F4;--water-bg:#0C447C;
+}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.5}
+main{max-width:420px;margin:0 auto;padding:16px}
+h1{font-size:18px;font-weight:500;margin:0 0 8px}
+button,select{font:inherit;color:var(--text-primary);background:transparent;border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:6px 12px;cursor:pointer}
+button:hover{background:var(--surface-1)}
+button:active{transform:scale(.98)}
+select{background:var(--surface-2);padding:6px 8px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.dev{font-family:'Noto Sans Devanagari',var(--font-sans)}
+#map{display:grid;grid-template-columns:repeat(15,24px);grid-template-rows:repeat(13,28px);justify-content:center;font-family:'Noto Sans Devanagari',var(--font-sans);margin:0.5rem 0;overflow:hidden;user-select:none}
+.c{display:flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap;overflow:hidden}
+.c span{display:inline-block}
+.w{background:var(--fill-control-hover);color:var(--text-secondary);font-size:13px;border:0.5px solid var(--border-strong);cursor:pointer}
+.f{color:var(--text-muted);font-size:11px;cursor:pointer}
+.tg{color:var(--text-accent);font-size:14px}
+.ent{font-size:15px;border-radius:6px;margin:1px;cursor:pointer;z-index:1;position:relative}
+.ent::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,transparent calc(100% - 0.5px),var(--border-strong) 0);background-size:24px 100%;opacity:.5;border-radius:6px}
+.pl{color:var(--text-accent);background:var(--bg-accent);font-weight:500;z-index:3;border:1px solid var(--border-accent)}
+.it{color:var(--text-pro);background:var(--bg-pro)}
+.tr{color:var(--text-success);background:var(--bg-success);font-size:14px}
+.en{color:var(--text-danger);background:var(--bg-danger)}
+.hz{color:var(--text-warning);background:var(--bg-warning)}
+.ex{color:var(--text-primary);background:var(--surface-1);border:0.5px solid var(--border-stronger)}
+.ch{background:#D85A30;color:#000;font-weight:500}
+.ch.ok{color:#fff}
+.wa{color:var(--water-fg);background:var(--water-bg)}
+.wa span{animation:flow 3.2s ease-in-out infinite}
+.hz span{animation:jit .35s steps(1) infinite}
+.en span{animation:live 2.6s ease-in-out infinite}
+@keyframes flow{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes jit{0%{transform:translate(0,0)}25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,0)}75%{transform:translate(0,1px) scale(1.04)}}
+@keyframes live{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-1px)}50%{transform:translate(0,1px)}75%{transform:translate(-2px,0)}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.c span{animation:none!important}}
+.sel{outline:1.5px solid var(--border-stronger);outline-offset:-1.5px}
+.qb{font-size:14px;padding:4px 12px;min-width:52px}
+.qb.no{color:var(--text-danger);border-color:var(--border-danger)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--radius);border:0.5px solid var(--border-strong);font-size:13px;cursor:pointer;background:var(--surface-2)}
+.chip .g{font-size:16px;font-weight:500;color:#D85A30}
+.chip.item .g{color:var(--text-pro);font-size:14px}
+.chip.fg{border-style:dashed;color:var(--text-muted)}
+.chip.fg .g{color:var(--text-muted)}
+.chip.pop{animation:pop .35s ease-out}
+.fly{position:absolute;z-index:10;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;pointer-events:none;transition:transform .65s cubic-bezier(.5,0,.3,1),opacity .65s;font-family:'Noto Sans Devanagari',var(--font-sans)}
+.fly.ch{background:#D85A30;color:#fff}
+.fly.it{background:var(--bg-pro);color:var(--text-pro)}
+.tw{font-size:12px;padding:2px 8px}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.muted{color:var(--text-secondary)}
+</style>
+</head>
+<body>
+<main id="root" style="position:relative">
+<h1 class="dev">संस्कृत roguelike</h1>
+<h2 class="sr-only">A turn-based Sanskrit roguelike. Tap the floor to walk. Tap an item or akṣara to select it, tap again to pick it up into the bag.</h2>
+<div class="row dev" style="justify-content:space-between;font-size:13px;color:var(--text-secondary)">
+<span>अ = अहम् <span id="hp" style="color:var(--text-primary);font-weight:500"></span></span>
+<span>Words learned: <span id="sc" style="color:var(--text-primary);font-weight:500">0</span></span>
+</div>
+<div class="row" style="margin-top:6px;font-size:13px;color:var(--text-secondary)"><i class="ti ti-backpack" style="font-size:18px" aria-hidden="true"></i>Bag</div>
+<div id="bag" class="row dev" style="min-height:30px;margin-top:4px"></div>
+<div id="map" tabindex="0" aria-label="Game map"></div>
+<div id="info" class="dev" style="background:var(--surface-1);border-radius:var(--radius);padding:8px 12px;font-size:13px;min-height:20px"></div>
+<div id="log" class="dev" style="margin-top:0.75rem;font-size:13px;line-height:1.6;min-height:84px"></div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px">
+<span>Simulate time</span><button class="tw" data-t="300000">+5 min</button><button class="tw" data-t="3600000">+1 h</button><button class="tw" data-t="86400000">+1 d</button><button class="tw" data-t="432000000">+5 d</button>
+<button id="rs" style="margin-left:auto;font-size:12px;padding:2px 10px">Restart</button>
+</div>
+<div class="row" style="gap:8px;margin-top:10px;font-size:13px;color:var(--text-secondary)">
+<i class="ti ti-volume" style="font-size:18px" aria-hidden="true"></i><label for="voice">Voice</label>
+<select id="voice" style="flex:1;min-width:0"><option value="">Off</option></select>
+</div>
+</main>
+<script>
+const M=["##############################",
+"#......#..........#..........#",
+"#......#..........#..........#",
+"#......+..........#..........#",
+"#......#..........+..........#",
+"#......#..........#..........#",
+"###+########+#######+#########",
+"#.....#..........#...........#",
+"#.....#..........#...........#",
+"#.....+..........+...........#",
+"#.....#..........#...........#",
+"#.....#..........#...........#",
+"######+#########+#####+#######",
+"#............................#",
+"#............................#",
+"#.......#######......#####...#",
+"#.......#.....#......#...#...#",
+"#.......#.....+......#...+...#",
+"#.......#.....#......#...#...#",
+"#.......#######......#####...#",
+"#............................#",
+"##############################"];
+const W=30,H=22,VW=15,VH=13,SHOW_MINI=false;
+const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
+const WALK=['tr','wa','it','ch'];
+const WALL={g:'भ',full:'भित्तिः',n:1,k:'w',t:'bhittiḥ',m:'wall'};
+const DUR={wa:3.2,hz:0.35,en:2.6};
+const POOL=['a','ā','i','ī','u','ū','ṛ','ṝ','ḷ','e','ai','o','au','ṃ','ḥ','m̐','virāma'];
+const CH=[['◌ि','i','vowel sign i',4,1,'इ'],['◌ी','ī','vowel sign ī',15,2,'ई'],['◌ु','u','vowel sign u',14,8,'उ'],['◌ू','ū','vowel sign ū',3,10,'ऊ'],['◌े','e','vowel sign e',27,10,'ए'],['◌ो','o','vowel sign o',10,14,'ओ'],['◌ं','ṃ','anusvāra',12,13,'अनुस्वार'],['◌ः','ḥ','visarga',27,18,'विसर्ग'],['◌्','virāma','virāma, removes the inherent a',11,16,'विराम'],['◌ा','ā','vowel sign ā',20,10,'आ'],['इ','i','vowel i',5,20,'इ'],['ऋ','ṛ','vowel ṛ',26,5,'ऋ'],['◌ै','ai','vowel sign ai',13,7,'ऐ'],['◌ँ','m̐','candrabindu',9,20,'चन्द्रबिन्दु'],['◌ि','i','vowel sign i',9,13,'इ']];
+const INFO={};CH.forEach(([g,t,m,,,s])=>INFO[g]={t,m,s});
+const IINFO={};
+const ZONES=[[1,7,13,20],[15,20,13,20],[19,28,1,5],[1,5,7,11]];
+let P,E,hp,learned,logs,atk,K={},bag={},warp=0,sel=null,selG=null,walk=null,target=null,quiz=null,voices=[],voiceName='';
+const now=()=>Date.now()+warp;
+function load(){try{const s=JSON.parse(localStorage.getItem('skt-rogue-v2')||'{}');K=s.K||{};bag=s.bag||{};warp=s.warp||0;voiceName=s.voice||'';}catch(e){}}
+function save(){try{localStorage.setItem('skt-rogue-v2',JSON.stringify({K,bag,warp,voice:voiceName}));}catch(e){}}
+const hasTTS='speechSynthesis' in window;
+function listVoices(){if(!hasTTS)return;voices=speechSynthesis.getVoices();const pr=v=>/^(sa|hi|mr|ne)/i.test(v.lang)?0:1;
+const sorted=voices.slice().sort((a,b)=>pr(a)-pr(b)||a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name));
+const s=document.getElementById('voice');s.innerHTML='<option value="">Off</option>'+(sorted.length?sorted.map(v=>'<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' ('+v.lang+')</option>').join(''):'<option disabled>No voices available</option>');
+if(voices.some(v=>v.name===voiceName))s.value=voiceName;else{s.value='';}}
+function speak(text){if(!hasTTS||!voiceName||!text)return;const v=voices.find(x=>x.name===voiceName);if(!v)return;
+speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=0.85;speechSynthesis.speak(u);}
+const sayOf=e=>e.k==='ch'?INFO[e.g].s:e.full;
+const kn=g=>K[g]||(K[g]={level:0,due:0});
+const active=g=>kn(g).due>now();
+function fmt(ms){const m=ms/60000;if(m<60)return Math.max(1,Math.round(m))+' min';const h=m/60;if(h<24)return Math.round(h)+' h';return Math.round(h/24)+' d';}
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function init(){stopWalk();quiz=null;selG=null;
+P={g:'अ',full:'अहम्',n:1,x:2,y:14,k:'pl',t:'aham',m:'I, the player'};
+E=[
+{g:'जलम्',n:2,x:2,y:2,k:'wa',t:'jalam',m:'water'},
+{g:'जलम्',n:2,x:24,y:20,k:'wa',t:'jalam',m:'water',d:1.1},
+{g:'जलम्',n:2,x:4,y:16,k:'wa',t:'jalam',m:'water',d:2.0},
+{g:'फलम्',n:2,x:10,y:1,k:'it',t:'phalam',m:'fruit',fx:'+1 HP'},
+{g:'फलम्',n:2,x:17,y:18,k:'it',t:'phalam',m:'fruit',fx:'+1 HP'},
+{g:'स्वर्णम्',n:3,x:10,y:17,k:'it',t:'svarṇam',m:'gold'},
+{g:'पुस्तकम्',n:3,x:22,y:2,k:'it',t:'pustakam',m:'book'},
+{g:'खड्गः',n:2,x:12,y:10,k:'it',t:'khaḍgaḥ',m:'sword',fx:'attack up'},
+{g:'पुष्पम्',n:2,x:26,y:14,k:'it',t:'puṣpam',m:'flower'},
+{g:'अग्निः',n:2,x:12,y:4,k:'hz',t:'agniḥ',m:'fire'},
+{g:'अग्निः',n:2,x:24,y:9,k:'hz',t:'agniḥ',m:'fire'},
+{g:'सर्पः',n:2,x:8,y:10,k:'en',t:'sarpaḥ',m:'snake',hp:2,d:0.4},
+{g:'सर्पः',n:2,x:18,y:15,k:'en',t:'sarpaḥ',m:'snake',hp:2,d:1.3},
+{g:'सिंहः',n:2,x:25,y:3,k:'en',t:'siṃhaḥ',m:'lion',hp:3,d:1.7},
+{g:'व्याघ्रः',n:3,x:20,y:8,k:'en',t:'vyāghraḥ',m:'tiger',hp:3,d:0.9},
+{g:'गजः',n:2,x:13,y:20,k:'en',t:'gajaḥ',m:'elephant',hp:4,d:2.1},
+{g:'सोपानम्',n:3,x:22,y:17,k:'ex',t:'sopānam',m:'stairs'}];
+CH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
+E.forEach(e=>{e.full=e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
+const r=rng(7);
+for(const [x0,x1,y0,y1] of ZONES)for(let y=y0;y<=y1;y++){let x=x0;while(x<x1){
+const ok=floor(x,y)&&floor(x+1,y)&&!entAt(x,y)&&!entAt(x+1,y)&&!(y===P.y&&(x===P.x||x+1===P.x));
+if(ok&&r()<0.62){E.push({g:'वृक्षः',full:'वृक्षः',n:2,x,y,k:'tr',t:'vṛkṣaḥ',m:'tree'});x+=2;}else x+=1;}}
+hp=6;atk=1;learned=new Set();logs=[];sel=P;
+say('त्वम् अ असि — tap to walk. Tap an item or akṣara to select it, tap again to pick it up.');draw();}
+const occ=(e,x,y)=>y===e.y&&x>=e.x&&x<e.x+e.n;
+const floor=(x,y)=>M[y]&&(M[y][x]==='.'||M[y][x]==='+');
+const entAt=(x,y)=>E.find(e=>occ(e,x,y));
+const passable=(x,y)=>{if(!floor(x,y))return false;const e=entAt(x,y);return !e||WALK.includes(e.k);};
+function say(s){logs.unshift(s);logs=logs.slice(0,4);}
+const sub=s=>' <span class="muted">'+s+'</span>';
+function word(e){learned.add(e.t);return e.full+sub(e.t+' — '+e.m);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function openQuiz(g){const t=INFO[g].t,n=4+Math.floor(Math.random()*3);quiz={g,choices:shuffle([t,...shuffle(POOL.filter(p=>p!==t)).slice(0,n-1)]),wrong:new Set()};}
+function answer(c){const g=quiz.g,k=kn(g),t=INFO[g].t;
+if(c===t){k.due=now()+INT[k.level];const lv=k.level;k.level=Math.min(5,k.level+1);say(g+' = '+t+sub('correct · level '+lv+' → '+k.level+' · next review in '+fmt(INT[lv])));quiz=null;selG=g;speak(INFO[g].s);}
+else{k.level=0;k.due=0;quiz.wrong.add(c);say(c+' is not '+g+sub('level reset to 0 · try again'));}save();draw();}
+function move(dx,dy){if(hp<=0)return false;const x=P.x+dx,y=P.y+dy;
+if(!floor(x,y)){sel=WALL;learned.add(WALL.t);say('भित्तिः'+sub('bhittiḥ — a wall blocks you'));return false;}
+const b=entAt(x,y),was=entAt(P.x,P.y);
+if(!b||WALK.includes(b.k)){P.x=x;P.y=y;
+if(b&&(!was||was.k!==b.k)){if(b.k==='tr'){learned.add('vanam');say('You step into the वनम्'+sub('vanam — forest'));}else if(b.k==='wa')say('You wade through '+word(b));}
+return true;}
+sel=b;
+if(b.k==='hz'){hp--;say(word(b)+' burns you · −1 HP');}
+else if(b.k==='ex'){say(word(b)+' · you descend. Level complete.');}
+else{b.hp-=atk;if(b.hp<=0){E=E.filter(e=>e!==b);say('You defeat '+word(b));sel=null;}else{hp--;say('You strike '+b.full+' ('+b.t+') · it bites back, −1 HP');}}
+if(hp<=0)say('अहम् पतामि — I fall. Restart to try again.');return false;}
+function pathTo(goal){const key=(x,y)=>y*W+x,prev=new Map([[key(P.x,P.y),null]]),q=[[P.x,P.y]];
+while(q.length){const [x,y]=q.shift();if(goal(x,y)){const r=[];let k=key(x,y);while(prev.get(k)!==null){r.unshift([k%W,Math.floor(k/W)]);k=prev.get(k);}return r;}
+for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,nk=key(nx,ny);if(!prev.has(nk)&&passable(nx,ny)){prev.set(nk,key(x,y));q.push([nx,ny]);}}}return null;}
+function stopWalk(){if(walk)clearInterval(walk);walk=null;target=null;}
+function run(p,then){if(!p.length){then&&then();draw();return}
+walk=setInterval(()=>{const [x,y]=p.shift();const ok=move(x-P.x,y-P.y);if(!ok){stopWalk();draw();return}if(!p.length){stopWalk();then&&then();}draw();},90);draw();}
+function walkTo(tx,ty){stopWalk();if(hp<=0||(tx===P.x&&ty===P.y)){draw();return}if(!passable(tx,ty)){draw();return}
+const p=pathTo((x,y)=>x===tx&&y===ty);if(!p){say('No way leads there');draw();return}target=[tx,ty];run(p);}
+function approach(e){stopWalk();if(hp<=0)return;const adj=(x,y)=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>occ(e,x+dx,y+dy));
+const p=pathTo(adj);if(!p){say('No way leads to '+e.full);draw();return}
+run(p,()=>{for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(occ(e,P.x+dx,P.y+dy)){move(dx,dy);break}});}
+function pickup(e,el){const g=e.g,root=document.getElementById('root').getBoundingClientRect(),a=el.getBoundingClientRect();
+if(e.k==='it'){E=E.filter(x=>x!==e);sel=null;selG=null;draw();}
+const chip=document.querySelector('.chip[data-g="'+g+'"]')||document.getElementById('bag'),b=chip.getBoundingClientRect();
+const f=document.createElement('div');f.className='fly '+e.k;f.textContent=g;
+Object.assign(f.style,{left:(a.left-root.left)+'px',top:(a.top-root.top)+'px',width:a.width+'px',height:a.height+'px'});
+document.getElementById('root').appendChild(f);
+const tx=(chip.classList.contains('chip')?b.left:b.left+8)-a.left,ty=b.top-a.top;
+requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.transform='translate('+tx+'px,'+ty+'px) scale(.8)';f.style.opacity='0.6';}));
+setTimeout(()=>{f.remove();bag[g]=(bag[g]||0)+1;
+if(e.k==='it'){learned.add(e.t);if(e.m==='fruit')hp+=1;if(e.m==='sword')atk=2;}
+save();say('You pick up '+g+sub(e.t+(e.fx?' · '+e.fx:'')+' · '+bag[g]+' in the bag'));draw();const c=document.querySelector('.chip[data-g="'+g+'"]');if(c)c.classList.add('pop');},650);}
+function draw(){let h='';const t=performance.now()/1000;
+const cx=Math.max(0,Math.min(W-VW,P.x-7)),cy=Math.max(0,Math.min(H-VH,P.y-6));
+for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
+if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
+else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
+E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
+const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
+h+='<div class="c ent '+e.k+(e.k==='ch'&&active(e.g)?' ok':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
+h+='<div class="c ent pl'+(sel===P?' sel':'')+'" data-p="1" style="grid-column:'+(P.x-cx+1)+';grid-row:'+(P.y-cy+1)+'">अ</div>';
+document.getElementById('map').innerHTML=h;
+document.getElementById('hp').textContent='♥ '+hp;document.getElementById('sc').textContent=learned.size;
+const gs=Object.keys(bag);
+document.getElementById('bag').innerHTML=gs.length?gs.map(g=>{if(!INFO[g])return '<span class="chip item" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+'</span>';const k=kn(g),a=active(g);return '<span class="chip'+(a?'':' fg')+'" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+' <span class="muted" style="font-size:12px">'+(a?'L'+k.level:'<i class="ti ti-refresh" aria-label="forgotten"></i>')+'</span></span>';}).join(''):'<span style="font-size:13px;color:var(--text-muted)">Empty</span>';
+const inf=document.getElementById('info');
+if(quiz){inf.innerHTML='<div style="margin-bottom:8px">Transliterate <span style="font-size:18px;font-weight:500">'+quiz.g+'</span>'+sub('level '+kn(quiz.g).level)+'</div><div class="row">'+quiz.choices.map(c=>'<button class="qb'+(quiz.wrong.has(c)?' no':'')+'" data-c="'+c+'">'+c+'</button>').join('')+'</div>';}
+else if(selG&&INFO[selG]){const k=kn(selG),a=active(selG),onMap=sel&&sel.k==='ch'&&sel.g===selG;
+inf.innerHTML='<span style="font-weight:500">'+selG+' = '+INFO[selG].t+'</span>'+sub('· '+INFO[selG].m+' · level '+k.level+' · '+(a?'review in '+fmt(k.due-now()):'forgotten, tap to review')+(onMap&&a?' · tap again to pick up':''));}
+else if(selG&&IINFO[selG]){inf.innerHTML='<span style="font-weight:500">'+selG+'</span>'+sub('· '+IINFO[selG].t+' — '+IINFO[selG].m+' · in your bag');}
+else if(sel&&(sel===WALL||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
+const hint={it:' · tap again to pick up',tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',en:' · tap again to go there',hz:' · tap again to go there',ex:' · tap again to go there'}[sel.k]||'';
+inf.innerHTML='<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+' · '+sel.n+' field'+(sel.n>1?'s':'')+hint+(u?' · standing on '+u.full:''));}
+else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
+document.getElementById('log').innerHTML=logs.map((l,i)=>'<div style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</div>').join('');
+if(SHOW_MINI)mini(cx,cy);}
+function mini(){}
+const cellOf=(c,e,ev)=>{const r=c.getBoundingClientRect();return +c.dataset.s+Math.min(e.n-1,Math.floor((ev.clientX-r.left)/24));};
+document.getElementById('map').addEventListener('click',ev=>{
+if(ev.target.closest('[data-p]')){sel=P;selG=null;quiz=null;speak('अहम्');draw();return}
+if(ev.target.closest('[data-w]')){sel=WALL;selG=null;quiz=null;learned.add(WALL.t);speak('भित्तिः');draw();return}
+const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];speak(sayOf(e));
+if(e.k==='tr'||e.k==='wa'){sel=e;selG=null;quiz=null;learned.add(e.t);walkTo(cellOf(c,e,ev),e.y);return}
+if(e.k==='ch'){const again=sel===e;sel=e;selG=e.g;
+if(!active(e.g)){if(!quiz||quiz.g!==e.g)openQuiz(e.g);draw();return}
+quiz=null;if(again){draw();pickup(e,document.querySelector('[data-id="'+E.indexOf(e)+'"]'));return}draw();return}
+if(e.k==='it'){const again=sel===e;sel=e;selG=null;quiz=null;learned.add(e.t);if(again){pickup(e,c);return}draw();return}
+const again=sel===e;sel=e;selG=null;quiz=null;learned.add(e.t);if(again)approach(e);else draw();return}
+const f=ev.target.closest('[data-x]');if(f){selG=null;quiz=null;walkTo(+f.dataset.x,+f.dataset.y);}});
+document.getElementById('info').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(b&&quiz)answer(b.dataset.c);});
+document.getElementById('bag').addEventListener('click',ev=>{const c=ev.target.closest('[data-g]');if(!c)return;const g=c.dataset.g;sel=null;selG=g;
+speak(INFO[g]?INFO[g].s:g);if(INFO[g]&&!active(g))openQuiz(g);else quiz=null;draw();});
+document.querySelectorAll('.tw').forEach(b=>b.onclick=()=>{warp+=+b.dataset.t;save();say('Time passes · +'+fmt(+b.dataset.t));draw();});
+document.getElementById('voice').addEventListener('change',ev=>{voiceName=ev.target.value;save();
+const s=sel===P?'अहम्':sel===WALL?'भित्तिः':selG&&INFO[selG]?INFO[selG].s:sel&&E.includes(sel)?sayOf(sel):'';speak(s);});
+document.addEventListener('keydown',ev=>{const k={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[ev.key];if(k){ev.preventDefault();stopWalk();move(...k);draw();}});
+document.getElementById('rs').onclick=()=>{K={};bag={};warp=0;save();init();};
+setInterval(()=>{if(!walk)draw();},15000);
+load();
+if(hasTTS){listVoices();speechSynthesis.onvoiceschanged=listVoices;}else{document.getElementById('voice').innerHTML='<option value="">Off</option><option disabled>Speech not supported here</option>';}
+init();
+</script>
+</body>
+</html>
