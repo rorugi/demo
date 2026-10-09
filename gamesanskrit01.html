@@ -63,9 +63,14 @@ select{background:var(--surface-2);padding:6px 8px}
 .wa{color:var(--water-fg);background:var(--water-bg)}
 .dr{background:#E24B4A;color:#fff;font-weight:500}
 .dr.open{opacity:.45}
-.st{background:#B4B2A9;color:#000;font-weight:500;border-radius:12px}
+.st{background:#B4B2A9;color:#000;font-weight:500}
+.ent.st,.ent.st::after,.ent.wa,.ent.wa::after{border-radius:0}
+.ent.wa{margin:0}
 .st.open{background:var(--surface-1);color:var(--text-primary);border:0.5px dashed var(--border-stronger)}
-.dw{font-size:13px;cursor:pointer}
+.dw{background:#0C447C;color:#B5D4F4;font-size:14px;cursor:pointer}
+@media (prefers-color-scheme:dark){.dw{background:#042C53;color:#85B7EB}}
+.dw span{animation:deep 2.1s ease-in-out infinite}
+@keyframes deep{0%,100%{transform:rotate(-11deg) translate(-2px,-1px)}25%{transform:rotate(4deg) translate(1px,2px)}50%{transform:rotate(11deg) translate(2px,-1px)}75%{transform:rotate(-4deg) translate(-1px,2px)}}
 .ent.unk{color:#000}
 .qp{line-height:1.25;padding:4px 10px;text-align:center}
 .qp.cur{border:1.5px solid var(--border-accent)}
@@ -143,9 +148,10 @@ const M=["##############################",
 "##############################"].map(r=>(r+'#'.repeat(44)).split(''));
 for(let i=0;i<4;i++)M.push('#'.repeat(74).split(''));
 (function(){const room=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]='.';};
-room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);room(50,68,1,5);room(50,72,7,17);for(let y=8;y<=16;y++)for(let x=50;x<=72;x++)M[y][x]=(x===54||x===66)?'.':'~';M[17][61]='~';
+room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);room(50,68,1,5);room(50,72,7,17);for(let y=8;y<=16;y++)for(let x=50;x<=72;x++)M[y][x]=(x===54||x===66)?'.':'~';for(let x=60;x<=62;x++)M[17][x]='~';
 for(const [x,y] of [[59,6],[49,3],[29,3],[29,9],[39,6],[38,12],[39,12],[40,12]])M[y][x]='+';})();
-const W=M[0].length,H=M.length,VW=15,VH=13,SHOW_MINI=false;
+const W=M[0].length,H=M.length,DWB={};for(let y=0;y<M.length;y++){let x=0;while(x<M[y].length){if(M[y][x]!=='~'){x++;continue}let e=x;while(M[y][e]==='~')e++;let L=e-x,a=x;while(L>0){const n=L===3?3:L>=2?2:1;for(let i=0;i<n;i++)DWB[y*M[0].length+a+i]=[a,n];a+=n;L-=n;}x=e;}}
+const VW=15,VH=13,SHOW_MINI=false;
 const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
 const WALK=['tr','wa','it','ch','sg'];
 const WALL={g:'भ',full:'भित्तिः',n:1,k:'w',t:'bhittiḥ',m:'wall'};
@@ -166,7 +172,10 @@ const MODS=[['अं','aṃ','anusvāra: nasal after the vowel','अं'],['अ�
 const MODP=['aṃ','aḥ','am̐','k','’','a','ā','ka','an','aṅ'];
 const SIGNS=[['◌ा','ā','आ'],['◌ि','i','इ'],['◌ी','ī','ई'],['◌ु','u','उ'],['◌ू','ū','ऊ'],['◌ृ','ṛ','ऋ'],['◌ॄ','ṝ','ॠ'],['◌ॢ','ḷ','ऌ'],['◌ॣ','ḹ','ॡ'],['◌े','e','ए'],['◌ै','ai','ऐ'],['◌ो','o','ओ'],['◌ौ','au','औ']];
 SIGNS.forEach(([g,t,sp],i)=>{const j=i+1;ROOMCH.push([g,t,'vowel sign '+t,52+2*(j%7),j<7?2:4,sp,'m']);});
-const STONES=[...['अ','आ','इ','ई','उ','ऊ','ए','ऐ','ओ'].map((g,i)=>[g,54,8+i]),...['क','खा','गि','घी','ङु','कू','खे','गै','घो'].map((g,i)=>[g,66,8+i])];
+const LA={'भ':'म','म':'भ','ब':'व','व':'ब','थ':'य','य':'थ','ख':'रव','रव':'ख','घ':'ध','ध':'घ','प':'ष','ष':'प','ङ':'ड','ड':'ङ','उ':'ज','ज':'उ'};
+const LAT={'भ':'bha','म':'ma','ब':'ba','व':'va','थ':'tha','य':'ya','ख':'kha','रव':'rava','घ':'gha','ध':'dha','प':'pa','ष':'ṣa','ङ':'ṅa','ड':'ḍa','उ':'u','ज':'ja'};
+Object.keys(LAT).forEach(g=>{if(!INFO[g])INFO[g]={t:LAT[g],m:g==='रव'?'ra + va, looks like ख':(g==='उ'?'vowel ':'consonant ')+LAT[g]+', looks like '+LA[g],s:g,grp:'la'};});
+const STONES=[...['भ','म','ब','व','थ','य','घ','ध','उ'].map((g,i)=>[g,54,8+i]),...['ख','रव','प','ष','ङ','ड','ज','उ','म'].map((g,i)=>[g,66,8+i])];
 const CONSL='कखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह'.split(''),CONST=['k','kh','g','gh','ṅ','c','ch','j','jh','ñ','ṭ','ṭh','ḍ','ḍh','ṇ','t','th','d','dh','n','p','ph','b','bh','m','y','r','l','v','ś','ṣ','s','h'];
 const TC={};CONSL.forEach((c,i)=>TC[c]=CONST[i]);const IV={};VOW.forEach(([g,t])=>IV[g]=t);
 const MV={'ा':'ā','ि':'i','ी':'ī','ु':'u','ू':'ū','ृ':'ṛ','ॄ':'ṝ','ॢ':'ḷ','ॣ':'ḹ','े':'e','ै':'ai','ो':'o','ौ':'au'},MODM={'ं':'ṃ','ः':'ḥ','ँ':'m̐','ऽ':'’'};
@@ -245,9 +254,10 @@ const sub=s=>' <span class="muted">'+s+'</span>';
 function word(e){return active(e.g)?e.full+sub(e.t+' — '+e.m):e.full;}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function openQuiz(g){const I=INFO[g],t=I.t;
-const pool=I.grp==='mod'?MODP:I.grp==='c'?CONS.map(([,c])=>c+'a'):I.grp==='k'?[...new Set([...CONS.map(([,c])=>c+I.v),...MARK.map(([,v])=>I.ct+v)])]:POOL;
+const pool=I.grp==='la'?Object.values(LAT):I.grp==='mod'?MODP:I.grp==='c'?CONS.map(([,c])=>c+'a'):I.grp==='k'?[...new Set([...CONS.map(([,c])=>c+I.v),...MARK.map(([,v])=>I.ct+v)])]:POOL;
 const n=Math.min(4+Math.floor(Math.random()*3),pool.filter(p=>p!==t).length+1);
-quiz={g,choices:shuffle([t,...shuffle(pool.filter(p=>p!==t)).slice(0,n-1)]),wrong:new Set()};}
+let ch=[t,...shuffle(pool.filter(p=>p!==t)).slice(0,n-1)];const pt=LA[g]&&LAT[LA[g]];if(pt&&pt!==t&&!ch.includes(pt))ch[ch.length-1]=pt;
+quiz={g,choices:shuffle(ch),wrong:new Set()};}
 const nearAt=(e,x,y)=>Math.abs(y-e.y)<=1&&x>=e.x-1&&x<=e.x+e.n;
 const near=e=>nearAt(e,P.x,P.y);
 const isNew=e=>!kn(e.g).seen;
@@ -307,7 +317,7 @@ function draw(){let h='';const t=performance.now()/1000;
 const cx=Math.max(0,Math.min(W-VW,P.x-7)),cy=Math.max(0,Math.min(H-VH,P.y-6));
 for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
 if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
-else if(M[y][x]==='~')h+='<div class="c wa dw" data-dw="1" style="'+pos+'"><span style="animation-delay:'+(-((t+x*0.37+y*0.61)%3.2)).toFixed(2)+'s">ज</span></div>';
+else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.min(a+n,cx+VW);h+='<div class="c dw" data-dw="1" style="grid-column:'+(vx+1)+' / span '+(en-x)+';grid-row:'+(vy+1)+'"><span style="animation-delay:'+(-((t+a*0.37+y*0.61)%2.1)).toFixed(2)+'s">'+(n>1?'जलम्':'ज')+'</span></div>';}}
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
