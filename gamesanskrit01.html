@@ -54,7 +54,10 @@ select{background:var(--surface-2);padding:6px 8px}
 .ent::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,transparent calc(100% - 0.5px),var(--border-strong) 0);background-size:24px 100%;opacity:.5;border-radius:6px}
 .pl{color:var(--text-accent);background:var(--bg-accent);font-weight:500;z-index:3;border:1px solid var(--border-accent)}
 .it{color:var(--text-pro);background:var(--bg-pro)}
-.tr{color:var(--text-success);background:var(--bg-success);font-size:14px}
+.tr{color:#27500A;background:#C0DD97;font-size:14px}
+@media (prefers-color-scheme:dark){.tr{color:#EAF3DE;background:#3B6D11}}
+.ent.tr,.ent.tr::after{border-radius:12px}
+.f.wd{background:var(--bg-success);border-radius:0}
 .en{color:var(--text-danger);background:var(--bg-danger)}
 .hz{color:var(--text-warning);background:var(--bg-warning)}
 .ex{color:var(--text-primary);background:var(--surface-1);border:0.5px solid var(--border-stronger)}
@@ -335,7 +338,7 @@ const cx=Math.max(0,Math.min(W-VW,P.x-7)),cy=Math.max(0,Math.min(H-VH,P.y-6));
 for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
 if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
 else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.min(a+n,cx+VW);h+='<div class="c dw" data-dw="1" style="grid-column:'+(vx+1)+' / span '+(en-x)+';grid-row:'+(vy+1)+'"><span style="animation-delay:'+(-((t+a*0.37+y*0.61)%2.1)).toFixed(2)+'s">'+(n>1?'जलम्':'ज')+'</span></div>';}}
-else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
+else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+(ZONES.some(([a,b,c,d])=>x>=a&&x<=b&&y>=c&&y<=d)?' wd':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
 h+='<div class="c ent '+e.k+(e.cls?' '+e.cls:'')+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k!=='ch'&&e.k!=='st'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="'+(e.cls==='divine'?'--dl:'+(-((t+(e.d||0))%2.4)).toFixed(2)+'s;':'')+'grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
