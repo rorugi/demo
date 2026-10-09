@@ -64,7 +64,9 @@ select{background:var(--surface-2);padding:6px 8px}
 .dr{background:#E24B4A;color:#fff;font-weight:500}
 .dr.open{opacity:.45}
 .ent.unk{color:#000}
-@media (prefers-color-scheme:dark){.ent.unk{color:#000;background:#D3D1C7}}
+.qp{line-height:1.25;padding:4px 10px;text-align:center}
+.qp.cur{border:1.5px solid var(--border-accent)}
+.qp.done{color:var(--text-success)}
 .sg{color:var(--text-secondary);background:var(--surface-2);border:0.5px dashed var(--border-stronger);opacity:.5}
 .wa span{animation:flow 3.2s ease-in-out infinite}
 .hz span{animation:jit .35s steps(1) infinite}
@@ -135,11 +137,11 @@ const M=["##############################",
 "#.......#.....#......#...#...#",
 "#.......#######......#####...#",
 "#............................#",
-"##############################"].map(r=>(r+'#'.repeat(20)).split(''));
-for(let i=0;i<4;i++)M.push('#'.repeat(50).split(''));
+"##############################"].map(r=>(r+'#'.repeat(32)).split(''));
+for(let i=0;i<4;i++)M.push('#'.repeat(62).split(''));
 (function(){const room=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]='.';};
-room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);
-for(const [x,y] of [[29,3],[29,9],[39,6],[38,12],[39,12],[40,12]])M[y][x]='+';})();
+room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);room(50,60,1,5);
+for(const [x,y] of [[49,3],[29,3],[29,9],[39,6],[38,12],[39,12],[40,12]])M[y][x]='+';})();
 const W=M[0].length,H=M.length,VW=15,VH=13,SHOW_MINI=false;
 const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
 const WALK=['tr','wa','it','ch','sg'];
@@ -156,8 +158,21 @@ VOW.forEach(([g,t],i)=>ROOMCH.push([g,t,'vowel '+t,32+2*(i%7),i<7?2:4,g,'v']));
 CONS.forEach(([g,c],i)=>ROOMCH.push([g,c+'a','consonant '+c+'a',33+3*i,9,g,'c']));
 CONS.forEach(([c,ct],r)=>MARK.forEach(([m,v],i)=>{if(i)ROOMCH.push([c+m,ct+v,c+' + vowel sign '+v,34+i,15+2*r,c+m,'k',ct,v]);}));
 CONS.forEach(([c,ct],r)=>ROOMCH.push([c,ct+'a',c+' with inherent a',34,15+2*r,c,'c',ct,'a']));
+const MODS=[['अं','aṃ','anusvāra: nasal after the vowel','अं'],['अः','aḥ','visarga: breath after the vowel','अः'],['अँ','am̐','candrabindu: nasalised vowel','अँ'],['क्','k','virāma: consonant without its a','क्'],['ऽ','’','avagraha: marks a dropped a','अवग्रह']];
+const MODP=['aṃ','aḥ','am̐','k','’','a','ā','ka','an','aṅ'];
+MODS.forEach(([g,t,m,sp],i)=>ROOMCH.push([g,t,m,51+2*i,3,sp,'mod']));
+const CONSL='कखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह'.split(''),CONST=['k','kh','g','gh','ṅ','c','ch','j','jh','ñ','ṭ','ṭh','ḍ','ḍh','ṇ','t','th','d','dh','n','p','ph','b','bh','m','y','r','l','v','ś','ṣ','s','h'];
+const TC={};CONSL.forEach((c,i)=>TC[c]=CONST[i]);const IV={};VOW.forEach(([g,t])=>IV[g]=t);
+const MV={'ा':'ā','ि':'i','ी':'ī','ु':'u','ू':'ū','ृ':'ṛ','ॄ':'ṝ','ॢ':'ḷ','ॣ':'ḹ','े':'e','ै':'ai','ो':'o','ौ':'au'},MODM={'ं':'ṃ','ः':'ḥ','ँ':'m̐','ऽ':'’'};
+function tr(x){let o='';for(const ch of x){if(TC[ch]!==undefined)o+=TC[ch]+'a';else if(MV[ch]!==undefined)o=o.slice(0,-1)+MV[ch];else if(ch==='्')o=o.slice(0,-1);else if(IV[ch]!==undefined)o+=IV[ch];else if(MODM[ch]!==undefined)o+=MODM[ch];}return o;}
+const AKS=/(?:[क-ह](?:्[क-ह])*(?:[ा-ौॢॣ]|्(?![क-ह]))?|[अ-औॠॡ])[ँंः]*|ऽ/g;
+function variants(t){const out=new Set(),VV=['a','ā','i','ī','u','ū','ṛ','e','ai','o','au'];const m=t.match(/^(.*?)(ai|au|ā|ī|ū|ṝ|ṛ|ḹ|ḷ|a|i|u|e|o)?((?:m̐|[ḥṃ])?)$/);if(!m)return [];
+const hd=m[1],v=m[2]||'',md=m[3];(v?VV:['a','ā','i']).forEach(x=>out.add(hd+x+md));
+if(/[kgcjṭḍtdpb]h$/.test(hd))out.add(hd.slice(0,-1)+v+md);else if(/[kgcjṭḍtdpb]$/.test(hd))out.add(hd+'h'+v+md);
+const sw={t:'ṭ',ṭ:'t',d:'ḍ',ḍ:'d',n:'ṇ',ṇ:'n',s:'ś',ś:'ṣ',ṣ:'s',r:'l',l:'r',v:'b',b:'v'};if(hd&&sw[hd[0]])out.add(sw[hd[0]]+hd.slice(1)+v+md);
+['','ḥ','ṃ'].forEach(x=>out.add(hd+v+x));out.delete(t);return [...out];}
 ROOMCH.forEach(([g,t,m,,,s,grp,ct,v])=>{if(!INFO[g])INFO[g]={t,m,s,grp,ct,v};});
-const IINFO={};
+const IINFO={},WINFO={};
 const ZONES=[[1,7,13,20],[15,20,13,20],[19,28,1,5],[1,5,7,11]];
 let P,E,hp,learned,logs,atk,K={},bag={},warp=0,sel=null,selG=null,walk=null,target=null,quiz=null,voices=[],voiceName='',doors={};
 const now=()=>Date.now()+warp;
@@ -171,7 +186,7 @@ if(voices.some(v=>v.name===voiceName))s.value=voiceName;else{s.value='';}}
 function speak(text){if(!hasTTS||!voiceName||!text)return;const v=voices.find(x=>x.name===voiceName);if(!v)return;
 speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=0.85;speechSynthesis.speak(u);}
 const sayOf=e=>e.k==='ch'?INFO[e.g].s:e.full;
-const knownE=e=>e===P||(e.k==='ch'?active(e.g):learned.has(e.t));
+const knownE=e=>e===P?true:e===WALL?learned.has(e.t):active(e.g);
 function speakIfKnown(e){if(knownE(e))speak(sayOf(e));}
 const kn=g=>K[g]||(K[g]={level:0,due:0});
 const active=g=>kn(g).due>now();
@@ -200,12 +215,14 @@ E=[
 CH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
 ROOMCH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
 E.push({g:'द्वारम्',n:3,x:38,y:12,k:'dr',t:'dvāram',m:'door',id:'d1',need:['क','ग'],full:'द्वारम्'});
+E.push({g:'अयोगवाहाः',n:5,x:50,y:1,k:'sg',t:'ayogavāhāḥ',m:'vowel modifiers'});
 E.push({g:'स्वराः',n:3,x:30,y:1,k:'sg',t:'svarāḥ',m:'vowels, in order'},{g:'व्यञ्जनानि',n:4,x:30,y:7,k:'sg',t:'vyañjanāni',m:'consonants, the ka row'},{g:'मात्राः',n:3,x:30,y:13,k:'sg',t:'mātrāḥ',m:'vowel signs on ka, kha, ga, gha, ṅa'});
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
 const r=rng(7);
 for(const [x0,x1,y0,y1] of ZONES)for(let y=y0;y<=y1;y++){let x=x0;while(x<x1){
 const ok=floor(x,y)&&floor(x+1,y)&&!entAt(x,y)&&!entAt(x+1,y)&&!(y===P.y&&(x===P.x||x+1===P.x));
 if(ok&&r()<0.62){E.push({g:'वृक्षः',full:'वृक्षः',n:2,x,y,k:'tr',t:'vṛkṣaḥ',m:'tree'});x+=2;}else x+=1;}}
+E.forEach(e=>{if(e.k!=='ch')WINFO[e.g]={t:e.t,m:e.m};});
 hp=6;atk=1;logs=[];sel=P;
 say('त्वम् अ असि — tap to walk. Stand beside new things to identify them. The learning rooms lie to the east.');draw();}
 const occ=(e,x,y)=>y===e.y&&x>=e.x&&x<e.x+e.n;
@@ -217,17 +234,23 @@ const needTxt=e=>e.need.map(g=>g+(bag[g]?' ✓':' ✗')).join(' · ');
 const canOpen=e=>e.need.every(g=>bag[g]>0);
 function say(s){logs.unshift(s);logs=logs.slice(0,4);}
 const sub=s=>' <span class="muted">'+s+'</span>';
-function word(e){learned.add(e.t);return e.full+sub(e.t+' — '+e.m);}
+function word(e){return active(e.g)?e.full+sub(e.t+' — '+e.m):e.full;}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function openQuiz(g){const I=INFO[g],t=I.t;
-const pool=I.grp==='c'?CONS.map(([,c])=>c+'a'):I.grp==='k'?[...new Set([...CONS.map(([,c])=>c+I.v),...MARK.map(([,v])=>I.ct+v)])]:POOL;
+const pool=I.grp==='mod'?MODP:I.grp==='c'?CONS.map(([,c])=>c+'a'):I.grp==='k'?[...new Set([...CONS.map(([,c])=>c+I.v),...MARK.map(([,v])=>I.ct+v)])]:POOL;
 const n=Math.min(4+Math.floor(Math.random()*3),pool.filter(p=>p!==t).length+1);
 quiz={g,choices:shuffle([t,...shuffle(pool.filter(p=>p!==t)).slice(0,n-1)]),wrong:new Set()};}
 const nearAt=(e,x,y)=>Math.abs(y-e.y)<=1&&x>=e.x-1&&x<=e.x+e.n;
 const near=e=>nearAt(e,P.x,P.y);
-const isNew=e=>e.k==='ch'?!kn(e.g).seen:!learned.has(e.t);
-function identify(e){if(e.k==='ch'){if(!active(e.g))openQuiz(e.g);return}
-learned.add(e.t);speak(sayOf(e));say('You identify '+word(e));}
+const isNew=e=>!kn(e.g).seen;
+function identify(e){if(active(e.g))return;if(e.k==='ch')openQuiz(e.g);else openWordQuiz(e.g);}
+function openWordQuiz(g){quiz={type:'w',g,parts:(g.match(AKS)||[g]).map(x=>({p:x,t:tr(x),ok:false})),idx:0};mkChoices();}
+function mkChoices(){const pt=quiz.parts[quiz.idx],v=variants(pt.t),n=Math.min(4+Math.floor(Math.random()*3),v.length+1);quiz.choices=shuffle([pt.t,...shuffle(v).slice(0,n-1)]);quiz.wrong=new Set();}
+function answerPart(c){const g=quiz.g,k=kn(g),pt=quiz.parts[quiz.idx];
+if(c!==pt.t){k.level=0;k.due=0;quiz.wrong.add(c);say(c+' is not '+pt.p+sub('level reset to 0 · try again'));save();draw();return}
+pt.ok=true;const nx=quiz.parts.findIndex(x=>!x.ok);if(nx>=0){quiz.idx=nx;mkChoices();draw();return}
+k.seen=true;k.due=now()+INT[k.level];const lv=k.level;k.level=Math.min(5,k.level+1);const wi=WINFO[g]||{t:quiz.parts.map(x=>x.t).join(''),m:''};
+say(g+' = '+wi.t+sub(wi.m+' · level '+lv+' → '+k.level+' · next review in '+fmt(INT[lv])));quiz=null;speak(g);save();draw();}
 function walkBeside(e,then){stopWalk();if(hp<=0)return;if(near(e)){then&&then();draw();return}
 const p=pathTo((x,y)=>nearAt(e,x,y));if(!p){say('No way leads to it');draw();return}run(p,then);}
 function answer(c){const g=quiz.g,k=kn(g),t=INFO[g].t;
@@ -243,7 +266,7 @@ sel=b;
 if(b.k==='dr'){say(word(b)+' is locked · needs '+b.need.join(' and '));}
 else if(b.k==='hz'){hp--;say(word(b)+' burns you · −1 HP');}
 else if(b.k==='ex'){say(word(b)+' · you descend. Level complete.');}
-else{b.hp-=atk;if(b.hp<=0){E=E.filter(e=>e!==b);say('You defeat '+word(b));sel=null;}else{hp--;say('You strike '+b.full+' ('+b.t+') · it bites back, −1 HP');}}
+else{b.hp-=atk;if(b.hp<=0){E=E.filter(e=>e!==b);say('You defeat '+word(b));sel=null;}else{hp--;say('You strike '+word(b)+' · it bites back, −1 HP');}}
 if(hp<=0)say('अहम् पतामि — I fall. Restart to try again.');return false;}
 function pathTo(goal){const key=(x,y)=>y*W+x,prev=new Map([[key(P.x,P.y),null]]),q=[[P.x,P.y]];
 while(q.length){const [x,y]=q.shift();if(goal(x,y)){const r=[];let k=key(x,y);while(prev.get(k)!==null){r.unshift([k%W,Math.floor(k/W)]);k=prev.get(k);}return r;}
@@ -277,23 +300,26 @@ if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
-h+='<div class="c ent '+e.k+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k!=='ch'&&isNew(e)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
+h+='<div class="c ent '+e.k+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k!=='ch'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
 h+='<div class="c ent pl'+(sel===P?' sel':'')+'" data-p="1" style="grid-column:'+(P.x-cx+1)+';grid-row:'+(P.y-cy+1)+'">अ</div>';
 document.getElementById('map').innerHTML=h;
-document.getElementById('hp').textContent='♥ '+hp;document.getElementById('sc').textContent=learned.size;
+document.getElementById('hp').textContent='♥ '+hp;document.getElementById('sc').textContent=Object.values(K).filter(k=>k.seen).length;
 const gs=Object.keys(bag);
-document.getElementById('bag').innerHTML=gs.length?gs.map(g=>{if(!INFO[g])return '<span class="chip item" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+'</span>';const k=kn(g),a=active(g);return '<span class="chip'+(a?'':' fg')+'" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+' <span class="muted" style="font-size:12px">'+(a?'L'+k.level:'<i class="ti ti-refresh" aria-label="forgotten"></i>')+'</span></span>';}).join(''):'<span style="font-size:13px;color:var(--text-muted)">Empty</span>';
+document.getElementById('bag').innerHTML=gs.length?gs.map(g=>{if(!INFO[g]&&!K[g])return '<span class="chip item" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+'</span>';const k=kn(g),a=active(g);return '<span class="chip'+(INFO[g]?'':' item')+(a?'':' fg')+'" data-g="'+g+'"><span class="g">'+g+'</span>×'+bag[g]+' <span class="muted" style="font-size:12px">'+(a?'L'+k.level:'<i class="ti ti-refresh" aria-label="forgotten"></i>')+'</span></span>';}).join(''):'<span style="font-size:13px;color:var(--text-muted)">Empty</span>';
 const inf=document.getElementById('info');
-if(quiz){inf.innerHTML='<div style="margin-bottom:8px">Transliterate <span style="font-size:18px;font-weight:500">'+quiz.g+'</span>'+sub('level '+kn(quiz.g).level)+'</div><div class="row">'+quiz.choices.map(c=>'<button class="qb'+(quiz.wrong.has(c)?' no':'')+'" data-c="'+c+'">'+c+'</button>').join('')+'</div>';}
+if(quiz&&quiz.type==='w'){const q=quiz;inf.innerHTML='<div style="margin-bottom:8px">Read <span style="font-size:18px;font-weight:500">'+q.g+'</span>'+sub('tap each part · level '+kn(q.g).level)+'</div><div class="row" style="margin-bottom:8px">'+q.parts.map((x,i)=>'<button class="qp'+(i===q.idx?' cur':'')+(x.ok?' done':'')+'" data-part="'+i+'"><span style="font-size:17px">'+x.p+'</span><br><span style="font-size:12px">'+(x.ok?x.t:'?')+'</span></button>').join('')+'</div><div class="row">'+q.choices.map(c=>'<button class="qb'+(q.wrong.has(c)?' no':'')+'" data-c="'+c+'">'+c+'</button>').join('')+'</div>';}
+else if(quiz){inf.innerHTML='<div style="margin-bottom:8px">Transliterate <span style="font-size:18px;font-weight:500">'+quiz.g+'</span>'+sub('level '+kn(quiz.g).level)+'</div><div class="row">'+quiz.choices.map(c=>'<button class="qb'+(quiz.wrong.has(c)?' no':'')+'" data-c="'+c+'">'+c+'</button>').join('')+'</div>';}
 else if(selG&&INFO[selG]&&sel&&sel.k==='ch'&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(selG&&INFO[selG]){const k=kn(selG),a=active(selG),onMap=sel&&sel.k==='ch'&&sel.g===selG&&E.includes(sel);
 inf.innerHTML=act(onMap&&a?(near(sel)?'pick':'near'):'')+'<span style="font-weight:500">'+selG+' = '+INFO[selG].t+'</span>'+sub('· '+INFO[selG].m+' · level '+k.level+' · '+(a?'review in '+fmt(k.due-now()):'forgotten, tap to review'));}
-else if(selG&&IINFO[selG]){inf.innerHTML='<span style="font-weight:500">'+selG+'</span>'+sub('· '+IINFO[selG].t+' — '+IINFO[selG].m+' · in your bag');}
+else if(selG&&WINFO[selG]){const k=kn(selG),a=active(selG);inf.innerHTML='<span style="font-weight:500">'+selG+'</span>'+sub('· '+(a?WINFO[selG].t+' — '+WINFO[selG].m+' · level '+k.level+' · review in '+fmt(k.due-now()):'forgotten, tap to review')+(bag[selG]?' · in your bag':''));}
 else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
+else if(sel&&E.includes(sel)&&!active(sel.g)){inf.innerHTML=act('id')+'<span style="font-weight:500">'+sel.full+'</span>'+sub('· forgotten · identify it again');}
 else if(sel&&(sel===WALL||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
 const hint=sel.k==='dr'?(doors[sel.id]?' · open':' · locked · needs '+needTxt(sel)):({tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',sg:' · a sign'}[sel.k]||'');
 const a=sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'):({it:near(sel)?'pick':'near',en:'go',hz:'go',ex:'go'}[sel.k]||'');
-inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+hint+(u?' · standing on '+u.full:''));}
+const lvl=E.includes(sel)?' · level '+kn(sel.g).level+' · review in '+fmt(kn(sel.g).due-now()):'';
+inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+hint+lvl+(u?' · standing on '+u.full:''));}
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
 document.getElementById('log').innerHTML=logs.map((l,i)=>'<div style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</div>').join('');
 if(SHOW_MINI)mini(cx,cy);save();}
@@ -302,24 +328,25 @@ const cellOf=(c,e,ev)=>{const r=c.getBoundingClientRect();return +c.dataset.s+Ma
 document.getElementById('map').addEventListener('click',ev=>{
 if(ev.target.closest('[data-p]')){sel=P;selG=null;quiz=null;speak('अहम्');draw();return}
 if(ev.target.closest('[data-w]')){sel=WALL;selG=null;quiz=null;speakIfKnown(WALL);learned.add(WALL.t);draw();return}
-const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keepQuiz=quiz&&e.k==='ch'&&quiz.g===e.g;
+const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keepQuiz=quiz&&quiz.g===e.g;
 const walkOn=e.k==='tr'||e.k==='wa'||e.k==='sg'||(e.k==='dr'&&doors[e.id]);
-if(sel===e&&!walkOn&&!near(e)){walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;if(isNew(e))identify(e);else if(e.k==='ch'&&!active(e.g))openQuiz(e.g);});return}
+if(sel===e&&!walkOn&&!near(e)){walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
 sel=e;selG=e.k==='ch'?e.g:null;if(!keepQuiz)quiz=null;
 if(isNew(e)){if(near(e)&&!keepQuiz)identify(e);}
-else{speakIfKnown(e);if(e.k==='ch'&&!active(e.g)&&!keepQuiz)openQuiz(e.g);}
+else{speakIfKnown(e);if(!keepQuiz)identify(e);}
 if(e.k==='tr'||e.k==='wa'||e.k==='sg'||(e.k==='dr'&&doors[e.id])){walkTo(cellOf(c,e,ev),e.y);return}
 draw();return}
 const f=ev.target.closest('[data-x]');if(f){selG=null;quiz=null;walkTo(+f.dataset.x,+f.dataset.y);}});
-document.getElementById('info').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(b&&quiz){answer(b.dataset.c);return}
+document.getElementById('info').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(b&&quiz){if(quiz.type==='w')answerPart(b.dataset.c);else answer(b.dataset.c);return}
+const pp=ev.target.closest('[data-part]');if(pp&&quiz&&quiz.type==='w'){const i=+pp.dataset.part;if(!quiz.parts[i].ok){quiz.idx=i;mkChoices();draw();}return}
 const a=ev.target.closest('[data-act]');if(!a||!sel||!E.includes(sel))return;
 if(a.dataset.act==='go'){approach(sel);return}
-if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;if(isNew(e))identify(e);});return}
+if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
 if(a.dataset.act==='id'){identify(sel);draw();return}
 if(a.dataset.act==='open'){const d=sel;if(!near(d)||!canOpen(d)){draw();return}d.need.forEach(g=>{bag[g]--;if(!bag[g])delete bag[g];});doors[d.id]=true;speak(d.full);say('You open the '+d.full+sub(d.t+' · used '+d.need.join(' and ')+' · it stays open'));save();draw();return}
 if(!near(sel)){draw();return}const tile=document.querySelector('#map [data-id="'+E.indexOf(sel)+'"]');pickup(sel,tile||a);});
 document.getElementById('bag').addEventListener('click',ev=>{const c=ev.target.closest('[data-g]');if(!c)return;const g=c.dataset.g;sel=null;selG=g;
-if(INFO[g]){if(active(g))speak(INFO[g].s);}else speak(g);if(INFO[g]&&!active(g))openQuiz(g);else quiz=null;draw();});
+quiz=null;if(INFO[g]){if(active(g))speak(INFO[g].s);else openQuiz(g);}else if(K[g]){if(active(g))speak(g);else openWordQuiz(g);}draw();});
 document.querySelectorAll('.tw').forEach(b=>b.onclick=()=>{warp+=+b.dataset.t;save();say('Time passes · +'+fmt(+b.dataset.t));draw();});
 document.getElementById('voice').addEventListener('change',ev=>{voiceName=ev.target.value;save();
 if(selG&&INFO[selG]){if(active(selG))speak(INFO[selG].s);}else if(sel&&(sel===P||sel===WALL||E.includes(sel)))speakIfKnown(sel);});
