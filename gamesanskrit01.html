@@ -63,6 +63,9 @@ select{background:var(--surface-2);padding:6px 8px}
 .wa{color:var(--water-fg);background:var(--water-bg)}
 .ent.gold{background:#EF9F27;color:#412402}
 .ent.jewel{background:#FFF8E1;color:#854F0B;box-shadow:inset 0 0 0 0.5px #FAC775}
+.np{background:#E1F5EE;color:#085041}
+@media (prefers-color-scheme:dark){.np{background:#085041;color:#9FE1CB}}
+.np span{animation:live 3.4s ease-in-out infinite}
 .dr{background:#E24B4A;color:#fff;font-weight:500}
 .dr.open{opacity:.45}
 .st{background:#B4B2A9;color:#000;font-weight:500}
@@ -150,15 +153,15 @@ const M=["##############################",
 "##############################"].map(r=>(r+'#'.repeat(44)).split(''));
 for(let i=0;i<4;i++)M.push('#'.repeat(74).split(''));
 (function(){const room=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]='.';};
-room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);room(50,68,1,5);room(50,72,7,17);for(let y=8;y<=16;y++)for(let x=50;x<=72;x++)M[y][x]=(x===54||x===66)?'.':'~';for(let x=60;x<=62;x++)M[17][x]='~';
-for(const [x,y] of [[59,6],[49,3],[29,3],[29,9],[39,6],[38,12],[39,12],[40,12]])M[y][x]='+';})();
+room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);room(50,68,1,5);room(50,72,7,17);for(let y=8;y<=16;y++)for(let x=50;x<=72;x++)M[y][x]=(x===54||x===66)?'.':'~';for(let x=60;x<=62;x++)M[17][x]='~';room(50,72,19,24);
+for(const [x,y] of [[56,18],[49,21],[59,6],[49,3],[29,3],[29,9],[39,6],[38,12],[39,12],[40,12]])M[y][x]='+';})();
 const W=M[0].length,H=M.length,DWB={};for(let y=0;y<M.length;y++){let x=0;while(x<M[y].length){if(M[y][x]!=='~'){x++;continue}let e=x;while(M[y][e]==='~')e++;let L=e-x,a=x;while(L>0){const n=L===3?3:L>=2?2:1;for(let i=0;i<n;i++)DWB[y*M[0].length+a+i]=[a,n];a+=n;L-=n;}x=e;}}
 const VW=15,VH=13,SHOW_MINI=false;
 const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
 const WALK=['tr','wa','it','ch','sg'];
 const WALL={g:'भ',full:'भित्तिः',n:1,k:'w',t:'bhittiḥ',m:'wall'};
 const DEEP={g:'ज',full:'जलम्',n:1,k:'dw',t:'jalam',m:'deep water, you can’t cross it'};
-const DUR={wa:3.2,hz:0.35,en:2.6};
+const DUR={wa:3.2,hz:0.35,en:2.6,np:3.4};
 const POOL=['a','ā','i','ī','u','ū','ṛ','ṝ','ḷ','ḹ','e','ai','o','au','ṃ','ḥ','m̐','virāma'];
 const CH=[['◌ि','i','vowel sign i',4,1,'इ'],['◌ी','ī','vowel sign ī',15,2,'ई'],['◌ु','u','vowel sign u',14,8,'उ'],['◌ू','ū','vowel sign ū',3,10,'ऊ'],['◌े','e','vowel sign e',27,10,'ए'],['◌ो','o','vowel sign o',10,14,'ओ'],['◌ं','ṃ','anusvāra',12,13,'अनुस्वार'],['◌ः','ḥ','visarga',27,18,'विसर्ग'],['◌्','virāma','virāma, removes the inherent a',11,16,'विराम'],['◌ा','ā','vowel sign ā',20,10,'आ'],['इ','i','vowel i',5,20,'इ'],['ऋ','ṛ','vowel ṛ',26,5,'ऋ'],['◌ै','ai','vowel sign ai',13,7,'ऐ'],['◌ँ','m̐','candrabindu',9,20,'चन्द्रबिन्दु'],['◌ि','i','vowel sign i',9,13,'इ']];
 const INFO={};CH.forEach(([g,t,m,,,s])=>INFO[g]={t,m,s,grp:g[0]==='◌'?'m':'v'});
@@ -234,6 +237,7 @@ ROOMCH.forEach(([g,t,m,x,y])=>E.push({g,n:1,x,y,k:'ch',t,m}));
 E.push({g:'द्वारम्',n:3,x:38,y:12,k:'dr',t:'dvāram',m:'door',id:'d1',need:['क','ग'],full:'द्वारम्'});
 E.push({g:'स्वरचिह्नानि',n:5,x:50,y:1,k:'sg',t:'svaracihnāni',m:'vowel signs, in the order of the vowels'},{g:'सेतुः',n:2,x:50,y:7,k:'sg',t:'setuḥ',m:'bridge: decipher each stone to step on it'});
 STONES.forEach(([g,x,y])=>E.push({g,n:1,x,y,k:'st',id:'s'+x+'_'+y,t:INFO[g].t,m:'stepping stone'}));
+E.push({g:'मन्दिरम्',n:3,x:50,y:19,k:'sg',t:'mandiram',m:'temple'},{g:'नरः',n:2,x:52,y:21,k:'np',t:'naraḥ',m:'man',d:0.3},{g:'देवः',n:2,x:57,y:21,k:'np',t:'devaḥ',m:'god',d:1.4},{g:'देवी',n:2,x:62,y:21,k:'np',t:'devī',m:'goddess',d:2.2},{g:'योगी',n:2,x:54,y:23,k:'np',t:'yogī',m:'yogi',d:0.8},{g:'मित्रम्',n:3,x:60,y:23,k:'np',t:'mitram',m:'friend',d:1.9});
 E.push({g:'रत्नम्',n:2,x:53,y:17,k:'it',t:'ratnam',m:'jewel',cls:'jewel'},{g:'मुकुटम्',n:3,x:65,y:17,k:'it',t:'mukuṭam',m:'crown',cls:'gold'});
 E.push({g:'स्वराः',n:3,x:30,y:1,k:'sg',t:'svarāḥ',m:'vowels, in order'},{g:'व्यञ्जनानि',n:4,x:30,y:7,k:'sg',t:'vyañjanāni',m:'consonants, the ka row'},{g:'मात्राः',n:3,x:30,y:13,k:'sg',t:'mātrāḥ',m:'vowel signs on ka, kha, ga, gha, ṅa'});
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
@@ -285,7 +289,8 @@ if(!b||walkE(b)){P.x=x;P.y=y;
 if(b&&(!was||was.k!==b.k)){if(b.k==='tr'){learned.add('vanam');say('You step into the वनम्'+sub('vanam — forest'));}else if(b.k==='wa')say('You wade through '+word(b));}
 return true;}
 sel=b;
-if(b.k==='dr'){say(word(b)+' is locked · needs '+b.need.join(' and '));}
+if(b.k==='np'){say(word(b)+(active(b.g)?' greets you · नमस्ते':''));}
+else if(b.k==='dr'){say(word(b)+' is locked · needs '+b.need.join(' and '));}
 else if(b.k==='hz'){hp--;say(word(b)+' burns you · −1 HP');}
 else if(b.k==='ex'){say(word(b)+' · you descend. Level complete.');}
 else{b.hp-=atk;if(b.hp<=0){E=E.filter(e=>e!==b);say('You defeat '+word(b));sel=null;}else{hp--;say('You strike '+word(b)+' · it bites back, −1 HP');}}
