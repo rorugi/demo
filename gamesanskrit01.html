@@ -61,7 +61,7 @@ select{background:var(--surface-2);padding:6px 8px}
 .ch{background:#D85A30;color:#000;font-weight:500}
 .ch.ok{color:#fff}
 .wa{color:var(--water-fg);background:var(--water-bg)}
-.sg{color:var(--text-secondary);background:var(--surface-2);border:0.5px dashed var(--border-stronger)}
+.sg{color:var(--text-secondary);background:var(--surface-2);border:0.5px dashed var(--border-stronger);opacity:.5}
 .wa span{animation:flow 3.2s ease-in-out infinite}
 .hz span{animation:jit .35s steps(1) infinite}
 .en span{animation:live 2.6s ease-in-out infinite}
@@ -277,12 +277,12 @@ const inf=document.getElementById('info');
 if(quiz){inf.innerHTML='<div style="margin-bottom:8px">Transliterate <span style="font-size:18px;font-weight:500">'+quiz.g+'</span>'+sub('level '+kn(quiz.g).level)+'</div><div class="row">'+quiz.choices.map(c=>'<button class="qb'+(quiz.wrong.has(c)?' no':'')+'" data-c="'+c+'">'+c+'</button>').join('')+'</div>';}
 else if(selG&&INFO[selG]&&sel&&sel.k==='ch'&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(selG&&INFO[selG]){const k=kn(selG),a=active(selG),onMap=sel&&sel.k==='ch'&&sel.g===selG&&E.includes(sel);
-inf.innerHTML=act(onMap&&a?'pick':'')+'<span style="font-weight:500">'+selG+' = '+INFO[selG].t+'</span>'+sub('· '+INFO[selG].m+' · level '+k.level+' · '+(a?'review in '+fmt(k.due-now()):'forgotten, tap to review'));}
+inf.innerHTML=act(onMap&&a?(near(sel)?'pick':'near'):'')+'<span style="font-weight:500">'+selG+' = '+INFO[selG].t+'</span>'+sub('· '+INFO[selG].m+' · level '+k.level+' · '+(a?'review in '+fmt(k.due-now()):'forgotten, tap to review'));}
 else if(selG&&IINFO[selG]){inf.innerHTML='<span style="font-weight:500">'+selG+'</span>'+sub('· '+IINFO[selG].t+' — '+IINFO[selG].m+' · in your bag');}
 else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(sel&&(sel===WALL||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
 const hint={tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',sg:' · a sign'}[sel.k]||'';
-const a={it:'pick',en:'go',hz:'go',ex:'go'}[sel.k]||'';
+const a={it:near(sel)?'pick':'near',en:'go',hz:'go',ex:'go'}[sel.k]||'';
 inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+' · '+sel.n+' field'+(sel.n>1?'s':'')+hint+(u?' · standing on '+u.full:''));}
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
 document.getElementById('log').innerHTML=logs.map((l,i)=>'<div style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</div>').join('');
@@ -296,15 +296,15 @@ const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keep
 sel=e;selG=e.k==='ch'?e.g:null;if(!keepQuiz)quiz=null;
 if(isNew(e)){if(near(e)&&!keepQuiz)identify(e);}
 else{speakIfKnown(e);if(e.k==='ch'&&!active(e.g)&&!keepQuiz)openQuiz(e.g);}
-if(e.k==='tr'||e.k==='wa'){walkTo(cellOf(c,e,ev),e.y);return}
+if(e.k==='tr'||e.k==='wa'||e.k==='sg'){walkTo(cellOf(c,e,ev),e.y);return}
 draw();return}
 const f=ev.target.closest('[data-x]');if(f){selG=null;quiz=null;walkTo(+f.dataset.x,+f.dataset.y);}});
 document.getElementById('info').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(b&&quiz){answer(b.dataset.c);return}
 const a=ev.target.closest('[data-act]');if(!a||!sel||!E.includes(sel))return;
 if(a.dataset.act==='go'){approach(sel);return}
-if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
+if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;if(isNew(e))identify(e);});return}
 if(a.dataset.act==='id'){identify(sel);draw();return}
-const tile=document.querySelector('#map [data-id="'+E.indexOf(sel)+'"]');pickup(sel,tile||a);});
+if(!near(sel)){draw();return}const tile=document.querySelector('#map [data-id="'+E.indexOf(sel)+'"]');pickup(sel,tile||a);});
 document.getElementById('bag').addEventListener('click',ev=>{const c=ev.target.closest('[data-g]');if(!c)return;const g=c.dataset.g;sel=null;selG=g;
 if(INFO[g]){if(active(g))speak(INFO[g].s);}else speak(g);if(INFO[g]&&!active(g))openQuiz(g);else quiz=null;draw();});
 document.querySelectorAll('.tw').forEach(b=>b.onclick=()=>{warp+=+b.dataset.t;save();say('Time passes · +'+fmt(+b.dataset.t));draw();});
