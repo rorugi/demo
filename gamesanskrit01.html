@@ -63,6 +63,8 @@ select{background:var(--surface-2);padding:6px 8px}
 .wa{color:var(--water-fg);background:var(--water-bg)}
 .dr{background:#E24B4A;color:#fff;font-weight:500}
 .dr.open{opacity:.45}
+.ent.unk{color:#000}
+@media (prefers-color-scheme:dark){.ent.unk{color:#000;background:#D3D1C7}}
 .sg{color:var(--text-secondary);background:var(--surface-2);border:0.5px dashed var(--border-stronger);opacity:.5}
 .wa span{animation:flow 3.2s ease-in-out infinite}
 .hz span{animation:jit .35s steps(1) infinite}
@@ -134,8 +136,9 @@ const M=["##############################",
 "#.......#######......#####...#",
 "#............................#",
 "##############################"].map(r=>(r+'#'.repeat(20)).split(''));
+for(let i=0;i<4;i++)M.push('#'.repeat(50).split(''));
 (function(){const room=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]='.';};
-room(30,48,1,5);room(30,48,7,11);room(30,48,13,20);
+room(30,48,1,5);room(30,48,7,11);room(30,48,13,24);
 for(const [x,y] of [[29,3],[29,9],[39,6],[38,12],[39,12],[40,12]])M[y][x]='+';})();
 const W=M[0].length,H=M.length,VW=15,VH=13,SHOW_MINI=false;
 const INT=[300000,3600000,86400000,432000000,2592000000,7776000000];
@@ -151,8 +154,8 @@ const MARK=[['','a'],['ा','ā'],['ि','i'],['ी','ī'],['ु','u'],['ू','�
 const ROOMCH=[];
 VOW.forEach(([g,t],i)=>ROOMCH.push([g,t,'vowel '+t,32+2*(i%7),i<7?2:4,g,'v']));
 CONS.forEach(([g,c],i)=>ROOMCH.push([g,c+'a','consonant '+c+'a',33+3*i,9,g,'c']));
-CONS.forEach(([c,ct],r)=>MARK.forEach(([m,v],i)=>{if(i)ROOMCH.push([c+m,ct+v,c+' + vowel sign '+v,34+i,15+r,c+m,'k',ct,v]);}));
-CONS.forEach(([c,ct],r)=>ROOMCH.push([c,ct+'a',c+' with inherent a',34,15+r,c,'c',ct,'a']));
+CONS.forEach(([c,ct],r)=>MARK.forEach(([m,v],i)=>{if(i)ROOMCH.push([c+m,ct+v,c+' + vowel sign '+v,34+i,15+2*r,c+m,'k',ct,v]);}));
+CONS.forEach(([c,ct],r)=>ROOMCH.push([c,ct+'a',c+' with inherent a',34,15+2*r,c,'c',ct,'a']));
 ROOMCH.forEach(([g,t,m,,,s,grp,ct,v])=>{if(!INFO[g])INFO[g]={t,m,s,grp,ct,v};});
 const IINFO={};
 const ZONES=[[1,7,13,20],[15,20,13,20],[19,28,1,5],[1,5,7,11]];
@@ -274,7 +277,7 @@ if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
 E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
-h+='<div class="c ent '+e.k+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
+h+='<div class="c ent '+e.k+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k!=='ch'&&isNew(e)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"><span style="animation-delay:'+dl.toFixed(2)+'s">'+e.g+'</span></div>';});
 h+='<div class="c ent pl'+(sel===P?' sel':'')+'" data-p="1" style="grid-column:'+(P.x-cx+1)+';grid-row:'+(P.y-cy+1)+'">अ</div>';
 document.getElementById('map').innerHTML=h;
 document.getElementById('hp').textContent='♥ '+hp;document.getElementById('sc').textContent=learned.size;
@@ -290,7 +293,7 @@ else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(sel&&(sel===WALL||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
 const hint=sel.k==='dr'?(doors[sel.id]?' · open':' · locked · needs '+needTxt(sel)):({tr:' · walkable, can’t be picked up',wa:' · walkable, can’t be picked up',sg:' · a sign'}[sel.k]||'');
 const a=sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'):({it:near(sel)?'pick':'near',en:'go',hz:'go',ex:'go'}[sel.k]||'');
-inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+' · '+sel.n+' field'+(sel.n>1?'s':'')+hint+(u?' · standing on '+u.full:''));}
+inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+hint+(u?' · standing on '+u.full:''));}
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
 document.getElementById('log').innerHTML=logs.map((l,i)=>'<div style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</div>').join('');
 if(SHOW_MINI)mini(cx,cy);save();}
@@ -300,6 +303,8 @@ document.getElementById('map').addEventListener('click',ev=>{
 if(ev.target.closest('[data-p]')){sel=P;selG=null;quiz=null;speak('अहम्');draw();return}
 if(ev.target.closest('[data-w]')){sel=WALL;selG=null;quiz=null;speakIfKnown(WALL);learned.add(WALL.t);draw();return}
 const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keepQuiz=quiz&&e.k==='ch'&&quiz.g===e.g;
+const walkOn=e.k==='tr'||e.k==='wa'||e.k==='sg'||(e.k==='dr'&&doors[e.id]);
+if(sel===e&&!walkOn&&!near(e)){walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;if(isNew(e))identify(e);else if(e.k==='ch'&&!active(e.g))openQuiz(e.g);});return}
 sel=e;selG=e.k==='ch'?e.g:null;if(!keepQuiz)quiz=null;
 if(isNew(e)){if(near(e)&&!keepQuiz)identify(e);}
 else{speakIfKnown(e);if(e.k==='ch'&&!active(e.g)&&!keepQuiz)openQuiz(e.g);}
