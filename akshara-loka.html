@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Akshara Loka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Layout: a level map (five places) and one shared level screen — prompt bar, word-built scene, bottom-sheet builder.
+   Single dark look on purpose: glyphs glowing on a night ground. */
+:root{
+  --bg:#0d1110; --panel:#151b19; --panel-2:#1c2421; --line:#2a3430; --fg:#e7ece8; --muted:#8e9a94;
+  --dormant:#4b5651; --accent:#f0a93a; --ok:#7fc77a; --bad:#e2685a;
+  --sky:#18242c; --ground:#221d15;
+  --f-deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari","Kohinoor Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:18px 40px;display:grid;gap:14px}
+.wrap[hidden]{display:none}
+.logo{font-family:var(--f-deva);font-size:clamp(30px,8vw,40px);line-height:1.2;color:var(--accent)}
+.logo small{font-family:var(--f-ui);font-size:13px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-left:8px}
+.lede{margin:0;color:var(--muted);font-size:15px;max-width:60ch}
+.hide-iast .ia,.hide-iast .iast{display:none!important}
+
+/* Map */
+.path{display:grid;gap:12px;position:relative}
+.place{appearance:none;font:inherit;color:inherit;text-align:left;position:relative;display:grid;grid-template-columns:84px 1fr;gap:14px;align-items:center;
+  padding:12px;border-radius:14px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
+.place:hover:not(:disabled){border-color:var(--c)}
+.place:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.place:disabled{cursor:default;opacity:.6}
+.place .tex{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:var(--bg);font-family:var(--f-deva);
+  font-size:15px;line-height:1.1;color:var(--c);padding:2px;word-spacing:.1em}
+.place:disabled .tex{color:var(--dormant)}
+.place .num{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.place .name{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.place .dv{font-family:var(--f-deva);font-size:24px;color:var(--c);line-height:1.2}
+.place:disabled .dv{color:var(--muted)}
+.place .en{font-weight:600}
+.place .sub{font-size:14px;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--c);border-radius:3px}
+.state{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.lock{position:absolute;right:12px;top:12px;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2}
+
+.savebox{display:grid;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.savebox[hidden]{display:none}
+.savebox label{font-size:13px;color:var(--muted)}
+.savebox textarea{width:100%;resize:vertical;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;
+  font:13px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-all}
+.savebox textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.admin{margin:18px 0 0;text-align:center}
+.link{appearance:none;background:none;border:0;padding:6px 10px;font:inherit;font-size:13px;color:var(--muted);text-decoration:underline;cursor:pointer}
+.link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.voicebox{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:14px;color:var(--muted)}
+.voicebox select{flex:1;min-width:0;max-width:100%;font:inherit;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.voicebox select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.voicebox .count{flex-basis:100%}
+/* Level screen */
+.lvhead{display:flex;align-items:center;gap:10px}
+.lvhead .t{flex:1;min-width:0;display:grid}
+.lvhead .dv{font-family:var(--f-deva);font-size:26px;line-height:1.2;color:var(--c)}
+.lvhead .en{font-size:13px;color:var(--muted);letter-spacing:.06em}
+.prompt{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:12px;min-height:64px;flex-wrap:wrap}
+.prompt[hidden]{display:none}
+.prompt .q{flex:1;min-width:0;display:grid}
+.prompt .lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.prompt .big{font-size:24px;font-weight:600;color:var(--accent);font-style:italic;line-height:1.2}
+.prompt .msg{font-size:14px}
+.choices{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.choice{appearance:none;font:inherit;flex:1;min-width:64px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);
+  font-size:18px;font-style:italic;cursor:pointer}
+.choice:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.choice.wrong{border-color:var(--bad);animation:shake .35s}
+
+.scene{position:relative;width:100%;aspect-ratio:3/4;border-radius:14px;overflow:hidden;container-type:inline-size;background:var(--bg);border:1px solid var(--line)}
+.stex,.obj{position:absolute;overflow:hidden;font-family:var(--f-deva);line-height:1.12;word-spacing:.15em;user-select:none;-webkit-user-select:none}
+.stex{inset:0;font-size:3.3cqw;pointer-events:none}
+.stex.sky{bottom:60%;color:var(--sky)}
+.stex.ground{top:40%;color:var(--ground)}
+.stex.full{color:var(--ground)}
+.obj{appearance:none;border:0;padding:0;margin:0;background:none;text-align:left;cursor:pointer;color:var(--dormant);
+  font-size:3.6cqw;transition:color .9s ease, filter .2s, opacity .9s}
+.obj.big{font-size:6.4cqw;line-height:1.05;text-align:center}
+.obj.mid{font-size:4.6cqw;text-align:center}
+.obj:hover{filter:brightness(1.5)}
+.obj:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.obj.half{color:color-mix(in srgb,var(--c) 45%,var(--dormant))}
+.obj.awake{color:var(--c)}
+.obj.sel{color:#fff6dc!important;animation:glow .9s ease-in-out infinite alternate;z-index:2}
+@keyframes glow{from{opacity:1}to{opacity:.15}}
+.hero{position:absolute;transform:translate(-50%,-92%);font-family:var(--f-deva);font-size:5.6cqw;line-height:1;white-space:nowrap;
+  color:#fff;text-shadow:0 0 6px var(--accent),0 0 14px var(--accent);pointer-events:none;z-index:4}
+.hero::after{content:"";position:absolute;left:15%;right:15%;bottom:-.25em;height:.3em;border-radius:50%;background:rgba(0,0,0,.55);z-index:-1}
+.hero.walk{animation:bob .28s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translate(-50%,-104%)}}
+.obj.just{animation:bloom 1.1s ease-out}
+.obj.wrong{animation:shake .35s}
+@keyframes pulse{50%{filter:brightness(2.4)}}
+@keyframes bloom{0%{filter:brightness(3)}100%{filter:brightness(1)}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.circle{border-radius:50%} .pill{border-radius:999px} .ellipse{border-radius:50%}
+.tri{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.house{clip-path:polygon(50% 0,100% 34%,100% 100%,0 100%,0 34%)}
+.flame{clip-path:polygon(50% 0,82% 38%,100% 100%,0 100%,18% 38%)}
+.river{clip-path:polygon(44% 0,60% 0,28% 100%,4% 100%)}
+.bird{clip-path:polygon(0 0,50% 55%,100% 0,100% 45%,50% 100%,0 45%)}
+.obj.door{font-size:2.4cqw;line-height:1.05;text-align:center;background:rgba(240,169,58,.16);border-radius:45% 45% 3px 3px;
+  box-shadow:inset 0 0 0 2px var(--c);z-index:2}
+.obj.cell{display:grid;place-items:center;align-content:center;gap:0;text-align:center;font-size:7.5cqw;line-height:1.1;border-radius:10px;
+  background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px var(--line)}
+.obj.cell.awake{box-shadow:inset 0 0 0 2px var(--c);background:color-mix(in srgb,var(--c) 10%,transparent)}
+.obj.cell small{font-family:var(--f-ui);font-size:3.4cqw;color:var(--muted);font-style:italic}
+.obj.cell .q{font-family:var(--f-ui);font-size:5cqw;color:var(--muted)}
+.gcell{position:absolute;display:grid;place-items:center;align-content:center;font-family:var(--f-deva);font-size:6cqw;line-height:1;
+  pointer-events:none;color:var(--dormant);transition:color .6s;user-select:none;-webkit-user-select:none}
+.gcell.grass{color:#20382a}
+.gcell.road{color:#3d3428}
+.gcell.house{color:#59635e}
+.gcell.house.lit{color:var(--c)}
+.gcell.door{color:#ff4f45;text-shadow:0 0 8px #ff4f45}
+.gcell.wall{color:color-mix(in srgb,var(--c) 40%,#1a201e)}
+.gcell.floor{color:transparent}
+.gcell.tile{color:var(--muted);font-size:5.4cqw;border:0;background:none;border-radius:0;height:auto;padding:0;cursor:default}
+.gcell.tile.lit{color:var(--c)}
+.gcell.tile .dot{display:none;font-size:5cqw;color:var(--muted)}
+.hide-iast .gcell.tile .dot{display:block}
+.flyer{position:fixed;z-index:20;pointer-events:none;font-family:var(--f-deva);font-size:30px;line-height:1;color:#ff9a2e;
+  text-shadow:0 0 10px rgba(255,154,46,.9);transform:translate(-50%,-50%)}
+.gcell.tile .q{font-family:var(--f-ui);font-size:4.4cqw}
+.gcell.tile small{font-family:var(--f-ui);font-size:2.6cqw;font-style:italic;color:var(--muted)}
+.gcell.exit{color:#ff4f45;text-shadow:0 0 8px #ff4f45}
+.gcell.plant{color:#9aa6a0}
+.gcell.plant.half{color:color-mix(in srgb,var(--c) 45%,#59635e)}
+.gcell.plant.lit{color:var(--c)}
+.gcell.sel{color:#fff6dc!important;animation:glow .9s ease-in-out infinite alternate}
+.gcell.gate{color:#59635e}
+.gcell.gate.ready{color:#ff4f45;text-shadow:0 0 8px #ff4f45}
+.gcell.tile.pick{color:#ff9a2e!important;text-shadow:0 0 8px rgba(255,154,46,.75)}
+.gcell.house.pick{color:#ff9a2e!important;text-shadow:0 0 8px rgba(255,154,46,.75)}
+.gcell.gate.open{color:#3c5a40;text-shadow:none}
+.prompt.invbar{min-height:112px;align-content:flex-start}
+.choice.inv{font-style:normal;flex:0 0 auto;min-width:48px}
+.choice.inv .dv{font-family:var(--f-deva);font-size:24px}
+.gcell.seed{color:#56615c}
+.gcell.water{color:#3f8fc9;opacity:.75;animation:ripple 5.5s ease-in-out var(--d,0s) infinite}
+@keyframes ripple{0%{transform:rotate(-14deg) translateY(0)}50%{transform:rotate(14deg) translateY(-6%)}100%{transform:rotate(-14deg) translateY(0)}}
+.ptitle{position:absolute;left:0;right:0;top:0;height:calc(100%/16);display:flex;align-items:baseline;justify-content:center;gap:10px;pointer-events:none;z-index:3}
+.ptitle .dv{font-family:var(--f-deva);font-size:7.5cqw;line-height:1.1;color:#6cc3e0;letter-spacing:.35em}
+.ptitle .sub{font-size:3.4cqw;color:var(--muted);font-style:italic}
+.gcell.twin{color:#7d8a85;font-size:6.6cqw}
+.gcell.twin.lit{color:var(--c);text-shadow:0 0 8px rgba(108,195,224,.6)}
+.gcell.portal{color:#ff4f45;text-shadow:0 0 8px #ff4f45;font-size:5.4cqw}
+.gcell.sign{color:#9aa6a0;font-size:6.4cqw}
+.gcell.sign.lit{color:var(--c)}
+.obj.portalobj{color:#ff4f45!important;text-shadow:0 0 8px #ff4f45;font-size:6cqw;text-align:center;z-index:3}
+.gcell.portal.locked{color:#59635e;text-shadow:none}
+.gcell.pickup{color:#ff9a2e;text-shadow:0 0 8px rgba(255,154,46,.75);font-size:7cqw}
+.guide{display:grid;gap:10px}
+.guide p{margin:0;display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center;color:var(--muted);font-size:15px}
+.guide span{font-family:var(--f-deva);font-size:24px;text-align:center}
+.hero-ex{color:#fff;text-shadow:0 0 6px var(--accent),0 0 14px var(--accent)}
+.pick-ex{color:#ff9a2e;text-shadow:0 0 8px rgba(255,154,46,.75)}
+.red-ex{color:#ff4f45;text-shadow:0 0 8px #ff4f45}
+.grey-ex{color:#59635e}
+.gcell.just{animation:bloom 1.1s ease-out}
+.gcell.wrong{animation:shake .35s}
+.leaf{border-radius:50% 50% 50% 50% / 60% 60% 40% 40%}
+
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.count b{color:var(--fg);font-weight:600}
+.spacer{flex:1}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer}
+.switch input{appearance:none;width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;margin:0;cursor:pointer;transition:background .2s;flex:none}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--fg);transition:transform .2s}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(16px);background:#1a1206}
+.switch input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{appearance:none;font:inherit;font-size:14px;font-weight:500;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);
+  border-radius:999px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px}
+.btn:hover{border-color:var(--muted)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
+.btn svg,.icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.icon{appearance:none;flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);display:grid;place-items:center;cursor:pointer}
+.icon:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+h2{margin:6px 0 0;font-size:15px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.words{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;font:inherit;display:inline-grid;grid-template-columns:auto auto;gap:0 8px;align-items:baseline;text-align:left;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;color:var(--fg);cursor:pointer}
+.chip .dv{font-family:var(--f-deva);font-size:20px;color:var(--c)}
+.chip .me{font-size:13px;color:var(--muted)}
+.chip .ia{grid-column:1/-1;font-size:12px;color:var(--muted);font-style:italic}
+.chip.empty{color:var(--muted);font-size:14px;cursor:default}
+.banner{background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.banner .dv{font-family:var(--f-deva);font-size:24px;color:var(--accent)}
+.banner p{margin:0;color:var(--muted)}
+
+/* Bottom sheet */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;pointer-events:none}
+.sheet[hidden]{display:none!important}
+.sheet-in{pointer-events:auto;width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;
+  padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(0,0,0,.55);max-height:74vh;overflow-y:auto;display:grid;gap:12px}
+.grip{width:40px;height:4px;border-radius:2px;background:var(--line);justify-self:center}
+.top{display:flex;align-items:center;gap:10px}
+.target{display:grid;flex:1;min-width:0}
+.target .lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.target .meaning{font-size:20px;font-weight:600}
+.target .iast{font-style:italic;color:var(--accent);font-size:15px}
+.dots{display:flex;gap:5px;justify-content:center}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dots i.ok{background:var(--ok)} .dots i.bad{background:var(--bad)} .dots i.cur{background:var(--accent)}
+
+.slots{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.slot{min-width:64px;height:76px;padding:0 8px;border-radius:12px;border:2px dashed var(--line);display:grid;place-items:center;align-content:center}
+.slot .g{font-family:var(--f-deva);font-size:36px;line-height:1.1;min-height:40px}
+.slot .iast{font-size:12px;color:var(--muted);font-style:italic}
+.slot.cur{border-color:var(--accent);border-style:solid}
+.slot.done{border-color:var(--ok);border-style:solid}
+.slot.done .g{color:var(--ok)}
+.slot.shake{animation:shake .35s}
+.msg{margin:0;min-height:1.5em;font-size:14px;color:var(--muted);text-align:center}
+.msg.bad{color:var(--bad)} .msg.good{color:var(--ok)}
+.prompt .msg{text-align:left;width:100%}
+
+.tray{display:grid;gap:10px}
+.row{display:grid;gap:6px}
+.row .lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.tiles.large{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))}
+.tile{appearance:none;font:inherit;height:54px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer;
+  display:grid;place-items:center;align-content:center;padding:0;touch-action:manipulation}
+.tiles.large .tile{height:68px}
+.tile .g{font-family:var(--f-deva);font-size:26px;line-height:1.05}
+.tiles.large .tile .g{font-size:34px}
+.tile .iast{font-size:11px;color:var(--muted)}
+.tile:active{transform:scale(.95)}
+.tile:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tile.hint{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;animation:pulse 1s ease-in-out 2}
+.tile.wrong{border-color:var(--bad);animation:shake .35s}
+.tile.right{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok) inset}
+.actions{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+
+.win{display:grid;gap:10px;text-align:center}
+.win .big{font-family:var(--f-deva);font-size:52px;line-height:1.15;color:var(--c)}
+.win .iast{font-style:italic;color:var(--accent)}
+.parts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.part{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-family:var(--f-deva);font-size:18px}
+.part span{color:var(--muted);font-family:var(--f-ui);font-size:13px}
+.note{margin:0;color:var(--muted);font-size:14px;max-width:46ch;justify-self:center}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- MAP -->
+<main class="wrap" id="mapView">
+  <header>
+    <div class="logo">अक्षरलोकः<small>akṣara-loka</small></div>
+    <p class="lede">A world made of Sanskrit letters. Start in the garden with your first letters and work your way to words, sandhi and sentences.</p>
+  </header>
+  <div class="path" id="path"></div>
+  <div class="bar">
+    <label class="switch" for="tIastMap"><input id="tIastMap" type="checkbox" checked><span>Transcription</span></label>
+    <label class="switch" for="tUnlock"><input id="tUnlock" type="checkbox"><span>I know the script: unlock all</span></label>
+  </div>
+  <div class="voicebox">
+    <label for="voiceSel">Voice</label>
+    <select id="voiceSel"><option value="">None</option></select>
+    <button class="btn" id="voiceTest" type="button" disabled>Test</button>
+    <span class="count" id="voiceNote"></span>
+  </div>
+  <div class="bar">
+    <button class="btn" id="saveTxt" type="button">Save as text</button>
+    <button class="btn" id="loadTxt" type="button">Load from text</button>
+    <span class="spacer"></span>
+    <button class="btn" id="resetAll" type="button">Reset all progress</button>
+  </div>
+  <p class="admin"><button class="link" type="button" data-admin>Admin</button></p>
+  <div class="savebox" id="saveBox" hidden>
+    <label for="saveCode" id="saveLbl">Your save code</label>
+    <textarea id="saveCode" rows="4" spellcheck="false"></textarea>
+    <div class="bar">
+      <button class="btn primary" id="saveAct" type="button">Copy</button>
+      <button class="btn" id="saveClose" type="button">Close</button>
+      <span class="count" id="saveMsg"></span>
+    </div>
+  </div>
+</main>
+
+<!-- LEVEL -->
+<main class="wrap" id="levelView" hidden>
+  <div class="lvhead">
+    <button class="icon" id="back" type="button" aria-label="Back to the map"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="t"><span class="dv" id="lvDv"></span><span class="en" id="lvEn"></span></div>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="prompt" id="prompt" hidden></div>
+  <section class="scene" id="scene" aria-label="Scene made of words"></section>
+  <div class="bar">
+    <span class="lede" id="howto" style="font-size:14px"></span>
+    <span class="spacer"></span>
+    <label class="switch" for="tIast"><input id="tIast" type="checkbox" checked><span>Transcription</span></label>
+  </div>
+  <div id="banner"></div>
+  <div id="below"></div>
+  <p class="admin"><button class="link" type="button" data-admin>Admin</button></p>
+</main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="false" aria-label="Task">
+    <div class="grip"></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- Script data ---------- */
+const CONS = "कखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह";
+const VOWELS = "अआइईउऊऋएऐओऔ";
+const MATRA = "ािीुूृेैोौ";
+const MARKS = "्ंः";
+const IAST = {क:"k",ख:"kh",ग:"g",घ:"gh",ङ:"ṅ",च:"c",छ:"ch",ज:"j",झ:"jh",ञ:"ñ",ट:"ṭ",ठ:"ṭh",ड:"ḍ",ढ:"ḍh",ण:"ṇ",त:"t",थ:"th",द:"d",ध:"dh",न:"n",
+  प:"p",फ:"ph",ब:"b",भ:"bh",म:"m",य:"y",र:"r",ल:"l",व:"v",श:"ś",ष:"ṣ",स:"s",ह:"h",
+  अ:"a",आ:"ā",इ:"i",ई:"ī",उ:"u",ऊ:"ū",ऋ:"ṛ",ए:"e",ऐ:"ai",ओ:"o",औ:"au",
+  "ा":"ā","ि":"i","ी":"ī","ु":"u","ू":"ū","ृ":"ṛ","े":"e","ै":"ai","ो":"o","ौ":"au","्":"no a","ं":"ṃ","ः":"ḥ"};
+const isCons=c=>CONS.includes(c), isMatra=c=>MATRA.includes(c), isVowel=c=>VOWELS.includes(c);
+const MATRA_OF={आ:"ा",इ:"ि",ई:"ी",उ:"ु",ऊ:"ू",ऋ:"ृ",ए:"े",ऐ:"ै",ओ:"ो",औ:"ौ"};
+// Sound of a single letter as a learner says it: consonants carry the inherent a
+const sound=c=>isCons(c)?IAST[c]+"a":IAST[c];
+function translit(s){
+  let out="",pendingA=false;
+  for(const ch of s){
+    if(isCons(ch)){ if(pendingA) out+="a"; out+=IAST[ch]; pendingA=true; }
+    else if(ch==="्") pendingA=false;
+    else if(isMatra(ch)){ out+=IAST[ch]; pendingA=false; }
+    else if(isVowel(ch)) out+=IAST[ch];
+    else if(ch==="ं"||ch==="ः"){ if(pendingA){out+="a";pendingA=false;} out+=IAST[ch]; }
+  }
+  return pendingA?out+"a":out;
+}
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const T=(dev,lat)=> S.iast ? `${dev} [${lat??translit(dev)}]` : dev;
+const glyph=c=>(isMatra(c)||MARKS.includes(c))?"◌"+c:c;
+const rep=(w,n)=>Array(n).fill(w).join(" ");
+
+/* ---------- Level content ---------- */
+const PALETTE=["#f4b740","#7fc77a","#5aa7d8","#f08fd0","#e58b5a","#a9bccd","#c9a7f0","#7fd6c8","#ece5c8","#e2685a","#9ad06a","#f0703c","#d99a62"];
+// Level 1: first letters as plants
+const L1 = "अआइईउऊकगतनमरस".split("");
+const L1_SHAPES = L1.map((c,i)=>{
+  if(i<6) return {id:c,x:3+i*16,y:8,w:14,h:10.5,cls:"circle big"};
+  if(i<10) return {id:c,x:4+(i-6)*24,y:34,w:20,h:15,cls:"leaf big"};
+  return {id:c,x:8+(i-10)*30,y:62,w:24,h:24,cls:"ellipse big"};
+});
+// Level 2: houses of the town, one per letter group
+const L2 = [
+  {id:"v", name:"Vowels",   letters:"अआइईउऊऋएऐओऔ"},
+  {id:"k", name:"k-row",    letters:"कखगघङ"},
+  {id:"c", name:"c-row",    letters:"चछजझञ"},
+  {id:"tt",name:"ṭ-row",    letters:"टठडढण"},
+  {id:"t", name:"t-row",    letters:"तथदधन"},
+  {id:"p", name:"p-row",    letters:"पफबभम"},
+  {id:"y", name:"Semivowels",letters:"यरलव"},
+  {id:"s", name:"Sibilants",letters:"शषसह"},
+].map((h,i)=>({...h, c:PALETTE[i], x:i%2?53:5, y:3+Math.floor(i/2)*24.5, w:42, h:21}));
+// Level 3: village words
+const WORDS = [
+  {id:"sun",    w:"सूर्यः",  t:"sūryaḥ",  m:"sun",      parts:["सू","र्यः"],     c:"#f4b740", note:"र् before another consonant becomes the small hook on top: र्य (reph)."},
+  {id:"moon",   w:"चन्द्रः", t:"candraḥ", m:"moon",     parts:["च","न्द्रः"],    c:"#ece5c8", note:"Three consonants stack in न्द्र: न् + द् + र. The final र turns into a small slash."},
+  {id:"cloud",  w:"मेघः",   t:"meghaḥ",  m:"cloud",    parts:["मे","घः"],      c:"#a9bccd", note:"The sign े sits on top of the consonant: मे = me."},
+  {id:"bird",   w:"खगः",    t:"khagaḥ",  m:"bird",     parts:["ख","गः"],       c:"#e58bb0", note:"ख (kha) is the breathy k. Literally “sky-goer”."},
+  {id:"mountain",w:"गिरिः", t:"giriḥ",   m:"mountain", parts:["गि","रिः"],     c:"#8fa486", note:"ि is written before the consonant but spoken after it: गि = gi."},
+  {id:"river",  w:"नदी",    t:"nadī",    m:"river",    parts:["न","दी"],       c:"#5aa7d8", note:"न alone already carries the vowel a. ी adds a long ī."},
+  {id:"tree",   w:"वृक्षः",  t:"vṛkṣaḥ",  m:"tree",     parts:["वृ","क्षः"],     c:"#6fbf63", note:"क् + ष fuse into the special form क्ष. ृ is the vowel ṛ."},
+  {id:"house",  w:"गृहम्",  t:"gṛham",   m:"house",    parts:["गृ","ह","म्"],   c:"#d99a62", note:"The virama ् removes the built-in a: म् = m."},
+  {id:"fire",   w:"अग्निः", t:"agniḥ",   m:"fire",     parts:["अ","ग्निः"],    c:"#f0703c", note:"A word can start with a full vowel letter: अ = a."},
+  {id:"cow",    w:"गौः",    t:"gauḥ",    m:"cow",      parts:["गौः"],         c:"#e9dcc4", note:"One syllable: consonant ग, vowel sign ौ (au), visarga ः."},
+  {id:"flower", w:"पुष्पम्", t:"puṣpam",  m:"flower",   parts:["पु","ष्प","म्"],  c:"#f08fd0", note:"ु hangs below: पु = pu. ष् + प join as ष्प."},
+  {id:"well",   w:"कूपः",   t:"kūpaḥ",   m:"well",     parts:["कू","पः"],      c:"#7fd6c8", note:"ू is the long ū, also hanging below: कू = kū."},
+];
+const byWord=Object.fromEntries(WORDS.map(w=>[w.id,w]));
+const L3_SHAPES = [
+  ["river",0,40,100,60,"river"],["moon",5,4,15,11,"circle"],["cloud",27,8,34,9,"pill"],["sun",75,3,20,15,"circle"],
+  ["bird",62,20,13,6,"bird"],["mountain",0,20,58,22,"tri"],["mountain",36,16,64,26,"tri"],["tree",6,42,26,18,"circle"],
+  ["tree",16,58,6,11,""],["house",62,47,32,22,"house"],["fire",52,64,9,11,"flame"],["well",2,74,15,9,"ellipse"],
+  ["cow",58,78,22,10,"pill"],["flower",38,89,20,8,"pill"],
+];
+const LEVELS = [
+  {n:0,dv:"प्रवेशः",tr:"praveśaḥ",en:"Entrance",sub:"Meet अहम्: red ways, orange letters",c:"#ff4f45",tex:"अहम् द्वारम् अ अ अ वाटिका"},
+  {n:1,dv:"वाटिका",tr:"vāṭikā",en:"Garden",sub:"First letters, planted in the order of the sound table",c:"#9ad06a",tex:"अ आ इ क ग त न म र स ई उ ऊ"},
+  {n:6,dv:"तडागः",tr:"taḍāgaḥ",en:"Twin pond",sub:"Look-alike letters: cross on twin stones",c:"#6cc3e0",tex:"भ म ब व थ य घ ध प ष ङ ड उ ज"},
+  {n:2,dv:"नगरम्",tr:"nagaram",en:"Town",sub:"All letters and the vowel signs",c:"#e9b45a",tex:"क खि गी घु ङ च छे जो झ ञ ट ठ ड"},
+  {n:7,dv:"वीथी",tr:"vīthī",en:"Street",sub:"Read the street signs: visarga, anusvāra, virāma and special forms",c:"#e58b5a",tex:"देवः हंसः गुरुः वाक् रूपम्"},
+  {n:3,dv:"ग्रामः",tr:"grāmaḥ",en:"Village",sub:"Spell words from syllables",c:"#5aa7d8",tex:"वृक्षः नदी गृहम् सूर्यः"},
+  {n:4,dv:"तीर्थम्",tr:"tīrtham",en:"River crossing",sub:"Sandhi: merge and split words",c:"#7fd6c8",tex:"देव आलयः देवालयः",soon:true},
+  {n:5,dv:"मन्दिरम्",tr:"mandiram",en:"Temple",sub:"Sentences and case endings",c:"#f08fd0",tex:"बालकः जलं पिबति",soon:true},
+];
+
+/* ---------- State ---------- */
+const $=id=>document.getElementById(id);
+let S={iast:true,unlockAll:false,l1:{},l2:{},l2r:{},l3:["sun"],hero:{},inv:[],gate:false,pond:{},street:{},intro:false};
+try{ const s=JSON.parse(localStorage.getItem("akshara-loka")||"null"); if(s) S={...S,...s}; }catch(e){}
+const save=()=>{ try{ localStorage.setItem("akshara-loka",JSON.stringify(S)); }catch(e){} };
+const MASTER=2; // correct answers in a row to master a garden letter
+function progress(n){
+  if(n===0) return S.intro?1:0;
+  if(n===1) return L1.filter(c=>(S.l1[c]||0)>=MASTER).length/L1.length;
+  if(n===2){ const [a,b]=counts(2); return a/b; }
+  if(n===3) return S.l3.length/WORDS.length;
+  if(n===6) return TWINS.filter((x,i)=>(S.pond||{})[i]).length/TWINS.length;
+  if(n===7) return SIGNS.filter((x,i)=>(S.street||{})[i]).length/SIGNS.length;
+  return 0;
+}
+const counts=n=>n===0?[S.intro?1:0,1]:n===1?[L1.filter(c=>(S.l1[c]||0)>=MASTER).length,L1.length]:n===2?[L2.filter(h=>S.l2[h.id]).length+L2.filter(h=>roomDone(h)).length,L2.length*2]:n===3?[S.l3.length,WORDS.length]:n===6?[TWINS.filter((x,i)=>(S.pond||{})[i]).length,TWINS.length]:n===7?[SIGNS.filter((x,i)=>(S.street||{})[i]).length,SIGNS.length]:[0,0];
+const lvIdx=n=>LEVELS.findIndex(L=>L.n===n);
+const byN=n=>LEVELS[lvIdx(n)];
+const dispNum=n=>lvIdx(n);
+const unlocked=n=>{ const i=lvIdx(n), L=LEVELS[i]; if(L.soon) return false; return i===0||S.unlockAll||progress(LEVELS[i-1].n)>=PASS; };
+const PASS=.5;
+
+/* ---------- Speech ---------- */
+const synthOK="speechSynthesis" in window;
+const allVoices=()=>{ try{ return synthOK?speechSynthesis.getVoices():[]; }catch(e){ return []; } };
+const curVoice=()=> S.voice ? (allVoices().find(v=>v.voiceURI===S.voice)||null) : null;
+const audioOK=()=> !!curVoice();
+let canSpeak=false;                    // true only when the player picked a voice
+const showSound=()=> S.iast || !audioOK();   // without a voice, the sound is shown in writing instead
+function say(text){
+  const v=curVoice(); if(!v) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text);
+    u.voice=v; u.lang=v.lang; u.rate=.8; speechSynthesis.speak(u); }catch(e){}
+}
+// Voice list: Sanskrit first, then Hindi and other Devanagari languages, then everything else
+const VOICE_RANK=l=>/^sa/i.test(l)?0:/^hi/i.test(l)?1:/^(mr|ne|kok|mai|bho)/i.test(l)?2:/^(bn|gu|pa|ta|te|kn|ml|or)/i.test(l)?3:4;
+function fillVoices(){
+  const sel=$("voiceSel"); if(!sel) return;
+  const vs=allVoices().slice().sort((a,b)=>VOICE_RANK(a.lang)-VOICE_RANK(b.lang)||a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name));
+  const groups=[["Sanskrit",0],["Hindi",1],["Other Devanagari languages",2],["Other Indian languages",3],["Other voices",4]];
+  sel.innerHTML=`<option value="">None</option>`+groups.map(([g,k])=>{ const list=vs.filter(v=>VOICE_RANK(v.lang)===k); return list.length?`<optgroup label="${g}">${list.map(v=>`<option value="${v.voiceURI.replace(/"/g,"&quot;")}">${v.name} (${v.lang})</option>`).join("")}</optgroup>`:""; }).join("");
+  sel.value = curVoice()?S.voice:"";
+  canSpeak=audioOK();
+  const has=vs.some(v=>VOICE_RANK(v.lang)===0);
+  $("voiceNote").textContent = !synthOK ? "This browser cannot speak." : !vs.length ? "No voices found on this device." : has ? "A Sanskrit voice is available." : "No Sanskrit voice on this device. A Hindi voice reads Devanagari closest.";
+  $("voiceTest").disabled=!audioOK();
+}
+if(synthOK){ try{ speechSynthesis.addEventListener("voiceschanged",fillVoices); }catch(e){} }
+const speakerBtn=(id,label="Hear it")=>canSpeak?`<button class="icon" type="button" id="${id}" aria-label="${label}"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>`:"";
+
+function applyIast(){ document.body.classList.toggle("hide-iast",!S.iast); $("tIast").checked=S.iast; $("tIastMap").checked=S.iast; }
+
+/* ---------- Map ---------- */
+function renderMap(){
+  $("path").innerHTML=LEVELS.map((L,idx)=>{
+    const open=unlocked(L.n), [a,b]=counts(L.n), pct=Math.round(progress(L.n)*100);
+    const state = L.soon ? "Coming soon" : !open ? `Unlocks at 50% of level ${idx-1}` : `${a} / ${b} · ${pct}%`;
+    return `<button class="place" type="button" data-lv="${L.n}" style="--c:${L.c}" ${open?"":"disabled"}>
+      <span class="tex" aria-hidden="true">${rep(L.tex,6)}</span>
+      <span><span class="num">Level ${idx}</span>
+        <span class="name"><span class="dv">${L.dv}</span><span class="en">${L.en}</span></span>
+        <span class="sub">${L.sub}</span>
+        ${L.soon?"":`<span class="meter"><i style="width:${pct}%"></i></span>`}
+        <span class="state">${state}</span></span>
+      ${open?"":`<svg class="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`}
+    </button>`;
+  }).join("");
+  $("tUnlock").checked=S.unlockAll;
+}
+$("path").addEventListener("click",e=>{ const p=e.target.closest(".place"); if(p&&!p.disabled) openLevel(+p.dataset.lv); });
+$("tUnlock").onchange=e=>{ S.unlockAll=e.target.checked; save(); renderMap(); };
+let resetArmed=false;
+$("resetAll").onclick=e=>{
+  if(!resetArmed){ resetArmed=true; e.target.textContent="Tap again to erase everything"; e.target.classList.add("warn");
+    setTimeout(()=>{ resetArmed=false; e.target.textContent="Reset all progress"; e.target.classList.remove("warn"); },3500); return; }
+  S={iast:S.iast,unlockAll:false,l1:{},l2:{},l2r:{},l3:["sun"],hero:{},inv:[],gate:false,pond:{},street:{},intro:false}; save(); resetArmed=false;
+  e.target.textContent="Reset all progress"; e.target.classList.remove("warn"); renderMap();
+};
+
+/* ---------- Admin popup ---------- */
+document.addEventListener("click",e=>{ if(e.target.closest("[data-admin]")) openAdmin(); });
+function openAdmin(msg=""){
+  openSheet(sheetTop("Admin","Testing tools","Changes are saved right away",null)+
+    `<div class="actions" style="display:grid;gap:8px;justify-content:stretch">
+      <button class="btn" type="button" data-a="gate">${S.gate?"Close the च wall again":"Open the च wall"}</button>
+      <button class="btn" type="button" data-a="bag">Empty the bag</button>
+      <button class="btn" type="button" data-a="town">Reset the town (houses, rooms, wall, bag)</button>
+      <button class="btn" type="button" data-a="intro">Reset the entrance</button>
+      <button class="btn" type="button" data-a="garden">Reset the garden</button>
+      <button class="btn" type="button" data-a="pond">Reset the twin pond</button>
+      <button class="btn" type="button" data-a="street">Reset the street</button>
+      <button class="btn" type="button" data-a="unlock">${S.unlockAll?"Lock levels again":"Unlock all levels"}</button>
+    </div><p class="msg good" id="aMsg">${msg}</p>`);
+  wireClose();
+  $("sheetBody").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>adminDo(b.dataset.a));
+}
+function adminDo(a){
+  let m="";
+  if(a==="gate"){ S.gate=!S.gate; m=S.gate?"The च wall is open.":"The च wall is closed again. अहम् is back in the upper part."; if(!S.gate&&S.hero) delete S.hero["2g"]; }
+  if(a==="bag"){ S.inv=[]; m="The bag is empty."; }
+  if(a==="town"){ S.l2={}; S.l2r={}; S.gate=false; S.inv=[]; if(S.hero){ delete S.hero["2g"]; delete S.hero["2rg"]; } m="The town is reset."; }
+  if(a==="garden"){ S.l1={}; if(S.hero) delete S.hero["1g3"]; m="The garden is reset."; }
+  if(a==="intro"){ S.intro=false; S.inv=(S.inv||[]).filter(x=>x!=="अ"); if(S.hero) delete S.hero["0g"]; m="The entrance is reset."; }
+  if(a==="pond"){ S.pond={}; if(S.hero) delete S.hero["6g2"]; m="The twin pond is reset."; }
+  if(a==="street"){ S.street={}; if(S.hero) delete S.hero["7g"]; m="The street is reset."; }
+  if(a==="unlock"){ S.unlockAll=!S.unlockAll; m=S.unlockAll?"All levels are unlocked.":"Levels unlock by progress again."; }
+  save();
+  if(!$("levelView").hidden){ if(LV===2){ if(a==="town"||GMODE==="town") drawTown(); else { paintRoom(); renderInv(); } } if(LV===1&&a==="garden"){ Q=null; initL1(); } if(LV===6&&a==="pond") initPond(); if(LV===0&&a==="intro") initIntro(); if(LV===7&&a==="street") initStreet(); }
+  else renderMap();
+  openAdmin(m);
+}
+
+/* ---------- Save as text ---------- */
+const encodeSave=()=> "AKL1:"+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+function decodeSave(s){
+  s=s.trim(); if(!s.startsWith("AKL1:")) throw new Error("prefix");
+  const o=JSON.parse(decodeURIComponent(escape(atob(s.slice(5)))));
+  if(typeof o!=="object"||!o) throw new Error("shape"); return o;
+}
+let saveMode="save";
+function openSaveBox(mode){
+  saveMode=mode; $("saveBox").hidden=false; $("saveMsg").textContent="";
+  const ta=$("saveCode");
+  if(mode==="save"){ $("saveLbl").textContent="Your save code. Keep it somewhere safe, for example in a note."; ta.value=encodeSave(); ta.readOnly=true; $("saveAct").textContent="Copy"; ta.select(); }
+  else { $("saveLbl").textContent="Paste a save code that starts with AKL1:"; ta.value=""; ta.readOnly=false; $("saveAct").textContent="Load"; ta.focus(); }
+}
+$("saveTxt").onclick=()=>openSaveBox("save");
+$("loadTxt").onclick=()=>openSaveBox("load");
+$("saveClose").onclick=()=>{ $("saveBox").hidden=true; };
+$("saveAct").onclick=()=>{
+  const ta=$("saveCode"), msg=$("saveMsg");
+  if(saveMode==="save"){
+    const done=()=>{ msg.textContent="Copied."; }, fallback=()=>{ ta.select(); msg.textContent="Selected. Copy it with your phone's copy menu."; };
+    try{ navigator.clipboard.writeText(ta.value).then(done,fallback); }catch(e){ fallback(); }
+  } else {
+    try{ const o=decodeSave(ta.value); S={iast:true,unlockAll:false,l1:{},l2:{},l2r:{},l3:["sun"],hero:{},inv:[],gate:false,pond:{},street:{},intro:false,...o}; save(); applyIast(); renderMap(); fillVoices();
+      msg.textContent="Progress loaded."; }
+    catch(e){ msg.textContent="This code could not be read. Check that it was copied completely."; }
+  }
+};
+
+/* ---------- Level screen ---------- */
+let LV=0;
+const scene=$("scene");
+function openLevel(n){
+  LV=n; const L=byN(n);
+  $("mapView").hidden=true; $("levelView").hidden=false; closeSheet();
+  $("levelView").style.setProperty("--c",L.c);
+  $("lvDv").textContent=L.dv; $("lvEn").textContent=`Level ${dispNum(n)} · ${L.en}`;
+  $("banner").innerHTML=""; $("below").innerHTML="";
+  scene.innerHTML="";
+  if(n===1) initL1(); if(n===0) initIntro(); if(n===6) initPond(); if(n===7) initStreet(); if(n===2) initL2(); if(n===3) initL3();
+  window.scrollTo(0,0);
+}
+$("back").onclick=()=>{ closeSheet(); $("prompt").hidden=true; $("levelView").hidden=true; $("mapView").hidden=false; renderMap(); window.scrollTo(0,0); };
+function addObj({id,x,y,w,h,cls,text,c,label}){
+  const b=document.createElement("button");
+  b.type="button"; b.className="obj "+(cls||""); b.dataset.id=id;
+  b.style.cssText=`left:${x}%;top:${y}%;width:${w}%;height:${h}%;--c:${c}`;
+  b.textContent=text; if(label) b.setAttribute("aria-label",label);
+  scene.appendChild(b); return b;
+}
+function texture(cls,word,n){ const d=document.createElement("div"); d.className="stex "+cls; d.textContent=rep(word,n); scene.appendChild(d); }
+function setCount(){ const [a,b]=counts(LV); $("count").innerHTML=`<b>${a}</b> / ${b}`; }
+function levelDoneBanner(){
+  const p=progress(LV), next=LEVELS[lvIdx(LV)+1];
+  if(p>=PASS && next){
+    $("banner").innerHTML=`<div class="banner"><span class="dv">${p>=1?"सम्पूर्णम्":"साधु!"}</span>
+      <p>${p>=1?"Every item restored.":"50% reached."} ${next.soon?`Level ${dispNum(next.n)}, ${next.en}, is coming soon.`:`Level ${dispNum(next.n)}, ${next.en}, is open.`}</p>
+      ${next.soon?"":`<div><button class="btn primary" type="button" id="goNext">Go to ${next.en}</button></div>`}</div>`;
+    const g=$("goNext"); if(g) g.onclick=()=>openLevel(next.n);
+  } else $("banner").innerHTML="";
+}
+function bump(el){ el.classList.remove("just"); void el.offsetWidth; el.classList.add("just"); }
+function wiggle(el,cls="wrong"){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(()=>el.classList.remove(cls),900); }
+
+/* ---------- Level 1: Garden quiz on the letter grid ---------- */
+let Q=null; // {letter, mode}
+// The garden follows the sound table: vowels on top, then one row per place of articulation
+// (velar, palatal, retroflex, dental, labial) with columns unaspirated · aspirated · voiced · voiced aspirated · nasal,
+// then semivowels and sibilants. Letters not yet learned here are seeds.
+const VARGAS=["कखगघङ","चछजझञ","टठडढण","तथदधन","पफबभम"];
+const SOUND_RC=(()=>{ const m={};
+  "अआइईउऊ".split("").forEach((c,i)=>m[c]=[0,i*2]);
+  VARGAS.forEach((row,v)=>[...row].forEach((c,k)=>m[c]=[2+2*v,1+2*k]));
+  [..."यरलव"].forEach((c,k)=>m[c]=[12,1+2*k]);
+  [..."शषसह"].forEach((c,k)=>m[c]=[14,1+2*k]);
+  return m; })();
+const PLANT_RC=L1.map(c=>SOUND_RC[c]);
+function initL1(){
+  GMODE="garden"; makeGrid(); paintGarden(); applyEntry();
+  $("howto").textContent="The red तडागः at the bottom leads to the pond once half the garden has grown. The garden is planted like the sound table: vowels on top, then rows from the throat (k) to the lips (p), columns from plain to breathy to voiced to nasal. Tap a plant and अहम् walks over to try it.";
+  gPlace(gPos()); paintL1(); nextQ();
+}
+function paintGarden(){
+  for(let r=0;r<GR;r++) for(let c=0;c<GC;c++) setCell(r,c,"grass","");
+  Object.entries(SOUND_RC).forEach(([ch,[r,c]])=>{ if(!L1.includes(ch)) setCell(r,c,"seed",ch,{obj:"seed:"+ch}); });
+  paintLinks();
+  L1.forEach((ch,i)=>{ const [r,c]=PLANT_RC[i], st=S.l1[ch]||0;
+    setCell(r,c,"plant",ch,{obj:"plant:"+ch,lit:st>=MASTER,half:st===1,sel:!!(Q&&Q.mode==="name"&&Q.letter===ch),color:PALETTE[i]});
+  });
+}
+function paintL1(){ paintGarden(); setCount(); levelDoneBanner(); }
+function pickLetter(pool,stateObj,threshold){
+  const weak=pool.filter(c=>(stateObj[c]||0)<threshold);
+  const src=weak.length&&Math.random()<.8?weak:pool;
+  let c; do{ c=src[Math.floor(Math.random()*src.length)]; }while(Q&&c===Q.letter&&src.length>1);
+  return c;
+}
+function nextQ(){
+  if(LV!==1) return;
+  const letter=pickLetter(L1,S.l1,MASTER);
+  const mode = S.iast && Math.random()<.35 ? "name" : "find";
+  Q={letter,mode}; paintGarden();
+  if(mode==="name"){ const [r,c]=PLANT_RC[L1.indexOf(letter)]; gridGo(r,c,true); }
+  const p=$("prompt"); p.hidden=false; p.classList.remove("invbar");
+  if(mode==="find"){
+    const heard = showSound() ? `<span class="big">${sound(letter)}</span>` : `<span class="big">Listen</span>`;
+    p.innerHTML=`<div class="q"><span class="lbl">Find the letter for</span>${heard}</div>${speakerBtn("qSay")}<p class="msg" id="qMsg"></p>`;
+    if(!S.iast) say(letter);
+  } else {
+    const opts=shuffle([letter,...shuffle(L1.filter(c=>c!==letter)).slice(0,3)]);
+    p.innerHTML=`<div class="q"><span class="lbl">How does the glowing letter sound?</span></div>${speakerBtn("qSay")}
+      <div class="choices">${opts.map(c=>`<button class="choice" type="button" data-c="${c}">${sound(c)}</button>`).join("")}</div><p class="msg" id="qMsg"></p>`;
+  }
+  const qs=$("qSay"); if(qs) qs.onclick=()=>say(letter);
+}
+function answerL1(c,el){
+  if(LV!==1||!Q) return;
+  const ok=c===Q.letter, m=$("qMsg");
+  if(ok){
+    S.l1[c]=(S.l1[c]||0)+1; save();
+    m.className="msg good"; m.textContent=`${T(c,sound(c))}${S.l1[c]===MASTER?" · learned!":""}`;
+    say(c); Q=null; paintL1(); flashObj("plant:"+c); setTimeout(nextQ,1100);
+  } else {
+    S.l1[Q.letter]=0; save(); paintL1();
+    if(el) wiggle(el); else wiggleObj("plant:"+c);
+    m.className="msg bad";
+    m.textContent = Q.mode==="find" ? `That one is ${T(c,sound(c))}. Try again.` : `Not [${sound(c)}]. Listen and try again.`;
+  }
+}
+scene.addEventListener("click",e=>{
+  const r=scene.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width*100, y=(e.clientY-r.top)/r.height*100;
+  if(LV===0||LV===1||LV===2||LV===6||LV===7){
+    if(LV===2&&!$("sheet").hidden) closeSheet();
+    gridGo(Math.min(GR-1,Math.max(0,Math.floor(y/100*GR))), Math.min(GC-1,Math.max(0,Math.floor(x/100*GC)))); return;
+  }
+  if(LV!==3) return;
+  if(!$("sheet").hidden) closeSheet();
+  const po=e.target.closest(".obj.portalobj");
+  if(po){ walkTo(50,6,po,{free:true,done:()=>travel(7)}); return; }
+  walkTo(x,y,e.target.closest(".obj"));
+});
+$("prompt").addEventListener("click",e=>{
+  const it=e.target.closest("[data-drop]"); if(it){ askDrop(+it.dataset.drop); return; }
+  const c=e.target.closest(".choice"); if(c) answerL1(c.dataset.c,c);
+});
+
+/* ---------- Builder (shared by levels 2 and 3) ---------- */
+let B=null; // {parts, slot, input, done}
+function builderHTML(parts,rows){
+  return `<div class="slots" id="slots"></div><p class="msg" id="bMsg"></p>
+    <div class="tray">${rows.map(([lbl,list])=>`<div class="row"><span class="lbl">${lbl}</span><div class="tiles">${
+      list.map(c=>`<button class="tile" type="button" data-b="${c}" aria-label="${IAST[c]}"><span class="g">${glyph(c)}</span><span class="iast">${IAST[c]}</span></button>`).join("")
+    }</div></div>`).join("")}</div>
+    <div class="actions" style="margin-top:12px">
+      <button class="btn" id="undo" type="button"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Undo</button>
+      <button class="btn" id="hint" type="button"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>Hint</button>
+    </div>`;
+}
+function startBuilder(parts,onDone,onMiss){
+  B={parts,slot:0,input:"",onDone,onMiss}; renderSlots();
+  $("undo").onclick=()=>{ if(!B) return;
+    if(B.input) B.input=[...B.input].slice(0,-1).join("");
+    else if(B.slot>0){ B.slot--; B.input=[...B.parts[B.slot]].slice(0,-1).join(""); }
+    bMsg(""); renderSlots(); };
+  $("hint").onclick=()=>{ if(!B) return;
+    const exp=[...B.parts[B.slot]][[...B.input].length];
+    const t=document.querySelector(`.tile[data-b="${exp}"]`); if(t){ t.classList.add("hint"); t.scrollIntoView({block:"nearest",behavior:"smooth"}); }
+    bMsg(isMatra(exp)?(S.iast?`The vowel sign for [${IAST[exp]}].`:"Look for a vowel sign."):exp==="्"?"The virama joins consonants.":(S.iast?`The sound [${IAST[exp]}].`:"The highlighted tile.")); };
+}
+function renderSlots(){
+  $("slots").innerHTML=B.parts.map((p,i)=>{
+    const st=i<B.slot?"done":i===B.slot?"cur":"", g=i<B.slot?p:i===B.slot?B.input:"";
+    return `<div class="slot ${st}" id="slot${i}"><span class="g">${g||"&nbsp;"}</span><span class="iast">${translit(p)}</span></div>`;
+  }).join("");
+}
+const bMsg=(t,k="")=>{ const m=$("bMsg"); if(m){ m.textContent=t; m.className="msg "+k; } };
+function explain(exp,c,input){
+  if(isMatra(c)&&input==="") return "Start with a consonant. A vowel sign always attaches to one.";
+  if(exp==="्") return "Two consonants meet here. Join them with the virama ्.";
+  if(isMatra(exp)) return "This syllable needs a vowel sign next.";
+  if(exp==="ः"||exp==="ं") return "Almost: the syllable ends with a mark.";
+  if(isCons(exp)&&!isCons(c)&&input!=="") return "Another consonant comes next.";
+  return "Not this one. Listen again, or use the hint.";
+}
+function builderTap(c,t){
+  const target=[...B.parts[B.slot]], exp=target[[...B.input].length];
+  document.querySelectorAll(".tile.hint").forEach(x=>x.classList.remove("hint"));
+  if(c!==exp){ wiggle(t); const s=$("slot"+B.slot); if(s) wiggle(s,"shake"); bMsg(explain(exp,c,B.input),"bad"); if(B.onMiss) B.onMiss(); return; }
+  B.input+=c;
+  if(B.input===B.parts[B.slot]){
+    B.slot++; B.input="";
+    if(B.slot===B.parts.length){ const f=B.onDone; B=null; f(); return; }
+    bMsg(T(B.parts[B.slot-1]),"good");
+  } else bMsg("");
+  renderSlots();
+}
+
+/* ---------- Sheet ---------- */
+function openSheet(html){ $("sheetBody").innerHTML=html; $("sheet").hidden=false; }
+function closeSheet(){ $("sheet").hidden=true; $("sheetBody").innerHTML=""; B=null; R=null; CUR=null; CELL=null; TW=null;
+  scene.querySelectorAll(".obj.sel").forEach(b=>{ if(LV!==1) b.classList.remove("sel"); }); }
+$("sheetBody").addEventListener("click",e=>{
+  const t=e.target.closest(".tile"); if(!t) return;
+  if(t.dataset.b!==undefined && B) builderTap(t.dataset.b,t);
+  else if(t.dataset.r!==undefined && R) roundAnswer(t.dataset.r,t);
+  else if(t.dataset.s!==undefined && CELL) signAnswer(t.dataset.s,t);
+  else if(t.dataset.inv!==undefined) gateSelect(+t.dataset.inv,t);
+  else if(t.dataset.tw!==undefined && TW) twinAnswer(t.dataset.tw,t);
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("sheet").hidden) closeSheet(); });
+const sheetTop=(lbl,title,sub,sayId)=>`<div class="top"><div class="target"><span class="lbl">${lbl}</span><span class="meaning">${title}</span>${sub?`<span class="iast">${sub}</span>`:""}</div>
+  ${sayId?speakerBtn(sayId):""}<button class="icon" type="button" id="closeS" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+function wireClose(){ $("closeS").onclick=closeSheet; }
+
+/* ---------- Hero: अहम् walks until it bumps into something forgotten ---------- */
+const HERO_START={1:[50,27],2:[50,50.5],"2r":[50,82],3:[90,74]};
+let HERO=null, walkId=0;
+function addHero(){ HERO=document.createElement("div"); HERO.className="hero"; HERO.textContent="अहम्"; HERO.setAttribute("aria-hidden","true"); scene.appendChild(HERO); placeHero(heroPos()); }
+const heroKey=()=> LV===2&&ROOM ? "2r" : LV;
+const heroPos=()=> (S.hero&&S.hero[heroKey()]) || HERO_START[heroKey()];
+function placeHero([x,y]){ HERO.style.left=x+"%"; HERO.style.top=y+"%"; }
+function objAt(x,y){
+  const r=scene.getBoundingClientRect();
+  const els=document.elementsFromPoint(r.left+x/100*r.width, r.top+y/100*r.height);
+  for(const el of els){ if(el===scene) break; if(el.classList.contains("obj")) return el; }
+  return null;
+}
+const isKnown=o=> o.dataset.door||o.dataset.exit||o.dataset.id==="portal"||ROOM ? true : LV===2 ? !!S.l2[o.dataset.id] : S.l3.includes(o.dataset.id);
+function walkTo(tx,ty,tapped,opts={}){
+  const id=++walkId, [sx,sy]=heroPos();
+  const dist=Math.hypot(tx-sx,ty-sy), n=Math.max(1,Math.ceil(dist/.7));
+  const startObj=objAt(sx,sy);
+  let stop=n, hit=null;
+  for(let k=1;k<=n&&!opts.free;k++){
+    const x=sx+(tx-sx)*k/n, y=sy+(ty-sy)*k/n, o=objAt(x,y);
+    if(o && o!==startObj && !isKnown(o)){ hit=o; stop=Math.max(0,k-2); break; }
+  }
+  const ex=sx+(tx-sx)*stop/n, ey=sy+(ty-sy)*stop/n, d=Math.hypot(ex-sx,ey-sy);
+  const dur=reducedMotion?0:Math.max(120,d/55*1000), t0=performance.now();
+  HERO.classList.add("walk");
+  function step(now){
+    if(id!==walkId) return;
+    const p=dur?Math.min(1,(now-t0)/dur):1;
+    placeHero([sx+(ex-sx)*p, sy+(ey-sy)*p]);
+    if(p<1){ requestAnimationFrame(step); return; }
+    HERO.classList.remove("walk");
+    S.hero=S.hero||{}; S.hero[heroKey()]=[ex,ey]; save();
+    if(opts.done){ opts.done(); return; }
+    if(hit){ wiggle(hit); if(LV===2) openHouse(hit.dataset.id); else openWord(hit.dataset.id); }
+    else if(tapped && LV===3 && isKnown(tapped)) openWord(tapped.dataset.id);
+  }
+  requestAnimationFrame(step);
+}
+const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Grid engine: every place is a 12 × 16 grid of letter cells (Hito style) ---------- */
+const GC=12, GR=16;
+let GMODE="town", CELLS=[], GHERO=null, gWalk=0;
+let R=null, ROOM=null, CELL=null;
+function makeGrid(){
+  scene.innerHTML=""; CELLS=[];
+  for(let r=0;r<GR;r++){ CELLS[r]=[]; for(let c=0;c<GC;c++){
+    const d=document.createElement("div"); d.className="gcell";
+    d.style.cssText=`left:${c*100/GC}%;top:${r*100/GR}%;width:${100/GC}%;height:${100/GR}%`;
+    scene.appendChild(d); CELLS[r][c]={el:d};
+  }}
+  GHERO=document.createElement("div"); GHERO.className="hero"; GHERO.textContent="अहम्"; GHERO.setAttribute("aria-hidden","true"); scene.appendChild(GHERO);
+}
+function setCell(r,c,kind,g,extra={}){
+  const k=CELLS[r][c]; for(const key of Object.keys(k)) if(key!=="el") delete k[key];
+  const cls=kind; kind=kind.split(" ")[0];
+  Object.assign(k,{kind,g},extra);
+  k.el.className="gcell "+cls+(k.lit?" lit":"")+(k.half?" half":"")+(k.sel?" sel":"")+(k.open?" open":"");
+  if(k.color) k.el.style.setProperty("--c",k.color);
+  k.el.innerHTML=g;
+}
+const gkey=()=> GMODE==="intro"?"0g":GMODE==="garden"?"1g3":GMODE==="room"?"2rg":GMODE==="pond"?"6g2":GMODE==="street"?"7g":"2g";
+const G_START={intro:[14,9],garden:[13,11],town:[4,5],room:[14,5],pond:[15,3],street:[1,3]};
+/* Red word links between places. Each link is a word written into cells; walking onto it travels there. */
+const LINKS={
+  0:[{to:1,row:0,col:4,word:["वा","टि","का"]}],
+  1:[{to:6,row:15,col:4,word:["त","डा","गः"]},{to:0,row:15,col:9,word:["प्रवे","शः"]}],
+  6:[{to:1,row:1,col:4,word:["वा","टि","का"]},{to:2,row:15,col:4,word:["न","ग","र","म्"]}],
+  2:[{to:6,row:0,col:5,word:["तडा","गः"]},{to:7,row:15,col:5,word:["वी","थी"]}],
+  7:[{to:2,row:0,col:4,word:["न","ग","र","म्"]},{to:3,row:15,col:5,word:["ग्रा","मः"]}],
+};
+const KEY_OF={0:"0g",1:"1g3",6:"6g2",2:"2g",7:"7g"};
+function paintLinks(){
+  (LINKS[LV]||[]).forEach(l=>{ const locked=!unlocked(l.to)&&lvIdx(l.to)>lvIdx(LV);
+    l.word.forEach((g,k)=>setCell(l.row,l.col+k,"portal"+(locked?" locked":""),g,{obj:"portal:"+l.to,to:l.to,locked})); });
+}
+let ENTRY=null;
+// After arriving through a link, stand next to the link that leads back
+function applyEntry(){
+  if(ENTRY==null) return; const from=ENTRY; ENTRY=null;
+  const l=(LINKS[LV]||[]).find(x=>x.to===from); if(!l) return;
+  const cands=[];
+  l.word.forEach((g,k)=>{ cands.push([l.row+(l.row<8?1:-1), l.col+k]); });
+  cands.push([l.row,l.col-1],[l.row,l.col+l.word.length]);
+  for(const [r,c] of cands){ if(r<0||c<0||r>=GR||c>=GC) continue; const k=CELLS[r][c];
+    if(k.kind!=="portal"&&passable(k)&&!blocker(k)){ S.hero=S.hero||{}; S.hero[gkey()]=[r,c]; save(); return; } }
+}
+function travel(to){
+  if(!unlocked(to) && lvIdx(to)>lvIdx(LV)){
+    const msg= LV===0 ? "The way to the garden is still grey. Pick up the orange अ first." : `${byN(to).en} opens at 50% here.`;
+    if($("qMsg")) { $("qMsg").className="msg"; $("qMsg").textContent=msg; }
+    else { const p=$("prompt"); p.hidden=false; p.classList.remove("invbar"); p.innerHTML=`<p class="msg">${msg}</p>`; }
+    return;
+  }
+  ENTRY=LV;
+  if(to===3){ S.hero=S.hero||{}; S.hero[3]=[50,8]; save(); }
+  openLevel(to);
+}
+function gPos(){
+  const p=(S.hero&&S.hero[gkey()]);
+  if(!p) return G_START[GMODE];
+  if(GMODE==="town" && !S.gate && p[0]>=GATE_ROW) return G_START.town;   // the lower half is out of reach until the च gate opens
+  return p;
+}
+function gPlace([r,c]){ GHERO.style.left=((c+.5)*100/GC)+"%"; GHERO.style.top=((r+.92)*100/GR)+"%"; }
+function passable(k){
+  if(k.kind==="portal") return true;
+  if(GMODE==="intro") return k.kind==="grass"||k.kind==="door";
+  if(GMODE==="garden") return k.kind==="grass";
+  if(GMODE==="pond") return k.kind==="grass"||k.kind==="twin";
+  if(GMODE==="street") return k.kind==="grass"||k.kind==="sign";
+  if(GMODE==="room") return k.kind==="floor"||k.kind==="exit"||k.kind==="tile";
+  return k.kind==="grass"||k.kind==="door"||k.kind==="gate"||(k.kind==="house"&&!k.lit);
+}
+function blocker(k){
+  if(GMODE==="room") return k.kind==="tile"&&!k.lit;
+  if(GMODE==="pond") return k.kind==="twin"&&!k.lit;
+  if(GMODE==="street") return k.kind==="sign"&&!k.lit;
+  if(GMODE==="town") return (k.kind==="house"&&!k.lit)||(k.kind==="gate"&&!S.gate);
+  return false;
+}
+const objCells=obj=>{ const out=[]; CELLS.forEach((row,r)=>row.forEach((x,c)=>{ if(x.obj===obj) out.push([r,c]); })); return out; };
+const flashObj=obj=>objCells(obj).forEach(([r,c])=>bump(CELLS[r][c].el));
+const wiggleObj=obj=>objCells(obj).forEach(([r,c])=>wiggle(CELLS[r][c].el));
+function bfs([sr,sc],goal,through){
+  const key=(r,c)=>r*GC+c, prev=new Map([[key(sr,sc),null]]), q=[[sr,sc]];
+  while(q.length){
+    const [r,c]=q.shift(), here=CELLS[r][c];
+    if(goal(r,c)){ const out=[]; let cur=[r,c]; while(cur){ out.unshift(cur); cur=prev.get(key(cur[0],cur[1])); } return out; }
+    if(!(r===sr&&c===sc) && blocker(here) && !through) continue;
+    for(const [dr,dc] of [[0,1],[1,0],[0,-1],[-1,0]]){
+      const nr=r+dr, nc=c+dc; if(nr<0||nc<0||nr>=GR||nc>=GC||prev.has(key(nr,nc))) continue;
+      if(!passable(CELLS[nr][nc])) continue;
+      prev.set(key(nr,nc),[r,c]); q.push([nr,nc]);
+    }
+  }
+  return null;
+}
+// Walk to a cell. Free cells are walked onto; objects are approached from a neighbouring cell.
+// Anything unknown on the way (a dark house, the closed च gate, an unsolved tile) stops अहम्.
+function gridGo(r,c,silent){
+  S.hero=S.hero||{};
+  const k=CELLS[r][c]; let goal, target=null;
+  if(passable(k)&&!blocker(k)) goal=(rr,cc)=>rr===r&&cc===c;
+  else if(blocker(k)) goal=(rr,cc)=>CELLS[rr][cc].obj===k.obj;
+  else { if(!k.obj) return; target=k; const cells=objCells(k.obj);
+    goal=(rr,cc)=>{ const x=CELLS[rr][cc]; return passable(x)&&!blocker(x)&&cells.some(([a,b])=>Math.abs(a-rr)+Math.abs(b-cc)===1); }; }
+  const path=bfs(gPos(),goal,false)||bfs(gPos(),goal,true); if(!path) return;
+  const id=++gWalk; GHERO.classList.add("walk"); let i=1;
+  (function step(){
+    if(id!==gWalk) return;
+    if(i>=path.length){ GHERO.classList.remove("walk"); save(); if(!silent) arrive(CELLS[path.at(-1)[0]][path.at(-1)[1]],target); return; }
+    const [nr,nc]=path[i], nk=CELLS[nr][nc];
+    if(blocker(nk)){ GHERO.classList.remove("walk"); save(); wiggleObj(nk.obj); if(!silent) onBlock(nk); return; }
+    S.hero[gkey()]=[nr,nc]; gPlace([nr,nc]); i++;
+    setTimeout(step, reducedMotion?0:85);
+  })();
+}
+function onBlock(k){
+  if(GMODE==="room") openCell(k.idx);
+  else if(GMODE==="pond") openTwin(k.idx);
+  else if(GMODE==="street") openSign(k.idx);
+  else if(k.kind==="gate") openGate();
+  else openHouse(k.id);
+}
+function arrive(k,target){
+  if(k.kind==="portal"){ travel(k.to); return; }
+  if(GMODE==="intro"){
+    if(target&&target.kind==="pickup") pickup(target.g,target.el);
+    else if(k.kind==="door"){ const [r,c]=gPos(); const nr=r<INTRO_WALL?INTRO_WALL+1:INTRO_WALL-1; S.hero[gkey()]=[nr,c]; save(); setTimeout(()=>{ gPlace([nr,c]); introGuide(); },90); }
+    return;
+  }
+  if(GMODE==="garden"){
+    if(target&&target.kind==="seed"){ $("qMsg").className="msg"; $("qMsg").textContent=`${T(target.g,sound(target.g))} is still a seed here. It grows in the town.`; }
+    else if(target&&target.kind==="plant"){
+      if(Q&&Q.mode==="find") answerL1(target.g,null);
+      else if(Q){ $("qMsg").className="msg"; $("qMsg").textContent="Pick a sound above for the glowing plant."; }
+    }
+  } else if(GMODE==="town"){
+    if(k.kind==="door") enterRoom(k.id);
+    else if(target&&target.kind==="house"){
+      if(target.pick) pickup(target.g,target.el);
+      else { const [r,c]=doorRC(houseIdx(target.id)); gridGo(r,c); }
+    }
+  } else if(GMODE==="pond"){
+    const r=(S.hero[gkey()]||[])[0];
+    if(r===1&&false) openSheet(sheetTop("Twin pond","The far shore",null,null)+`<div class="win" style="--c:#6cc3e0"><div class="big">तडागः</div><p class="note">You crossed on all ${TWINS.length} twin stones. When a word looks strange, check its look-alike letters first.</p><div class="actions" style="justify-content:center"><button class="btn primary" type="button" id="closeW">Close</button></div></div>`), wireClose(), $("closeW").onclick=closeSheet;
+  } else if(GMODE==="room"){
+    if(k.kind==="exit") leaveRoom();
+    else if(k.kind==="tile"&&k.pick) pickup(k.item,k.el);
+  }
+}
+
+/* ---------- Level 0: entrance, the rules of the world ---------- */
+const INTRO_WALL=8;
+function initIntro(){
+  GMODE="intro"; makeGrid(); paintIntro(); applyEntry();
+  $("howto").textContent="Tap any empty spot and अहम् walks there.";
+  gPlace(gPos()); renderInv(); introGuide(); setCount(); levelDoneBanner();
+}
+function paintIntro(){
+  for(let r=0;r<GR;r++) for(let c=0;c<GC;c++) setCell(r,c,"grass","");
+  for(let c=0;c<GC;c++) setCell(INTRO_WALL,c,"wall",c%2?"त्तिः":"भि",{color:"#59635e"});
+  ["द्वा","र","म्"].forEach((g,k)=>setCell(INTRO_WALL,4+k,"door",g,{obj:"door:intro"}));
+  setCell(11,2,"pickup pick","अ",{obj:"pick:a",pick:true});
+  paintLinks();
+}
+function introGuide(){
+  setCount(); levelDoneBanner();
+  const [r]=gPos(), has=(S.inv||[]).includes("अ")||S.intro;
+  const step = !has ? `First, walk to the orange ${T("अ","a")} on the left and take it.`
+    : r>INTRO_WALL ? `Now walk through the red door ${T("द्वारम्","dvāram")} in the wall.`
+    : `Walk onto the red ${T("वाटिका","vāṭikā")} at the top to enter the garden.`;
+  $("below").innerHTML=`<h2>How this world works</h2>
+    <div class="guide">
+      <p><span class="hero-ex">अहम्</span> This is you: ${T("अहम्","aham")}, “I”. Tap a spot and you walk there. Things you don't know yet stop you on the way.</p>
+      <p><span class="pick-ex">अ</span> Orange letters can be picked up. Walk to them and they fly into your bag, as often as you like. You will need them for quests.</p>
+      <p><span class="red-ex">द्वा</span> Red words are doors and paths. Walk onto them to go through. A grey path is still closed.</p>
+      <p><span class="grey-ex">भि</span> Grey letters are walls or things you have not learned yet.</p>
+    </div>
+    <p class="banner" style="margin-top:12px"><span style="color:var(--fg)">${step}</span></p>`;
+}
+
+/* ---------- Twin pond: look-alike letters as stepping stones ---------- */
+const TWINS=[
+  {a:"भ",b:"म",tip:"{भ} has a break in the top line on the left; {म} is closed on top."},
+  {a:"ब",b:"व",tip:"{ब} has a small slash inside its loop; {व} is an empty loop."},
+  {a:"थ",b:"य",tip:"{थ} has a little loop at the bottom left; {य} is a plain curve. A thoga is really a yoga: {योग|yoga}."},
+  {a:"घ",b:"ध",tip:"{ध} has a break in the top line on the left; {घ} is closed on top."},
+  {a:"प",b:"ष",tip:"{ष} has a diagonal stroke through the middle; {प} has none."},
+  {a:"ङ",b:"ड",tip:"{ङ} carries a dot on the right; {ड} has none."},
+  {a:"उ",b:"ज",tip:"{उ} is a vowel with no upright line; {ज} has the upright line on the right."},
+];
+const tipText=tw=>tw.tip.replace(/\{([^}|]+)(?:\|([^}]+))?\}/g,(m,d,l)=>T(d,l||([...d].length===1?sound(d):translit(d))));
+const TWIN_ROW=i=>14-2*i;     // stones at rows 14, 12, … 2; title on row 0, far shore on row 1
+let TW=null;
+function initPond(){
+  GMODE="pond"; makeGrid(); paintPond(); $("prompt").hidden=true; applyEntry();
+  $("howto").textContent=`Cross the pond between the garden (red वाटिका, top) and the town (red नगरम्, bottom). The water is written ${T("जलम्","jalam")}, “water”. Each pair of stones is two letters that look alike: tell them apart to step on them.`;
+  gPlace(gPos()); paintPondInfo();
+}
+const WATER=["ज","ल","म्"];   // जलम् jalam, water
+function paintPond(){
+  for(let r=0;r<GR;r++) for(let c=0;c<GC;c++){
+    if(r===0){ setCell(r,c,"title",""); continue; }
+    const bank = r===1||r===15, path=(c===5||c===6);
+    if(bank||path) setCell(r,c,"grass","");
+    else { setCell(r,c,"water",WATER[(c+(r*2))%3]); CELLS[r][c].el.style.setProperty("--d",(((r*7+c*3)%11)*-.45)+"s"); }
+  }
+  const ttl=document.createElement("div"); ttl.className="ptitle";
+  ttl.innerHTML=`<span class="dv">तडागः</span><span class="sub">${S.iast?"[taḍāgaḥ] · ":""}pond</span>`;
+  scene.querySelectorAll(".ptitle").forEach(x=>x.remove()); scene.appendChild(ttl);
+  paintLinks();
+  TWINS.forEach((tw,i)=>{ const r=TWIN_ROW(i), done=!!(S.pond||{})[i];
+    setCell(r,5,"twin",tw.a,{obj:"twin:"+i,idx:i,lit:done,color:"#6cc3e0"});
+    setCell(r,6,"twin",tw.b,{obj:"twin:"+i,idx:i,lit:done,color:"#6cc3e0"}); });
+}
+function paintPondInfo(){
+  setCount(); levelDoneBanner();
+  $("below").innerHTML=`<h2>Twin stones</h2><div class="words">${TWINS.map((tw,i)=>`<span class="chip" style="--c:#6cc3e0;cursor:default"><span class="dv">${tw.a} ${tw.b}</span><span class="me">${(S.pond||{})[i]?"✓":""}</span><span class="ia">${sound(tw.a)} · ${sound(tw.b)}</span></span>`).join("")}</div>`;
+}
+function openTwin(i){
+  const tw=TWINS[i]; TW={i,qs:shuffle([tw.a,tw.b]),k:0,miss:0}; showTwin();
+}
+function showTwin(){
+  const tw=TWINS[TW.i], target=TW.qs[TW.k], opts=shuffle([tw.a,tw.b]);
+  openSheet(sheetTop(`Twin stones · ${TW.k+1} of 2 · which one is`,showSound()?`“${sound(target)}”`:"what you hear","","sSay")+
+    `<div class="tiles large">${opts.map(c=>`<button class="tile" type="button" data-tw="${c}"><span class="g" style="font-size:44px">${c}</span></button>`).join("")}</div>
+     <p class="msg" id="rMsg"></p>`);
+  wireClose(); if(!S.iast) say(target); $("sSay")&&($("sSay").onclick=()=>say(target));
+}
+function twinAnswer(c,t){
+  const tw=TWINS[TW.i], target=TW.qs[TW.k], m=$("rMsg");
+  if(c!==target){ TW.miss++; wiggle(t); m.className="msg bad"; m.textContent=`That one is ${T(c,sound(c))}. ${tipText(tw)}`; return; }
+  t.classList.add("right"); say(c); TW.k++;
+  if(TW.k<2){ setTimeout(showTwin,700); return; }
+  const ok=TW.miss===0, i=TW.i;
+  if(ok){ S.pond=S.pond||{}; S.pond[i]=true; save(); paintPond(); flashObj("twin:"+i); paintPondInfo(); }
+  openSheet(sheetTop("Twin stones", ok?"The stones hold":"They wobble", ok?"":"Both right on the first try makes them hold",null)+
+    `<div class="win" style="--c:#6cc3e0"><div class="big">${tw.a} &nbsp; ${tw.b}</div><p class="note">${tipText(tw)}</p>
+     <div class="actions" style="justify-content:center">${ok?`<button class="btn primary" type="button" id="closeW">Step on</button>`:`<button class="btn primary" type="button" id="again">Try again</button>`}</div></div>`);
+  wireClose(); const cw=$("closeW"); if(cw) cw.onclick=closeSheet; const a=$("again"); if(a) a.onclick=()=>openTwin(i);
+  TW=null;
+}
+
+/* ---------- Street: read the signs ---------- */
+const SIGNS=[
+  {w:"देवः",t:"devaḥ",m:"god",note:"The two dots ः at the end are the visarga: a soft breath after the vowel."},
+  {w:"हंसः",t:"haṃsaḥ",m:"swan",note:"The dot ं on top is the anusvāra: it makes the vowel before it nasal."},
+  {w:"गुरुः",t:"guruḥ",m:"teacher",note:"In रु the u is not hung below but tucked into the र."},
+  {w:"वाक्",t:"vāk",m:"speech",note:"The small stroke ् under क is the virāma: no vowel follows, just k."},
+  {w:"हृदयम्",t:"hṛdayam",m:"heart",note:"In हृ the ṛ sits inside the ह, not below it."},
+  {w:"रूपम्",t:"rūpam",m:"form",note:"In रू the long ū is attached to the side of र."},
+  {w:"सिंहः",t:"siṃhaḥ",m:"lion",note:"ि is written first but spoken after स; ं nasalises the i."},
+  {w:"मधु",t:"madhu",m:"honey",note:"A word can simply end in a vowel."},
+];
+function aksharas(w){
+  const out=[]; let cur="";
+  for(const ch of w){
+    if((isCons(ch)||isVowel(ch)) && cur && !cur.endsWith("्")){ out.push(cur); cur=ch; }
+    else cur+=ch;
+  }
+  if(cur) out.push(cur); return out;
+}
+const SIGN_POS=[[3,1],[3,7],[6,1],[6,7],[9,1],[9,7],[12,1],[12,7]];
+let SG=null;
+function initStreet(){
+  GMODE="street"; makeGrid(); paintStreet(); $("prompt").hidden=true; applyEntry();
+  $("howto").textContent="Walk down the street. Each sign is a word: read it to pass. Red नगरम् (top) leads back to the town, red ग्रामः (bottom) to the village.";
+  gPlace(gPos()); paintStreetInfo();
+}
+function paintStreet(){
+  for(let r=0;r<GR;r++) for(let c=0;c<GC;c++) setCell(r,c,"grass","");
+  SIGNS.forEach((s,i)=>{ const [r,c0]=SIGN_POS[i], done=!!(S.street||{})[i];
+    aksharas(s.w).forEach((g,k)=>setCell(r,c0+k,"sign",g,{obj:"sign:"+i,idx:i,lit:done,color:"#e58b5a"})); });
+  paintLinks();
+}
+function paintStreetInfo(){
+  setCount(); levelDoneBanner();
+  $("below").innerHTML=`<h2>Signs read</h2><div class="words">${SIGNS.filter((s,i)=>(S.street||{})[i]).map(s=>`<button class="chip" type="button" data-say2="${s.w}" style="--c:#e58b5a"><span class="dv">${s.w}</span><span class="me">${s.m}</span><span class="ia">${s.t}</span></button>`).join("")||`<span class="chip empty">Nothing yet.</span>`}</div>`;
+}
+function openSign(i){
+  const s=SIGNS[i]; SG={i,miss:0};
+  const others=shuffle(SIGNS.filter((x,j)=>j!==i)).slice(0,2);
+  const opts=shuffle([s,...others]);
+  const label=S.iast?"How is this sign read?":"What does this sign mean?";
+  openSheet(sheetTop("Street sign",label,"","sSay")+
+    `<div class="win" style="--c:#e58b5a"><div class="big">${s.w}</div></div>
+     <div class="choices" style="display:grid;gap:6px">${opts.map(o=>`<button class="choice" type="button" data-sg="${o.w}">${S.iast?o.t:o.m}</button>`).join("")}</div>
+     <p class="msg" id="rMsg"></p>`);
+  wireClose(); $("sSay")&&($("sSay").onclick=()=>say(s.w));
+}
+function signAnswer2(w,t){
+  const s=SIGNS[SG.i], m=$("rMsg");
+  if(w!==s.w){ SG.miss++; wiggle(t); m.className="msg bad"; m.textContent=S.iast?"Not quite. Read it sound by sound, from left to right.":"Not this one. Tap the speaker to hear the word."; return; }
+  const i=SG.i; S.street=S.street||{}; S.street[i]=true; save(); say(s.w); paintStreet(); flashObj("sign:"+i); paintStreetInfo();
+  openSheet(sheetTop("Street sign",T(s.w,s.t),s.m,null)+
+    `<div class="win" style="--c:#e58b5a"><div class="big">${s.w}</div><p class="note">${s.note}</p>
+     <div class="actions" style="justify-content:center"><button class="btn primary" type="button" id="closeW">Walk on</button></div></div>`);
+  wireClose(); $("closeW").onclick=closeSheet; SG=null;
+}
+$("sheetBody").addEventListener("click",e=>{ const b=e.target.closest("[data-sg]"); if(b&&SG) signAnswer2(b.dataset.sg,b); });
+
+/* ---------- Level 2: town ---------- */
+const HOUSE_BOX=i=>({c0:i%2?7:1, r0:1+Math.floor(i/2)*4, w:4, h:3});
+const doorRC=i=>{ const b=HOUSE_BOX(i); return [b.r0+b.h-1, b.c0+1]; };
+const GATE_ROW=8;
+const EXIT_RC=[[15,5],[15,6]];
+const houseIdx=id=>L2.findIndex(h=>h.id===id);
+function initL2(){ drawTown(); }
+function drawTown(){
+  GMODE="town"; ROOM=null; makeGrid(); paintTown(); applyEntry();
+  $("howto").textContent="Tap a cell and अहम् walks there. A dark house stops it: name its letters to light it. Orange letters can be taken, red fields are actions: द्वारम् leads inside, the च wall opens when you bring ca, तडागः leads to the pond and वीथी to the street.";
+  gPlace(gPos()); renderInv(); paintL2();
+}
+function paintTown(){
+  for(let r=0;r<GR;r++) for(let c=0;c<GC;c++) setCell(r,c,"grass","");
+  L2.forEach((h,i)=>{
+    const b=HOUSE_BOX(i), L=[...h.letters], lit=!!S.l2[h.id]; let n=0;
+    for(let r=b.r0;r<b.r0+b.h;r++) for(let c=b.c0;c<b.c0+b.w;c++){ const g=L[n++%L.length];
+      setCell(r,c,"house"+(lit&&isPickable(g)?" pick":""),g,{obj:"house:"+h.id,id:h.id,lit,color:h.c,pick:lit&&isPickable(g)}); }
+    if(lit){ const [dr]=doorRC(i); ["द्वा","र","म्"].forEach((g,k)=>setCell(dr,b.c0+k+(i%2?1:0),"door",g,{obj:"door:"+h.id,id:h.id})); }
+  });
+  const ready=!S.gate&&(S.inv||[]).includes("च");
+  for(let c=0;c<GC;c++) setCell(GATE_ROW,c,"gate"+(ready?" ready":""),"च",{obj:"gate",open:!!S.gate});
+  paintLinks();
+}
+const isPickable=g=> g==="च";
+/* Inventory: letters taken from lit houses */
+function askDrop(i){
+  const g=(S.inv||[])[i]; if(g===undefined) return;
+  openSheet(sheetTop("Your bag",`Drop ${itemGlyph(g)}?`,S.iast?`[${itemSound(g)}]`:"",null)+
+    `<div class="win"><div class="big" style="color:#ff9a2e">${itemGlyph(g)}</div>
+     <p class="note">${g==="च"&&!S.gate?"You need this letter to open the च wall.":"Dropped items can be picked up again where you found them."}</p>
+     <div class="actions" style="justify-content:center"><button class="btn warn" type="button" id="dropYes">Drop it</button><button class="btn primary" type="button" id="dropNo">Keep it</button></div></div>`);
+  wireClose(); $("dropNo").onclick=closeSheet;
+  $("dropYes").onclick=()=>{ S.inv.splice(i,1); save(); closeSheet(); if(GMODE==="town") paintTown(); else if(GMODE==="room") paintRoom(); renderInv(`Dropped ${itemGlyph(g)}.`); };
+}
+const BAG_MAX=12;
+const itemGlyph=g=>isMatra(g)?"◌"+g:g;
+const itemSound=g=>isMatra(g)?IAST[g]:translit(g);
+function flyToBag(g,fromEl){
+  if(reducedMotion||!fromEl) return;
+  const a=fromEl.getBoundingClientRect(), chips=$("prompt").querySelectorAll(".choice.inv"), last=chips[chips.length-1];
+  const b=(last||$("prompt")).getBoundingClientRect();
+  const f=document.createElement("div"); f.className="flyer"; f.textContent=itemGlyph(g);
+  f.style.left=(a.left+a.width/2)+"px"; f.style.top=(a.top+a.height/2)+"px"; document.body.appendChild(f);
+  const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+  const anim=f.animate([{transform:"translate(-50%,-50%) scale(1)",opacity:1},
+    {transform:`translate(calc(-50% + ${dx*.5}px), calc(-50% + ${dy*.5-40}px)) scale(1.5)`,opacity:1,offset:.45},
+    {transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.9)`,opacity:.9}],{duration:650,easing:"cubic-bezier(.3,.7,.4,1)"});
+  if(last) last.style.visibility="hidden";
+  anim.onfinish=()=>{ f.remove(); if(last){ last.style.visibility=""; bump(last); } };
+}
+function pickup(g,fromEl){
+  S.inv=S.inv||[];
+  if(S.inv.length>=BAG_MAX){ renderInv("Your bag is full. Tap a letter in it to drop it."); return; }
+  S.inv.push(g); save(); say(isMatra(g)?"क"+g:g);
+  if(GMODE==="intro"){ if(!S.intro){ S.intro=true; save(); } paintIntro(); introGuide(); }
+  else if(GMODE==="town"){ paintTown(); flashObj("gate"); }
+  else paintRoom();
+  const hint = GMODE==="intro" ? " Look: the way to the garden has turned red." : g==="च"&&!S.gate ? " The च wall now glows red: walk to it." : " Kept for later quests.";
+  renderInv(`Took ${T(itemGlyph(g),itemSound(g))}.${hint}`);
+  flyToBag(g,fromEl);
+}
+function renderInv(msg=""){
+  if(GMODE!=="town"&&GMODE!=="room"&&GMODE!=="intro"){ $("prompt").hidden=true; $("prompt").classList.remove("invbar"); return; }
+  const p=$("prompt"); p.hidden=false; p.classList.add("invbar"); const inv=S.inv||[];
+  p.innerHTML=`<div class="q"><span class="lbl">Your bag</span>
+    <div class="choices" style="margin-top:4px">${inv.length?inv.map((g,i)=>`<button class="choice inv" type="button" data-drop="${i}" aria-label="${itemSound(g)}"><span class="dv">${itemGlyph(g)}</span></button>`).join(""):`<span class="count">Empty. Orange letters can be taken, as often as you like.</span>`}</div></div>
+    <p class="msg" id="qMsg">${msg}</p>`;
+}
+/* The च gate: bring the pieces of “ca” */
+function openGate(){
+  const inv=S.inv||[];
+  if(!inv.includes("च")){
+    const where = !S.l2.c ? "First light the c-row house (च छ ज झ ञ), then take its orange च." : "Take the orange च from the c-row house.";
+    openSheet(sheetTop("The च wall","Bring the sound “ca”","ca means “and”",null)+
+      `<div class="win" style="--c:#8e9a94"><div class="big">च</div><p class="note">The wall only opens for ca. ${where}</p></div>`);
+    wireClose(); return;
+  }
+  openSheet(sheetTop("The च wall","Which letter in your bag sounds “ca”?","",null)+
+    `<div class="tiles large">${inv.map((g,i)=>`<button class="tile" type="button" data-inv="${i}"><span class="g">${g}</span></button>`).join("")}</div>
+     <p class="msg" id="rMsg"></p>`);
+  wireClose();
+}
+function gateSelect(i,t){
+  const inv=S.inv, g=inv[i], m=$("rMsg");
+  if(g!=="च"){ wiggle(t); m.className="msg bad"; m.textContent=`${T(g,sound(g))} does not sound ca.`; return; }
+  inv.splice(i,1); S.gate=true; save(); paintTown(); flashObj("gate"); renderInv("The wall is open."); say("च");
+  openSheet(sheetTop("The च wall","Open",null,null)+`<div class="win" style="--c:#f0a93a"><div class="big">च</div>
+    <p class="note">${T("च","ca")} on its own is a word: “and”.</p>
+    <p class="note">It comes after the last item it joins: ${T("रामः सीता च","rāmaḥ sītā ca")}, “Rama and Sita”.</p>
+    <div class="actions" style="justify-content:center"><button class="btn primary" type="button" id="closeW">Walk on</button></div></div>`);
+  wireClose(); $("closeW").onclick=closeSheet;
+}
+
+/* Room */
+function enterRoom(id){
+  closeSheet(); ROOM=L2.find(x=>x.id===id); GMODE="room"; makeGrid(); paintRoomGrid(); renderInv();
+  $("howto").textContent = ROOM.id==="v" ? "Inside the vowel house: walk to a vowel and choose the sign it takes after a consonant. Solved signs turn orange and can be taken. The red बहिः leads outside."
+    : `Inside the ${ROOM.name} house: walk to a tile and build that combination. Solved tiles turn orange: walk onto one to take it for later quests. The red बहिः leads outside.`;
+  gPlace(gPos()); paintRoom();
+}
+function paintRoomGrid(){
+  const L=[...ROOM.letters]; let n=0;
+  for(let r=0;r<GR;r++) for(let c=0;c<GC;c++){
+    if(r===0||r===GR-1) setCell(r,c,"wall",L[n++%L.length],{color:ROOM.c});
+    else setCell(r,c,"floor","");
+  }
+  setCell(...EXIT_RC[0],"exit","ब",{obj:"exit"}); setCell(...EXIT_RC[1],"exit","हिः",{obj:"exit"});
+}
+function tileLabel(cell,done){
+  if(cell.kind==="build") return done?cell.syl:`<small class="iast">${translit(cell.syl)}</small><small class="dot">·</small>`;
+  return done?`◌${MATRA_OF[cell.v]}`:`${cell.v}`;
+}
+// Every consonant of the house with every vowel: ca, cā, ci, cī, cu, cū, cṛ, ce, cai, co, cau
+const roomCells=h=> h.id==="v"
+  ? Object.keys(MATRA_OF).map(v=>({k:v,kind:"sign",v}))
+  : [...h.letters].flatMap(c=>["",...MATRA].map(m=>({k:c+m,kind:"build",syl:c+m})));
+// One row per consonant (11 tiles), with a free row between rows to walk along
+const roomLayout=h=> h.id==="v"
+  ? [...[2,4,6,8,10].map(c=>[5,c]),...[2,4,6,8,10].map(c=>[9,c])]
+  : roomCells(h).map((x,i)=>[1+2*Math.floor(i/11), i%11]);
+const roomDoneKeys=h=>((S.l2r||{})[h.id]||[]);
+const roomDone=h=>roomDoneKeys(h).length>=roomCells(h).length;
+function paintL2(){
+  if(ROOM){ paintRoom(); return; }
+  setCount(); levelDoneBanner();
+  $("below").innerHTML=`<h2>Houses</h2><div class="words">${L2.map(h=>{
+    const st=!S.l2[h.id]?"dark":roomDone(h)?"letters ✓ · room ✓":`letters ✓ · room ${roomDoneKeys(h).length}/${roomCells(h).length}`;
+    return `<span class="chip" style="--c:${h.c};cursor:default"><span class="dv">${h.letters.slice(0,3)}…</span><span class="me">${h.name}</span><span class="st" style="grid-column:1/-1;font-size:12px;color:var(--muted)">${st}</span></span>`;
+  }).join("")}</div>`;
+}
+
+/* Outside: name the house's letters */
+function openHouse(id){
+  const h=L2.find(x=>x.id===id);
+  R={h,steps:shuffle([...h.letters]).map(c=>({type:"pick",c})),i:0,miss:0,res:[]};
+  showStep();
+}
+function dots(){ return `<div class="dots">${R.steps.map((s,i)=>`<i class="${R.res[i]===true?"ok":R.res[i]===false?"bad":i===R.i?"cur":""}"></i>`).join("")}</div>`; }
+function showStep(){
+  const s=R.steps[R.i], h=R.h;
+  const others=shuffle([...CONS+VOWELS].filter(c=>!h.letters.includes(c))).slice(0,2);
+  const opts=shuffle([...h.letters,...others]);
+  openSheet(sheetTop(`${h.name} · tap the letter for`,showSound()?`“${sound(s.c)}”`:"what you hear","","sSay")+dots()+
+    `<div class="tiles large">${opts.map(c=>`<button class="tile" type="button" data-r="${c}"><span class="g">${c}</span></button>`).join("")}</div><p class="msg" id="rMsg"></p>`);
+  if(!S.iast) say(s.c);
+  $("sSay")&&($("sSay").onclick=()=>say(s.c));
+  wireClose();
+}
+function roundAnswer(c,t){
+  const s=R.steps[R.i], m=$("rMsg");
+  if(R.res[R.i]===undefined && c!==s.c){ R.res[R.i]=false; R.miss++; }
+  if(c!==s.c){ wiggle(t); m.className="msg bad"; m.textContent=`That is ${T(c,sound(c))}.`; return; }
+  if(R.res[R.i]===undefined) R.res[R.i]=true;
+  t.classList.add("right"); m.className="msg good"; m.textContent=T(c,sound(c)); say(c);
+  setTimeout(advance,800);
+}
+function advance(){
+  if(!R) return;
+  R.i++;
+  if(R.i<R.steps.length){ showStep(); return; }
+  const h=R.h, lit=R.miss<=2;
+  if(lit&&!S.l2[h.id]){ S.l2[h.id]=true; save(); paintTown(); flashObj("house:"+h.id); }
+  openSheet(sheetTop(h.name, lit?"The house lights up":"Almost there", `${R.steps.length-R.miss} of ${R.steps.length} right first time`)+dots()+
+    `<div class="win" style="--c:${h.c}"><div class="big">${[...h.letters].join(" ")}</div>
+     <p class="note">${lit?"A door, द्वारम्, is now written into the house. Walk in to practise the combinations of these letters.":"Light it with at most two misses. Try the round again."}</p>
+     <div class="actions" style="justify-content:center">
+       ${lit?`<button class="btn primary" type="button" id="enter">Enter the house</button>`:`<button class="btn primary" type="button" id="again">Try again</button>`}
+       <button class="btn" type="button" id="closeW">Close</button></div></div>`);
+  wireClose(); $("closeW").onclick=closeSheet;
+  const a=$("again"); if(a) a.onclick=()=>openHouse(h.id);
+  const en=$("enter"); if(en) en.onclick=()=>{ closeSheet(); const [r,c]=doorRC(houseIdx(h.id)); gridGo(r,c); };
+  R=null; paintL2();
+}
+
+/* Inside: one tile per vowel sign */
+function paintRoom(){
+  const done=roomDoneKeys(ROOM);
+  roomCells(ROOM).forEach((cell,i)=>{ const [r,c]=roomLayout(ROOM)[i], d=done.includes(cell.k);
+    const item=cell.kind==="build"?cell.syl:MATRA_OF[cell.v], pick=d;
+    setCell(r,c,"tile"+(pick?" pick":""),tileLabel(cell,d),{obj:"tile:"+i,idx:i,lit:d,color:ROOM.c,pick,item}); });
+  setCount(); levelDoneBanner();
+  $("below").innerHTML=`<h2>${ROOM.name} house · ${done.length} / ${roomCells(ROOM).length}</h2><div class="words">${done.length?roomCells(ROOM).filter(c=>done.includes(c.k)).map(c=>
+    c.kind==="build"?`<button class="chip" type="button" data-say2="${c.syl}" style="--c:${ROOM.c}"><span class="dv">${c.syl}</span><span class="me">${[...c.syl].map(glyph).join(" + ")}</span><span class="ia">${translit(c.syl)}</span></button>`
+    :`<span class="chip" style="--c:${ROOM.c};cursor:default"><span class="dv">${c.v} → ◌${MATRA_OF[c.v]}</span><span class="ia">${IAST[c.v]}</span></span>`).join(""):`<span class="chip empty">Nothing yet.</span>`}</div>`;
+}
+function leaveRoom(){
+  const h=ROOM, [dr,dc]=doorRC(houseIdx(h.id));
+  S.hero=S.hero||{}; S.hero["2rg"]=[14,5]; ROOM=null;
+  S.hero["2g"]=[dr+1,dc]; save(); drawTown();
+}
+function openCell(i){
+  const cell=roomCells(ROOM)[i]; CELL={i,cell};
+  if(cell.kind==="build"){
+    const rows=[["Consonants",[...ROOM.letters].filter(isCons)],["Vowel signs",[...MATRA]]];
+    openSheet(sheetTop(`${ROOM.name} house · build`,showSound()?translit(cell.syl):"what you hear","","sSay")+builderHTML([cell.syl],rows));
+    wireClose(); $("sSay")&&($("sSay").onclick=()=>say(cell.syl)); if(!S.iast) say(cell.syl);
+    startBuilder([cell.syl],()=>cellDone(i));
+  } else {
+    const right=MATRA_OF[cell.v], opts=shuffle([right,...shuffle([...MATRA].filter(m=>m!==right)).slice(0,3)]);
+    openSheet(sheetTop("Vowel house · which sign does",`${cell.v} take after a consonant?`,S.iast?IAST[cell.v]:"","sSay")+
+      `<div class="tiles large">${opts.map(m=>`<button class="tile" type="button" data-s="${m}"><span class="g">क${m}</span><span class="iast">k${IAST[m]}</span></button>`).join("")}</div>
+       <p class="msg" id="rMsg">Every vowel except अ has a short sign. Here it is shown on क.</p>`);
+    wireClose(); $("sSay")&&($("sSay").onclick=()=>say(cell.v));
+  }
+}
+function signAnswer(m,t){
+  const cell=CELL.cell, right=MATRA_OF[cell.v], msg=$("rMsg");
+  if(m!==right){ wiggle(t); msg.className="msg bad"; msg.textContent=`${T("क"+m,"k"+IAST[m])} uses a different sign.`; return; }
+  t.classList.add("right"); say("क"+m); setTimeout(()=>cellDone(CELL.i),600);
+}
+function cellDone(i){
+  const cell=roomCells(ROOM)[i]; S.l2r=S.l2r||{}; const arr=S.l2r[ROOM.id]=S.l2r[ROOM.id]||[];
+  if(!arr.includes(cell.k)) arr.push(cell.k); save();
+  paintRoom(); const [r,c]=roomLayout(ROOM)[i]; bump(CELLS[r][c].el);
+  const nextI=roomCells(ROOM).findIndex(c=>!roomDoneKeys(ROOM).includes(c.k));
+  const big= cell.kind==="build" ? cell.syl : `${cell.v} → ◌${MATRA_OF[cell.v]}`;
+  const note= cell.kind==="build" ? `${[...cell.syl].map(glyph).join(" + ")} = ${T(cell.syl)}` : `${T(cell.v,IAST[cell.v])} becomes ◌${MATRA_OF[cell.v]} after a consonant: ${T("क"+MATRA_OF[cell.v],"k"+IAST[cell.v])}.`;
+  if(cell.kind==="build") say(cell.syl);
+  openSheet(sheetTop(ROOM.name+" house", nextI<0?"Room complete":"Well done", "", null)+
+    `<div class="win" style="--c:${ROOM.c}"><div class="big">${big}</div><p class="note">${note}</p>
+     <div class="actions" style="justify-content:center">
+       ${nextI<0?`<button class="btn primary" type="button" id="out">Go outside</button>`:`<button class="btn primary" type="button" id="nextC">Next tile</button>`}
+       <button class="btn" type="button" id="closeW">Close</button></div></div>`);
+  wireClose(); $("closeW").onclick=closeSheet;
+  const n=$("nextC"); if(n) n.onclick=()=>{ closeSheet(); const [r,c]=roomLayout(ROOM)[nextI]; gridGo(r,c); };
+  const o=$("out"); if(o) o.onclick=()=>{ closeSheet(); gridGo(...EXIT_RC[0]); };
+}
+$("below").addEventListener("click",e=>{ const b=e.target.closest("[data-say2]"); if(b) say(b.dataset.say2); });
+
+/* ---------- Level 3: Village words ---------- */
+let CUR=null;
+function initL3(){
+  texture("sky","आकाशः",120); texture("ground","भूमिः",200);
+  L3_SHAPES.forEach(([id,x,y,w,h,cls])=>{ const W=byWord[id]; addObj({id,x,y,w,h,cls,c:W.c,text:rep(W.w,90),label:"Forgotten object"}); });
+  const po=addObj({id:"portal",x:38,y:0,w:24,h:5,cls:"portalobj",c:"#ff4f45",text:"वी थी",label:"Red link back to the street"});
+  $("prompt").hidden=true;
+  $("howto").textContent="Tap where अहम् should walk. It stops at anything forgotten: spell its name to pass. The red वीथी at the top leads back to the street.";
+  addHero(); paintL3();
+}
+function paintL3(){
+  scene.querySelectorAll(".obj").forEach(b=>{ const on=S.l3.includes(b.dataset.id); b.classList.toggle("awake",on); b.classList.toggle("sel",!!(CUR&&CUR.id===b.dataset.id));
+    b.setAttribute("aria-label",on?`${byWord[b.dataset.id].w} (${byWord[b.dataset.id].m})`:"Forgotten object"); });
+  setCount(); levelDoneBanner();
+  const list=WORDS.filter(w=>S.l3.includes(w.id));
+  $("below").innerHTML=`<h2>Remembered words</h2><div class="words">${list.length?list.map(w=>`<button class="chip" type="button" data-say="${w.id}" style="--c:${w.c}"><span class="dv">${w.w}</span><span class="me">${w.m}</span><span class="ia">${w.t}</span></button>`).join(""):`<span class="chip empty">Nothing yet.</span>`}</div>`;
+}
+$("below").addEventListener("click",e=>{ const b=e.target.closest("[data-say]"); if(b) say(byWord[b.dataset.say].w); });
+function openWord(id){
+  CUR=byWord[id];
+  if(S.l3.includes(id)){ showWordWin(); paintL3(); return; }
+  const chars=new Set(CUR.parts.join("")), need=[...chars].filter(isCons);
+  const pool=shuffle([..."कतटडदबभलजशनय"].filter(c=>!chars.has(c))).slice(0,Math.max(4,9-need.length));
+  const cons=[...new Set([...need,...pool])].sort((a,b)=>CONS.indexOf(a)-CONS.indexOf(b));
+  const rows=[["Consonants",cons]]; if([...chars].some(isVowel)) rows.push(["Vowels",["अ","आ","इ","उ"]]);
+  rows.push(["Vowel signs",[...MATRA]],["Marks",[...MARKS]]);
+  openSheet(sheetTop("Spell the word for",CUR.m,CUR.t,"sSay")+builderHTML(CUR.parts,rows));
+  wireClose(); $("sSay")&&($("sSay").onclick=()=>say(CUR.w));
+  startBuilder(CUR.parts,()=>{ S.l3.push(CUR.id); save(); scene.querySelectorAll(`.obj[data-id="${CUR.id}"]`).forEach(bump); say(CUR.w); showWordWin(); paintL3(); });
+  paintL3();
+}
+function showWordWin(){
+  const w=CUR, next=WORDS.find(x=>!S.l3.includes(x.id));
+  const parts=w.parts.map(p=>{ const pc=[...p]; return `<span class="part">${p} <span>= ${pc.length>1?pc.join(" + ")+" · ":""}${translit(p)}</span></span>`; }).join("");
+  openSheet(sheetTop("Remembered",w.m,w.t,null)+`<div class="win" style="--c:${w.c}"><div class="big">${w.w}</div><div class="parts">${parts}</div><p class="note">${w.note}</p>
+    <div class="actions" style="justify-content:center">${canSpeak?`<button class="btn" type="button" id="againW">Hear again</button>`:""}
+    ${next?`<button class="btn primary" type="button" id="nextW">Next: ${next.m}</button>`:`<button class="btn primary" type="button" id="closeW">Done</button>`}</div></div>`);
+  wireClose();
+  const a=$("againW"); if(a) a.onclick=()=>say(w.w);
+  const n=$("nextW"); if(n) n.onclick=()=>openWord(next.id);
+  const d=$("closeW"); if(d) d.onclick=closeSheet;
+}
+
+/* ---------- Global toggles ---------- */
+function setIast(v){ S.iast=v; save(); applyIast(); if(!$("levelView").hidden){ if(LV===1) nextQ(); if(LV===6) initPond(); } }
+$("tIast").onchange=e=>setIast(e.target.checked);
+$("tIastMap").onchange=e=>setIast(e.target.checked);
+
+applyIast(); renderMap(); fillVoices();
+$("voiceSel").onchange=e=>{ S.voice=e.target.value||null; save(); canSpeak=audioOK(); $("voiceTest").disabled=!audioOK(); if(audioOK()) say("अहम्"); };
+$("voiceTest").onclick=()=>say("अक्षरलोकः");
+</script>
+</body>
+</html>
