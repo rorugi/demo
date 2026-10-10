@@ -323,13 +323,15 @@ function traceTap(i){const q=quiz,pt=q.parts[i];if(pt.ok)return;if(i!==q.idx){sa
 pt.ok=true;speak(pt.p);q.idx++;if(q.idx<q.parts.length){draw();return}learnWord(q.e);}
 function learnWord(e){if(e&&TAMEK.includes(e.k)){tamed(e);return}const g=e.g,k=kn(g);k.seen=true;k.due=now()+INT[k.level];const lv=k.level;k.level=Math.min(5,k.level+1);const wi=WINFO[g]||{t:tr(g),m:''};
 say(g+' = '+wi.t+sub(wi.m+' · level '+lv+' → '+k.level+' · next review in '+fmt(INT[lv])));quiz=null;speak(g);save();draw();}
-function identify(e){if(e.k==='sg')return;if(e.k==='st'){if(!doors[e.id])openQuiz(e.g);return}if(active(e.g))return;if(e.k==='ch')openQuiz(e.g);else if(e.tame===-1)openTrace(e);else if(TAMEK.includes(e.k)&&(e.tame||0)>0)openBuild(e);else{openWordQuiz(e.g);if(quiz)quiz.e=e;}}
+function startFollow(e){doors['follow:'+e.id]=true;e.n=1;e.wander=null;speak(e.g);say(e.g+' flies to your side and follows you'+sub('bring it to '+e.deliver.name));save();}
+const canTake=e=>!!(e&&e.deliver&&active(e.g)&&!doors['follow:'+e.id]&&!doors['delivered:'+e.id]);
+function identify(e){if(e.k==='sg')return;if(canTake(e)){if(near(e))startFollow(e);return}if(e.k==='st'){if(!doors[e.id])openQuiz(e.g);return}if(active(e.g))return;if(e.k==='ch')openQuiz(e.g);else if(e.tame===-1)openTrace(e);else if(TAMEK.includes(e.k)&&(e.tame||0)>0)openBuild(e);else{openWordQuiz(e.g);if(quiz)quiz.e=e;}}
 function openBuild(e){const parts=e.g.match(AKS)||[e.g];const others=[...new Set(Object.keys(WINFO).flatMap(w=>w.match(AKS)||[]))].filter(x=>!parts.includes(x));
 const la=parts.map(x=>LA[x]).filter(Boolean);const extra=shuffle([...la,...shuffle(others).slice(0,4)]).slice(0,Math.max(3,5-parts.length));
 quiz={type:'b',g:e.g,e,parts,built:[],stage:'build',tray:shuffle([...parts,...extra].map((p,i)=>({p,id:i,used:false}))),wrong:new Set()};}
 function tamed(e){const g=e.g,k=kn(g);k.seen=true;k.due=now()+INT[k.level];const lv=k.level;k.level=Math.min(5,k.level+1);const wi=WINFO[g]||{t:tr(g),m:''};
 say(g+' = '+wi.t+sub(wi.m+' · level '+lv+' → '+k.level+' · next review in '+fmt(INT[lv])));quiz=null;speak(g);
-if(e&&e.deliver&&!doors['follow:'+e.id]&&!doors['delivered:'+e.id]){doors['follow:'+e.id]=true;e.n=1;e.wander=null;say(g+' flies to your side and follows you'+sub('bring it to '+e.deliver.name));}
+if(e&&e.deliver&&!doors['follow:'+e.id]&&!doors['delivered:'+e.id]){startFollow(e);}
 else if(e&&TAMEK.includes(e.k)){if(e.leave&&e.k!=='hz'){doors['gone:'+e.id]=true;E=E.filter(x=>x!==e);if(sel===e)sel=null;say(e.k==='hz'?g+' dies down and goes out':g+' bows and goes away');}
 else say(e.k==='hz'?g+' burns calmly now · you can pass':g+' is calm now · you can pass');}save();draw();}
 function buildTap(i){const q=quiz,t=q.tray.find(x=>x.id===i);if(!t||t.used)return;const need=q.parts[q.built.length];
@@ -397,7 +399,7 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.transform='translat
 setTimeout(()=>{f.remove();bag[g]=(bag[g]||0)+1;
 
 save();say('You pick up '+g+sub(e.t+(e.fx?' · '+e.fx:'')+' · '+bag[g]+' in your स्यूतः'));draw();const c=document.querySelector('.chip[data-g="'+g+'"]');if(c)c.classList.add('pop');},650);}
-const ACT={open:['lock-open','Open'],pick:['hand-grab','Pick up'],go:['walk','Go there'],near:['walk','Go closer'],id:['eye','Identify']};
+const ACT={take:['feather','Take along'],open:['lock-open','Open'],pick:['hand-grab','Pick up'],go:['walk','Go there'],near:['walk','Go closer'],id:['eye','Identify']};
 const act=a=>a?'<button class="abtn" data-act="'+a+'" style="float:right;margin:-2px 0 4px 8px;font-size:13px;padding:3px 10px"><i class="ti ti-'+ACT[a][0]+'" aria-hidden="true"></i> '+ACT[a][1]+'</button>':'';
 const HEAD=(g,t,m)=>'<div style="font-size:15px"><span style="font-weight:500;font-size:17px">'+g+'</span>'+(t?', <i>'+t+'</i>':'')+(m?' = '+m:'')+'</div>';
 const LINES=ls=>ls.filter(Boolean).map(x=>'<div class="muted" style="margin-top:2px">'+x+'</div>').join('');
@@ -433,8 +435,8 @@ else if(sel&&sel.k==='st'&&E.includes(sel)){inf.innerHTML=doors[sel.id]?panel(''
 else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(sel&&E.includes(sel)&&sel.k!=='sg'&&!active(sel.g)){inf.innerHTML=panel('id',sel.full,'','',['forgotten · identify it again']);}
 else if(sel&&(sel===WALL||sel===DEEP||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
-const hint=sel.k==='dr'?(doors[sel.id]?'open':'locked · needs '+needTxt(sel)):({tr:'walkable, can’t be picked up',wa:'walkable, can’t be picked up',wd:'walkable',sg:'a label (सूचना)',dw:'deep here · you can’t cross it',en:sel.deliver&&doors['delivered:'+sel.id]?'has arrived · it stays here':following(sel)?'follows you · bring it to '+sel.deliver.name:'calm · you can pass',hz:'burns calmly · you can pass'}[sel.k]||'');
-const a=sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'):({it:near(sel)?'pick':'near',ex:'go'}[sel.k]||'');
+const hint=sel.k==='dr'?(doors[sel.id]?'open':'locked · needs '+needTxt(sel)):({tr:'walkable, can’t be picked up',wa:'walkable, can’t be picked up',wd:'walkable',sg:'a label (सूचना)',dw:'deep here · you can’t cross it',en:canTake(sel)?(near(sel)?'tap it to take it with you':'go beside it and tap it to take it with you'):sel.deliver&&doors['delivered:'+sel.id]?'has arrived · it stays here':following(sel)?'follows you · bring it to '+sel.deliver.name:'calm · you can pass',hz:'burns calmly · you can pass'}[sel.k]||'');
+const a=canTake(sel)?(near(sel)?'take':'near'):sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'):({it:near(sel)?'pick':'near',ex:'go'}[sel.k]||'');
 const lvl=E.includes(sel)&&sel.k!=='sg'?'level '+kn(sel.g).level+' · review in '+fmt(kn(sel.g).due-now()):'';
 if(sel.k==='sg'&&!sel.confirm&&E.includes(sel))doors['read:'+lblId(sel)]=true;
 const okx=sel.k==='sg'&&sel.confirm?(doors['read:'+sel.id]?'<div class="lblok">✓ read</div>':'<div style="margin-top:8px"><button class="abtn tw" data-act="ok" style="font-size:14px;padding:4px 18px">OK</button></div>'):'';
@@ -466,8 +468,9 @@ const tl=ev.target.closest('[data-tile]');if(tl&&quiz&&quiz.type==='b'){buildTap
 const pp=ev.target.closest('[data-part]');if(pp&&quiz&&quiz.type==='w'){const i=+pp.dataset.part;if(!quiz.parts[i].ok){quiz.idx=i;mkChoices();draw();}return}
 const a=ev.target.closest('[data-act]');if(!a||!sel||!E.includes(sel))return;
 if(a.dataset.act==='go'){approach(sel);return}
-if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
+if(a.dataset.act==='near'){const e=sel;walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;if(isNew(e)||!active(e.g)||canTake(e))identify(e);});return}
 if(a.dataset.act==='id'){identify(sel);draw();return}
+if(a.dataset.act==='take'){if(canTake(sel)&&near(sel))startFollow(sel);draw();return}
 if(a.dataset.act==='ok'){const l=sel;doors['read:'+l.id]=true;say('✓ '+l.g+sub('read'));for(const d of E)if(d.k==='dr'&&!doors[d.id]&&(d.needRead||[]).includes(l.id)&&!d.need.length&&canOpen(d))openDoor(d);save();draw();return}
 if(a.dataset.act==='open'){const d=sel;if(!near(d)||!canOpen(d)){draw();return}d.need.forEach(g=>{bag[g]--;if(!bag[g])delete bag[g];});doors[d.id]=true;speak(d.full);say('You open the '+d.full+sub(d.t+' · used '+d.need.join(' and ')+' · it stays open'));save();draw();return}
 if(!near(sel)){draw();return}const tile=document.querySelector('#map [data-id="'+E.indexOf(sel)+'"]');pickup(sel,tile||a);});
