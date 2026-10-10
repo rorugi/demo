@@ -288,7 +288,7 @@ function init(){stopWalk();quiz=null;selG=null;
 P={...LV.player,n:1,k:'pl',x:LV.start.x,y:LV.start.y};
 E=JSON.parse(JSON.stringify(LV.entities)).filter(e=>!(e.leave&&e.id&&doors['gone:'+e.id]));for(const k in IINFO)delete IINFO[k];for(const k in WINFO)delete WINFO[k];
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
-for(const e of E){if(!e.deliver)continue;if(doors['delivered:'+e.id]){e.n=1;e.wander=null;[e.x,e.y]=e.deliver.perch;}else if(doors['follow:'+e.id]){e.n=1;e.wander=null;e.x=P.x;e.y=P.y;}}
+for(const e of E){if(!e.deliver)continue;if(doors['delivered:'+e.id]){settle(e);}else if(doors['follow:'+e.id]){e.n=1;e.wander=null;e.x=P.x;e.y=P.y;}}
 E.forEach(e=>{if(e.k!=='ch'&&e.k!=='st')WINFO[e.g]={t:e.t,m:e.m};});
 hp=6;atk=1;logs=[];sel=P;
 say(LV.intro||'');draw();}
@@ -358,9 +358,13 @@ function wanderTick(){for(const e of E){if(!e.wander||(quiz&&quiz.e===e)||(!e.fl
 for(const [dx,dy] of shuffle([[1,0],[-1,0],[0,1],[0,-1]])){const nx=e.x+dx,ny=e.y+dy;if(nx<x0||nx+e.n-1>x1||ny<y0||ny>y1)continue;let ok=true;
 for(let i=0;i<e.n;i++){const cx=nx+i;const o=E.find(q=>q!==e&&occ(q,cx,ny)&&!(e.fly&&['wd','tr','wa','sg'].includes(q.k)));if(!floor(cx,ny)||M[ny][cx]==='+'||(P.x===cx&&P.y===ny)||o){ok=false;break}}if(ok){e.x=nx;e.y=ny;break}}}}
 function move(dx,dy){const px=P.x,py=P.y,r=move0(dx,dy);if(r)followTick(px,py);wanderTick();return r;}
+function settle(e){const [x0,x1,y0,y1]=e.deliver.room;e.n=2;e.fly=true;e.wander=[x0,x1,y0,y1];
+const free=(x,y)=>[0,1].every(i=>floor(x+i,y)&&M[y][x+i]!=='+'&&x+i<=x1&&!(P.x===x+i&&P.y===y)&&!E.find(o=>o!==e&&occ(o,x+i,y)&&!['wd','tr','wa','sg'].includes(o.k)));
+const [qx,qy]=e.deliver.perch;if(free(qx,qy)){e.x=qx;e.y=qy;return}if(free(e.x,e.y)&&e.x>=x0&&e.y>=y0&&e.y<=y1)return;
+for(let y=y0;y<=y1;y++)for(let x=x0;x<x1;x++)if(free(x,y)){e.x=x;e.y=y;return}}
 function followTick(px,py){for(const e of E){if(!following(e))continue;e.x=px;e.y=py;const [x0,x1,y0,y1]=e.deliver.room;
-if(P.x>=x0&&P.x<=x1&&P.y>=y0&&P.y<=y1&&e.x>=x0&&e.x<=x1&&e.y>=y0&&e.y<=y1){doors['delivered:'+e.id]=true;const [qx,qy]=e.deliver.perch;if(!E.find(o=>o!==e&&occ(o,qx,qy))&&!(P.x===qx&&P.y===qy)){e.x=qx;e.y=qy;}
-speak(e.g);say(e.g+' has arrived and settles here'+sub('it stays in this room'));for(const d of E)if(d.k==='dr'&&!doors[d.id]&&(d.needDeliver||[]).includes(e.id)&&!d.need.length&&canOpen(d))openDoor(d);save();}}}
+if(P.x>=x0&&P.x<=x1&&P.y>=y0&&P.y<=y1&&e.x>=x0&&e.x<=x1&&e.y>=y0&&e.y<=y1){doors['delivered:'+e.id]=true;settle(e);
+speak(e.g);say(e.g+' has arrived'+sub('it flies around in this room from now on'));for(const d of E)if(d.k==='dr'&&!doors[d.id]&&(d.needDeliver||[]).includes(e.id)&&!d.need.length&&canOpen(d))openDoor(d);save();}}}
 function move0(dx,dy){const x=P.x+dx,y=P.y+dy;
 if(M[y]&&M[y][x]==='~'){sel=DEEP;learned.add(DEEP.t);say('जलम्'+sub('the water is too deep'));return false;}
 if(!floor(x,y)){sel=WALL;learned.add(WALL.t);say('भित्तिः'+sub('bhittiḥ — a wall blocks you'));return false;}
@@ -435,7 +439,7 @@ else if(sel&&sel.k==='st'&&E.includes(sel)){inf.innerHTML=doors[sel.id]?panel(''
 else if(sel&&E.includes(sel)&&isNew(sel)){inf.innerHTML=unknownInfo(sel);}
 else if(sel&&E.includes(sel)&&sel.k!=='sg'&&!active(sel.g)){inf.innerHTML=panel('id',sel.full,'','',['forgotten · identify it again']);}
 else if(sel&&(sel===WALL||sel===DEEP||sel===P||E.includes(sel))){const u=sel===P?entAt(P.x,P.y):null;
-const hint=sel.k==='dr'?(doors[sel.id]?'open':'locked · needs '+needTxt(sel)):({tr:'walkable, can’t be picked up',wa:'walkable, can’t be picked up',wd:'walkable',sg:'a label (सूचना)',dw:'deep here · you can’t cross it',en:canTake(sel)?(near(sel)?'tap it to take it with you':'go beside it and tap it to take it with you'):sel.deliver&&doors['delivered:'+sel.id]?'has arrived · it stays here':following(sel)?'follows you · bring it to '+sel.deliver.name:'calm · you can pass',hz:'burns calmly · you can pass'}[sel.k]||'');
+const hint=sel.k==='dr'?(doors[sel.id]?'open':'locked · needs '+needTxt(sel)):({tr:'walkable, can’t be picked up',wa:'walkable, can’t be picked up',wd:'walkable',sg:'a label (सूचना)',dw:'deep here · you can’t cross it',en:canTake(sel)?(near(sel)?'tap it to take it with you':'go beside it and tap it to take it with you'):sel.deliver&&doors['delivered:'+sel.id]?'has arrived · it flies around in this room':following(sel)?'follows you · bring it to '+sel.deliver.name:'calm · you can pass',hz:'burns calmly · you can pass'}[sel.k]||'');
 const a=canTake(sel)?(near(sel)?'take':'near'):sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'):({it:near(sel)?'pick':'near',ex:'go'}[sel.k]||'');
 const lvl=E.includes(sel)&&sel.k!=='sg'?'level '+kn(sel.g).level+' · review in '+fmt(kn(sel.g).due-now()):'';
 if(sel.k==='sg'&&!sel.confirm&&E.includes(sel))doors['read:'+lblId(sel)]=true;
