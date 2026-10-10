@@ -13,11 +13,11 @@
   },
   "rows": [
    "########################################################################################",
-   "#......#..........#..........#...................#...................#####.............#",
-   "#......#..........#..........#...................#...................#####.............#",
-   "#......+..........#..........+...................+...................#####.............#",
-   "#......#..........+..........#...................#...................#####.............#",
-   "#......#..........#..........#...................#...................#####.............#",
+   "#......#..........#..........#...................#...................#...#.............#",
+   "#......#..........#..........#...................#...................#...#.............#",
+   "#......+..........#..........+...................+...................+...#.............#",
+   "#......#..........+..........#...................#...................#...#.............#",
+   "#......#..........#..........#...................#...................#...#.............#",
    "#######################################+##################################.............#",
    "#.....#..........#...........#...................#.......................+.............#",
    "#.....#..........#...........#...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
@@ -1183,33 +1183,6 @@
    "m": "vowel sign o"
   },
   {
-   "g": "◌ं",
-   "n": 1,
-   "x": 12,
-   "y": 13,
-   "k": "ch",
-   "t": "ṃ",
-   "m": "anusvāra"
-  },
-  {
-   "g": "◌ः",
-   "n": 1,
-   "x": 27,
-   "y": 18,
-   "k": "ch",
-   "t": "ḥ",
-   "m": "visarga"
-  },
-  {
-   "g": "◌्",
-   "n": 1,
-   "x": 11,
-   "y": 16,
-   "k": "ch",
-   "t": "virāma",
-   "m": "virāma, removes the inherent a"
-  },
-  {
    "g": "इ",
    "n": 1,
    "x": 5,
@@ -1217,15 +1190,6 @@
    "k": "ch",
    "t": "i",
    "m": "vowel i"
-  },
-  {
-   "g": "◌ँ",
-   "n": 1,
-   "x": 9,
-   "y": 20,
-   "k": "ch",
-   "t": "m̐",
-   "m": "candrabindu"
   },
   {
    "g": "◌ि",
@@ -3150,7 +3114,9 @@
    "k": "sg",
    "t": "nāmakaraṇam",
    "m": "naming",
-   "info": "Everything in this world is written: animals, objects, fire, doors and people all appear as their Sanskrit word, so to know a thing you read its word. Naming: stand beside a creature and tap it. Its name appears split into its akṣaras; choose the right sound for each part, one after the other. A wrong choice costs nothing but the word’s level, so at the beginning just try: trial and error is a good way to start. Once named, the creature calms down and lets you pass."
+   "info": "Everything in this world is written: animals, objects, fire, doors and people all appear as their Sanskrit word, so to know a thing you read its word. Naming: stand beside a creature and tap it. Its name appears split into its akṣaras; choose the right sound for each part, one after the other. A wrong choice costs nothing but the word’s level, so at the beginning just try: trial and error is a good way to start. Once named, the creature calms down and lets you pass.",
+   "id": "naming",
+   "confirm": true
   },
   {
    "g": "दीपः",
@@ -3370,6 +3336,62 @@
     ],
     "name": "the room of the ka row (व्यञ्जनानि)"
    }
+  },
+  {
+   "g": "सूचना",
+   "n": 3,
+   "x": 70,
+   "y": 1,
+   "k": "sg",
+   "t": "sūcanā",
+   "m": "notice",
+   "info": "Signs that change a syllable without being a vowel: ◌ं anusvāra adds a nasal after the vowel (कं kaṃ), ◌ः visarga adds a breath (कः kaḥ), ◌ँ candrabindu makes the vowel nasal (कँ kam̐), and ◌् virāma removes the inherent a (क् k)."
+  },
+  {
+   "g": "◌ं",
+   "n": 1,
+   "x": 70,
+   "y": 2,
+   "k": "ch",
+   "t": "ṃ",
+   "m": "anusvāra"
+  },
+  {
+   "g": "◌ः",
+   "n": 1,
+   "x": 72,
+   "y": 2,
+   "k": "ch",
+   "t": "ḥ",
+   "m": "visarga"
+  },
+  {
+   "g": "◌्",
+   "n": 1,
+   "x": 72,
+   "y": 4,
+   "k": "ch",
+   "t": "virāma",
+   "m": "virāma, removes the inherent a"
+  },
+  {
+   "g": "◌ँ",
+   "n": 1,
+   "x": 70,
+   "y": 4,
+   "k": "ch",
+   "t": "m̐",
+   "m": "candrabindu"
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 71,
+   "y": 5,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 2.2
   }
  ],
  "tame": {
@@ -3410,13 +3432,13 @@
    }
   },
   {
-   "text": "Tap the label नामकरणम् to read how naming works.",
+   "text": "Tap the label नामकरणम्, read how naming works and press OK.",
    "at": [
     10,
     1
    ],
    "until": {
-    "read": "lbl8_1"
+    "read": "naming"
    }
   },
   {
