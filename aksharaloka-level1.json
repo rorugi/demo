@@ -448,7 +448,9 @@
    "t": "ḍa",
    "m": "consonant ḍa, looks like ङ",
    "say": "ड",
-   "group": "la"
+   "group": "c",
+   "consonant": "ḍ",
+   "vowel": "a"
   },
   "उ": {
    "t": "u",
@@ -1043,6 +1045,38 @@
    "group": "c",
    "consonant": "ñ",
    "vowel": "a"
+  },
+  "ट": {
+   "t": "ṭa",
+   "m": "consonant ṭa",
+   "say": "ट",
+   "group": "c",
+   "consonant": "ṭ",
+   "vowel": "a"
+  },
+  "ठ": {
+   "t": "ṭha",
+   "m": "consonant ṭha",
+   "say": "ठ",
+   "group": "c",
+   "consonant": "ṭh",
+   "vowel": "a"
+  },
+  "ढ": {
+   "t": "ḍha",
+   "m": "consonant ḍha",
+   "say": "ढ",
+   "group": "c",
+   "consonant": "ḍh",
+   "vowel": "a"
+  },
+  "ण": {
+   "t": "ṇa",
+   "m": "consonant ṇa",
+   "say": "ण",
+   "group": "c",
+   "consonant": "ṇ",
+   "vowel": "a"
   }
  },
  "entities": [
@@ -1086,15 +1120,6 @@
    "cls": "gold"
   },
   {
-   "g": "खड्गः",
-   "n": 2,
-   "x": 12,
-   "y": 10,
-   "k": "it",
-   "t": "khaḍgaḥ",
-   "m": "sword"
-  },
-  {
    "g": "पुष्पम्",
    "n": 2,
    "x": 26,
@@ -1113,18 +1138,6 @@
    "m": "fire",
    "tame": -1,
    "id": "hz24_9"
-  },
-  {
-   "g": "सर्पः",
-   "n": 2,
-   "x": 8,
-   "y": 10,
-   "k": "en",
-   "t": "sarpaḥ",
-   "m": "snake",
-   "d": 0.4,
-   "tame": 0,
-   "id": "en8_10"
   },
   {
    "g": "सर्पः",
@@ -1159,24 +1172,6 @@
    "k": "ex",
    "t": "sopānam",
    "m": "stairs"
-  },
-  {
-   "g": "◌ु",
-   "n": 1,
-   "x": 14,
-   "y": 8,
-   "k": "ch",
-   "t": "u",
-   "m": "vowel sign u"
-  },
-  {
-   "g": "◌ू",
-   "n": 1,
-   "x": 3,
-   "y": 10,
-   "k": "ch",
-   "t": "ū",
-   "m": "vowel sign ū"
   },
   {
    "g": "◌ो",
@@ -1222,15 +1217,6 @@
    "k": "ch",
    "t": "i",
    "m": "vowel i"
-  },
-  {
-   "g": "◌ै",
-   "n": 1,
-   "x": 13,
-   "y": 7,
-   "k": "ch",
-   "t": "ai",
-   "m": "vowel sign ai"
   },
   {
    "g": "◌ँ",
@@ -2465,15 +2451,6 @@
    "m": "tree"
   },
   {
-   "g": "वृक्षः",
-   "n": 2,
-   "x": 10,
-   "y": 11,
-   "k": "tr",
-   "t": "vṛkṣaḥ",
-   "m": "tree"
-  },
-  {
    "g": "वनम्",
    "n": 2,
    "x": 1,
@@ -3288,7 +3265,8 @@
     "अ",
     "आ",
     "◌ा"
-   ]
+   ],
+   "tame": -1
   },
   {
    "g": "सूचना",
@@ -3299,6 +3277,82 @@
    "t": "sūcanā",
    "m": "notice",
    "info": "The door below (द्व) leads to the consonants. It opens with the vowels अ a and आ ā from this room and the vowel sign ◌ा ā from the room of vowel signs to the east. Pick them up into your स्यूतः: stand beside each, learn it, then press Pick up. Short a has no vowel sign, because every consonant already carries it."
+  },
+  {
+   "g": "ट",
+   "n": 1,
+   "x": 8,
+   "y": 10,
+   "k": "ch",
+   "t": "ṭa",
+   "m": "consonant ṭa"
+  },
+  {
+   "g": "ठ",
+   "n": 1,
+   "x": 10,
+   "y": 10,
+   "k": "ch",
+   "t": "ṭha",
+   "m": "consonant ṭha"
+  },
+  {
+   "g": "ड",
+   "n": 1,
+   "x": 12,
+   "y": 10,
+   "k": "ch",
+   "t": "ḍa",
+   "m": "consonant ḍa"
+  },
+  {
+   "g": "ढ",
+   "n": 1,
+   "x": 14,
+   "y": 10,
+   "k": "ch",
+   "t": "ḍha",
+   "m": "consonant ḍha"
+  },
+  {
+   "g": "ण",
+   "n": 1,
+   "x": 16,
+   "y": 10,
+   "k": "ch",
+   "t": "ṇa",
+   "m": "consonant ṇa"
+  },
+  {
+   "g": "टवर्गः",
+   "n": 4,
+   "x": 8,
+   "y": 7,
+   "k": "sg",
+   "t": "ṭavargaḥ",
+   "m": "the ṭa row",
+   "info": "The third row of consonants, the ṭa-varga or cerebrals: ट ṭa, ठ ṭha, ड ḍa, ढ ḍha, ण ṇa. The tongue curls back to the roof of the mouth; in transliteration they carry a dot below."
+  },
+  {
+   "g": "काकः",
+   "n": 2,
+   "x": 3,
+   "y": 9,
+   "k": "en",
+   "t": "kākaḥ",
+   "m": "crow",
+   "tame": 0,
+   "id": "crow1",
+   "cls": "crow",
+   "wander": [
+    1,
+    5,
+    7,
+    11
+   ],
+   "fly": true,
+   "d": 0.2,
+   "info": "A crow flies around in the wood. Name it — and then it would like to be brought to the room of the ka row."
   }
  ],
  "tame": {
