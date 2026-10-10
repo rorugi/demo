@@ -88,7 +88,9 @@ select{background:var(--surface-2);padding:6px 8px}
 .np{background:#E1F5EE;color:#085041}
 @media (prefers-color-scheme:dark){.np{background:#085041;color:#9FE1CB}}
 .np span{animation:live 3.4s ease-in-out infinite}
-.lp{background:#412402;color:#FAC775}
+.lp{background:radial-gradient(ellipse at center,rgba(250,199,117,.38) 0%,rgba(250,199,117,.18) 70%,rgba(250,199,117,.10) 100%);color:#854F0B;font-weight:500}
+@media (prefers-color-scheme:dark){.lp{color:#FAC775}}
+.ent.lp::after{display:none}
 .lp span{animation:glow 4s ease-in-out infinite}
 .ent.lp{z-index:0;animation:lampshine 6s ease-in-out infinite}
 .c.w{position:relative;z-index:2}
