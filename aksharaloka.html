@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" type="image/png" sizes="32x32" href="aksharaloka-icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="aksharaloka-icon-192.png">
+<link rel="apple-touch-icon" href="aksharaloka-icon-180.png">
 <title>Akṣaraloka</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -142,17 +146,33 @@ select{background:var(--surface-2);padding:6px 8px}
 .tw{font-size:12px;padding:2px 8px}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .muted{color:var(--text-secondary)}
+.thopt{display:flex;align-items:center;gap:8px;padding:5px 2px;color:var(--text-primary);cursor:pointer;font-size:14px}
 </style>
+<script>
+window.applyTheme=function(t){document.documentElement.dataset.theme=t;const m=document.querySelector('meta[name=color-scheme]');if(m)m.content=t==='system'?'dark light':t;
+for(const sh of document.styleSheets){let rules;try{rules=sh.cssRules;}catch(e){continue}
+for(const r of rules){if(!r.media||r.media.mediaText===undefined)continue;if(r.__orig===undefined&&/prefers-color-scheme:\s*dark/.test(r.media.mediaText))r.__orig=r.media.mediaText;
+if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not all');if(r.media.mediaText!==want)r.media.mediaText=want;}}}};
+(function(){let T='dark';try{T=localStorage.getItem('skt-theme')||'dark';}catch(e){}window.THEME=T;applyTheme(T);})();
+</script>
 </head>
 <body>
 <main id="root" style="position:relative">
 <h1 class="dev">अक्षरलोकः <span style="font-weight:400;color:var(--text-secondary);font-size:15px">Akṣaraloka</span></h1>
 <h2 class="sr-only">Akṣaraloka, a turn-based Sanskrit roguelike. Tap the floor to walk. Tap an item or akṣara to read it and use the Pick up button to put it in the bag.</h2>
-<div class="row dev" style="justify-content:flex-end;font-size:13px;color:var(--text-secondary)">
+<div class="row dev" style="font-size:13px;color:var(--text-secondary);position:relative">
+<button id="bagbtn" class="tw" style="font-size:13px" aria-expanded="false"><i class="ti ti-backpack" aria-hidden="true"></i> <span class="dev">स्यूतः</span> <i>syūtaḥ</i> = bag · <span id="bagn" style="color:var(--text-primary);font-weight:500">0</span> <i class="ti ti-chevron-down" aria-hidden="true"></i></button>
 <button id="lrnbtn" class="tw" style="font-size:13px" aria-expanded="false">Learned: <span id="sc" style="color:var(--text-primary);font-weight:500">0</span> <i class="ti ti-chevron-down" aria-hidden="true"></i></button>
+<button id="setbtn" class="tw" style="margin-left:auto;font-size:15px;padding:2px 8px" aria-label="Settings" aria-expanded="false"><i class="ti ti-settings" aria-hidden="true"></i></button>
+<div id="setpop" role="dialog" aria-label="Settings" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:20;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:12px;padding:12px 14px;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-family:var(--font-sans)">
+<div style="font-weight:500;color:var(--text-primary);margin-bottom:8px">Settings</div>
+<div class="muted" style="font-size:12px;margin-bottom:6px">Appearance</div>
+<label class="thopt"><input type="radio" name="theme" value="dark"> <i class="ti ti-moon" aria-hidden="true"></i> Dark</label>
+<label class="thopt"><input type="radio" name="theme" value="light"> <i class="ti ti-sun" aria-hidden="true"></i> Light</label>
+<label class="thopt"><input type="radio" name="theme" value="system"> <i class="ti ti-device-desktop" aria-hidden="true"></i> System</label>
+</div>
 </div>
 <div id="lrn" class="dev" style="display:none;margin-top:6px;background:var(--surface-1);border-radius:var(--radius);padding:8px 10px;font-size:13px;max-height:260px;overflow:auto"></div>
-<div class="row" style="margin-top:6px;font-size:13px;color:var(--text-secondary)"><button id="bagbtn" class="tw" style="font-size:13px" aria-expanded="false"><i class="ti ti-backpack" aria-hidden="true"></i> <span class="dev">स्यूतः</span> <i>syūtaḥ</i> = bag · <span id="bagn" style="color:var(--text-primary);font-weight:500">0</span> <i class="ti ti-chevron-down" aria-hidden="true"></i></button></div>
 <div id="bag" class="row dev" style="display:none;min-height:30px;margin-top:4px"></div>
 <div id="map" tabindex="0" aria-label="Game map"></div>
 <div id="info" class="dev" style="background:var(--surface-1);border-radius:var(--radius);padding:8px 12px;font-size:13px;min-height:20px"></div>
@@ -479,6 +499,15 @@ setInterval(()=>{if(!walk)draw();},15000);
 load();sizeView();showLevel();
 if(hasTTS){listVoices();speechSynthesis.onvoiceschanged=listVoices;}else{document.getElementById('voice').innerHTML='<option value="">Off</option><option disabled>Speech not supported here</option>';}
 init();
+</script>
+<script>
+(function(){const b=document.getElementById('setbtn'),p=document.getElementById('setpop');
+const sync=t=>document.querySelectorAll('input[name=theme]').forEach(i=>i.checked=i.value===t);sync(window.THEME);
+b.onclick=ev=>{ev.stopPropagation();const o=p.style.display==='none';p.style.display=o?'':'none';b.setAttribute('aria-expanded',o);};
+p.addEventListener('click',ev=>ev.stopPropagation());
+const close=()=>{p.style.display='none';b.setAttribute('aria-expanded','false');};
+document.addEventListener('click',close);document.addEventListener('keydown',ev=>{if(ev.key==='Escape')close();});
+document.querySelectorAll('input[name=theme]').forEach(i=>i.onchange=()=>{try{localStorage.setItem('skt-theme',i.value);}catch(e){}window.THEME=i.value;applyTheme(i.value);sync(i.value);});})();
 </script>
 </body>
 </html>
