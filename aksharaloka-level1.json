@@ -3059,7 +3059,8 @@
    "k": "lp",
    "t": "dīpaḥ",
    "m": "lamp",
-   "d": 0.0
+   "d": 0.0,
+   "tame": -1
   },
   {
    "g": "दीपः",
@@ -3069,7 +3070,8 @@
    "k": "lp",
    "t": "dīpaḥ",
    "m": "lamp",
-   "d": 0.37
+   "d": 0.37,
+   "tame": -1
   },
   {
    "g": "दीपः",
@@ -3079,7 +3081,8 @@
    "k": "lp",
    "t": "dīpaḥ",
    "m": "lamp",
-   "d": 0.74
+   "d": 0.74,
+   "tame": -1
   },
   {
    "g": "दीपः",
@@ -3089,7 +3092,8 @@
    "k": "lp",
    "t": "dīpaḥ",
    "m": "lamp",
-   "d": 1.1099999999999999
+   "d": 1.1099999999999999,
+   "tame": -1
   },
   {
    "g": "शशः",
@@ -3374,5 +3378,46 @@
   "2": "build, then choose what it means",
   "leave": "animals only: when true the animal goes away once named; fire always stays and burns calmly",
   "-1": "read along: tap the nāgarī syllables one after another, each one shows and speaks its sound (for the very beginning)"
- }
+ },
+ "tutorial": [
+  {
+   "text": "Read the text in the panel below and press OK.",
+   "until": {
+    "read": "namaste"
+   }
+  },
+  {
+   "text": "Tap the pulsing target to walk there.",
+   "at": [
+    5,
+    4
+   ],
+   "until": {
+    "at": [
+     5,
+     4
+    ]
+   }
+  },
+  {
+   "text": "Tap the door द्व to walk through it.",
+   "at": [
+    7,
+    3
+   ],
+   "until": {
+    "x": 7
+   }
+  },
+  {
+   "text": "Tap the label नामकरणम् to read how naming works.",
+   "at": [
+    10,
+    1
+   ],
+   "until": {
+    "read": "lbl8_1"
+   }
+  }
+ ]
 }
