@@ -1,5 +1,5 @@
 {
- "format": "sanskrit-roguelike-level",
+ "format": "aksaraloka-level",
  "version": 1,
  "id": "level-1",
  "title": "अहम् — first level",
@@ -3239,5 +3239,6 @@
    "t": "vanam",
    "m": "wood, a whole region of trees"
   }
- ]
+ ],
+ "game": "Akṣaraloka 2"
 }
