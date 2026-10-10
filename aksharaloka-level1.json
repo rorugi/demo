@@ -3832,13 +3832,25 @@
     {
      "g": "व्याघ्रः",
      "n": 3,
-     "x": 9,
-     "y": 12,
+     "x": 15,
+     "y": 4,
      "k": "en",
      "t": "vyāghraḥ",
      "m": "tiger",
      "tame": 1,
-     "id": "en9_12"
+     "id": "tiger2",
+     "wander": [
+      10,
+      20,
+      1,
+      5
+     ],
+     "hits": true,
+     "throwTo": [
+      5,
+      3
+     ],
+     "info": "A tiger prowls through this room. If it runs into you before you have named it, it throws you back to the stairs. Stand beside it and build its name to calm it."
     },
     {
      "g": "रेफः",
