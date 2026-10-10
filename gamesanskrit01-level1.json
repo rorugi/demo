@@ -85,8 +85,9 @@
    "walk": true
   },
   "sg": {
-   "name": "sign",
-   "walk": true
+   "name": "label (सूचना)",
+   "walk": true,
+   "note": "text g, meaning m and an info text shown on hover or when stepped on"
   },
   "it": {
    "name": "item",
@@ -2172,7 +2173,8 @@
    "y": 1,
    "k": "sg",
    "t": "svaracihnāni",
-   "m": "vowel signs, in the order of the vowels"
+   "m": "vowel signs, in the order of the vowels",
+   "info": "The vowel signs, each placed where its vowel stands in the room of vowels."
   },
   {
    "g": "सेतुः",
@@ -2181,7 +2183,8 @@
    "y": 7,
    "k": "sg",
    "t": "setuḥ",
-   "m": "bridge: decipher each stone to step on it"
+   "m": "bridge: decipher each stone to step on it",
+   "info": "Two paths of stepping stones made of look-alike letters. Decipher a stone to raise it."
   },
   {
    "g": "भ",
@@ -2370,7 +2373,8 @@
    "y": 19,
    "k": "sg",
    "t": "mandiram",
-   "m": "temple"
+   "m": "temple",
+   "info": "A temple with people and gods from the word list. Name them to greet them."
   },
   {
    "g": "नरः",
@@ -2502,7 +2506,8 @@
    "y": 1,
    "k": "sg",
    "t": "svarāḥ",
-   "m": "vowels, in order"
+   "m": "vowels, in order",
+   "info": "The fourteen vowels in their traditional order. Stand beside each one to learn it."
   },
   {
    "g": "व्यञ्जनानि",
@@ -2511,7 +2516,8 @@
    "y": 7,
    "k": "sg",
    "t": "vyañjanāni",
-   "m": "consonants, the ka row"
+   "m": "consonants, the ka row",
+   "info": "The first row of consonants, the ka-varga: ka kha ga gha ṅa."
   },
   {
    "g": "मात्राः",
@@ -2520,7 +2526,8 @@
    "y": 13,
    "k": "sg",
    "t": "mātrāḥ",
-   "m": "vowel signs on ka, kha, ga, gha, ṅa"
+   "m": "vowel signs on ka, kha, ga, gha, ṅa",
+   "info": "Each consonant of the ka row with every vowel sign. The door needs क and ग from your bag."
   },
   {
    "g": "वृक्षः",
