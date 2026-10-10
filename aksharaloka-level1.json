@@ -18,7 +18,7 @@
    "#......+..........#..........+...................+...................#####.............#",
    "#......#..........+..........#...................#...................#####.............#",
    "#......#..........#..........#...................#...................#####.............#",
-   "############+#######+##################+###################+##############.............#",
+   "####################+##################+###################+##############.............#",
    "#.....#..........#...........#...................#.......................+.............#",
    "#.....#..........#...........#...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
    "#.....+..........+...........+...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
@@ -137,7 +137,7 @@
    "name": "door",
    "walk": false,
    "bump": "locked",
-   "open": "need: uses one of each listed letter from the bag, stays open"
+   "open": "letters in need are used from the bag; labels in needRead must be confirmed with OK; stays open"
   },
   "st": {
    "name": "stepping stone",
@@ -1052,15 +1052,6 @@
    "cls": "gold"
   },
   {
-   "g": "पुस्तकम्",
-   "n": 3,
-   "x": 22,
-   "y": 2,
-   "k": "it",
-   "t": "pustakam",
-   "m": "book"
-  },
-  {
    "g": "खड्गः",
    "n": 2,
    "x": 12,
@@ -1113,18 +1104,6 @@
    "tame": 0,
    "leave": true,
    "id": "en18_15"
-  },
-  {
-   "g": "सिंहः",
-   "n": 2,
-   "x": 25,
-   "y": 3,
-   "k": "en",
-   "t": "siṃhaḥ",
-   "m": "lion",
-   "d": 1.7,
-   "tame": 1,
-   "id": "en25_3"
   },
   {
    "g": "व्याघ्रः",
@@ -1239,15 +1218,6 @@
    "k": "ch",
    "t": "i",
    "m": "vowel i"
-  },
-  {
-   "g": "ऋ",
-   "n": 1,
-   "x": 26,
-   "y": 5,
-   "k": "ch",
-   "t": "ṛ",
-   "m": "vowel ṛ"
   },
   {
    "g": "◌ै",
@@ -2907,195 +2877,6 @@
   {
    "g": "वनम्",
    "n": 2,
-   "x": 19,
-   "y": 1,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 21,
-   "y": 1,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 23,
-   "y": 1,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 25,
-   "y": 1,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 27,
-   "y": 1,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 3,
-   "x": 19,
-   "y": 2,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 25,
-   "y": 2,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 27,
-   "y": 2,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 19,
-   "y": 3,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 21,
-   "y": 3,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 23,
-   "y": 3,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 27,
-   "y": 3,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 19,
-   "y": 4,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 21,
-   "y": 4,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 23,
-   "y": 4,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 25,
-   "y": 4,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 27,
-   "y": 4,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 19,
-   "y": 5,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 21,
-   "y": 5,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 3,
-   "x": 23,
-   "y": 5,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
-   "x": 27,
-   "y": 5,
-   "k": "wd",
-   "t": "vanam",
-   "m": "wood, a whole region of trees"
-  },
-  {
-   "g": "वनम्",
-   "n": 2,
    "x": 1,
    "y": 7,
    "k": "wd",
@@ -3294,7 +3075,9 @@
    "k": "sg",
    "t": "namaste",
    "m": "greetings to you",
-   "info": "Namaste! You are अ, short for अहम् aham = “I”. This is Akṣaraloka, a world written in Devanagari. Tap the floor to walk. Go beside a word or letter and tap it to learn to read it: unknown words are written in black and get their colours once you can read them. Letters can be picked up into your स्यूतः bag, and some doors need them. Animals and fire block the way until you name them. What you learn fades over time, so come back and read it again. Labels like this one tell you more. Start through the door on the right."
+   "info": "Namaste! You are अ, short for अहम् aham = “I”. This is Akṣaraloka, a world written in Devanagari. Tap the floor to walk. Go beside a word or letter and tap it to learn to read it: unknown words are written in black and get their colours once you can read them. Letters can be picked up into your स्यूतः bag, and some doors need them. Animals and fire block the way until you name them. What you learn fades over time, so come back and read it again. Labels like this one tell you more. Start through the door on the right.",
+   "id": "namaste",
+   "confirm": true
   },
   {
    "g": "दीपः",
@@ -3340,15 +3123,21 @@
    "g": "शशः",
    "n": 2,
    "x": 10,
-   "y": 2,
+   "y": 3,
    "k": "en",
    "t": "śaśaḥ",
    "m": "rabbit",
    "tame": 0,
-   "id": "en10_2",
+   "id": "rabbit1",
    "cls": "brown",
    "d": 0.5,
-   "info": "Animals live in this world. They are not fought: an animal blocks your way until you name it. Stand beside it, tap it and read its name. Some animals ask you to build their name or to know what it means."
+   "info": "Animals live in this world. They are not fought: an animal blocks your way until you name it. Stand beside it, tap it and read its name. Some animals ask you to build their name or to know what it means.",
+   "wander": [
+    8,
+    17,
+    1,
+    5
+   ]
   },
   {
    "g": "वाक्",
@@ -3359,6 +3148,79 @@
    "t": "vāk",
    "m": "voice, speech, language",
    "info": "वाक् vāc is the power of speech. Here sounds and words are magic: reading a word gives it its colour, naming a creature calms it, and the letters you collect open doors."
+  },
+  {
+   "g": "द्वारम्",
+   "label": "द्व",
+   "n": 1,
+   "x": 7,
+   "y": 3,
+   "k": "dr",
+   "t": "dvāram",
+   "m": "door",
+   "id": "d0",
+   "need": [],
+   "needRead": [
+    "namaste"
+   ]
+  },
+  {
+   "g": "नामकरणम्",
+   "n": 5,
+   "x": 8,
+   "y": 1,
+   "k": "sg",
+   "t": "nāmakaraṇam",
+   "m": "naming",
+   "info": "Naming: stand beside a creature and tap it. Its name appears split into its akṣaras; choose the right sound for each part, one after the other. A wrong choice costs nothing but the word’s level, so at the beginning just try: trial and error is a good way to start. Once named, the creature calms down and lets you pass. The rabbit here wanders around, so follow it."
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 16,
+   "y": 1,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 0.8
+  },
+  {
+   "g": "अकारः",
+   "n": 4,
+   "x": 20,
+   "y": 1,
+   "k": "sg",
+   "t": "akāraḥ",
+   "m": "the sound a",
+   "info": "Every consonant carries a short a: क is ka, not just k. The short a is the most common sound in Sanskrit, so the script does not write it: it is built into every consonant. A vowel sign replaces it (कि ki, कु ku), and the virāma ् removes it (क् k). Learn the vowel अ and the consonant क here."
+  },
+  {
+   "g": "अ",
+   "n": 1,
+   "x": 22,
+   "y": 3,
+   "k": "ch",
+   "t": "a",
+   "m": "vowel a"
+  },
+  {
+   "g": "क",
+   "n": 1,
+   "x": 26,
+   "y": 3,
+   "k": "ch",
+   "t": "ka",
+   "m": "consonant ka"
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 27,
+   "y": 5,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 1.6
   }
  ],
  "tame": {
