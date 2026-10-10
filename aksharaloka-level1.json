@@ -137,7 +137,7 @@
    "name": "door",
    "walk": false,
    "bump": "locked",
-   "open": "letters in need are used from the bag; labels in needRead must be confirmed with OK; stays open"
+   "open": "letters in need are used from the bag; needRead labels must be confirmed with OK; needDeliver creatures must have been brought to their room; stays open"
   },
   "st": {
    "name": "stepping stone",
@@ -2073,9 +2073,9 @@
    "t": "dvāram",
    "m": "door",
    "id": "d1",
-   "need": [
-    "क",
-    "ग"
+   "need": [],
+   "needDeliver": [
+    "crow1"
    ]
   },
   {
@@ -3037,7 +3037,7 @@
    "k": "sg",
    "t": "sūcanā",
    "m": "notice",
-   "info": "The door below (द्वारम्) is locked. It opens with क (ka) and ग (ga) from your स्यूतः bag. Both stand in this room: go beside each one, learn it, then press Pick up. Letters the door still needs glow on the map."
+   "info": "The door below (द्वारम्) opens when the crow काकः is here with you. It flies around in the small wood in the far west, past the rooms of the ca row and the ṭa row. Name it, and it will follow you back here."
   },
   {
    "g": "नमस्ते",
@@ -3352,7 +3352,20 @@
    ],
    "fly": true,
    "d": 0.2,
-   "info": "A crow flies around in the wood. Name it — and then it would like to be brought to the room of the ka row."
+   "info": "A crow flies around in the wood. Name it and it will follow you. Bring it to the room of the ka row: there it opens the door down to the vowel signs on consonants.",
+   "deliver": {
+    "room": [
+     30,
+     48,
+     7,
+     11
+    ],
+    "perch": [
+     32,
+     8
+    ],
+    "name": "the room of the ka row (व्यञ्जनानि)"
+   }
   }
  ],
  "tame": {
