@@ -3,7 +3,7 @@
  "version": 1,
  "id": "level-1",
  "title": "अहम् — first level",
- "intro": "त्वम् अ असि — tap to walk. Stand beside new things to identify them. Animals and fire block your way until you name them.",
+ "intro": "नमस्ते! Read the नमस्ते label in this room to learn how to play.",
  "map": {
   "legend": {
    "#": "wall (भित्तिः)",
@@ -18,7 +18,7 @@
    "#......+..........#..........+...................+...................#####.............#",
    "#......#..........+..........#...................#...................#####.............#",
    "#......#..........#..........#...................#...................#####.............#",
-   "###+########+#######+##################+###################+##############.............#",
+   "############+#######+##################+###################+##############.............#",
    "#.....#..........#...........#...................#.......................+.............#",
    "#.....#..........#...........#...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
    "#.....+..........+...........+...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
@@ -41,8 +41,8 @@
   ]
  },
  "start": {
-  "x": 2,
-  "y": 14
+  "x": 3,
+  "y": 2
  },
  "player": {
   "g": "अ",
@@ -1015,15 +1015,6 @@
   {
    "g": "जलम्",
    "n": 2,
-   "x": 2,
-   "y": 2,
-   "k": "wa",
-   "t": "jalam",
-   "m": "water"
-  },
-  {
-   "g": "जलम्",
-   "n": 2,
    "x": 24,
    "y": 20,
    "k": "wa",
@@ -1040,15 +1031,6 @@
    "t": "jalam",
    "m": "water",
    "d": 2
-  },
-  {
-   "g": "फलम्",
-   "n": 2,
-   "x": 10,
-   "y": 1,
-   "k": "it",
-   "t": "phalam",
-   "m": "fruit"
   },
   {
    "g": "फलम्",
@@ -1095,17 +1077,6 @@
    "k": "it",
    "t": "puṣpam",
    "m": "flower"
-  },
-  {
-   "g": "अग्निः",
-   "n": 2,
-   "x": 12,
-   "y": 4,
-   "k": "hz",
-   "t": "agniḥ",
-   "m": "fire",
-   "tame": 0,
-   "id": "hz12_4"
   },
   {
    "g": "अग्निः",
@@ -1187,24 +1158,6 @@
    "k": "ex",
    "t": "sopānam",
    "m": "stairs"
-  },
-  {
-   "g": "◌ि",
-   "n": 1,
-   "x": 4,
-   "y": 1,
-   "k": "ch",
-   "t": "i",
-   "m": "vowel sign i"
-  },
-  {
-   "g": "◌ी",
-   "n": 1,
-   "x": 15,
-   "y": 2,
-   "k": "ch",
-   "t": "ī",
-   "m": "vowel sign ī"
   },
   {
    "g": "◌ु",
@@ -2540,15 +2493,6 @@
   {
    "g": "वृक्षः",
    "n": 2,
-   "x": 14,
-   "y": 1,
-   "k": "tr",
-   "t": "vṛkṣaḥ",
-   "m": "tree"
-  },
-  {
-   "g": "वृक्षः",
-   "n": 2,
    "x": 26,
    "y": 7,
    "k": "tr",
@@ -3341,6 +3285,80 @@
    "t": "sūcanā",
    "m": "notice",
    "info": "The door below (द्वारम्) is locked. It opens with क (ka) and ग (ga) from your स्यूतः bag. Both stand in this room: go beside each one, learn it, then press Pick up. Letters the door still needs glow on the map."
+  },
+  {
+   "g": "नमस्ते",
+   "n": 4,
+   "x": 2,
+   "y": 3,
+   "k": "sg",
+   "t": "namaste",
+   "m": "greetings to you",
+   "info": "Namaste! You are अ, short for अहम् aham = “I”. This is Akṣaraloka, a world written in Devanagari. Tap the floor to walk. Go beside a word or letter and tap it to learn to read it: unknown words are written in black and get their colours once you can read them. Letters can be picked up into your स्यूतः bag, and some doors need them. Animals and fire block the way until you name them. What you learn fades over time, so come back and read it again. Labels like this one tell you more. Start through the door on the right."
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 1,
+   "y": 1,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 0.0
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 5,
+   "y": 1,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 0.37
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 1,
+   "y": 5,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 0.74
+  },
+  {
+   "g": "दीपः",
+   "n": 2,
+   "x": 5,
+   "y": 5,
+   "k": "lp",
+   "t": "dīpaḥ",
+   "m": "lamp",
+   "d": 1.1099999999999999
+  },
+  {
+   "g": "शशः",
+   "n": 2,
+   "x": 10,
+   "y": 2,
+   "k": "en",
+   "t": "śaśaḥ",
+   "m": "rabbit",
+   "tame": 0,
+   "id": "en10_2",
+   "cls": "brown",
+   "d": 0.5,
+   "info": "Animals live in this world. They are not fought: an animal blocks your way until you name it. Stand beside it, tap it and read its name. Some animals ask you to build their name or to know what it means."
+  },
+  {
+   "g": "वाक्",
+   "n": 2,
+   "x": 14,
+   "y": 4,
+   "k": "it",
+   "t": "vāk",
+   "m": "voice, speech, language",
+   "info": "वाक् vāc is the power of speech. Here sounds and words are magic: reading a word gives it its colour, naming a creature calms it, and the letters you collect open doors."
   }
  ],
  "tame": {
