@@ -41,7 +41,7 @@
   ]
  },
  "start": {
-  "x": 3,
+  "x": 1,
   "y": 3
  },
  "player": {
@@ -3150,7 +3150,7 @@
    "k": "sg",
    "t": "nāmakaraṇam",
    "m": "naming",
-   "info": "Naming: stand beside a creature and tap it. Its name appears split into its akṣaras; choose the right sound for each part, one after the other. A wrong choice costs nothing but the word’s level, so at the beginning just try: trial and error is a good way to start. Once named, the creature calms down and lets you pass."
+   "info": "Everything in this world is written: animals, objects, fire, doors and people all appear as their Sanskrit word, so to know a thing you read its word. Naming: stand beside a creature and tap it. Its name appears split into its akṣaras; choose the right sound for each part, one after the other. A wrong choice costs nothing but the word’s level, so at the beginning just try: trial and error is a good way to start. Once named, the creature calms down and lets you pass."
   },
   {
    "g": "दीपः",
@@ -3417,6 +3417,13 @@
    ],
    "until": {
     "read": "lbl8_1"
+   }
+  },
+  {
+   "text": "Now the rabbit शशः: tap it, then tap it again to walk beside it and read its name.",
+   "ent": "rabbit1",
+   "until": {
+    "known": "शशः"
    }
   }
  ]
