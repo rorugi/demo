@@ -159,11 +159,15 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
 
   <section class="spl">
     <h2 id="splTitle">Splines</h2>
-    <p class="note">Die Mittellinien als SVG-Pfade (kubische Bézier-Splines), in Strichreihenfolge. Punkte stehen quer zum aktuellen Federwinkel. Koordinaten in Schrifteinheiten: y nach unten, Kopflinie bei y = 117, Grundlinie bei y = 700, Breite = adv.</p>
+    <p class="note">Die Mittellinien als SVG-Pfade (kubische Bézier-Splines), in Strichreihenfolge. Punkte stehen quer zum aktuellen Federwinkel. Koordinaten in Schrifteinheiten: y nach unten, Kopflinie bei y = 117, Grundlinie bei y = 700, Breite = adv. <b>Variable Breite</b>: der Rahmen ist so breit wie der Buchstabe (adv + 40 je Seite), gut zum Zusammensetzen von Wörtern (nächster Buchstabe bei x = adv). <b>Fester Rahmen</b>: 1200 × 1290 für alle Zeichen, mittig, gut für Karten, Icons und Raster.</p>
     <div class="spl-bar">
       <div class="seg" role="group" aria-label="Format">
         <button type="button" data-fmt="json" aria-pressed="true">JSON</button>
         <button type="button" data-fmt="svg" aria-pressed="false">SVG</button>
+      </div>
+      <div class="seg" role="group" aria-label="Rahmen">
+        <button type="button" data-box="var" aria-pressed="true">Variable Breite</button>
+        <button type="button" data-box="fix" aria-pressed="false">Fester Rahmen</button>
       </div>
       <button class="btn" id="splCopy" type="button">Kopieren</button>
       <button class="btn" id="splAll" type="button">Alle Zeichen kopieren</button>
@@ -249,9 +253,17 @@ function build(){
 // Splines below the board: the stroke paths of the current letter, ready to copy
 let splFmt="json";
 try{ splFmt=localStorage.getItem("deva-nib-fmt")||"json"; }catch(e){}
-const splJSON=d=>`{\n  "ch": "${d.ch}",\n  "tr": "${d.tr}",\n  "adv": ${d.adv},\n  "strokes": [\n${d.strokes.map(s=>`    "${(isDot(s)?dotPath(s):s).replace(/\s+/g," ").trim()}"`).join(",\n")}\n  ]\n}`;
+let splBox="var";
+try{ splBox=localStorage.getItem("deva-nib-box")||"var"; }catch(e){}
+// Frame of the exported SVG: variable (letter width) or fixed (same 1200 × 1290 box for every letter, centred)
+function splViewBox(d){
+  if(splBox==="fix") return [Math.round(d.adv/2-600),-235,1200,1290];
+  const HEAD=117, BASE=700, Z=(BASE-HEAD)/2, y0=Math.floor(HEAD-Z), y1=Math.ceil(BASE+Z);
+  return [-40,y0,d.adv+80,y1-y0];
+}
+const splJSON=d=>`{\n  "ch": "${d.ch}",\n  "tr": "${d.tr}",\n  "adv": ${d.adv},\n  "viewBox": "${splViewBox(d).join(" ")}",\n  "strokes": [\n${d.strokes.map(s=>`    "${(isDot(s)?dotPath(s):s).replace(/\s+/g," ").trim()}"`).join(",\n")}\n  ]\n}`;
 function splSVG(d){
-  const HEAD=117, BASE=700, Z=(BASE-HEAD)/2, x0=-40, y0=HEAD-Z, w=d.adv+80, h=(BASE+Z)-y0;
+  const [x0,y0,w,h]=splViewBox(d);
   return `<!-- ${d.ch} (${d.tr}): Mittellinien in Strichreihenfolge -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${w} ${h}" fill="none" stroke="currentColor" stroke-width="40" stroke-linecap="round" stroke-linejoin="round">\n${d.strokes.map((s,i)=>`  <path d="${(isDot(s)?dotPath(s):s).replace(/\s+/g," ").trim()}"/> <!-- ${i+1}${isDot(s)?`, Punkt bei ${angle}°`:""} -->`).join("\n")}\n</svg>`;
 }
 const splText=d=>splFmt==="svg"?splSVG(d):splJSON(d);
@@ -260,6 +272,7 @@ function showSplines(){
   $("splTitle").textContent=`Splines für ${d.ch}`;
   $("splCode").textContent=splText(d);
   document.querySelectorAll(".seg [data-fmt]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.fmt===splFmt));
+  document.querySelectorAll(".seg [data-box]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.box===splBox));
   $("splMsg").textContent="";
 }
 function copyText(txt,msg){
@@ -268,6 +281,7 @@ function copyText(txt,msg){
   try{ navigator.clipboard.writeText(txt).then(done,fallback); }catch(e){ fallback(); }
 }
 document.querySelectorAll(".seg [data-fmt]").forEach(b=>b.onclick=()=>{ splFmt=b.dataset.fmt; try{ localStorage.setItem("deva-nib-fmt",splFmt); }catch(e){} showSplines(); });
+document.querySelectorAll(".seg [data-box]").forEach(b=>b.onclick=()=>{ splBox=b.dataset.box; try{ localStorage.setItem("deva-nib-box",splBox); }catch(e){} showSplines(); });
 $("splCopy").onclick=()=>copyText($("splCode").textContent,`${DATA[cur].ch} kopiert.`);
 $("splAll").onclick=()=>copyText(splFmt==="svg"?DATA.map(splSVG).join("\n\n"):"[\n"+DATA.map(d=>splJSON(d).replace(/^/gm,"  ")).join(",\n")+"\n]",`Alle ${DATA.length} Zeichen kopiert.`);
 
