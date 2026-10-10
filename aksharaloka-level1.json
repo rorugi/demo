@@ -3331,6 +3331,16 @@
    "t": "dīpaḥ",
    "m": "lamp",
    "d": 0.5
+  },
+  {
+   "g": "सूचना",
+   "n": 4,
+   "x": 34,
+   "y": 11,
+   "k": "sg",
+   "t": "sūcanā",
+   "m": "notice",
+   "info": "The door below (द्वारम्) is locked. It opens with क (ka) and ग (ga) from your स्यूतः bag. Both stand in this room: go beside each one, learn it, then press Pick up. Letters the door still needs glow on the map."
   }
  ],
  "tame": {
