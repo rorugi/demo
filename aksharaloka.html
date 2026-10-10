@@ -52,7 +52,8 @@ select{background:var(--surface-2);padding:6px 8px}
 .c{display:flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap;overflow:hidden}
 .c span{display:inline-block}
 .w{background:var(--fill-control-hover);color:var(--text-secondary);font-size:13px;border:0.5px solid var(--border-strong);cursor:pointer}
-.f{color:var(--text-muted);font-size:11px;cursor:pointer}
+.f{color:var(--text-muted);font-size:11px;cursor:pointer;background:#ECEBE6}
+@media (prefers-color-scheme:dark){.f{background:#2B2B29}}
 .tg{color:var(--text-accent);font-size:14px}
 .ent{font-size:15px;border-radius:6px;margin:1px;cursor:pointer;z-index:1;position:relative}
 .ent::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,transparent calc(100% - 0.5px),var(--border-strong) 0);background-size:24px 100%;opacity:.5;border-radius:6px}
@@ -68,6 +69,7 @@ select{background:var(--surface-2);padding:6px 8px}
 .hz{color:var(--text-warning);background:var(--bg-warning)}
 .ex{color:var(--text-primary);background:var(--surface-1);border:0.5px solid var(--border-stronger)}
 .ch{background:#D85A30;color:#000;font-weight:500}
+@media (prefers-color-scheme:dark){.ch{background:#B0613F}}
 .ch.ok{color:#fff}
 .wa{color:var(--water-fg);background:var(--water-bg)}
 .ent.gold{background:#EF9F27;color:#412402}
@@ -142,6 +144,7 @@ select{background:var(--surface-2);padding:6px 8px}
 .lrow.pop{background:var(--bg-accent)}
 .fly{position:absolute;z-index:10;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;pointer-events:none;transition:transform .65s cubic-bezier(.5,0,.3,1),opacity .65s;font-family:'Noto Sans Devanagari',var(--font-sans)}
 .fly.ch{background:#D85A30;color:#fff}
+@media (prefers-color-scheme:dark){.fly.ch{background:#B0613F}}
 .fly.it{background:var(--bg-pro);color:var(--text-pro)}
 .tw{font-size:12px;padding:2px 8px}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -178,14 +181,11 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <div id="info" class="dev" style="background:var(--surface-1);border-radius:var(--radius);padding:8px 12px;font-size:13px;min-height:20px"></div>
 <div id="log" class="dev" style="margin-top:0.75rem;font-size:13px;line-height:1.6;min-height:84px"></div>
 <div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px">
-<span>Simulate time</span><button class="tw" data-t="300000">+5 min</button><button class="tw" data-t="3600000">+1 h</button><button class="tw" data-t="86400000">+1 d</button><button class="tw" data-t="432000000">+5 d</button>
-<button id="rs" style="margin-left:auto;font-size:12px;padding:2px 10px">Restart</button>
-</div>
-<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px">
 <span>Level <span id="lvname" class="dev" style="color:var(--text-primary)"></span></span>
 <button id="dl" class="tw" style="margin-left:auto"><i class="ti ti-download" aria-hidden="true"></i> Download level</button>
 <label class="tw" style="border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer"><i class="ti ti-upload" aria-hidden="true"></i> Load level<input id="ld" type="file" accept=".json,application/json" style="display:none"></label>
 <button id="bi" class="tw" style="display:none">Built-in level</button>
+<button id="rs" class="tw">Restart</button>
 </div>
 <div id="lderr" style="font-size:13px;color:var(--text-danger);min-height:0"></div>
 <div class="row" style="gap:8px;margin-top:10px;font-size:13px;color:var(--text-secondary)">
@@ -195,6 +195,7 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <div id="vhint" class="muted" style="font-size:12px;margin-top:4px"></div>
 <section id="admin" style="margin-top:20px;border-top:0.5px solid var(--border);padding-top:12px">
 <div class="row" style="font-size:13px"><span style="font-weight:500">Admin</span><label style="margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="edon"> Enable editing</label></div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Simulate time</span><button class="tw" data-t="300000">+5 min</button><button class="tw" data-t="3600000">+1 h</button><button class="tw" data-t="86400000">+1 d</button><button class="tw" data-t="432000000">+5 d</button></div>
 <div id="edtools" style="display:none;margin-top:8px;font-size:13px">
 <div class="row">
 <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="edtool" value="draw" checked> <i class="ti ti-pencil" aria-hidden="true"></i> Draw</label>
@@ -476,7 +477,7 @@ editedLevel();const j=LV.entities.findIndex(x=>sameE(x,e));Object.assign(e,o,{fu
 WINFO[e.g]={t:e.t,m:e.m};editedLevel();edMsg('Label updated');draw();};
 function pan(dx,dy){ED.cam={x:Math.max(0,Math.min(W-VW,ED.cx+dx)),y:Math.max(0,Math.min(H-VH,ED.cy+dy))};draw();edPos();}
 function edPos(){document.getElementById('edpos').textContent='view '+ED.cx+','+ED.cy;}
-document.getElementById('edon').onchange=ev=>{ED.on=ev.target.checked;document.getElementById('edtools').style.display=ED.on?'':'none';document.getElementById('map').style.cursor=ED.on?'crosshair':'';
+document.getElementById('edon').onchange=ev=>{ED.on=ev.target.checked;{const ad=document.getElementById('admin'),mp=document.getElementById('map');if(ED.on){mp.after(ad);ad.style.marginTop='8px';}else{document.getElementById('vhint').after(ad);ad.style.marginTop='20px';}}document.getElementById('edtools').style.display=ED.on?'':'none';document.getElementById('map').style.cursor=ED.on?'crosshair':'';
 stopWalk();quiz=null;if(ED.on){ED.cam={x:ED.cx,y:ED.cy};fillEditor();edMsg('Tap fields on the map to draw or delete');}draw();edPos();};
 document.getElementById('edtype').onchange=ev=>{const d=EDT[+ev.target.value];document.getElementById('edletter').style.display=(d[0]==='ch'||d[0]==='st')?'':'none';document.getElementById('edlabel').style.display=d[0]==='label'?'':'none';ED.lab=null;document.getElementById('edlupd').style.display='none';document.getElementById('edtame').style.display=(d[0]==='e'&&TAMEK.includes(d[1].k))?'':'none';document.getElementById('edleave').parentNode.style.display=(d[0]==='e'&&d[1].k==='en')?'':'none';};
 document.querySelectorAll('[data-pan]').forEach(b=>b.onclick=()=>{const [a,c]=b.dataset.pan.split(',').map(Number);pan(a,c);});
