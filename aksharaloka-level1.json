@@ -18,7 +18,7 @@
    "#......+..........#..........+...................+...................#####.............#",
    "#......#..........+..........#...................#...................#####.............#",
    "#......#..........#..........#...................#...................#####.............#",
-   "#######################################+###################+##############.............#",
+   "#######################################+##################################.............#",
    "#.....#..........#...........#...................#.......................+.............#",
    "#.....#..........#...........#...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
    "#.....+..........+...........+...................#~~~~.~~~~~~~~~~~.~~~~~~#.............#",
@@ -460,7 +460,9 @@
    "t": "ja",
    "m": "consonant ja, looks like उ",
    "say": "ज",
-   "group": "la"
+   "group": "c",
+   "consonant": "j",
+   "vowel": "a"
   },
   "अ": {
    "t": "a",
@@ -1009,6 +1011,38 @@
    "m": "vowel sign au",
    "say": "औ",
    "group": "m"
+  },
+  "च": {
+   "t": "ca",
+   "m": "consonant ca",
+   "say": "च",
+   "group": "c",
+   "consonant": "c",
+   "vowel": "a"
+  },
+  "छ": {
+   "t": "cha",
+   "m": "consonant cha",
+   "say": "छ",
+   "group": "c",
+   "consonant": "ch",
+   "vowel": "a"
+  },
+  "झ": {
+   "t": "jha",
+   "m": "consonant jha",
+   "say": "झ",
+   "group": "c",
+   "consonant": "jh",
+   "vowel": "a"
+  },
+  "ञ": {
+   "t": "ña",
+   "m": "consonant ña",
+   "say": "ञ",
+   "group": "c",
+   "consonant": "ñ",
+   "vowel": "a"
   }
  },
  "entities": [
@@ -1077,7 +1111,7 @@
    "k": "hz",
    "t": "agniḥ",
    "m": "fire",
-   "tame": 1,
+   "tame": -1,
    "id": "hz24_9"
   },
   {
@@ -1104,18 +1138,6 @@
    "tame": 0,
    "leave": true,
    "id": "en18_15"
-  },
-  {
-   "g": "व्याघ्रः",
-   "n": 3,
-   "x": 20,
-   "y": 8,
-   "k": "en",
-   "t": "vyāghraḥ",
-   "m": "tiger",
-   "d": 0.9,
-   "tame": 2,
-   "id": "en20_8"
   },
   {
    "g": "गजः",
@@ -1157,15 +1179,6 @@
    "m": "vowel sign ū"
   },
   {
-   "g": "◌े",
-   "n": 1,
-   "x": 27,
-   "y": 10,
-   "k": "ch",
-   "t": "e",
-   "m": "vowel sign e"
-  },
-  {
    "g": "◌ो",
    "n": 1,
    "x": 10,
@@ -1200,15 +1213,6 @@
    "k": "ch",
    "t": "virāma",
    "m": "virāma, removes the inherent a"
-  },
-  {
-   "g": "◌ा",
-   "n": 1,
-   "x": 20,
-   "y": 10,
-   "k": "ch",
-   "t": "ā",
-   "m": "vowel sign ā"
   },
   {
    "g": "इ",
@@ -2463,15 +2467,6 @@
   {
    "g": "वृक्षः",
    "n": 2,
-   "x": 26,
-   "y": 7,
-   "k": "tr",
-   "t": "vṛkṣaḥ",
-   "m": "tree"
-  },
-  {
-   "g": "वृक्षः",
-   "n": 2,
    "x": 10,
    "y": 11,
    "k": "tr",
@@ -3223,6 +3218,87 @@
    "t": "dīpaḥ",
    "m": "lamp",
    "d": 1.6
+  },
+  {
+   "g": "च",
+   "n": 1,
+   "x": 19,
+   "y": 10,
+   "k": "ch",
+   "t": "ca",
+   "m": "consonant ca"
+  },
+  {
+   "g": "छ",
+   "n": 1,
+   "x": 21,
+   "y": 10,
+   "k": "ch",
+   "t": "cha",
+   "m": "consonant cha"
+  },
+  {
+   "g": "ज",
+   "n": 1,
+   "x": 23,
+   "y": 10,
+   "k": "ch",
+   "t": "ja",
+   "m": "consonant ja"
+  },
+  {
+   "g": "झ",
+   "n": 1,
+   "x": 25,
+   "y": 10,
+   "k": "ch",
+   "t": "jha",
+   "m": "consonant jha"
+  },
+  {
+   "g": "ञ",
+   "n": 1,
+   "x": 27,
+   "y": 10,
+   "k": "ch",
+   "t": "ña",
+   "m": "consonant ña"
+  },
+  {
+   "g": "चवर्गः",
+   "n": 4,
+   "x": 19,
+   "y": 7,
+   "k": "sg",
+   "t": "cavargaḥ",
+   "m": "the ca row",
+   "info": "The second row of consonants, the ca-varga: च ca, छ cha, ज ja, झ jha, ञ ña. They are spoken with the tongue against the palate. Like every consonant, each carries a short a."
+  },
+  {
+   "g": "द्वारम्",
+   "label": "द्व",
+   "n": 1,
+   "x": 39,
+   "y": 6,
+   "k": "dr",
+   "t": "dvāram",
+   "m": "door",
+   "id": "d2",
+   "need": [
+    "अ",
+    "आ",
+    "◌ा"
+   ]
+  },
+  {
+   "g": "सूचना",
+   "n": 4,
+   "x": 40,
+   "y": 5,
+   "k": "sg",
+   "t": "sūcanā",
+   "m": "notice",
+   "info": "The door below (द्व) leads to the consonants. It opens with the vowels अ a and आ ā from this room and the vowel sign ◌ा ā from the room of vowel signs to the east. Pick them up into your स्यूतः: stand beside each, learn it, then press Pick up. Short a has no vowel sign, because every consonant already carries it."
   }
  ],
  "tame": {
