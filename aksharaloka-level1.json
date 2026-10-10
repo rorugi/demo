@@ -3127,7 +3127,7 @@
    "k": "en",
    "t": "śaśaḥ",
    "m": "rabbit",
-   "tame": 0,
+   "tame": -1,
    "id": "rabbit1",
    "cls": "brown",
    "d": 0.5,
@@ -3147,7 +3147,8 @@
    "k": "it",
    "t": "vāk",
    "m": "voice, speech, language",
-   "info": "वाक् vāc is the power of speech. Here sounds and words are magic: reading a word gives it its colour, naming a creature calms it, and the letters you collect open doors."
+   "info": "वाक् vāc is the power of speech. Here sounds and words are magic: reading a word gives it its colour, naming a creature calms it, and the letters you collect open doors.",
+   "tame": -1
   },
   {
    "g": "द्वारम्",
@@ -3162,7 +3163,8 @@
    "need": [],
    "needRead": [
     "namaste"
-   ]
+   ],
+   "tame": -1
   },
   {
    "g": "नामकरणम्",
@@ -3227,6 +3229,7 @@
   "0": "read: name it part by part from preset choices",
   "1": "build: put its name together from akṣara tiles",
   "2": "build, then choose what it means",
-  "leave": "animals only: when true the animal goes away once named; fire always stays and burns calmly"
+  "leave": "animals only: when true the animal goes away once named; fire always stays and burns calmly",
+  "-1": "read along: tap the nāgarī syllables one after another, each one shows and speaks its sound (for the very beginning)"
  }
 }
