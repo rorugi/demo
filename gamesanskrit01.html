@@ -104,8 +104,16 @@ select{background:var(--surface-2);padding:6px 8px}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.c span{animation:none!important}}
 .sel{outline:1.5px solid var(--border-stronger);outline-offset:-1.5px}
-.qb{font-size:14px;padding:4px 12px;min-width:52px}
-.qb.no{color:var(--text-danger);border-color:var(--border-danger)}
+.qb{font-size:14px;padding:4px 12px;min-width:52px;background:#FAECE7;color:#712B13;border:0.5px solid #F0997B}
+.qb:hover{background:#F5C4B3}
+.qb.no{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger);text-decoration:line-through}
+.abtn{background:#D85A30;color:#fff;border:0;font-weight:500}
+.abtn:hover{background:#993C1D}
+@media (prefers-color-scheme:dark){.qb{background:#4A1B0C;color:#F5C4B3;border-color:#993C1D}.qb:hover{background:#712B13}}
+#info{border:1.5px solid transparent}
+#info.active{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{border-color:#F0997B;box-shadow:0 0 0 0 rgba(216,90,48,0)}50%{border-color:#D85A30;box-shadow:0 0 0 3px rgba(216,90,48,.25)}}
+@media (prefers-reduced-motion:reduce){#info.active{animation:none;border-color:#D85A30}}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--radius);border:0.5px solid var(--border-strong);font-size:13px;cursor:pointer;background:var(--surface-2)}
 .chip .g{font-size:16px;font-weight:500;color:#D85A30}
 .chip.item .g{color:var(--text-pro);font-size:14px}
@@ -288,7 +296,7 @@ setTimeout(()=>{f.remove();bag[g]=(bag[g]||0)+1;
 if(e.k==='it'){const f=e.effect||{};if(f.hp)hp+=f.hp;if(f.atk)atk=Math.max(atk,f.atk);}
 save();say('You pick up '+g+sub(e.t+(e.fx?' · '+e.fx:'')+' · '+bag[g]+' in the bag'));draw();const c=document.querySelector('.chip[data-g="'+g+'"]');if(c)c.classList.add('pop');},650);}
 const ACT={open:['lock-open','Open'],pick:['hand-grab','Pick up'],go:['walk','Go there'],near:['walk','Go closer'],id:['eye','Identify']};
-const act=a=>a?'<button data-act="'+a+'" style="float:right;margin:-2px 0 4px 8px;font-size:13px;padding:3px 10px"><i class="ti ti-'+ACT[a][0]+'" aria-hidden="true"></i> '+ACT[a][1]+'</button>':'';
+const act=a=>a?'<button class="abtn" data-act="'+a+'" style="float:right;margin:-2px 0 4px 8px;font-size:13px;padding:3px 10px"><i class="ti ti-'+ACT[a][0]+'" aria-hidden="true"></i> '+ACT[a][1]+'</button>':'';
 const unknownInfo=e=>act(near(e)?'id':'near')+'<span style="font-weight:500">'+e.g+'</span>'+sub('· unknown'+(e.k==='ch'?' akṣara':'')+' · '+(near(e)?'you are beside it':'go beside it to identify'));
 function draw(){let h='';const t=performance.now()/1000;
 const cx=Math.max(0,Math.min(W-VW,ED.on&&ED.cam?ED.cam.x:P.x-7)),cy=Math.max(0,Math.min(H-VH,ED.on&&ED.cam?ED.cam.y:P.y-6));ED.cx=cx;ED.cy=cy;
@@ -320,6 +328,7 @@ const a=sel.k==='dr'?(doors[sel.id]?'':near(sel)?(canOpen(sel)?'open':''):'near'
 const lvl=E.includes(sel)?' · level '+kn(sel.g).level+' · review in '+fmt(kn(sel.g).due-now()):'';
 inf.innerHTML=act(a)+'<span style="font-weight:500">'+(sel.n===1?sel.g+' = '+sel.full:sel.full)+'</span>'+sub('· '+sel.t+' — '+sel.m+hint+lvl+(u?' · standing on '+u.full:''));}
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
+inf.classList.toggle('active',!!inf.querySelector('[data-act],[data-c]'));
 document.getElementById('log').innerHTML=logs.map((l,i)=>'<div style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</div>').join('');
 if(SHOW_MINI)mini(cx,cy);save();}
 function mini(){}
