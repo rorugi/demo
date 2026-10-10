@@ -57,7 +57,7 @@ select{background:var(--surface-2);padding:6px 8px}
 .tg{color:var(--text-accent);font-size:14px}
 .ent{font-size:15px;border-radius:6px;margin:1px;cursor:pointer;z-index:1;position:relative}
 .ent::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,transparent calc(100% - 0.5px),var(--border-strong) 0);background-size:24px 100%;opacity:.5;border-radius:6px}
-.pl{color:var(--text-accent);background:var(--bg-accent);font-weight:500;z-index:3;border:1px solid var(--border-accent)}
+.pl{color:var(--text-accent);background:var(--bg-accent);font-weight:500;z-index:2;border:1px solid var(--border-accent)}
 .it{color:var(--text-pro);background:var(--bg-pro)}
 .tr{color:#27500A;background:#C0DD97;font-size:14px}
 @media (prefers-color-scheme:dark){.tr{color:#EAF3DE;background:#3B6D11}}
@@ -105,11 +105,11 @@ select{background:var(--surface-2);padding:6px 8px}
 @media (prefers-color-scheme:dark){.lp{color:#FAC775}}
 .ent.lp::after{display:none}
 .lp span{animation:glow 4s ease-in-out infinite}
-.ent.hz{z-index:0;animation:fireshine 2.6s ease-in-out infinite}
+.ent.hz{z-index:3;animation:fireshine 2.6s ease-in-out infinite}
 @keyframes fireshine{0%,100%{box-shadow:0 0 36px 20px rgba(239,159,39,.45),0 0 96px 60px rgba(239,159,39,.20)}35%{box-shadow:0 0 42px 24px rgba(216,90,48,.48),0 0 108px 66px rgba(216,90,48,.22)}70%{box-shadow:0 0 34px 18px rgba(239,159,39,.42),0 0 90px 56px rgba(239,159,39,.19)}}
 @media (prefers-reduced-motion:reduce){.ent.hz{animation:none;box-shadow:0 0 36px 20px rgba(239,159,39,.45),0 0 96px 60px rgba(239,159,39,.20)}}
-.ent.lp{z-index:0;animation:lampshine 6s ease-in-out infinite}
-.c.w{position:relative;z-index:2}
+.ent.lp{z-index:3;animation:lampshine 6s ease-in-out infinite}
+.c.w{position:relative;z-index:4}
 @keyframes lampshine{0%,100%{box-shadow:0 0 22px 12px rgba(250,199,117,.30),0 0 60px 40px rgba(250,199,117,.15)}40%{box-shadow:0 0 24px 13px rgba(250,199,117,.33),0 0 64px 42px rgba(250,199,117,.17)}70%{box-shadow:0 0 21px 11px rgba(239,159,39,.28),0 0 58px 38px rgba(239,159,39,.14)}}
 @media (prefers-reduced-motion:reduce){.ent.lp{animation:none;box-shadow:0 0 22px 12px rgba(250,199,117,.30),0 0 60px 40px rgba(250,199,117,.15)}}
 @keyframes glow{0%,100%{text-shadow:0 0 2px #EF9F27;transform:translateY(0)}30%{text-shadow:0 0 7px #FAC775,0 0 12px #EF9F27;transform:translateY(-1px)}60%{text-shadow:0 0 4px #EF9F27;transform:translateY(0) scale(1.03)}}
