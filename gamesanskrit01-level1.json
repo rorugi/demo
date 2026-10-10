@@ -3,7 +3,7 @@
  "version": 1,
  "id": "level-1",
  "title": "अहम् — first level",
- "intro": "त्वम् अ असि — tap to walk. Stand beside new things to identify them. The learning rooms lie to the east.",
+ "intro": "त्वम् अ असि — tap to walk. Stand beside new things to identify them. Animals and fire block your way until you name them.",
  "map": {
   "legend": {
    "#": "wall (भित्तिः)",
@@ -103,14 +103,16 @@
   "en": {
    "name": "animal",
    "walk": false,
-   "bump": "fight",
-   "identify": "word"
+   "bump": "blocks until named",
+   "identify": "tame",
+   "pass": "once named (while you still know the word)"
   },
   "hz": {
    "name": "fire",
    "walk": false,
-   "bump": "damage",
-   "identify": "word"
+   "bump": "blocks until named",
+   "identify": "tame",
+   "pass": "once named (while you still know the word)"
   },
   "ex": {
    "name": "stairs",
@@ -1045,11 +1047,7 @@
    "y": 1,
    "k": "it",
    "t": "phalam",
-   "m": "fruit",
-   "fx": "+1 HP",
-   "effect": {
-    "hp": 1
-   }
+   "m": "fruit"
   },
   {
    "g": "फलम्",
@@ -1058,11 +1056,7 @@
    "y": 18,
    "k": "it",
    "t": "phalam",
-   "m": "fruit",
-   "fx": "+1 HP",
-   "effect": {
-    "hp": 1
-   }
+   "m": "fruit"
   },
   {
    "g": "स्वर्णम्",
@@ -1090,11 +1084,7 @@
    "y": 10,
    "k": "it",
    "t": "khaḍgaḥ",
-   "m": "sword",
-   "fx": "attack up",
-   "effect": {
-    "atk": 2
-   }
+   "m": "sword"
   },
   {
    "g": "पुष्पम्",
@@ -1113,9 +1103,9 @@
    "k": "hz",
    "t": "agniḥ",
    "m": "fire",
-   "effect": {
-    "damage": 1
-   }
+   "tame": 0,
+   "leave": true,
+   "id": "hz12_4"
   },
   {
    "g": "अग्निः",
@@ -1125,9 +1115,8 @@
    "k": "hz",
    "t": "agniḥ",
    "m": "fire",
-   "effect": {
-    "damage": 1
-   }
+   "tame": 1,
+   "id": "hz24_9"
   },
   {
    "g": "सर्पः",
@@ -1138,7 +1127,8 @@
    "t": "sarpaḥ",
    "m": "snake",
    "d": 0.4,
-   "hp": 2
+   "tame": 0,
+   "id": "en8_10"
   },
   {
    "g": "सर्पः",
@@ -1149,7 +1139,9 @@
    "t": "sarpaḥ",
    "m": "snake",
    "d": 1.3,
-   "hp": 2
+   "tame": 0,
+   "leave": true,
+   "id": "en18_15"
   },
   {
    "g": "सिंहः",
@@ -1160,7 +1152,8 @@
    "t": "siṃhaḥ",
    "m": "lion",
    "d": 1.7,
-   "hp": 3
+   "tame": 1,
+   "id": "en25_3"
   },
   {
    "g": "व्याघ्रः",
@@ -1171,7 +1164,8 @@
    "t": "vyāghraḥ",
    "m": "tiger",
    "d": 0.9,
-   "hp": 3
+   "tame": 2,
+   "id": "en20_8"
   },
   {
    "g": "गजः",
@@ -1182,7 +1176,8 @@
    "t": "gajaḥ",
    "m": "elephant",
    "d": 2.1,
-   "hp": 4
+   "tame": 0,
+   "id": "en13_20"
   },
   {
    "g": "सोपानम्",
@@ -2417,9 +2412,8 @@
    "k": "hz",
    "t": "agniḥ",
    "m": "fire",
-   "effect": {
-    "damage": 1
-   }
+   "tame": 0,
+   "id": "hz60_22"
   },
   {
    "g": "दीपः",
@@ -3240,5 +3234,10 @@
    "m": "wood, a whole region of trees"
   }
  ],
- "game": "Akṣaraloka"
+ "tame": {
+  "0": "read: name it part by part from preset choices",
+  "1": "build: put its name together from akṣara tiles",
+  "2": "build, then choose what it means",
+  "leave": "when true the creature goes away once named instead of staying calm"
+ }
 }
