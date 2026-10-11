@@ -473,7 +473,7 @@ function draw(){let h='';const t=performance.now()/1000;
 const needSet=NEED();const cx=Math.max(0,Math.min(W-VW,ED.on&&ED.cam?ED.cam.x:P.x-Math.floor(VW/2))),cy=Math.max(0,Math.min(H-VH,ED.on&&ED.cam?ED.cam.y:P.y-Math.floor(VH/2)));ED.cx=cx;ED.cy=cy;
 markSeen();
 for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
-if(!cellVis(x,y)){h+='<div class="c fog" style="'+pos+'"></div>';continue}
+if(!cellVis(x,y)){h+='<div class="c fog" data-fx="'+x+'" data-fy="'+y+'" style="'+pos+'"></div>';continue}
 if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
 else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.min(a+n,cx+VW);h+='<div class="c dw" data-dw="1" style="grid-column:'+(vx+1)+' / span '+(en-x)+';grid-row:'+(vy+1)+'"><span style="animation-delay:'+(-((t+a*0.37+y*0.61)%2.1)).toFixed(2)+'s">'+(n>1?'जलम्':'ज')+'</span></div>';}}
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
@@ -528,6 +528,8 @@ if(isNew(e)){if(near(e)&&!keepQuiz)identify(e);}
 else{speakIfKnown(e);if(!keepQuiz)identify(e);}
 if(walkOn){walkTo(cellOf(c,e,ev),e.y);return}
 draw();return}
+const fg=ev.target.closest('[data-fx]');if(fg){const x=+fg.dataset.fx,y=+fg.dataset.fy;selG=null;quiz=null;
+if(passable(x,y)){walkTo(x,y);return}if(floor(x,y)){stopWalk();const p=pathTo((a,b)=>Math.abs(a-x)+Math.abs(b-y)===1);if(p){run(p);return}}draw();return}
 const f=ev.target.closest('[data-x]');if(f){selG=null;quiz=null;walkTo(+f.dataset.x,+f.dataset.y);}});
 document.getElementById('info').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(b&&quiz){if(quiz.type==='w')answerPart(b.dataset.c);else if(quiz.type==='b')answerMean(b.dataset.c);else answer(b.dataset.c);return}
 const rp=ev.target.closest('[data-rp]');if(rp&&quiz&&quiz.type==='r'){traceTap(+rp.dataset.rp);return}
