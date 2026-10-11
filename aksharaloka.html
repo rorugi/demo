@@ -150,6 +150,7 @@ select{background:var(--surface-2);padding:6px 8px}
 @keyframes flow{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
 @keyframes jit{0%{transform:translate(0,0)}25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,0)}75%{transform:translate(0,1px) scale(1.04)}}
 @keyframes live{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-1px)}50%{transform:translate(0,1px)}75%{transform:translate(-2px,0)}}
+@keyframes mepulse{0%,100%{box-shadow:0 0 0 0 rgba(55,138,221,.55)}50%{box-shadow:0 0 0 8px rgba(55,138,221,0)}}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.c span{animation:none!important}}
 .sel{outline:1.5px solid var(--border-stronger);outline-offset:-1.5px}
@@ -646,15 +647,23 @@ document.querySelectorAll('input[name=theme]').forEach(i=>i.onchange=()=>{try{lo
 </script>
 <div id="fade" style="display:none;position:fixed;inset:0;z-index:90;background:var(--page);opacity:0;transition:opacity .45s ease"></div>
 <div id="intro" style="position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px;background:var(--page);transition:background-color .7s ease 1.5s">
-<div id="introbox" class="dev" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:var(--text-accent);background:var(--bg-accent);border:3px solid var(--border-accent);border-radius:24px;font-weight:500;width:min(86vw,720px);height:min(40vw,330px);font-size:min(22vw,190px);line-height:1;transform-origin:center;transition:width .7s cubic-bezier(.6,0,.3,1) .5s,border-radius .7s ease .5s,transform 1s cubic-bezier(.6,0,.25,1) 1.3s,opacity .3s ease 2.2s"><span>अ</span><span id="introrest" style="display:inline-block;max-width:4em;overflow:hidden;transition:max-width .7s cubic-bezier(.6,0,.3,1) .5s,opacity .5s ease .5s">हम्</span></div>
-<div id="introtxt" style="text-align:center;transition:opacity .4s ease;max-width:520px">
+<div id="introtitle" style="text-align:center;max-width:560px;transition:opacity .4s ease">
+<div class="dev" style="font-size:clamp(52px,13vw,104px);font-weight:500;line-height:1.15;background:linear-gradient(180deg,#FFE7A8 0%,#FAC775 35%,#EF9F27 65%,#BA7517 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 6px rgba(186,117,23,.45))">अक्षरलोकः</div>
+<div style="font-size:clamp(22px,5vw,30px);color:#EF9F27;font-weight:500;margin-top:2px">Akṣaraloka</div>
+<div style="font-size:15px;color:var(--text-secondary);margin-top:4px"><i>akṣara</i> = letter, syllable · <i>loka</i> = world — “the world of letters”</div>
+<div style="font-size:16px;color:var(--text-primary);margin-top:18px;line-height:1.6">A small game for learning to read Sanskrit. Everything in this world is written in Devanagari: walls, water, animals and doors. Walk through its rooms, read what you find, collect letters and name the creatures that stand in your way. What you learn fades over time, so the world brings it back to you.</div>
+<div style="font-size:17px;color:var(--text-primary);margin-top:22px;display:flex;align-items:center;justify-content:center;gap:10px">This is you: <button id="introme" class="dev" aria-label="Start: this is you, अ" style="width:40px;height:46px;padding:0;font-size:24px;font-weight:500;color:var(--text-accent);background:var(--bg-accent);border:2px solid var(--border-accent);border-radius:8px;cursor:pointer;animation:mepulse 1.6s ease-in-out infinite">अ</button> tap it</div>
+</div>
+<div id="introbox" class="dev" aria-hidden="true" style="display:none;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:var(--text-accent);background:var(--bg-accent);border:3px solid var(--border-accent);border-radius:24px;font-weight:500;width:min(86vw,720px);height:min(40vw,330px);font-size:min(22vw,190px);line-height:1;transform-origin:center;transition:width .7s cubic-bezier(.6,0,.3,1) .5s,border-radius .7s ease .5s,transform 1s cubic-bezier(.6,0,.25,1) 1.3s,opacity .3s ease 2.2s"><span>अ</span><span id="introrest" style="display:inline-block;max-width:4em;overflow:hidden;transition:max-width .7s cubic-bezier(.6,0,.3,1) .5s,opacity .5s ease .5s">हम्</span></div>
+<div id="introtxt" style="display:none;text-align:center;transition:opacity .4s ease;max-width:520px">
 <div style="font-size:22px;color:var(--text-primary)"><span class="dev" style="font-weight:500">अहम्</span> <i>aham</i> = “I”</div>
 <div style="font-size:16px;color:var(--text-secondary);margin-top:6px">This is you, moving through a world written in Devanagari.</div>
 <button id="introgo" class="abtn" style="margin-top:18px;font-size:18px;padding:8px 36px;border-radius:var(--radius)">Go</button></div></div>
 <script>
 (function(){const ov=document.getElementById('intro'),bx=document.getElementById('introbox'),rest=document.getElementById('introrest'),tx=document.getElementById('introtxt'),go=document.getElementById('introgo');
 const done=()=>{if(ov.isConnected)ov.remove();};const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-go.focus&&go.focus();
+const t1=document.getElementById('introtitle'),me=document.getElementById('introme');me.focus&&me.focus();
+me.onclick=()=>{t1.style.opacity='0';setTimeout(()=>{t1.style.display='none';bx.style.display='flex';tx.style.display='';if(!reduce&&bx.animate)bx.animate([{transform:'scale(.08)',opacity:.4},{transform:'scale(1)',opacity:1}],{duration:500,easing:'cubic-bezier(.2,.8,.3,1)'});go.focus&&go.focus();},350);};
 go.onclick=()=>{if(reduce){done();return}go.disabled=true;tx.style.opacity='0';const t=document.querySelector('#map [data-p]');if(!t){done();return}if(t.scrollIntoView)t.scrollIntoView({block:'center',behavior:'instant'});
 setTimeout(()=>{tx.style.display='none';const h=bx.getBoundingClientRect().height;rest.style.maxWidth='0';rest.style.opacity='0';bx.style.width=h+'px';bx.style.borderRadius='18px';
 const b=t.getBoundingClientRect();const sx=b.width/h,sy=b.height/h;
