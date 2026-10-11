@@ -381,6 +381,7 @@ E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
 for(const e of E)if(e.wants&&fed(e))freeFly(e);
 for(const e of E){if(!e.deliver)continue;if(doors['delivered:'+e.id]){settle(e);}else if(doors['follow:'+e.id]){e.n=1;e.wander=null;e.x=P.x;e.y=P.y;}}
 E.forEach(e=>{if(e.k!=='ch'&&e.k!=='st')WINFO[e.g]={t:e.t,m:e.m};});
+for(const F of Object.values(LEVELS))for(const e of F.entities||[]){if(e.k==='ch'||e.k==='st'||!e.g||!e.t)continue;if(!WINFO[e.g])WINFO[e.g]={t:e.t,m:e.m};if(e.k==='it'&&!IINFO[e.g])IINFO[e.g]={t:e.t,m:e.m};}
 hp=6;atk=1;logs=logs||[];sel=P;{const u=E.find(e=>e.k==='sg'&&(occ(e,P.x,P.y)||occ(e,P.x+1,P.y)));if(u)sel=u;}
 say(LV.intro||'');draw();}
 const occ=(e,x,y)=>y===e.y&&x>=e.x&&x<e.x+e.n;
