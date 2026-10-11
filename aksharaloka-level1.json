@@ -1476,6 +1476,12 @@
    "say": "दु",
    "group": "syl",
    "syl": true
+  },
+  "।": {
+   "t": "daṇḍa",
+   "m": "daṇḍa “stick”: full stop",
+   "say": "।",
+   "group": "punct"
   }
  },
  "floors": [
@@ -6440,6 +6446,1432 @@
      "t": "dīpaḥ",
      "m": "lamp",
      "d": 0.9
+    },
+    {
+     "g": "तोरणम्",
+     "n": 3,
+     "x": 44,
+     "y": 7,
+     "k": "ex",
+     "t": "toraṇam",
+     "m": "gateway",
+     "cls": "gold",
+     "to": "l3-forge",
+     "at": [
+      2,
+      2
+     ],
+     "info": "The gateway to level 3: the road map of verbs."
+    }
+   ]
+  },
+  {
+   "id": "l3-forge",
+   "title": "धातुशाला — the forge of words",
+   "level": 3,
+   "levelName": "धातवः — the road map of verbs",
+   "intro": "Level 3: the road map of verbs. Here roots, stems and endings are forged into words.",
+   "map": {
+    "rows": [
+     "#######################################################",
+     "#.........#.........#.........#.........###############",
+     "#.........#.........#.........#.........###############",
+     "#.........+.........+.........+.........###############",
+     "#.........#.........#.........#.........###############",
+     "#.........#.........#.........#.........###############",
+     "#####+#########+#########+#########+###################",
+     "#.............................................#.......#",
+     "#.............................................#.......#",
+     "#.............................................+.......#",
+     "#.............................................#.......#",
+     "#.............................................#.......#",
+     "#.............................................#########",
+     "#.............................................#########",
+     "#.............................................#########",
+     "#.............................................#########",
+     "#.............................................#########",
+     "#.............................................#########",
+     "#.............................................#########",
+     "#######################################################"
+    ]
+   },
+   "start": {
+    "x": 2,
+    "y": 2
+   },
+   "entities": [
+    {
+     "g": "तोरणम्",
+     "n": 3,
+     "x": 1,
+     "y": 1,
+     "k": "ex",
+     "t": "toraṇam",
+     "m": "gateway",
+     "cls": "gold",
+     "to": "l2-breath",
+     "at": [
+      45,
+      6
+     ]
+    },
+    {
+     "g": "धातुः",
+     "n": 2,
+     "x": 4,
+     "y": 3,
+     "k": "sg",
+     "t": "dhātuḥ",
+     "m": "verbal root",
+     "info": "Level 3 follows chapter 3 of Ruppel: the road map of verbs. A verb is listed under its root (√), its minimal form, left over when all markers of person, number, tense, mood and voice are removed. Most verbs change the root into a stem by adding something before, into or behind it; then the ending is added. √as + -ti → asti “he is”; √viś → viśa- + -ti → viśati “he enters”; √dā → dadā- + -ti → dadāti “he gives”. In the three rooms you find roots, stem parts and endings. Forge them into words in the workshop below."
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 8,
+     "y": 1,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.3
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 1,
+     "y": 5,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.4
+    },
+    {
+     "g": "धातवः",
+     "n": 3,
+     "x": 12,
+     "y": 1,
+     "k": "sg",
+     "t": "dhātavaḥ",
+     "m": "roots",
+     "info": "Roots: the minimal form of a verb. A root is never found in a text; only full forms like asmi “I am” or asti “he is”."
+    },
+    {
+     "g": "अस्",
+     "n": 2,
+     "x": 12,
+     "y": 3,
+     "k": "it",
+     "t": "as",
+     "m": "root √as “to be”"
+    },
+    {
+     "g": "विश्",
+     "n": 2,
+     "x": 15,
+     "y": 3,
+     "k": "it",
+     "t": "viś",
+     "m": "root √viś “to enter”"
+    },
+    {
+     "g": "दा",
+     "n": 1,
+     "x": 18,
+     "y": 3,
+     "k": "it",
+     "t": "dā",
+     "m": "root √dā “to give”"
+    },
+    {
+     "g": "अङ्गानि",
+     "n": 3,
+     "x": 22,
+     "y": 1,
+     "k": "sg",
+     "t": "aṅgāni",
+     "m": "stems",
+     "info": "Stems and what is added to make them. bhar- is the present stem of “to carry”. -a- is added after the root (viś → viśa-), da- in front of it (dā → dadā-). -iṣya- is the future suffix: it sits between the stem and the ending."
+    },
+    {
+     "g": "भर",
+     "n": 2,
+     "x": 22,
+     "y": 3,
+     "k": "it",
+     "t": "bhara",
+     "m": "stem bhar(a)- “carry”"
+    },
+    {
+     "g": "भर",
+     "n": 2,
+     "x": 25,
+     "y": 3,
+     "k": "it",
+     "t": "bhara",
+     "m": "stem bhar(a)- “carry”"
+    },
+    {
+     "g": "भर",
+     "n": 2,
+     "x": 28,
+     "y": 3,
+     "k": "it",
+     "t": "bhara",
+     "m": "stem bhar(a)- “carry”"
+    },
+    {
+     "g": "-अ-",
+     "n": 2,
+     "x": 21,
+     "y": 5,
+     "k": "it",
+     "t": "-a-",
+     "m": "added after the root"
+    },
+    {
+     "g": "द-",
+     "n": 2,
+     "x": 24,
+     "y": 5,
+     "k": "it",
+     "t": "da-",
+     "m": "added in front of the root"
+    },
+    {
+     "g": "-इष्य-",
+     "n": 3,
+     "x": 27,
+     "y": 5,
+     "k": "it",
+     "t": "-iṣya-",
+     "m": "future suffix"
+    },
+    {
+     "g": "प्रत्ययाः",
+     "n": 4,
+     "x": 32,
+     "y": 1,
+     "k": "sg",
+     "t": "pratyayāḥ",
+     "m": "affixes and endings",
+     "info": "An affix can stand before (prefix), inside (infix) or after (suffix) a stem. An ending always comes last and makes a complete word: -ti “he/she/it”, -si “you” (one person), -nti “they”."
+    },
+    {
+     "g": "-ति",
+     "n": 2,
+     "x": 32,
+     "y": 3,
+     "k": "it",
+     "t": "-ti",
+     "m": "ending: he/she/it"
+    },
+    {
+     "g": "-ति",
+     "n": 2,
+     "x": 35,
+     "y": 3,
+     "k": "it",
+     "t": "-ti",
+     "m": "ending: he/she/it"
+    },
+    {
+     "g": "-ति",
+     "n": 2,
+     "x": 38,
+     "y": 3,
+     "k": "it",
+     "t": "-ti",
+     "m": "ending: he/she/it"
+    },
+    {
+     "g": "-सि",
+     "n": 2,
+     "x": 32,
+     "y": 5,
+     "k": "it",
+     "t": "-si",
+     "m": "ending: you (one)"
+    },
+    {
+     "g": "-सि",
+     "n": 2,
+     "x": 35,
+     "y": 5,
+     "k": "it",
+     "t": "-si",
+     "m": "ending: you (one)"
+    },
+    {
+     "g": "-न्ति",
+     "n": 2,
+     "x": 38,
+     "y": 5,
+     "k": "it",
+     "t": "-nti",
+     "m": "ending: they"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 18,
+     "y": 5,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.9
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 38,
+     "y": 1,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 2.0
+    },
+    {
+     "g": "अस्",
+     "n": 3,
+     "x": 3,
+     "y": 8,
+     "k": "pd",
+     "id": "f1_0",
+     "item": "अस्",
+     "t": "as",
+     "m": "root",
+     "showT": true
+    },
+    {
+     "g": "शून्यम्",
+     "n": 3,
+     "x": 7,
+     "y": 8,
+     "k": "sg",
+     "t": "śūnyam",
+     "m": "nothing",
+     "info": "Nothing is added here: the ending goes straight onto the root or stem."
+    },
+    {
+     "g": "-ति",
+     "n": 3,
+     "x": 11,
+     "y": 8,
+     "k": "pd",
+     "id": "f1_2",
+     "item": "-ति",
+     "t": "-ti",
+     "m": "ending",
+     "showT": true
+    },
+    {
+     "g": "अस्ति",
+     "n": 4,
+     "x": 15,
+     "y": 8,
+     "k": "pd",
+     "id": "r1",
+     "parts": [
+      "f1_0",
+      "f1_2"
+     ],
+     "cls": "divine",
+     "t": "asti",
+     "m": "he/she/it is"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 16,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.0,
+     "boost": [
+      "f1_0",
+      "f1_2"
+     ],
+     "info": "It shines up when the word beside it is forged."
+    },
+    {
+     "g": "विश्",
+     "n": 3,
+     "x": 25,
+     "y": 8,
+     "k": "pd",
+     "id": "f2_0",
+     "item": "विश्",
+     "t": "viś",
+     "m": "root",
+     "showT": true
+    },
+    {
+     "g": "-अ-",
+     "n": 3,
+     "x": 29,
+     "y": 8,
+     "k": "pd",
+     "id": "f2_1",
+     "item": "-अ-",
+     "t": "-a-",
+     "m": "added after the root",
+     "showT": true
+    },
+    {
+     "g": "-ति",
+     "n": 3,
+     "x": 33,
+     "y": 8,
+     "k": "pd",
+     "id": "f2_2",
+     "item": "-ति",
+     "t": "-ti",
+     "m": "ending",
+     "showT": true
+    },
+    {
+     "g": "विशति",
+     "n": 4,
+     "x": 37,
+     "y": 8,
+     "k": "pd",
+     "id": "r2",
+     "parts": [
+      "f2_0",
+      "f2_1",
+      "f2_2"
+     ],
+     "cls": "divine",
+     "t": "viśati",
+     "m": "he/she/it enters"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 38,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.4,
+     "boost": [
+      "f2_0",
+      "f2_1",
+      "f2_2"
+     ],
+     "info": "It shines up when the word beside it is forged."
+    },
+    {
+     "g": "द-",
+     "n": 3,
+     "x": 3,
+     "y": 11,
+     "k": "pd",
+     "id": "f3_0",
+     "item": "द-",
+     "t": "da-",
+     "m": "added in front",
+     "showT": true
+    },
+    {
+     "g": "दा",
+     "n": 3,
+     "x": 7,
+     "y": 11,
+     "k": "pd",
+     "id": "f3_1",
+     "item": "दा",
+     "t": "dā",
+     "m": "root",
+     "showT": true
+    },
+    {
+     "g": "-ति",
+     "n": 3,
+     "x": 11,
+     "y": 11,
+     "k": "pd",
+     "id": "f3_2",
+     "item": "-ति",
+     "t": "-ti",
+     "m": "ending",
+     "showT": true
+    },
+    {
+     "g": "ददाति",
+     "n": 4,
+     "x": 15,
+     "y": 11,
+     "k": "pd",
+     "id": "r3",
+     "parts": [
+      "f3_0",
+      "f3_1",
+      "f3_2"
+     ],
+     "cls": "divine",
+     "t": "dadāti",
+     "m": "he/she/it gives"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 16,
+     "y": 12,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.8,
+     "boost": [
+      "f3_0",
+      "f3_1",
+      "f3_2"
+     ],
+     "info": "It shines up when the word beside it is forged."
+    },
+    {
+     "g": "भर",
+     "n": 3,
+     "x": 25,
+     "y": 11,
+     "k": "pd",
+     "id": "f4_0",
+     "item": "भर",
+     "t": "bhara",
+     "m": "stem",
+     "showT": true
+    },
+    {
+     "g": "शून्यम्",
+     "n": 3,
+     "x": 29,
+     "y": 11,
+     "k": "sg",
+     "t": "śūnyam",
+     "m": "nothing",
+     "info": "Nothing is added here: the ending goes straight onto the root or stem."
+    },
+    {
+     "g": "-सि",
+     "n": 3,
+     "x": 33,
+     "y": 11,
+     "k": "pd",
+     "id": "f4_2",
+     "item": "-सि",
+     "t": "-si",
+     "m": "ending",
+     "showT": true
+    },
+    {
+     "g": "भरसि",
+     "n": 4,
+     "x": 37,
+     "y": 11,
+     "k": "pd",
+     "id": "r4",
+     "parts": [
+      "f4_0",
+      "f4_2"
+     ],
+     "cls": "divine",
+     "t": "bharasi",
+     "m": "you carry"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 38,
+     "y": 12,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.2000000000000002,
+     "boost": [
+      "f4_0",
+      "f4_2"
+     ],
+     "info": "It shines up when the word beside it is forged."
+    },
+    {
+     "g": "भर",
+     "n": 3,
+     "x": 3,
+     "y": 14,
+     "k": "pd",
+     "id": "f5_0",
+     "item": "भर",
+     "t": "bhara",
+     "m": "stem",
+     "showT": true
+    },
+    {
+     "g": "शून्यम्",
+     "n": 3,
+     "x": 7,
+     "y": 14,
+     "k": "sg",
+     "t": "śūnyam",
+     "m": "nothing",
+     "info": "Nothing is added here: the ending goes straight onto the root or stem."
+    },
+    {
+     "g": "-न्ति",
+     "n": 3,
+     "x": 11,
+     "y": 14,
+     "k": "pd",
+     "id": "f5_2",
+     "item": "-न्ति",
+     "t": "-nti",
+     "m": "ending",
+     "showT": true
+    },
+    {
+     "g": "भरन्ति",
+     "n": 4,
+     "x": 15,
+     "y": 14,
+     "k": "pd",
+     "id": "r5",
+     "parts": [
+      "f5_0",
+      "f5_2"
+     ],
+     "cls": "divine",
+     "t": "bharanti",
+     "m": "they carry"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 16,
+     "y": 15,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.6,
+     "boost": [
+      "f5_0",
+      "f5_2"
+     ],
+     "info": "It shines up when the word beside it is forged."
+    },
+    {
+     "g": "भर",
+     "n": 3,
+     "x": 25,
+     "y": 14,
+     "k": "pd",
+     "id": "f6_0",
+     "item": "भर",
+     "t": "bhara",
+     "m": "stem",
+     "showT": true
+    },
+    {
+     "g": "-इष्य-",
+     "n": 3,
+     "x": 29,
+     "y": 14,
+     "k": "pd",
+     "id": "f6_1",
+     "item": "-इष्य-",
+     "t": "-iṣya-",
+     "m": "future suffix",
+     "showT": true
+    },
+    {
+     "g": "-सि",
+     "n": 3,
+     "x": 33,
+     "y": 14,
+     "k": "pd",
+     "id": "f6_2",
+     "item": "-सि",
+     "t": "-si",
+     "m": "ending",
+     "showT": true
+    },
+    {
+     "g": "भरिष्यसि",
+     "n": 4,
+     "x": 37,
+     "y": 14,
+     "k": "pd",
+     "id": "r6",
+     "parts": [
+      "f6_0",
+      "f6_1",
+      "f6_2"
+     ],
+     "cls": "divine",
+     "t": "bhariṣyasi",
+     "m": "you will carry"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 38,
+     "y": 15,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 2.0,
+     "boost": [
+      "f6_0",
+      "f6_1",
+      "f6_2"
+     ],
+     "info": "It shines up when the word beside it is forged."
+    },
+    {
+     "g": "शाला",
+     "n": 2,
+     "x": 20,
+     "y": 17,
+     "k": "sg",
+     "t": "śālā",
+     "m": "workshop",
+     "info": "The workshop. Each row forges one verb form: walk onto a place with the right part in your स्यूतः. English adds small words (you carry, they carry, you will carry); Sanskrit adds affixes and endings: bharasi, bharanti, bhariṣyasi. When all six words are forged, the door on the right opens."
+    },
+    {
+     "g": "द्वारम्",
+     "label": "द्वा",
+     "n": 1,
+     "x": 46,
+     "y": 9,
+     "k": "dr",
+     "t": "dvāram",
+     "m": "door",
+     "id": "d3forge",
+     "need": [],
+     "needSlots": [
+      "r1",
+      "r2",
+      "r3",
+      "r4",
+      "r5",
+      "r6"
+     ],
+     "tame": -1
+    },
+    {
+     "g": "सोपानम्",
+     "n": 3,
+     "x": 49,
+     "y": 11,
+     "k": "ex",
+     "t": "sopānam",
+     "m": "stairs",
+     "to": "l3-village",
+     "at": [
+      3,
+      2
+     ]
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 47,
+     "y": 7,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.6
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 52,
+     "y": 7,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.5
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 1,
+     "y": 17,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.8
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 44,
+     "y": 17,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.9
+    }
+   ]
+  },
+  {
+   "id": "l3-village",
+   "title": "ग्रामः — the village of verbs",
+   "level": 3,
+   "levelName": "धातवः — the road map of verbs",
+   "intro": "The village of verbs: every verb here does what its name says.",
+   "map": {
+    "rows": [
+     "#########################################################",
+     "#.........#...................#.........#...............#",
+     "#.........#...................#.........#...............#",
+     "#.........#...................#.........#...............#",
+     "#.........+...................+.........+...............#",
+     "#.........#...................#.........#...............#",
+     "#.........#...................#.........#...............#",
+     "#.........#...................#.........#...............#",
+     "################################################+########",
+     "#.......................................................#",
+     "#.......................................................#",
+     "#.......................................................#",
+     "#.......................................................#",
+     "#.......................................................#",
+     "#.......................................................#",
+     "#.......................................................#",
+     "##############################################+++########",
+     "########################################................#",
+     "########################################................#",
+     "########################################................#",
+     "########################################................#",
+     "#########################################################"
+    ]
+   },
+   "start": {
+    "x": 3,
+    "y": 2
+   },
+   "entities": [
+    {
+     "g": "सोपानम्",
+     "n": 3,
+     "x": 2,
+     "y": 1,
+     "k": "ex",
+     "t": "sopānam",
+     "m": "stairs",
+     "to": "l3-forge",
+     "at": [
+      50,
+      10
+     ]
+    },
+    {
+     "g": "ग्रामः",
+     "n": 3,
+     "x": 3,
+     "y": 5,
+     "k": "sg",
+     "t": "grāmaḥ",
+     "m": "village",
+     "info": "The village of verbs. Its people are verbs from chapter 3, and each does what its name says. To name them you build the word and choose its meaning. The ending -ti means “he”, “she” or “it”: only the context tells which. And there is no difference between “he carries” and “he is carrying”: bharati means both."
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 8,
+     "y": 1,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.3
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 1,
+     "y": 7,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.2
+    },
+    {
+     "g": "बोधति",
+     "n": 3,
+     "x": 11,
+     "y": 4,
+     "k": "en",
+     "t": "bodhati",
+     "m": "he wakes up",
+     "tame": 2,
+     "id": "v_bodhati",
+     "cls": "folk",
+     "leave": true,
+     "leaveMsg": "wakes up, stretches and walks away",
+     "info": "Someone lies asleep across the doorway."
+    },
+    {
+     "g": "गच्छति",
+     "n": 3,
+     "x": 16,
+     "y": 3,
+     "k": "en",
+     "t": "gacchati",
+     "m": "he goes",
+     "tame": 2,
+     "id": "v_gacchati",
+     "cls": "folk",
+     "wander": [
+      12,
+      28,
+      1,
+      6
+     ],
+     "info": "Always on the go."
+    },
+    {
+     "g": "स्मरति",
+     "n": 3,
+     "x": 26,
+     "y": 1,
+     "k": "en",
+     "t": "smarati",
+     "m": "he remembers",
+     "tame": 2,
+     "id": "v_smarati",
+     "cls": "folk",
+     "review": true,
+     "info": "An old woman who remembers everything. Once you know her name, she tells you which words are due for review."
+    },
+    {
+     "g": "पुरुषः",
+     "n": 3,
+     "x": 12,
+     "y": 7,
+     "k": "sg",
+     "t": "puruṣaḥ",
+     "m": "person",
+     "info": "Person: 1st = the speaker (“I”), 2nd = the one spoken to (“you”), 3rd = someone spoken about (“he/she/it”)."
+    },
+    {
+     "g": "वचनम्",
+     "n": 3,
+     "x": 17,
+     "y": 7,
+     "k": "sg",
+     "t": "vacanam",
+     "m": "number",
+     "info": "Number: singular (one), plural (several) and, unlike English, the dual for exactly two: “we two”, “the two of them”."
+    },
+    {
+     "g": "कालः",
+     "n": 2,
+     "x": 22,
+     "y": 7,
+     "k": "sg",
+     "t": "kālaḥ",
+     "m": "time, tense",
+     "info": "Tense: present, future and past. Sanskrit has three past tenses (imperfect, aorist, perfect) that all mean an action before now. Mood: indicative (what is), potential (what could or should be), imperative (commands)."
+    },
+    {
+     "g": "पदम्",
+     "n": 2,
+     "x": 26,
+     "y": 7,
+     "k": "sg",
+     "t": "padam",
+     "m": "voice",
+     "info": "Voice: active (“I carry”), passive (“I am carried”) and a third, the middle. The Indian grammarians call the active parasmaipada, “word for another”, and the middle ātmanepada, “word for oneself”."
+    },
+    {
+     "g": "विशति",
+     "n": 3,
+     "x": 31,
+     "y": 4,
+     "k": "en",
+     "t": "viśati",
+     "m": "he enters",
+     "tame": 2,
+     "id": "v_viśati",
+     "cls": "folk",
+     "leave": true,
+     "leaveMsg": "enters the house",
+     "info": "He stands in the doorway, about to go in."
+    },
+    {
+     "g": "लिखति",
+     "n": 3,
+     "x": 36,
+     "y": 2,
+     "k": "en",
+     "t": "likhati",
+     "m": "he writes",
+     "tame": 2,
+     "id": "v_likhati",
+     "cls": "folk",
+     "info": "A scribe, writing all day."
+    },
+    {
+     "g": "पुस्तकम्",
+     "n": 3,
+     "x": 33,
+     "y": 6,
+     "k": "it",
+     "t": "pustakam",
+     "m": "book",
+     "info": "A book from the scribe’s house."
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 38,
+     "y": 6,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.7
+    },
+    {
+     "g": "इच्छति",
+     "n": 3,
+     "x": 41,
+     "y": 4,
+     "k": "en",
+     "t": "icchati",
+     "m": "he wants",
+     "tame": 2,
+     "id": "v_icchati",
+     "cls": "folk",
+     "wants": "पुस्तकम्",
+     "flyRoom": [
+      43,
+      54,
+      1,
+      6
+     ],
+     "info": "He wants something and does not move until he gets it."
+    },
+    {
+     "g": "हरति",
+     "n": 3,
+     "x": 46,
+     "y": 3,
+     "k": "en",
+     "t": "harati",
+     "m": "he takes",
+     "tame": 2,
+     "id": "v_harati",
+     "cls": "folk",
+     "wander": [
+      43,
+      54,
+      1,
+      6
+     ],
+     "steals": [
+      "गच्छति",
+      "विशति",
+      "च",
+      "अत्र",
+      "स्मरति",
+      "तत्र"
+     ],
+     "info": "Careful: he takes things. As long as you do not know his name, he takes words out of your bag when you come close."
+    },
+    {
+     "g": "भरति",
+     "n": 3,
+     "x": 52,
+     "y": 6,
+     "k": "en",
+     "t": "bharati",
+     "m": "he carries",
+     "tame": 2,
+     "id": "v_bharati",
+     "cls": "folk",
+     "gives": [
+      "तत्र"
+     ],
+     "givesMsg": "carries a word to you:",
+     "info": "A porter with a bundle on his back."
+    },
+    {
+     "g": "च",
+     "n": 2,
+     "x": 44,
+     "y": 1,
+     "k": "it",
+     "t": "ca",
+     "m": "and (postposed)"
+    },
+    {
+     "g": "च",
+     "n": 2,
+     "x": 53,
+     "y": 2,
+     "k": "it",
+     "t": "ca",
+     "m": "and (postposed)"
+    },
+    {
+     "g": "अत्र",
+     "n": 2,
+     "x": 44,
+     "y": 6,
+     "k": "it",
+     "t": "atra",
+     "m": "here"
+    },
+    {
+     "g": "गच्छति",
+     "n": 3,
+     "x": 49,
+     "y": 2,
+     "k": "it",
+     "t": "gacchati",
+     "m": "he goes"
+    },
+    {
+     "g": "विशति",
+     "n": 3,
+     "x": 49,
+     "y": 5,
+     "k": "it",
+     "t": "viśati",
+     "m": "he enters"
+    },
+    {
+     "g": "विशति",
+     "n": 3,
+     "x": 24,
+     "y": 4,
+     "k": "it",
+     "t": "viśati",
+     "m": "he enters"
+    },
+    {
+     "g": "स्मरति",
+     "n": 3,
+     "x": 6,
+     "y": 3,
+     "k": "it",
+     "t": "smarati",
+     "m": "he remembers"
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 54,
+     "y": 1,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.1
+    },
+    {
+     "g": "गच्छति",
+     "n": 3,
+     "x": 3,
+     "y": 10,
+     "k": "pd",
+     "id": "s1_0",
+     "item": "गच्छति",
+     "t": "he goes",
+     "m": "he goes",
+     "showM": true
+    },
+    {
+     "g": "विशति",
+     "n": 3,
+     "x": 7,
+     "y": 10,
+     "k": "pd",
+     "id": "s1_1",
+     "item": "विशति",
+     "t": "he enters",
+     "m": "he enters",
+     "showM": true
+    },
+    {
+     "g": "च",
+     "n": 2,
+     "x": 11,
+     "y": 10,
+     "k": "pd",
+     "id": "s1_2",
+     "item": "च",
+     "t": "and",
+     "m": "and",
+     "showM": true
+    },
+    {
+     "g": "।",
+     "n": 1,
+     "x": 14,
+     "y": 10,
+     "k": "pd",
+     "id": "s1_3",
+     "item": "।",
+     "t": "(full stop)",
+     "m": "(full stop)",
+     "showM": true
+    },
+    {
+     "g": "गच्छति विशति च ।",
+     "n": 12,
+     "x": 3,
+     "y": 11,
+     "k": "pd",
+     "id": "sr1",
+     "parts": [
+      "s1_0",
+      "s1_1",
+      "s1_2",
+      "s1_3"
+     ],
+     "cls": "divine",
+     "t": "gacchati viśati ca",
+     "m": "he goes and enters"
+    },
+    {
+     "g": "अत्र",
+     "n": 2,
+     "x": 3,
+     "y": 13,
+     "k": "pd",
+     "id": "s2_0",
+     "item": "अत्र",
+     "t": "here",
+     "m": "here",
+     "showM": true
+    },
+    {
+     "g": "स्मरति",
+     "n": 3,
+     "x": 6,
+     "y": 13,
+     "k": "pd",
+     "id": "s2_1",
+     "item": "स्मरति",
+     "t": "he remembers",
+     "m": "he remembers",
+     "showM": true
+    },
+    {
+     "g": "तत्र",
+     "n": 2,
+     "x": 10,
+     "y": 13,
+     "k": "pd",
+     "id": "s2_2",
+     "item": "तत्र",
+     "t": "there",
+     "m": "there",
+     "showM": true
+    },
+    {
+     "g": "च",
+     "n": 2,
+     "x": 13,
+     "y": 13,
+     "k": "pd",
+     "id": "s2_3",
+     "item": "च",
+     "t": "and",
+     "m": "and",
+     "showM": true
+    },
+    {
+     "g": "विशति",
+     "n": 3,
+     "x": 16,
+     "y": 13,
+     "k": "pd",
+     "id": "s2_4",
+     "item": "विशति",
+     "t": "he enters",
+     "m": "he enters",
+     "showM": true
+    },
+    {
+     "g": "।",
+     "n": 1,
+     "x": 20,
+     "y": 13,
+     "k": "pd",
+     "id": "s2_5",
+     "item": "।",
+     "t": "(full stop)",
+     "m": "(full stop)",
+     "showM": true
+    },
+    {
+     "g": "अत्र स्मरति तत्र च विशति ।",
+     "n": 18,
+     "x": 3,
+     "y": 14,
+     "k": "pd",
+     "id": "sr2",
+     "parts": [
+      "s2_0",
+      "s2_1",
+      "s2_2",
+      "s2_3",
+      "s2_4",
+      "s2_5"
+     ],
+     "cls": "divine",
+     "t": "atra smarati tatra ca viśati",
+     "m": "here he remembers and there he enters"
+    },
+    {
+     "g": "।",
+     "n": 1,
+     "x": 30,
+     "y": 12,
+     "k": "ch"
+    },
+    {
+     "g": "निपाताः",
+     "n": 3,
+     "x": 34,
+     "y": 10,
+     "k": "sg",
+     "t": "nipātāḥ",
+     "m": "particles",
+     "info": "Small words: na “not”, atra “here”, tatra “there”, punar “again”, kim “what? why?”. ca “and”, vā “or” and tu “but” are postposed: they come after the word they belong to and can never stand first. gacchati viśati ca = “he goes and enters”. Every sentence ends with the daṇḍa । (“stick”); ॥ ends a verse or a paragraph."
+    },
+    {
+     "g": "वाक्यानि",
+     "n": 3,
+     "x": 34,
+     "y": 13,
+     "k": "sg",
+     "t": "vākyāni",
+     "m": "sentences",
+     "info": "Two sentences to build. Under each place you see the English meaning of the word that belongs there. Find the words in the village, and the daṇḍa । here in the hall."
+    },
+    {
+     "g": "करोति",
+     "n": 3,
+     "x": 46,
+     "y": 15,
+     "k": "en",
+     "t": "karoti",
+     "m": "he does",
+     "tame": 2,
+     "id": "v_karoti",
+     "cls": "folk",
+     "leave": true,
+     "leaveMsg": "does his work and clears the way",
+     "info": "A builder who stands before the last door."
+    },
+    {
+     "g": "द्वारम्",
+     "n": 3,
+     "x": 46,
+     "y": 16,
+     "k": "dr",
+     "t": "dvāram",
+     "m": "door",
+     "id": "d3end",
+     "need": [],
+     "needSlots": [
+      "sr1",
+      "sr2"
+     ],
+     "ask": {
+      "q": "Which numbers does Sanskrit have?",
+      "opts": [
+       "singular and plural",
+       "singular, dual and plural",
+       "only singular",
+       "dual and plural"
+      ],
+      "a": 1,
+      "why": "Sanskrit has a dual for exactly two."
+     }
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 1,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.4
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 54,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.3
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 1,
+     "y": 14,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 2.2
+    },
+    {
+     "g": "समाप्तम्",
+     "n": 4,
+     "x": 45,
+     "y": 18,
+     "k": "sg",
+     "t": "samāptam",
+     "m": "completed",
+     "action": "overview",
+     "cls": "end",
+     "info": "The end of level 3. You know how a Sanskrit verb is built: root, stem and ending, and what it tells: person, number, tense, mood and voice."
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 40,
+     "y": 17,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.5
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 54,
+     "y": 17,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.4
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 40,
+     "y": 20,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 2.1
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 54,
+     "y": 20,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.8
     }
    ]
   }
