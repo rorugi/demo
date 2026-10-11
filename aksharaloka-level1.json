@@ -4024,7 +4024,8 @@
      "t": "iti",
      "m": "thus — the end",
      "action": "overview",
-     "info": "इति iti, “thus”: the word that closes a text in Sanskrit. You walked through the world of letters and read your first verse. Come back now and then: what you learned fades, and the world will bring it back to you."
+     "info": "इति iti, “thus”: the word that closes a text in Sanskrit. You walked through the world of letters and read your first verse. Come back now and then: what you learned fades, and the world will bring it back to you.",
+     "cls": "end"
     },
     {
      "g": "दीपः",
@@ -4065,6 +4066,16 @@
      "t": "dīpaḥ",
      "m": "lamp",
      "d": 0.9
+    },
+    {
+     "g": "वृक्षः",
+     "n": 2,
+     "x": 3,
+     "y": 7,
+     "k": "tr",
+     "t": "vṛkṣaḥ",
+     "m": "tree",
+     "info": "A tree in the crow’s room."
     },
     {
      "g": "तोरणम्",
@@ -6361,6 +6372,7 @@
      "t": "samāptam",
      "m": "completed",
      "action": "overview",
+     "cls": "end",
      "info": "The end of level 2. You now know the order of the Sanskrit alphabet: by place, from throat to lips, and by manner, unvoiced or voiced, with little or much breath, and nasal. And you can tell heavy from light syllables."
     },
     {
