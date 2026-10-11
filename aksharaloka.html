@@ -252,7 +252,8 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <button id="bi" class="tw" style="display:none">Built-in level</button>
 <button id="rs" class="tw">Restart</button>
 </div>
-<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Reset everything to the beginning</span><button id="rlv" class="tw" style="margin-left:auto"><i class="ti ti-rotate-clockwise" aria-hidden="true"></i> Reset level</button><button id="rlvy" class="tw abtn" style="display:none">Yes, reset all</button><button id="rlvn" class="tw" style="display:none">Cancel</button></div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Restore this level’s original layout · progress is kept</span><button id="rlay" class="tw" style="margin-left:auto"><i class="ti ti-layout-grid" aria-hidden="true"></i> Reset level</button><button id="rlayy" class="tw abtn" style="display:none">Yes, restore layout</button><button id="rlayn" class="tw" style="display:none">Cancel</button></div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Reset everything to the beginning</span><button id="rlv" class="tw" style="margin-left:auto"><i class="ti ti-rotate-clockwise" aria-hidden="true"></i> Reset all</button><button id="rlvy" class="tw abtn" style="display:none">Yes, reset all</button><button id="rlvn" class="tw" style="display:none">Cancel</button></div>
 <div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Simulate time</span><button class="tw" data-t="300000">+5 min</button><button class="tw" data-t="3600000">+1 h</button><button class="tw" data-t="86400000">+1 d</button><button class="tw" data-t="432000000">+5 d</button></div>
 <div id="edtools" style="display:none;margin-top:8px;font-size:13px">
 <div class="row">
@@ -673,6 +674,17 @@ const rl=document.getElementById('rlv'),ry=document.getElementById('rlvy'),rn=do
 rl.onclick=()=>{rl.style.display='none';ry.style.display='';rn.style.display='';};
 rn.onclick=()=>{rl.style.display='';ry.style.display='none';rn.style.display='none';};
 ry.onclick=()=>{rn.onclick();K={};bag={};warp=0;learned=new Set();doors={};try{localStorage.removeItem('skt-rogue-level');localStorage.removeItem('skt-rogue-cur');}catch(e){}useLevel(BUILTIN_LEVEL,false);save();say('Everything was reset to the beginning');draw();};
+{const a=document.getElementById('rlay'),y=document.getElementById('rlayy'),n=document.getElementById('rlayn');
+a.onclick=()=>{a.style.display='none';y.style.display='';n.style.display='';};
+n.onclick=()=>{a.style.display='';y.style.display='none';n.style.display='none';};
+y.onclick=()=>{n.onclick();const lv=LV.level||1,bi=normLevel(JSON.parse(JSON.stringify(BUILTIN_LEVEL))),orig=bi.floors.filter(f=>(f.level||1)===lv);
+if(!orig.length){say('Nothing to restore'+sub('the built-in game has no level '+lv));draw();return}
+const cur=joinLevel(),out=[];let put=false;for(const f of cur.floors){if((f.level||1)===lv){if(!put){out.push(...orig);put=true;}}else out.push(f);}if(!put)out.push(...orig);
+const L=JSON.parse(JSON.stringify(bi));L.floors=out;const same=JSON.stringify(out)===JSON.stringify(bi.floors);
+const keepCur=CUR,px=P.x,py=P.y;useLevel(same?BUILTIN_LEVEL:L,!same);
+if(LEVELS[keepCur]&&keepCur!==CUR){CUR=keepCur;LV=LEVELS[CUR];try{localStorage.setItem('skt-rogue-cur',CUR);}catch(e){}applyLevel(LV);showLevel();init();}
+if(CUR===keepCur&&floor(px,py)&&!E.some(e=>occ(e,px,py)&&!walkE(e))){P.x=px;P.y=py;}
+sizeView();say('Level '+lv+' has its original layout again'+sub('your progress is kept'));draw();};}
 document.getElementById('vtest').onclick=()=>{if(!voiceName){say('Choose a voice first'+sub('Settings → Voice'));draw();return}speak('नमस्ते');};
 document.getElementById('rs').onclick=()=>{K={};bag={};warp=0;learned=new Set();doors={};save();init();};
 setInterval(()=>{if(!walk)draw();},15000);
