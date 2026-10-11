@@ -221,13 +221,6 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <h2 class="sect"><i class="ti ti-history" aria-hidden="true"></i> History</h2>
 <div id="log" class="dev" style="margin-top:2px;font-size:13px;line-height:1.6;min-height:84px"></div>
 <h2 class="sect"><i class="ti ti-settings" aria-hidden="true"></i> Settings</h2>
-<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:4px">
-<span>Level <span id="lvname" class="dev" style="color:var(--text-primary)"></span></span>
-<button id="dl" class="tw" style="margin-left:auto"><i class="ti ti-download" aria-hidden="true"></i> Download level</button>
-<label class="tw" style="border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer"><i class="ti ti-upload" aria-hidden="true"></i> Load level<input id="ld" type="file" accept=".json,application/json" style="display:none"></label>
-<button id="bi" class="tw" style="display:none">Built-in level</button>
-<button id="rs" class="tw">Restart</button>
-</div>
 <div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:6px"><span>Game</span><button id="sg" class="tw" style="margin-left:auto"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save game</button><label class="tw" style="border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer"><i class="ti ti-folder-open" aria-hidden="true"></i> Load game<input id="lg" type="file" accept=".json,application/json" style="display:none"></label></div>
 <div id="lderr" style="font-size:13px;color:var(--text-danger);min-height:0"></div>
 <div class="row" style="gap:8px;margin-top:10px;font-size:13px;color:var(--text-secondary)">
@@ -236,7 +229,16 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 </div>
 <div id="vhint" class="muted" style="font-size:12px;margin-top:4px"></div>
 <section id="admin" style="margin-top:20px;border-top:0.5px solid var(--border);padding-top:12px">
-<div class="row" style="font-size:13px"><span style="font-weight:500">Admin</span><label style="margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="edon"> Enable editing</label></div>
+<div class="row" style="font-size:13px"><button id="adtog" class="tw" aria-expanded="false" aria-controls="adbody" style="font-weight:500;padding:2px 8px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Admin</button></div>
+<div id="adbody" style="display:none">
+<div class="row" style="font-size:13px;margin-top:8px"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="edon"> Enable editing</label></div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px">
+<span>Level <span id="lvname" class="dev" style="color:var(--text-primary)"></span></span>
+<button id="dl" class="tw" style="margin-left:auto"><i class="ti ti-download" aria-hidden="true"></i> Download level</button>
+<label class="tw" style="border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer"><i class="ti ti-upload" aria-hidden="true"></i> Load level<input id="ld" type="file" accept=".json,application/json" style="display:none"></label>
+<button id="bi" class="tw" style="display:none">Built-in level</button>
+<button id="rs" class="tw">Restart</button>
+</div>
 <div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Reset everything to the beginning</span><button id="rlv" class="tw" style="margin-left:auto"><i class="ti ti-rotate-clockwise" aria-hidden="true"></i> Reset level</button><button id="rlvy" class="tw abtn" style="display:none">Yes, reset all</button><button id="rlvn" class="tw" style="display:none">Cancel</button></div>
 <div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Simulate time</span><button class="tw" data-t="300000">+5 min</button><button class="tw" data-t="3600000">+1 h</button><button class="tw" data-t="86400000">+1 d</button><button class="tw" data-t="432000000">+5 d</button></div>
 <div id="edtools" style="display:none;margin-top:8px;font-size:13px">
@@ -254,6 +256,7 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <button class="tw" data-pan="-3,0" aria-label="Left"><i class="ti ti-arrow-left"></i></button><button class="tw" data-pan="0,-3" aria-label="Up"><i class="ti ti-arrow-up"></i></button><button class="tw" data-pan="0,3" aria-label="Down"><i class="ti ti-arrow-down"></i></button><button class="tw" data-pan="3,0" aria-label="Right"><i class="ti ti-arrow-right"></i></button>
 <span id="edpos" class="muted" style="margin-left:auto;font-size:12px"></span></div>
 <div id="edmsg" class="dev muted" style="margin-top:6px;font-size:12px;min-height:18px"></div>
+</div>
 </div>
 </section>
 </main>
@@ -603,6 +606,7 @@ editedLevel();const j=LV.entities.findIndex(x=>sameE(x,e));Object.assign(e,o,{fu
 WINFO[e.g]={t:e.t,m:e.m};editedLevel();edMsg('Label updated');draw();};
 function pan(dx,dy){ED.cam={x:Math.max(0,Math.min(W-VW,ED.cx+dx)),y:Math.max(0,Math.min(H-VH,ED.cy+dy))};draw();edPos();}
 function edPos(){document.getElementById('edpos').textContent='view '+ED.cx+','+ED.cy;}
+document.getElementById('adtog').onclick=ev=>{const bd=document.getElementById('adbody'),open=bd.style.display==='none';bd.style.display=open?'':'none';const t=ev.currentTarget;t.setAttribute('aria-expanded',open);t.querySelector('i').className='ti ti-chevron-'+(open?'down':'right');};
 document.getElementById('edon').onchange=ev=>{ED.on=ev.target.checked;{const ad=document.getElementById('admin'),mp=document.getElementById('map');if(ED.on){mp.after(ad);ad.style.marginTop='8px';}else{document.getElementById('vhint').after(ad);ad.style.marginTop='20px';}}document.getElementById('edtools').style.display=ED.on?'':'none';document.getElementById('map').style.cursor=ED.on?'crosshair':'';
 stopWalk();quiz=null;if(ED.on){ED.cam={x:ED.cx,y:ED.cy};fillEditor();edMsg('Tap fields on the map to draw or delete');}draw();edPos();};
 document.getElementById('edtype').onchange=ev=>{const d=EDT[+ev.target.value];document.getElementById('edletter').style.display=(d[0]==='ch'||d[0]==='st')?'':'none';document.getElementById('edlabel').style.display=d[0]==='label'?'':'none';ED.lab=null;document.getElementById('edlupd').style.display='none';document.getElementById('edtame').style.display=(d[0]==='e'&&TAMEK.includes(d[1].k))?'':'none';document.getElementById('edleave').parentNode.style.display=(d[0]==='e'&&d[1].k==='en')?'':'none';};
