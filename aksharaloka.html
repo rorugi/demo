@@ -229,7 +229,7 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <div id="lderr" style="font-size:13px;color:var(--text-danger);min-height:0"></div>
 <div class="row" style="gap:8px;margin-top:10px;font-size:13px;color:var(--text-secondary)">
 <i class="ti ti-volume" style="font-size:18px" aria-hidden="true"></i><label for="voice">Voice</label>
-<select id="voice" style="flex:1;min-width:0"><option value="">Off</option></select>
+<select id="voice" style="flex:1;min-width:0"><option value="">Off</option></select><button id="vtest" class="tw" aria-label="Test voice"><i class="ti ti-player-play" aria-hidden="true"></i> Test</button>
 </div>
 <div id="vhint" class="muted" style="font-size:12px;margin-top:4px"></div>
 <section id="admin" style="margin-top:20px;border-top:0.5px solid var(--border);padding-top:12px">
@@ -279,7 +279,9 @@ function computeRooms(){ROOM=new Int32Array(W*H).fill(-1);const open=(x,y)=>M[y]
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!open(x,y)||ROOM[y*W+x]>=0)continue;const id=y*W+x,q=[[x,y]];ROOM[id]=id;
 while(q.length){const [a,b]=q.pop();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=a+dx,ny=b+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;if(open(nx,ny)&&ROOM[ny*W+nx]<0){ROOM[ny*W+nx]=id;q.push([nx,ny]);}}}}}
 const roomSeen=id=>id>=0&&!!doors['seen:'+CUR+':'+id];
-function markSeen(){if(!ROOM)computeRooms();const id=ROOM[P.y*W+P.x];if(id>=0&&!doors['seen:'+CUR+':'+id]){doors['seen:'+CUR+':'+id]=true;}}
+function markSeen(){if(!ROOM)computeRooms();const see=id=>{if(id>=0)doors['seen:'+CUR+':'+id]=true;};see(ROOM[P.y*W+P.x]);
+for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const x=P.x+dx,y=P.y+dy;if(!M[y]||M[y][x]!=='+')continue;
+const dr=E.find(e=>e.k==='dr'&&occ(e,x,y));if(dr&&!doors[dr.id])continue;for(const [ax,ay] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+ax,ny=y+ay;if(M[ny]&&(M[ny][nx]==='.'||M[ny][nx]==='~'))see(ROOM[ny*W+nx]);}}}
 function cellVis(x,y){if(ED.on||!ROOM)return true;if(x<0||y<0||x>=W||y>=H)return false;const c=M[y][x];
 if(c==='.'||c==='~')return roomSeen(ROOM[y*W+x]);
 const nb=c==='+'?[[1,0],[-1,0],[0,1],[0,-1]]:[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
@@ -312,8 +314,9 @@ const sorted=voices.slice().sort((a,b)=>pr(a)-pr(b)||a.lang.localeCompare(b.lang
 const s=document.getElementById('voice');s.innerHTML='<option value="">Off</option>'+(sorted.length?sorted.map(v=>'<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' ('+v.lang+')</option>').join(''):'<option disabled>No voices available</option>');
 if(voices.some(v=>v.name===voiceName))s.value=voiceName;else{s.value='';}
 const vh=document.getElementById('vhint');if(vh)vh.textContent=!voices.length?'':voices.some(v=>/^sa/i.test(v.lang))?'':'This browser offers no Sanskrit (sa) voice. A Hindi voice (hi) reads Devanagari well.';}
-function speak(text){if(!hasTTS||!voiceName||!text)return;const v=voices.find(x=>x.name===voiceName);if(!v)return;
-speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=0.85;speechSynthesis.speak(u);}
+function speak(text){if(!hasTTS||!voiceName||!text)return;let v=voices.find(x=>x.name===voiceName);if(!v){voices=speechSynthesis.getVoices();v=voices.find(x=>x.name===voiceName);}if(!v)return;
+const go=()=>{const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=0.85;u.volume=1;speechSynthesis.speak(u);speechSynthesis.resume();};
+if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(go,80);}else go();}
 const sayOf=e=>(e.k==='ch'||e.k==='st')?INFO[e.g].s:e.full;
 const knownE=e=>e===P||e.k==='sg'||e.k==='pd'?true:(e===WALL||e===DEEP)?learned.has(e.t):active(e.g);
 function speakIfKnown(e){if(knownE(e))speak(sayOf(e));}
@@ -621,6 +624,7 @@ const rl=document.getElementById('rlv'),ry=document.getElementById('rlvy'),rn=do
 rl.onclick=()=>{rl.style.display='none';ry.style.display='';rn.style.display='';};
 rn.onclick=()=>{rl.style.display='';ry.style.display='none';rn.style.display='none';};
 ry.onclick=()=>{rn.onclick();K={};bag={};warp=0;learned=new Set();doors={};try{localStorage.removeItem('skt-rogue-level');localStorage.removeItem('skt-rogue-cur');}catch(e){}useLevel(BUILTIN_LEVEL,false);save();say('Everything was reset to the beginning');draw();};
+document.getElementById('vtest').onclick=()=>{if(!voiceName){say('Choose a voice first'+sub('Settings → Voice'));draw();return}speak('नमस्ते');};
 document.getElementById('rs').onclick=()=>{K={};bag={};warp=0;learned=new Set();doors={};save();init();};
 setInterval(()=>{if(!walk)draw();},15000);
 load();sizeView();showLevel();
