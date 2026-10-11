@@ -6525,7 +6525,7 @@
      "k": "sg",
      "t": "dhātuḥ",
      "m": "verbal root",
-     "info": "Three words to know. ROOT (√, dhātu): the bare core of a verb that carries its meaning, e.g. √viś “enter”. A root never appears on its own in a text. STEM: the form the endings are attached to. For most verbs the root is changed first – something is added after it (viś → viśa-) or in front of it (dā → dadā-). ENDING: comes last and says who acts: -ti “he/she/it”, -si “you”, -nti “they”. Root + addition = stem; stem + ending = a real word."
+     "info": "Three words to know:\n**Root** (√, dhātu): the bare core of a verb that carries its meaning, e.g. √viś “enter”. A root never appears on its own in a text.\n**Stem**: the form the endings are attached to. For most verbs the root is changed first – something is added after it (viś → viśa-) or in front of it (dā → dadā-).\n**Ending**: comes last and says who acts: -ti “he/she/it”, -si “you”, -nti “they”.\n\nRoot + addition = stem · stem + ending = a real word."
     },
     {
      "g": "दीपः",
@@ -6555,7 +6555,7 @@
      "k": "sg",
      "t": "dhātavaḥ",
      "m": "roots",
-     "info": "Roots: the bare core of a verb, written with √. √as “be”, √viś “enter”, √dā “give”. You will never read a root in a text – only finished words like asti “he is”."
+     "info": "Roots: the bare core of a verb, written with √.\n√as “be” · √viś “enter” · √dā “give”\nYou will never read a root in a text – only finished words like asti “he is”."
     },
     {
      "g": "अस्",
@@ -6592,7 +6592,7 @@
      "k": "sg",
      "t": "aṅgāni",
      "m": "stems",
-     "info": "What turns a root into a stem. -a- is added after the root (viś → viśa-), da- in front of it (dā → dadā-, a doubled syllable). bhara- “carry” is already a finished present stem, so it needs nothing more – only an ending. -iṣya- is not part of the stem: it is the future marker that sits between stem and ending."
+     "info": "What turns a root into a stem:\n-a- is added after the root: viś → viśa-\nda- is added in front of it: dā → dadā- (a doubled syllable)\nbhara- “carry” is already a finished present stem, so it only needs an ending.\n-iṣya- is not part of the stem: it is the future marker between stem and ending."
     },
     {
      "g": "भर",
@@ -6656,7 +6656,7 @@
      "k": "sg",
      "t": "pratyayāḥ",
      "m": "affixes and endings",
-     "info": "An affix is added to a root or stem: before it (prefix), inside it (infix) or after it (suffix). An ending always comes last and completes the word; it tells the person and number: -ti “he/she/it”, -si “you” (one person), -nti “they”."
+     "info": "An **affix** is added to a root or stem: before it (prefix), inside it (infix) or after it (suffix).\nAn **ending** always comes last and completes the word. It tells person and number:\n-ti “he/she/it” · -si “you” (one person) · -nti “they”"
     },
     {
      "g": "-ति",
@@ -6750,7 +6750,7 @@
      "k": "sg",
      "t": "āgamaḥ",
      "m": "addition",
-     "info": "Second column: what is added to the root to make the stem (or, for the future, the marker -iṣya-). When nothing is needed, the place says शून्यम् “empty”. The hyphen shows where the addition goes: -a- after the root, da- in front of it (dā → dadā-)."
+     "info": "Second column: what is added to the root to make the stem – or, for the future, the marker -iṣya-.\nWhen nothing is needed, the place says शून्यम् “empty”.\nThe hyphen shows where the addition goes: -a- after the root, da- in front of it (dā → dadā-)."
     },
     {
      "g": "अन्तः",
@@ -6790,7 +6790,7 @@
      "k": "sg",
      "t": "āgamaḥ",
      "m": "addition",
-     "info": "Second column: what is added to the root to make the stem (or, for the future, the marker -iṣya-). When nothing is needed, the place says शून्यम् “empty”. The hyphen shows where the addition goes: -a- after the root, da- in front of it (dā → dadā-)."
+     "info": "Second column: what is added to the root to make the stem – or, for the future, the marker -iṣya-.\nWhen nothing is needed, the place says शून्यम् “empty”.\nThe hyphen shows where the addition goes: -a- after the root, da- in front of it (dā → dadā-)."
     },
     {
      "g": "अन्तः",
@@ -6832,7 +6832,7 @@
      "k": "sg",
      "t": "śūnyam",
      "m": "empty",
-     "info": "Nothing is added here. √as is one of the few verbs that take the ending straight on the root: the root itself is the stem (a “root stem”). as + ti → asti."
+     "info": "Nothing is added here.\n√as is one of the few verbs that take the ending straight on the root: the root itself is the stem (a “root stem”).\nas + ti → asti"
     },
     {
      "g": "-ति",
@@ -7032,7 +7032,7 @@
      "k": "sg",
      "t": "śūnyam",
      "m": "empty",
-     "info": "Nothing is added here, because bhara- already is the present stem (the root √bhṛ has already been changed into bhara-). For the present tense only the ending is missing: bhara + si → bharasi."
+     "info": "Nothing is added here, because bhara- already is the present stem (the root √bhṛ has already been changed into bhara-).\nFor the present tense only the ending is missing:\nbhara + si → bharasi"
     },
     {
      "g": "-सि",
@@ -7096,7 +7096,7 @@
      "k": "sg",
      "t": "śūnyam",
      "m": "empty",
-     "info": "Nothing is added here: bhara- is already the present stem, so only the ending follows. bhara + nti → bharanti “they carry”. Compare bhariṣyasi below: for the future, -iṣya- comes in between."
+     "info": "Nothing is added here: bhara- is already the present stem, so only the ending follows.\nbhara + nti → bharanti “they carry”\nCompare bhariṣyasi: for the future, -iṣya- comes in between."
     },
     {
      "g": "-न्ति",
@@ -7216,7 +7216,7 @@
      "k": "sg",
      "t": "śālā",
      "m": "workshop",
-     "info": "The workshop. Each row forges one verb form from left to right: root or stem, addition, ending. Walk onto a place with the right part in your स्यूतः. English adds small words (you carry, they carry, you will carry); Sanskrit adds affixes and endings: bharasi, bharanti, bhariṣyasi. When all six words are forged, the door on the right opens."
+     "info": "The workshop. Each row forges one verb form from left to right:\nroot or stem → addition → ending → word\nWalk onto a place with the right part in your स्यूतः.\n\nEnglish adds small words: you carry, they carry, you will carry.\nSanskrit adds affixes and endings: bharasi, bharanti, bhariṣyasi.\n\nWhen all six words are forged, the door on the right opens."
     },
     {
      "g": "गुरुः",
@@ -7381,7 +7381,7 @@
      "k": "sg",
      "t": "grāmaḥ",
      "m": "village",
-     "info": "The village of verbs. Its people are verbs from chapter 3, and each does what its name says. To name them you build the word and choose its meaning. The ending -ti means “he”, “she” or “it”: only the context tells which. And there is no difference between “he carries” and “he is carrying”: bharati means both."
+     "info": "The village of verbs. Its people are verbs from chapter 3, and each does what its name says.\nTo name them you build the word and choose its meaning.\n\nThe ending -ti means “he”, “she” or “it” – only the context tells which.\nbharati means both “he carries” and “he is carrying”."
     },
     {
      "g": "दीपः",
@@ -7459,7 +7459,7 @@
      "k": "sg",
      "t": "puruṣaḥ",
      "m": "person",
-     "info": "Person: 1st = the speaker (“I”), 2nd = the one spoken to (“you”), 3rd = someone spoken about (“he/she/it”)."
+     "info": "Person:\n1st – the speaker: “I”\n2nd – the one spoken to: “you”\n3rd – someone spoken about: “he / she / it”"
     },
     {
      "g": "वचनम्",
@@ -7469,7 +7469,7 @@
      "k": "sg",
      "t": "vacanam",
      "m": "number",
-     "info": "Number: singular (one), plural (several) and, unlike English, the dual for exactly two: “we two”, “the two of them”."
+     "info": "Number:\nsingular – one\ndual – exactly two (“we two”, “the two of them”), unlike English\nplural – several"
     },
     {
      "g": "कालः",
@@ -7479,7 +7479,7 @@
      "k": "sg",
      "t": "kālaḥ",
      "m": "time, tense",
-     "info": "Tense: present, future and past. Sanskrit has three past tenses (imperfect, aorist, perfect) that all mean an action before now. Mood: indicative (what is), potential (what could or should be), imperative (commands)."
+     "info": "Tense: present, future and past.\nSanskrit has three past tenses (imperfect, aorist, perfect); all mean an action before now.\n\nMood:\nindicative – what is\npotential – what could or should be\nimperative – commands"
     },
     {
      "g": "पदम्",
@@ -7489,7 +7489,7 @@
      "k": "sg",
      "t": "padam",
      "m": "voice",
-     "info": "Voice: active (“I carry”), passive (“I am carried”) and a third, the middle. The Indian grammarians call the active parasmaipada, “word for another”, and the middle ātmanepada, “word for oneself”."
+     "info": "Voice:\nactive – “I carry”\npassive – “I am carried”\nmiddle – a third voice\n\nThe Indian grammarians call the active **parasmaipada** “word for another” and the middle **ātmanepada** “word for oneself”."
     },
     {
      "g": "विशति",
@@ -7847,7 +7847,7 @@
      "k": "sg",
      "t": "nipātāḥ",
      "m": "particles",
-     "info": "Small words: na “not”, atra “here”, tatra “there”, punar “again”, kim “what? why?”. ca “and”, vā “or” and tu “but” are postposed: they come after the word they belong to and can never stand first. gacchati viśati ca = “he goes and enters”. Every sentence ends with the daṇḍa । (“stick”); ॥ ends a verse or a paragraph."
+     "info": "Small words:\nna “not” · atra “here” · tatra “there” · punar “again” · kim “what? why?”\n\nca “and”, vā “or” and tu “but” are **postposed**: they come after the word they belong to and never stand first.\ngacchati viśati ca = “he goes and enters”\n\n। (daṇḍa “stick”) ends every sentence; ॥ ends a verse or a paragraph."
     },
     {
      "g": "वाक्यानि",
@@ -7857,7 +7857,7 @@
      "k": "sg",
      "t": "vākyāni",
      "m": "sentences",
-     "info": "Two sentences to build. Under each place you see the English meaning of the word that belongs there. Find the words in the village, and the daṇḍa । here in the hall."
+     "info": "Two sentences to build.\nUnder each place you see the English meaning of the word that belongs there.\nFind the words in the village, and the daṇḍa । here in the hall."
     },
     {
      "g": "करोति",
@@ -7966,7 +7966,7 @@
      "m": "completed",
      "action": "overview",
      "cls": "end",
-     "info": "The end of level 3. You know how a Sanskrit verb is built: root, stem and ending, and what it tells: person, number, tense, mood and voice."
+     "info": "The end of level 3.\nYou know how a Sanskrit verb is built: root, stem and ending –\nand what it tells: person, number, tense, mood and voice."
     },
     {
      "g": "दीपः",
