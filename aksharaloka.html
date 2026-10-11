@@ -179,6 +179,10 @@ select{background:var(--surface-2);padding:6px 8px}
 .tw{font-size:12px;padding:2px 8px}
 .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .muted{color:var(--text-secondary)}
+ul.hist{list-style:none;margin:0;padding:0}
+ul.hist li{padding-left:1em;text-indent:-1em}
+ul.hist li::before{content:'– ';color:var(--text-muted)}
+.c.fog{background:var(--page);position:relative;z-index:4}
 h2.sect{font-size:16px;font-weight:500;margin:1rem 0 4px;display:flex;align-items:center;gap:6px;color:var(--text-primary)}
 .thopt{display:flex;align-items:center;gap:8px;padding:5px 2px;color:var(--text-primary);cursor:pointer;font-size:14px}
 </style>
@@ -221,6 +225,7 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <button id="bi" class="tw" style="display:none">Built-in level</button>
 <button id="rs" class="tw">Restart</button>
 </div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:6px"><span>Game</span><button id="sg" class="tw" style="margin-left:auto"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save game</button><label class="tw" style="border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer"><i class="ti ti-folder-open" aria-hidden="true"></i> Load game<input id="lg" type="file" accept=".json,application/json" style="display:none"></label></div>
 <div id="lderr" style="font-size:13px;color:var(--text-danger);min-height:0"></div>
 <div class="row" style="gap:8px;margin-top:10px;font-size:13px;color:var(--text-secondary)">
 <i class="ti ti-volume" style="font-size:18px" aria-hidden="true"></i><label for="voice">Voice</label>
@@ -229,6 +234,7 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <div id="vhint" class="muted" style="font-size:12px;margin-top:4px"></div>
 <section id="admin" style="margin-top:20px;border-top:0.5px solid var(--border);padding-top:12px">
 <div class="row" style="font-size:13px"><span style="font-weight:500">Admin</span><label style="margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="edon"> Enable editing</label></div>
+<div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Reset everything to the beginning</span><button id="rlv" class="tw" style="margin-left:auto"><i class="ti ti-rotate-clockwise" aria-hidden="true"></i> Reset level</button><button id="rlvy" class="tw abtn" style="display:none">Yes, reset all</button><button id="rlvn" class="tw" style="display:none">Cancel</button></div>
 <div class="row" style="font-size:12px;color:var(--text-secondary);margin-top:8px"><span>Simulate time</span><button class="tw" data-t="300000">+5 min</button><button class="tw" data-t="3600000">+1 h</button><button class="tw" data-t="86400000">+1 d</button><button class="tw" data-t="432000000">+5 d</button></div>
 <div id="edtools" style="display:none;margin-top:8px;font-size:13px">
 <div class="row">
@@ -263,11 +269,21 @@ let CUR=Object.keys(LEVELS)[0];try{const c=localStorage.getItem('skt-rogue-cur')
 let LV=LEVELS[CUR];const BUILTIN=LV;
 let M,W,H,DWB,INT,WALK,WALL,DEEP,POOL,MODP,CONS,MARK,LA,LAT,INFO;
 function applyLevel(L){M=L.map.rows.map(r=>r.split(''));H=M.length;W=Math.max(...M.map(r=>r.length));M.forEach(r=>{while(r.length<W)r.push('#');});
-computeDWB();
+computeDWB();computeRooms();
 INT=L.review.intervalsMs;WALK=Object.keys(L.kinds).filter(k=>L.kinds[k].walk);WALL=L.terrain.wall;DEEP=L.terrain.deepWater;
 POOL=L.quiz.pool;MODP=L.quiz.modifierPool;CONS=L.quiz.consonantRow;MARK=L.quiz.vowelSignRow;LA=L.lookalikes||{};
 INFO={};for(const [g,v] of Object.entries(L.letters))INFO[g]={t:v.t,m:v.m,s:v.say||g,grp:v.group,ct:v.consonant,v:v.vowel};
 LAT={};Object.keys(LA).forEach(g=>{if(INFO[g])LAT[g]=INFO[g].t;});}
+let ROOM=null;
+function computeRooms(){ROOM=new Int32Array(W*H).fill(-1);const open=(x,y)=>M[y]&&(M[y][x]==='.'||M[y][x]==='~');
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!open(x,y)||ROOM[y*W+x]>=0)continue;const id=y*W+x,q=[[x,y]];ROOM[id]=id;
+while(q.length){const [a,b]=q.pop();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=a+dx,ny=b+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;if(open(nx,ny)&&ROOM[ny*W+nx]<0){ROOM[ny*W+nx]=id;q.push([nx,ny]);}}}}}
+const roomSeen=id=>id>=0&&!!doors['seen:'+CUR+':'+id];
+function markSeen(){if(!ROOM)computeRooms();const id=ROOM[P.y*W+P.x];if(id>=0&&!doors['seen:'+CUR+':'+id]){doors['seen:'+CUR+':'+id]=true;}}
+function cellVis(x,y){if(ED.on||!ROOM)return true;if(x<0||y<0||x>=W||y>=H)return false;const c=M[y][x];
+if(c==='.'||c==='~')return roomSeen(ROOM[y*W+x]);
+const nb=c==='+'?[[1,0],[-1,0],[0,1],[0,-1]]:[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+for(const [dx,dy] of nb){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const d=M[ny][nx];if((d==='.'||d==='~')&&roomSeen(ROOM[ny*W+nx]))return true;if(c==='#'&&d==='+'&&cellVis(nx,ny))return true;}return false;}
 function computeDWB(){DWB={};for(let y=0;y<H;y++){let x=0;while(x<W){if(M[y][x]!=='~'){x++;continue}let e=x;while(M[y][e]==='~')e++;let L2=e-x,a=x;while(L2>0){const n=L2===3?3:L2>=2?2:1;for(let i=0;i<n;i++)DWB[y*W+a+i]=[a,n];a+=n;L2-=n;}x=e;}}}
 applyLevel(LV);
 window.addEventListener('resize',()=>{const a=VW,b=VH;sizeView();if(a!==VW||b!==VH)draw();});
@@ -307,7 +323,7 @@ function fmt(ms){const m=ms/60000;if(m<60)return Math.max(1,Math.round(m))+' min
 function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 function init(){stopWalk();quiz=null;selG=null;
 P={...LV.player,n:1,k:'pl',x:LV.start.x,y:LV.start.y};
-E=JSON.parse(JSON.stringify(LV.entities)).filter(e=>!(e.leave&&e.id&&doors['gone:'+e.id]));for(const k in IINFO)delete IINFO[k];for(const k in WINFO)delete WINFO[k];
+E=JSON.parse(JSON.stringify(LV.entities)).filter(e=>!(e.leave&&e.id&&doors['gone:'+e.id])&&!(e.k==='it'&&doors['taken:'+CUR+':'+e.x+','+e.y+':'+e.g]));for(const k in IINFO)delete IINFO[k];for(const k in WINFO)delete WINFO[k];
 E.forEach(e=>{e.full=e.full||e.g;if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};});
 for(const e of E){if(!e.deliver)continue;if(doors['delivered:'+e.id]){settle(e);}else if(doors['follow:'+e.id]){e.n=1;e.wander=null;e.x=P.x;e.y=P.y;}}
 E.forEach(e=>{if(e.k!=='ch'&&e.k!=='st')WINFO[e.g]={t:e.t,m:e.m};});
@@ -433,7 +449,7 @@ function approach(e){stopWalk();const adj=(x,y)=>[[1,0],[-1,0],[0,1],[0,-1]].som
 const p=pathTo(adj);if(!p){say('No way leads to '+e.full);draw();return}
 run(p,()=>{for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(occ(e,P.x+dx,P.y+dy)){move(dx,dy);break}});}
 function pickup(e,el){const g=e.g,root=document.getElementById('root').getBoundingClientRect(),a=el.getBoundingClientRect();
-if(e.k==='it'){E=E.filter(x=>x!==e);sel=null;selG=null;draw();}
+if(e.k==='it'){E=E.filter(x=>x!==e);doors['taken:'+CUR+':'+e.x+','+e.y+':'+e.g]=true;sel=null;selG=null;draw();}
 const chip=(bagOpen&&document.querySelector('.chip[data-g="'+g+'"]'))||(bagOpen?document.getElementById('bag'):document.getElementById('bagbtn')),b=chip.getBoundingClientRect();
 const f=document.createElement('div');f.className='fly '+e.k+(e.cls?' ent '+e.cls:'');f.textContent=g;
 Object.assign(f.style,{left:(a.left-root.left)+'px',top:(a.top-root.top)+'px',width:a.width+'px',height:a.height+'px'});
@@ -452,11 +468,13 @@ const unknownInfo=e=>panel(near(e)?'id':'near',e.g,'','',['unknown'+(e.k==='ch'?
 const esc=x=>String(x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 function draw(){let h='';const t=performance.now()/1000;
 const needSet=NEED();const cx=Math.max(0,Math.min(W-VW,ED.on&&ED.cam?ED.cam.x:P.x-Math.floor(VW/2))),cy=Math.max(0,Math.min(H-VH,ED.on&&ED.cam?ED.cam.y:P.y-Math.floor(VH/2)));ED.cx=cx;ED.cy=cy;
+markSeen();
 for(let vy=0;vy<VH;vy++)for(let vx=0;vx<VW;vx++){const x=cx+vx,y=cy+vy,pos='grid-column:'+(vx+1)+';grid-row:'+(vy+1);
+if(!cellVis(x,y)){h+='<div class="c fog" style="'+pos+'"></div>';continue}
 if(M[y][x]==='#')h+='<div class="c w" data-w="1" style="'+pos+'">भ</div>';
 else if(M[y][x]==='~'){const [a,n]=DWB[y*W+x];if(x===a||vx===0){const en=Math.min(a+n,cx+VW);h+='<div class="c dw" data-dw="1" style="grid-column:'+(vx+1)+' / span '+(en-x)+';grid-row:'+(vy+1)+'"><span style="animation-delay:'+(-((t+a*0.37+y*0.61)%2.1)).toFixed(2)+'s">'+(n>1?'जलम्':'ज')+'</span></div>';}}
 else{const tg=target&&target[0]===x&&target[1]===y&&!entAt(x,y);h+='<div class="c f'+(tg?' tg':'')+'" data-x="'+x+'" data-y="'+y+'" style="'+pos+'">'+(tg?'◎':M[y][x]==='+'?'▫':'·')+'</div>';}}
-E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
+E.forEach((e,i)=>{if(e.y<cy||e.y>=cy+VH)return;if(![...Array(e.n).keys()].some(k=>cellVis(e.x+k,e.y)))return;const s=Math.max(e.x,cx),en=Math.min(e.x+e.n,cx+VW);if(en<=s)return;
 const du=DUR[e.k],dl=du?-((t+(e.d||0))%du):0;
 h+='<div class="c ent '+e.k+(e.cls&&(e.k!=='pd'||doors['slot:'+e.id])?' '+e.cls:'')+(e.deliver&&e.n===1?' tiny':'')+(e.k==='ch'&&active(e.g)?' ok':'')+(e.k==='dr'&&doors[e.id]?' open':'')+(e.k==='ch'&&needSet.has(e.g)?' need':'')+(e.k==='st'&&doors[e.id]?' open':'')+(e.k==='sg'&&!doors['read:'+lblId(e)]?' unread':'')+(e.k==='pd'?(doors['slot:'+e.id]?' filled':''):'')+(e.k!=='ch'&&e.k!=='st'&&e.k!=='sg'&&e.k!=='pd'&&!active(e.g)?' unk':'')+(e===sel?' sel':'')+'" data-id="'+i+'" data-s="'+s+'" style="'+(e.cls==='divine'?'--dl:'+(-((t+(e.d||0))%2.4)).toFixed(2)+'s;':'')+'grid-column:'+(s-cx+1)+' / span '+(en-s)+';grid-row:'+(e.y-cy+1)+'"'+(e.info?' title="'+esc(e.info)+'"':'')+'><span style="animation-delay:'+dl.toFixed(2)+'s">'+(e.label||e.g)+'</span>'+(e.k==='dr'&&!doors[e.id]&&e.need.length&&e.n*24>=e.need.length*16?'<span class="needs">'+e.need.map(g=>'<b class="'+(bag[g]?'have':'miss')+'">'+g+'</b>').join('')+'</span>':'')+'</div>';});
 h+='<div class="c ent pl'+(sel===P?' sel':'')+'" data-p="1" style="'+(throwing?'visibility:hidden;':'')+'grid-column:'+(P.x-cx+1)+';grid-row:'+(P.y-cy+1)+'">अ</div>';
@@ -489,7 +507,7 @@ inf.innerHTML=panel(a,sel.full,sel.t,sel.m,[sel===P?'that’s you, अ':'',hint,
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
 {const st=tutStep(),tb=document.getElementById('tut');tb.style.display=st&&!ED.on?'flex':'none';if(st)document.getElementById('tuttext').textContent=st.text;}
 renderLearned();inf.classList.toggle('active',!!inf.querySelector('[data-act],[data-c],[data-tile],[data-rp]'));
-document.getElementById('log').innerHTML=logs.map((l,i)=>'<div style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</div>').join('');
+document.getElementById('log').innerHTML='<ul class="hist">'+logs.map((l,i)=>'<li style="color:'+(i?'var(--text-secondary)':'var(--text-primary)')+'">'+l+'</li>').join('')+'</ul>';
 if(SHOW_MINI)mini(cx,cy);save();}
 function mini(){}
 const cellOf=(c,e,ev)=>{const r=c.getBoundingClientRect();return +c.dataset.s+Math.min(e.n-1,Math.floor((ev.clientX-r.left)/24));};
@@ -551,9 +569,9 @@ function cellFromEvent(ev){const mp=document.getElementById('map'),r=mp.getBound
 return [ED.cx+Math.floor((ev.clientX-left)/24),ED.cy+Math.floor((ev.clientY-r.top)/28)];}
 function editClick(ev){const [x,y]=cellFromEvent(ev);editAt(x,y);}
 function editAt(x,y){if(x<0||y<0||x>=W||y>=H)return;const tool=document.querySelector('input[name=edtool]:checked').value;const e=entAt(x,y);
-if(tool==='del'){if(e){removeEnt(e);edMsg('Deleted '+e.g);}else if(M[y][x]!=='.'){if(x===0||y===0||x===W-1||y===H-1){edMsg('The outer wall stays');}else{M[y][x]='.';computeDWB();edMsg('Cleared field '+x+','+y);}}else edMsg('Nothing to delete at '+x+','+y);editedLevel();quiz=null;draw();return}
+if(tool==='del'){if(e){removeEnt(e);edMsg('Deleted '+e.g);}else if(M[y][x]!=='.'){if(x===0||y===0||x===W-1||y===H-1){edMsg('The outer wall stays');}else{M[y][x]='.';computeDWB();computeRooms();edMsg('Cleared field '+x+','+y);}}else edMsg('Nothing to delete at '+x+','+y);editedLevel();quiz=null;draw();return}
 const d=EDT[+document.getElementById('edtype').value];const isP=(px,py)=>px===P.x&&py===P.y;
-if(d[0]==='t'){if(isP(x,y)&&(d[1]==='#'||d[1]==='~')){edMsg('Move the player first');return}if(d[1]!=='.'&&e)removeEnt(e);M[y][x]=d[1];computeDWB();edMsg(d[2]+' at '+x+','+y);}
+if(d[0]==='t'){if(isP(x,y)&&(d[1]==='#'||d[1]==='~')){edMsg('Move the player first');return}if(d[1]!=='.'&&e)removeEnt(e);M[y][x]=d[1];computeDWB();computeRooms();edMsg(d[2]+' at '+x+','+y);}
 else if(d[0]==='label'){if(e&&e.k==='sg'){ED.lab=e;document.getElementById('edltext').value=e.g;document.getElementById('edlmean').value=e.m||'';document.getElementById('edlinfo').value=e.info||'';document.getElementById('edlupd').style.display='';edMsg('Editing label '+e.g+' · change the fields and press Update label');draw();return}
 const o=labelFromForm();if(!o)return;for(let i=0;i<o.n;i++){if(!floor(x+i,y)||entAt(x+i,y)||isP(x+i,y)){edMsg('No room for '+o.g+' at '+x+','+y+' (needs '+o.n+' free floor fields)');return}}
 o.x=x;o.y=y;editedLevel();LV.entities.push(JSON.parse(JSON.stringify(o)));o.full=o.g;E.push(o);WINFO[o.g]={t:o.t,m:o.m};edMsg('Placed label '+o.g);}
@@ -591,6 +609,18 @@ const words=seen.filter(g=>!INFO[g]),lets=seen.filter(g=>INFO[g]);
 el.innerHTML=seen.length?(words.length?'<div class="muted" style="margin:2px 0 4px">शब्दाः · words</div>'+words.map(row).join(''):'')+(lets.length?'<div class="muted" style="margin:8px 0 4px">अक्षराणि · letters</div>'+lets.map(row).join(''):''):'<span class="muted">Nothing learned yet. Identify a word or letter on the map.</span>';}
 document.getElementById('lrnbtn').onclick=()=>{lrnOpen=!lrnOpen;renderLearned();};
 document.getElementById('lrn').addEventListener('click',ev=>{const b=ev.target.closest('[data-say]');if(!b)return;const g=b.dataset.say;speak(INFO[g]?INFO[g].s:g);b.classList.add('pop');setTimeout(()=>b.classList.remove('pop'),400);});
+function dlFile(name,obj){const b=new Blob([JSON.stringify(obj,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+document.getElementById('sg').onclick=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');
+dlFile('aksharaloka-save-'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'-'+z(d.getHours())+z(d.getMinutes())+'.json',{format:'aksaraloka-save',version:1,savedAt:d.toISOString(),levelId:LV.levelId,level:CUSTOM?joinLevel():null,floor:CUR,player:{x:P.x,y:P.y},K,bag,warp,learned:[...learned],doors});say('Game saved'+sub('as a file in your downloads'));draw();};
+document.getElementById('lg').onchange=ev=>{const f=ev.target.files[0];const er=document.getElementById('lderr');er.textContent='';if(!f)return;f.text().then(t=>{let S;try{S=JSON.parse(t);}catch(e){er.textContent='That file isn’t valid JSON.';return}
+if(S.format!=='aksaraloka-save'||!S.K||!S.doors){er.textContent='That file isn’t a saved game.';return}
+K=S.K;bag=S.bag||{};warp=S.warp||0;learned=new Set(S.learned||[]);doors=S.doors||{};
+useLevel(S.level||BUILTIN_LEVEL,!!S.level);if(S.floor&&LEVELS[S.floor]&&S.floor!==CUR){CUR=S.floor;LV=LEVELS[CUR];applyLevel(LV);showLevel();init();}
+try{localStorage.setItem('skt-rogue-cur',CUR);}catch(e){}if(S.player&&floor(S.player.x,S.player.y)){P.x=S.player.x;P.y=S.player.y;sel=P;}save();say('Game loaded'+sub(S.savedAt?'saved '+new Date(S.savedAt).toLocaleString():''));sizeView();draw();}).finally(()=>{ev.target.value='';});};
+const rl=document.getElementById('rlv'),ry=document.getElementById('rlvy'),rn=document.getElementById('rlvn');
+rl.onclick=()=>{rl.style.display='none';ry.style.display='';rn.style.display='';};
+rn.onclick=()=>{rl.style.display='';ry.style.display='none';rn.style.display='none';};
+ry.onclick=()=>{rn.onclick();K={};bag={};warp=0;learned=new Set();doors={};try{localStorage.removeItem('skt-rogue-level');localStorage.removeItem('skt-rogue-cur');}catch(e){}useLevel(BUILTIN_LEVEL,false);save();say('Everything was reset to the beginning');draw();};
 document.getElementById('rs').onclick=()=>{K={};bag={};warp=0;learned=new Set();doors={};save();init();};
 setInterval(()=>{if(!walk)draw();},15000);
 load();sizeView();showLevel();
