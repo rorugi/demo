@@ -2783,7 +2783,7 @@
      "k": "sg",
      "t": "sūcanā",
      "m": "notice",
-     "info": "The door below (द्वारम्) opens when the crow काकः is here with you. It flies around in the small wood in the far west, past the rooms of the ca row and the ṭa row. Name it, and it will follow you back here."
+     "info": "The door below (द्वारम्) opens when the crow काकः is here with you. It flies around in a room in the far west, past the rooms of the ca row and the ṭa row. Name it, and it will follow you back here."
     },
     {
      "g": "नमस्ते",
@@ -3104,7 +3104,7 @@
      ],
      "fly": true,
      "d": 0.2,
-     "info": "A crow flies around in the wood. Name it and it will follow you. Bring it to the room of the ka row: there it opens the door down to the vowel signs on consonants.",
+     "info": "A crow flies around in this room. Name it and it will follow you. Bring it to the room of the ka row: there it opens the door down to the vowel signs on consonants.",
      "deliver": {
       "room": [
        30,
@@ -3565,7 +3565,7 @@
      "item": "मुकुटम्",
      "cls": "gold",
      "t": "mukuṭam",
-     "m": "place for the crown"
+     "m": "crown"
     },
     {
      "g": "रत्नम्",
@@ -3577,7 +3577,7 @@
      "item": "रत्नम्",
      "cls": "jewel",
      "t": "ratnam",
-     "m": "place for the jewel"
+     "m": "jewel"
     },
     {
      "g": "द्वारम्",
