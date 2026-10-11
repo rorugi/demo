@@ -4799,6 +4799,25 @@
      "showT": true
     },
     {
+     "g": "अग्निः",
+     "n": 2,
+     "x": 17,
+     "y": 5,
+     "k": "hz",
+     "t": "agniḥ",
+     "m": "fire",
+     "tame": 0,
+     "id": "hz2_13",
+     "boost": [
+      "p2_14_3",
+      "p2_16_3",
+      "p2_18_3",
+      "p2_20_3",
+      "p2_22_3"
+     ],
+     "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
+    },
+    {
      "g": "अ",
      "n": 1,
      "x": 15,
@@ -4898,6 +4917,25 @@
      "t": "ña",
      "m": "nasal, palate",
      "showT": true
+    },
+    {
+     "g": "अग्निः",
+     "n": 2,
+     "x": 29,
+     "y": 5,
+     "k": "hz",
+     "t": "agniḥ",
+     "m": "fire",
+     "tame": 0,
+     "id": "hz2_25",
+     "boost": [
+      "p2_26_3",
+      "p2_28_3",
+      "p2_30_3",
+      "p2_32_3",
+      "p2_34_3"
+     ],
+     "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
     },
     {
      "g": "इ",
@@ -5008,6 +5046,25 @@
      "showT": true
     },
     {
+     "g": "अग्निः",
+     "n": 2,
+     "x": 41,
+     "y": 5,
+     "k": "hz",
+     "t": "agniḥ",
+     "m": "fire",
+     "tame": 0,
+     "id": "hz2_37",
+     "boost": [
+      "p2_38_3",
+      "p2_40_3",
+      "p2_42_3",
+      "p2_44_3",
+      "p2_46_3"
+     ],
+     "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
+    },
+    {
      "g": "ऋ",
      "n": 1,
      "x": 39,
@@ -5116,6 +5173,25 @@
      "showT": true
     },
     {
+     "g": "अग्निः",
+     "n": 2,
+     "x": 53,
+     "y": 5,
+     "k": "hz",
+     "t": "agniḥ",
+     "m": "fire",
+     "tame": 0,
+     "id": "hz2_49",
+     "boost": [
+      "p2_50_3",
+      "p2_52_3",
+      "p2_54_3",
+      "p2_56_3",
+      "p2_58_3"
+     ],
+     "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
+    },
+    {
      "g": "ऌ",
      "n": 1,
      "x": 51,
@@ -5215,6 +5291,25 @@
      "t": "ma",
      "m": "nasal, the two lips",
      "showT": true
+    },
+    {
+     "g": "अग्निः",
+     "n": 2,
+     "x": 65,
+     "y": 5,
+     "k": "hz",
+     "t": "agniḥ",
+     "m": "fire",
+     "tame": 0,
+     "id": "hz2_61",
+     "boost": [
+      "p2_62_3",
+      "p2_64_3",
+      "p2_66_3",
+      "p2_68_3",
+      "p2_70_3"
+     ],
+     "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
     },
     {
      "g": "उ",
