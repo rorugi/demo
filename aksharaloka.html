@@ -524,6 +524,7 @@ if(ev.target.closest('[data-dw]')){sel=DEEP;selG=null;quiz=null;speakIfKnown(DEE
 if(ev.target.closest('[data-w]')){sel=WALL;selG=null;quiz=null;speakIfKnown(WALL);learned.add(WALL.t);draw();return}
 const c=ev.target.closest('[data-id]');if(c){const e=E[+c.dataset.id];const keepQuiz=quiz&&quiz.g===e.g;
 const walkOn=e.k==='tr'||e.k==='wa'||e.k==='wd'||e.k==='sg'||((e.k==='dr'||e.k==='st')&&doors[e.id]);
+if(e.k==='ex'&&sel===e&&active(e.g)&&e.to&&LEVELS[e.to]){const go=()=>setTimeout(()=>switchLevel(e.to,e.at),0);if(near(e))go();else walkBeside(e,go);return}
 if(sel===e&&!walkOn&&!near(e)){walkBeside(e,()=>{sel=e;selG=e.k==='ch'?e.g:null;identify(e);});return}
 if(e.k==='st'&&!doors[e.id]){sel=e;selG=null;if(!keepQuiz)quiz=null;if(near(e)&&!keepQuiz)openQuiz(e.g);draw();return}
 sel=e;selG=e.k==='ch'?e.g:null;if(!keepQuiz)quiz=null;
@@ -647,10 +648,10 @@ document.querySelectorAll('input[name=theme]').forEach(i=>i.onchange=()=>{try{lo
 </script>
 <div id="fade" style="display:none;position:fixed;inset:0;z-index:90;background:var(--page);opacity:0;transition:opacity .45s ease"></div>
 <div id="intro" style="position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px;background:var(--page);transition:background-color .7s ease 1.5s">
-<div id="introtitle" style="text-align:center;max-width:560px;transition:opacity .4s ease">
-<div class="dev" style="font-size:clamp(52px,13vw,104px);font-weight:500;line-height:1.15;background:linear-gradient(180deg,#FFE7A8 0%,#FAC775 35%,#EF9F27 65%,#BA7517 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 6px rgba(186,117,23,.45))">अक्षरलोकः</div>
+<div id="introtitle" style="text-align:center;max-width:560px;padding-top:.35em;transition:opacity .4s ease">
+<div class="dev" style="font-size:clamp(52px,13vw,104px);font-weight:500;line-height:1.5;padding-top:.2em;background:linear-gradient(180deg,#FFE7A8 0%,#FAC775 35%,#EF9F27 65%,#BA7517 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 6px rgba(186,117,23,.45))">अक्षरलोकः</div>
 <div style="font-size:clamp(22px,5vw,30px);color:#EF9F27;font-weight:500;margin-top:2px">Akṣaraloka</div>
-<div style="font-size:15px;color:var(--text-secondary);margin-top:4px"><i>akṣara</i> = letter, syllable · <i>loka</i> = world — “the world of letters”</div>
+<div style="font-size:15px;color:var(--text-secondary);margin-top:4px">World of letters</div>
 <div style="font-size:16px;color:var(--text-primary);margin-top:18px;line-height:1.6">A small game for learning to read Sanskrit. Everything in this world is written in Devanagari: walls, water, animals and doors. Walk through its rooms, read what you find, collect letters and name the creatures that stand in your way. What you learn fades over time, so the world brings it back to you.</div>
 <div style="font-size:17px;color:var(--text-primary);margin-top:22px;display:flex;align-items:center;justify-content:center;gap:10px">This is you: <button id="introme" class="dev" aria-label="Start: this is you, अ" style="width:40px;height:46px;padding:0;font-size:24px;font-weight:500;color:var(--text-accent);background:var(--bg-accent);border:2px solid var(--border-accent);border-radius:8px;cursor:pointer;animation:mepulse 1.6s ease-in-out infinite">अ</button> tap it</div>
 </div>
