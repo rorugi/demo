@@ -6375,6 +6375,10 @@
      "tame": 0,
      "id": "parrot1",
      "cls": "parrot",
+     "tint": [
+      "#A32D2D",
+      "#0C447C"
+     ],
      "wants": "फलम्",
      "flyRoom": [
       42,
