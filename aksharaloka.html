@@ -686,7 +686,7 @@ document.querySelectorAll('input[name=theme]').forEach(i=>i.onchange=()=>{try{lo
 <div id="introtxt" style="display:none;text-align:center;transition:opacity .4s ease;max-width:520px">
 <div style="font-size:22px;color:var(--text-primary)"><span class="dev" style="font-weight:500">अहम्</span> <i>aham</i> = “I”</div>
 <div style="font-size:16px;color:var(--text-secondary);margin-top:6px">This is you, moving through a world written in Devanagari.</div>
-<button id="introgo" class="abtn" style="margin-top:18px;font-size:18px;padding:8px 36px;border-radius:var(--radius)">Go</button></div></div>
+<button id="introgo" class="abtn" style="display:none;margin-top:18px;font-size:18px;padding:8px 36px;border-radius:var(--radius)">Go</button></div></div>
 <script>
 (function(){const ov=document.getElementById('intro'),bx=document.getElementById('introbox'),rest=document.getElementById('introrest'),tx=document.getElementById('introtxt'),go=document.getElementById('introgo');
 const done=()=>{if(ov.isConnected)ov.remove();};const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -695,7 +695,7 @@ t1.style.cursor='pointer';t1.addEventListener('click',ev=>{if(ev.target!==me)me.
 me.onclick=()=>{if(me.disabled)return;me.disabled=true;me.style.animation='none';me.style.cursor='default';const row=me.parentElement;
 for(const c of t1.children)if(c!==row){c.style.transition='opacity .3s ease';c.style.opacity='0';}row.style.transition='color .3s ease';row.style.color='transparent';
 setTimeout(()=>{const rb=me.getBoundingClientRect();t1.style.display='none';bx.style.display='flex';tx.style.display='';tx.style.opacity='0';
-if(reduce||!bx.animate){tx.style.opacity='1';go.focus&&go.focus();return}
+if(reduce||!bx.animate){tx.style.opacity='1';setTimeout(()=>go.onclick(),1600);return}
 const keep=bx.style.transition,w0=bx.style.width;bx.style.transition='none';rest.style.transition='none';
 const fb=bx.getBoundingClientRect(),H=fb.height,W=fb.width,cx=fb.left+W/2,cy=fb.top+H/2;
 rest.style.maxWidth='0';rest.style.opacity='0';bx.style.width=H+'px';
@@ -703,8 +703,8 @@ bx.style.transform='translate('+((rb.left+rb.width/2)-cx)+'px,'+((rb.top+rb.heig
 void bx.offsetWidth;
 bx.style.transition='transform .75s cubic-bezier(.5,0,.2,1),width .6s cubic-bezier(.5,0,.3,1) .45s';rest.style.transition='max-width .6s cubic-bezier(.5,0,.3,1) .45s,opacity .5s ease .5s';
 bx.style.transform='none';bx.style.width=W+'px';rest.style.maxWidth='4em';rest.style.opacity='1';
-setTimeout(()=>{bx.style.transition='none';rest.style.transition='none';bx.style.width=w0;void bx.offsetWidth;bx.style.transition=keep;rest.style.transition='max-width .7s cubic-bezier(.6,0,.3,1) .5s,opacity .5s ease .5s';tx.style.opacity='1';go.focus&&go.focus();},1150);},320);};
-go.onclick=()=>{if(reduce){done();return}go.disabled=true;tx.style.opacity='0';const t=document.querySelector('#map [data-p]');if(!t){done();return}if(t.scrollIntoView)t.scrollIntoView({block:'center',behavior:'instant'});
+setTimeout(()=>{bx.style.transition='none';rest.style.transition='none';bx.style.width=w0;void bx.offsetWidth;bx.style.transition=keep;rest.style.transition='max-width .7s cubic-bezier(.6,0,.3,1) .5s,opacity .5s ease .5s';tx.style.opacity='1';setTimeout(()=>go.onclick(),1600);},1150);},320);};
+go.onclick=()=>{if(go.disabled)return;if(reduce){done();return}go.disabled=true;tx.style.opacity='0';const t=document.querySelector('#map [data-p]');if(!t){done();return}if(t.scrollIntoView)t.scrollIntoView({block:'center',behavior:'instant'});
 setTimeout(()=>{tx.style.display='none';const h=bx.getBoundingClientRect().height;rest.style.maxWidth='0';rest.style.opacity='0';bx.style.width=h+'px';bx.style.borderRadius='18px';
 const b=t.getBoundingClientRect();const sx=b.width/h,sy=b.height/h;
 bx.style.transform='translate('+((b.left+b.width/2)-innerWidth/2)+'px,'+((b.top+b.height/2)-innerHeight/2)+'px) scale('+sx+','+sy+')';ov.style.backgroundColor='transparent';bx.style.opacity='0';setTimeout(done,2700);},250);};})();
