@@ -492,7 +492,7 @@ if(!b||walkE(b)){P.x=x;P.y=y;
 if(b&&b.k==='pd'&&b.needGot&&!doors['slot:'+b.id]&&was!==b)say(b.g+sub('pick up all its words: '+gotN(b)+' of '+b.needGot.length));
 else if(b&&b.k==='pd'&&b.parts&&!doors['slot:'+b.id]&&was!==b)say(b.g+sub('fill its parts: '+b.parts.filter(id=>doors['slot:'+id]).length+' of '+b.parts.length));
 else if(b&&b.k==='pd'&&!doors['slot:'+b.id]&&was!==b){if(bag[b.item]>0){bag[b.item]--;if(!bag[b.item])delete bag[b.item];doors['slot:'+b.id]=true;speak(b.item);say('You place '+b.item+sub('it shines on its place'));if(E.some(r=>r.parts&&r.parts.includes(b.id)))setTimeout(checkSayings,600);for(const f of E)if(f.boost&&f.boost.includes(b.id)&&f.boost.every(id=>doors['slot:'+id]))say(f.g+(f.k==='lp'?' shines up':' blazes up')+sub(f.boost.length===5?'all five letters of this place are in their places':'all its places are filled'));const seen=new Set();for(const d of E)if(d.k==='dr'&&!doors[d.id]&&!seen.has(d.id)&&(d.needSlots||[]).includes(b.id)&&!d.need.length&&canOpen(d)){seen.add(d.id);openDoor(d);}save();}else say(b.showM?'“'+b.m+'”'+sub('find the word and bring it here'):b.showT?b.t+sub('bring '+b.t+' here in your स्यूतः'):b.item+sub('its place is empty — bring it here in your स्यूतः'));}
-if(b&&b.k==='sg'&&b.info&&was!==b){say(b.g+sub(b.info));if(!b.confirm)doors['read:'+lblId(b)]=true;}
+if(b&&b.k==='sg'&&b.info&&was!==b){say(b.g+sub(escBr(b.info)));if(!b.confirm)doors['read:'+lblId(b)]=true;}
 if(b&&(!was||was.k!==b.k)){if(b.k==='wd'){say('You step into the '+word(b));}else if(b.k==='wa')say('You wade through '+word(b));}
 return true;}
 sel=b;
@@ -552,8 +552,9 @@ const act=a=>a?'<button class="abtn" data-act="'+a+'" style="float:right;margin:
 const HEAD=(g,t,m)=>'<div style="font-size:15px"><span style="font-weight:500;font-size:17px">'+g+'</span>'+(t?', <i>'+t+'</i>':'')+(m?' = '+m:'')+'</div>';
 const LINES=ls=>ls.filter(Boolean).map(x=>'<div class="muted" style="margin-top:2px">'+x+'</div>').join('');
 const panel=(a,g,t,m,ls,extra)=>act(a)+HEAD(g,t,m)+LINES(ls||[])+(extra||'');
-const unknownInfo=e=>panel(near(e)?'id':'near',e.g,'','',['unknown'+(e.k==='ch'?' akṣara':e.k==='st'?' stepping stone':''),TAMEK.includes(e.k)?(e.k==='hz'?'blazes in your way':'blocks your way')+' · '+tameTxt(e):'',e.k==='dr'&&!doors[e.id]?'locked · needs '+needTxt(e):'',near(e)?'you are beside it — identify it':'go beside it to identify',e.info?'ⓘ '+esc(e.info):'']);
+const unknownInfo=e=>panel(near(e)?'id':'near',e.g,'','',['unknown'+(e.k==='ch'?' akṣara':e.k==='st'?' stepping stone':''),TAMEK.includes(e.k)?(e.k==='hz'?'blazes in your way':'blocks your way')+' · '+tameTxt(e):'',e.k==='dr'&&!doors[e.id]?'locked · needs '+needTxt(e):'',near(e)?'you are beside it — identify it':'go beside it to identify',e.info?'ⓘ '+escBr(e.info):'']);
 const esc=x=>String(x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const escBr=x=>esc(x).replace(/\n/g,'<br>');
 function draw(){let h='';const t=performance.now()/1000;
 const needSet=NEED();const cx=Math.max(0,Math.min(W-VW,ED.on&&ED.cam?ED.cam.x:P.x-Math.floor(VW/2))),cy=Math.max(0,Math.min(H-VH,ED.on&&ED.cam?ED.cam.y:P.y-Math.floor(VH/2)));ED.cx=cx;ED.cy=cy;
 markSeen();
@@ -592,7 +593,7 @@ const lvl=E.includes(sel)&&sel.k!=='sg'&&sel.k!=='pd'?'level '+kn(sel.g).level+'
 if(sel.k==='sg'&&!sel.confirm&&E.includes(sel))doors['read:'+lblId(sel)]=true;
 if(sel.k==='sg'&&sel.action==='overview'&&!doors.finished){doors.finished=true;save();}
 const okx=(sel.k==='dr'&&sel.ask&&!doors[sel.id]&&canOpen(sel)?'<div style="margin-top:8px"><div style="font-weight:500;margin-bottom:6px">'+esc(sel.ask.q)+'</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+sel.ask.opts.map((o,i)=>'<button class="tw'+((doors['wrong:'+sel.id]||[]).includes(i)?' wrong':'')+'" data-ask="'+i+'"'+((doors['wrong:'+sel.id]||[]).includes(i)?' disabled':'')+'>'+esc(o)+'</button>').join('')+'</div></div>':'')+(sel.k==='sg'&&sel.action==='overview'?'<div style="margin-top:8px"><button class="abtn tw" data-act="ov" style="font-size:14px;padding:4px 14px"><i class="ti ti-map" aria-hidden="true"></i> Orientation</button></div>':'')+(sel.k==='sg'&&sel.confirm?(doors['read:'+sel.id]?'<div class="lblok">✓ read</div>':'<div style="margin-top:8px"><button class="abtn tw" data-act="ok" style="font-size:14px;padding:4px 18px">OK</button></div>'):'');
-inf.innerHTML=panel(a,(sel.k==='pd'&&(sel.showT||sel.showM)&&!doors['slot:'+sel.id])?'?':sel.full,sel.t,sel.m,[sel===P?'that’s you, अ':'',hint,sel.info?'ⓘ '+esc(sel.info):'',lvl,u?'standing on '+u.full:''],okx);}
+inf.innerHTML=panel(a,(sel.k==='pd'&&(sel.showT||sel.showM)&&!doors['slot:'+sel.id])?'?':sel.full,sel.t,sel.m,[sel===P?'that’s you, अ':'',hint,sel.info?'ⓘ '+escBr(sel.info):'',lvl,u?'standing on '+u.full:''],okx);}
 else inf.innerHTML='<span style="color:var(--text-muted)">Tap a word to read it, the floor to walk</span>';
 {const st=tutStep(),tb=document.getElementById('tut');tb.style.display=st&&!ED.on?'flex':'none';if(st)document.getElementById('tuttext').textContent=st.text;}
 {const r=document.getElementById('ovrow');if(r)r.style.display=doors.finished?'':'none';}renderLearned();inf.classList.toggle('active',!!inf.querySelector('[data-act],[data-c],[data-tile],[data-rp],[data-ask]'));
