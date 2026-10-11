@@ -6476,7 +6476,9 @@
      "#######################################################",
      "#.........#.........#.........#.........###############",
      "#.........#.........#.........#.........###############",
+     "#.........#.........#.........#.........###############",
      "#.........+.........+.........+.........###############",
+     "#.........#.........#.........#.........###############",
      "#.........#.........#.........#.........###############",
      "#.........#.........#.........#.........###############",
      "#####+#########+#########+#########+###################",
@@ -6519,11 +6521,11 @@
      "g": "धातुः",
      "n": 2,
      "x": 4,
-     "y": 3,
+     "y": 4,
      "k": "sg",
      "t": "dhātuḥ",
      "m": "verbal root",
-     "info": "Level 3 follows chapter 3 of Ruppel: the road map of verbs. A verb is listed under its root (√), its minimal form, left over when all markers of person, number, tense, mood and voice are removed. Most verbs change the root into a stem by adding something before, into or behind it; then the ending is added. √as + -ti → asti “he is”; √viś → viśa- + -ti → viśati “he enters”; √dā → dadā- + -ti → dadāti “he gives”. In the three rooms you find roots, stem parts and endings. Forge them into words in the workshop below."
+     "info": "Three words to know. ROOT (√, dhātu): the bare core of a verb that carries its meaning, e.g. √viś “enter”. A root never appears on its own in a text. STEM: the form the endings are attached to. For most verbs the root is changed first – something is added after it (viś → viśa-) or in front of it (dā → dadā-). ENDING: comes last and says who acts: -ti “he/she/it”, -si “you”, -nti “they”. Root + addition = stem; stem + ending = a real word."
     },
     {
      "g": "दीपः",
@@ -6539,7 +6541,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 1,
-     "y": 5,
+     "y": 7,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -6553,13 +6555,13 @@
      "k": "sg",
      "t": "dhātavaḥ",
      "m": "roots",
-     "info": "Roots: the minimal form of a verb. A root is never found in a text; only full forms like asmi “I am” or asti “he is”."
+     "info": "Roots: the bare core of a verb, written with √. √as “be”, √viś “enter”, √dā “give”. You will never read a root in a text – only finished words like asti “he is”."
     },
     {
      "g": "अस्",
      "n": 2,
      "x": 12,
-     "y": 3,
+     "y": 4,
      "k": "it",
      "t": "as",
      "m": "root √as “to be”"
@@ -6568,7 +6570,7 @@
      "g": "विश्",
      "n": 2,
      "x": 15,
-     "y": 3,
+     "y": 4,
      "k": "it",
      "t": "viś",
      "m": "root √viś “to enter”"
@@ -6577,7 +6579,7 @@
      "g": "दा",
      "n": 1,
      "x": 18,
-     "y": 3,
+     "y": 4,
      "k": "it",
      "t": "dā",
      "m": "root √dā “to give”"
@@ -6590,7 +6592,7 @@
      "k": "sg",
      "t": "aṅgāni",
      "m": "stems",
-     "info": "Stems and what is added to make them. bhar- is the present stem of “to carry”. -a- is added after the root (viś → viśa-), da- in front of it (dā → dadā-). -iṣya- is the future suffix: it sits between the stem and the ending."
+     "info": "What turns a root into a stem. -a- is added after the root (viś → viśa-), da- in front of it (dā → dadā-, a doubled syllable). bhara- “carry” is already a finished present stem, so it needs nothing more – only an ending. -iṣya- is not part of the stem: it is the future marker that sits between stem and ending."
     },
     {
      "g": "भर",
@@ -6599,7 +6601,7 @@
      "y": 3,
      "k": "it",
      "t": "bhara",
-     "m": "stem bhar(a)- “carry”"
+     "m": "present stem bhara- “carry”"
     },
     {
      "g": "भर",
@@ -6608,7 +6610,7 @@
      "y": 3,
      "k": "it",
      "t": "bhara",
-     "m": "stem bhar(a)- “carry”"
+     "m": "present stem bhara- “carry”"
     },
     {
      "g": "भर",
@@ -6617,13 +6619,13 @@
      "y": 3,
      "k": "it",
      "t": "bhara",
-     "m": "stem bhar(a)- “carry”"
+     "m": "present stem bhara- “carry”"
     },
     {
      "g": "-अ-",
      "n": 2,
      "x": 21,
-     "y": 5,
+     "y": 6,
      "k": "it",
      "t": "-a-",
      "m": "added after the root"
@@ -6632,7 +6634,7 @@
      "g": "द-",
      "n": 2,
      "x": 24,
-     "y": 5,
+     "y": 6,
      "k": "it",
      "t": "da-",
      "m": "added in front of the root"
@@ -6641,10 +6643,10 @@
      "g": "-इष्य-",
      "n": 3,
      "x": 27,
-     "y": 5,
+     "y": 6,
      "k": "it",
      "t": "-iṣya-",
-     "m": "future suffix"
+     "m": "future marker"
     },
     {
      "g": "प्रत्ययाः",
@@ -6654,7 +6656,7 @@
      "k": "sg",
      "t": "pratyayāḥ",
      "m": "affixes and endings",
-     "info": "An affix can stand before (prefix), inside (infix) or after (suffix) a stem. An ending always comes last and makes a complete word: -ti “he/she/it”, -si “you” (one person), -nti “they”."
+     "info": "An affix is added to a root or stem: before it (prefix), inside it (infix) or after it (suffix). An ending always comes last and completes the word; it tells the person and number: -ti “he/she/it”, -si “you” (one person), -nti “they”."
     },
     {
      "g": "-ति",
@@ -6687,7 +6689,7 @@
      "g": "-सि",
      "n": 2,
      "x": 32,
-     "y": 5,
+     "y": 6,
      "k": "it",
      "t": "-si",
      "m": "ending: you (one)"
@@ -6696,7 +6698,7 @@
      "g": "-सि",
      "n": 2,
      "x": 35,
-     "y": 5,
+     "y": 6,
      "k": "it",
      "t": "-si",
      "m": "ending: you (one)"
@@ -6705,7 +6707,7 @@
      "g": "-न्ति",
      "n": 2,
      "x": 38,
-     "y": 5,
+     "y": 6,
      "k": "it",
      "t": "-nti",
      "m": "ending: they"
@@ -6714,7 +6716,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 18,
-     "y": 5,
+     "y": 7,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -6731,10 +6733,90 @@
      "d": 2.0
     },
     {
+     "g": "मूलम्",
+     "n": 3,
+     "x": 3,
+     "y": 10,
+     "k": "sg",
+     "t": "mūlam",
+     "m": "root or stem",
+     "info": "First column: the root, or a stem that is already finished."
+    },
+    {
+     "g": "आगमः",
+     "n": 3,
+     "x": 7,
+     "y": 10,
+     "k": "sg",
+     "t": "āgamaḥ",
+     "m": "addition",
+     "info": "Second column: what is added to the root to make the stem (or, for the future, the marker -iṣya-). When nothing is needed, the place says शून्यम् “empty”. The hyphen shows where the addition goes: -a- after the root, da- in front of it (dā → dadā-)."
+    },
+    {
+     "g": "अन्तः",
+     "n": 3,
+     "x": 11,
+     "y": 10,
+     "k": "sg",
+     "t": "antaḥ",
+     "m": "ending",
+     "info": "Third column: the ending, which tells who acts."
+    },
+    {
+     "g": "शब्दः",
+     "n": 3,
+     "x": 15,
+     "y": 10,
+     "k": "sg",
+     "t": "śabdaḥ",
+     "m": "word",
+     "info": "Last column: the finished word. It lights up when all its parts are in place."
+    },
+    {
+     "g": "मूलम्",
+     "n": 3,
+     "x": 25,
+     "y": 10,
+     "k": "sg",
+     "t": "mūlam",
+     "m": "root or stem",
+     "info": "First column: the root, or a stem that is already finished."
+    },
+    {
+     "g": "आगमः",
+     "n": 3,
+     "x": 29,
+     "y": 10,
+     "k": "sg",
+     "t": "āgamaḥ",
+     "m": "addition",
+     "info": "Second column: what is added to the root to make the stem (or, for the future, the marker -iṣya-). When nothing is needed, the place says शून्यम् “empty”. The hyphen shows where the addition goes: -a- after the root, da- in front of it (dā → dadā-)."
+    },
+    {
+     "g": "अन्तः",
+     "n": 3,
+     "x": 33,
+     "y": 10,
+     "k": "sg",
+     "t": "antaḥ",
+     "m": "ending",
+     "info": "Third column: the ending, which tells who acts."
+    },
+    {
+     "g": "शब्दः",
+     "n": 3,
+     "x": 37,
+     "y": 10,
+     "k": "sg",
+     "t": "śabdaḥ",
+     "m": "word",
+     "info": "Last column: the finished word. It lights up when all its parts are in place."
+    },
+    {
      "g": "अस्",
      "n": 3,
      "x": 3,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "f1_0",
      "item": "अस्",
@@ -6746,17 +6828,17 @@
      "g": "शून्यम्",
      "n": 3,
      "x": 7,
-     "y": 8,
+     "y": 11,
      "k": "sg",
      "t": "śūnyam",
-     "m": "nothing",
-     "info": "Nothing is added here: the ending goes straight onto the root or stem."
+     "m": "empty",
+     "info": "Nothing is added here. √as is one of the few verbs that take the ending straight on the root: the root itself is the stem (a “root stem”). as + ti → asti."
     },
     {
      "g": "-ति",
      "n": 3,
      "x": 11,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "f1_2",
      "item": "-ति",
@@ -6768,7 +6850,7 @@
      "g": "अस्ति",
      "n": 4,
      "x": 15,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "r1",
      "parts": [
@@ -6783,7 +6865,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 16,
-     "y": 9,
+     "y": 12,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -6798,7 +6880,7 @@
      "g": "विश्",
      "n": 3,
      "x": 25,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "f2_0",
      "item": "विश्",
@@ -6810,7 +6892,7 @@
      "g": "-अ-",
      "n": 3,
      "x": 29,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "f2_1",
      "item": "-अ-",
@@ -6822,7 +6904,7 @@
      "g": "-ति",
      "n": 3,
      "x": 33,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "f2_2",
      "item": "-ति",
@@ -6834,7 +6916,7 @@
      "g": "विशति",
      "n": 4,
      "x": 37,
-     "y": 8,
+     "y": 11,
      "k": "pd",
      "id": "r2",
      "parts": [
@@ -6850,7 +6932,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 38,
-     "y": 9,
+     "y": 12,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -6863,34 +6945,34 @@
      "info": "It shines up when the word beside it is forged."
     },
     {
-     "g": "द-",
-     "n": 3,
-     "x": 3,
-     "y": 11,
-     "k": "pd",
-     "id": "f3_0",
-     "item": "द-",
-     "t": "da-",
-     "m": "added in front",
-     "showT": true
-    },
-    {
      "g": "दा",
      "n": 3,
-     "x": 7,
-     "y": 11,
+     "x": 3,
+     "y": 14,
      "k": "pd",
-     "id": "f3_1",
+     "id": "f3_0",
      "item": "दा",
      "t": "dā",
      "m": "root",
      "showT": true
     },
     {
+     "g": "द-",
+     "n": 3,
+     "x": 7,
+     "y": 14,
+     "k": "pd",
+     "id": "f3_1",
+     "item": "द-",
+     "t": "da-",
+     "m": "added in front of the root",
+     "showT": true
+    },
+    {
      "g": "-ति",
      "n": 3,
      "x": 11,
-     "y": 11,
+     "y": 14,
      "k": "pd",
      "id": "f3_2",
      "item": "-ति",
@@ -6902,7 +6984,7 @@
      "g": "ददाति",
      "n": 4,
      "x": 15,
-     "y": 11,
+     "y": 14,
      "k": "pd",
      "id": "r3",
      "parts": [
@@ -6918,7 +7000,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 16,
-     "y": 12,
+     "y": 15,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -6934,7 +7016,7 @@
      "g": "भर",
      "n": 3,
      "x": 25,
-     "y": 11,
+     "y": 14,
      "k": "pd",
      "id": "f4_0",
      "item": "भर",
@@ -6946,17 +7028,17 @@
      "g": "शून्यम्",
      "n": 3,
      "x": 29,
-     "y": 11,
+     "y": 14,
      "k": "sg",
      "t": "śūnyam",
-     "m": "nothing",
-     "info": "Nothing is added here: the ending goes straight onto the root or stem."
+     "m": "empty",
+     "info": "Nothing is added here, because bhara- already is the present stem (the root √bhṛ has already been changed into bhara-). For the present tense only the ending is missing: bhara + si → bharasi."
     },
     {
      "g": "-सि",
      "n": 3,
      "x": 33,
-     "y": 11,
+     "y": 14,
      "k": "pd",
      "id": "f4_2",
      "item": "-सि",
@@ -6968,7 +7050,7 @@
      "g": "भरसि",
      "n": 4,
      "x": 37,
-     "y": 11,
+     "y": 14,
      "k": "pd",
      "id": "r4",
      "parts": [
@@ -6983,7 +7065,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 38,
-     "y": 12,
+     "y": 15,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -6998,7 +7080,7 @@
      "g": "भर",
      "n": 3,
      "x": 3,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "f5_0",
      "item": "भर",
@@ -7010,17 +7092,17 @@
      "g": "शून्यम्",
      "n": 3,
      "x": 7,
-     "y": 14,
+     "y": 17,
      "k": "sg",
      "t": "śūnyam",
-     "m": "nothing",
-     "info": "Nothing is added here: the ending goes straight onto the root or stem."
+     "m": "empty",
+     "info": "Nothing is added here: bhara- is already the present stem, so only the ending follows. bhara + nti → bharanti “they carry”. Compare bhariṣyasi below: for the future, -iṣya- comes in between."
     },
     {
      "g": "-न्ति",
      "n": 3,
      "x": 11,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "f5_2",
      "item": "-न्ति",
@@ -7032,7 +7114,7 @@
      "g": "भरन्ति",
      "n": 4,
      "x": 15,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "r5",
      "parts": [
@@ -7047,7 +7129,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 16,
-     "y": 15,
+     "y": 18,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -7062,7 +7144,7 @@
      "g": "भर",
      "n": 3,
      "x": 25,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "f6_0",
      "item": "भर",
@@ -7074,19 +7156,19 @@
      "g": "-इष्य-",
      "n": 3,
      "x": 29,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "f6_1",
      "item": "-इष्य-",
      "t": "-iṣya-",
-     "m": "future suffix",
+     "m": "future marker",
      "showT": true
     },
     {
      "g": "-सि",
      "n": 3,
      "x": 33,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "f6_2",
      "item": "-सि",
@@ -7098,7 +7180,7 @@
      "g": "भरिष्यसि",
      "n": 4,
      "x": 37,
-     "y": 14,
+     "y": 17,
      "k": "pd",
      "id": "r6",
      "parts": [
@@ -7114,7 +7196,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 38,
-     "y": 15,
+     "y": 18,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -7129,19 +7211,46 @@
     {
      "g": "शाला",
      "n": 2,
-     "x": 20,
-     "y": 17,
+     "x": 1,
+     "y": 9,
      "k": "sg",
      "t": "śālā",
      "m": "workshop",
-     "info": "The workshop. Each row forges one verb form: walk onto a place with the right part in your स्यूतः. English adds small words (you carry, they carry, you will carry); Sanskrit adds affixes and endings: bharasi, bharanti, bhariṣyasi. When all six words are forged, the door on the right opens."
+     "info": "The workshop. Each row forges one verb form from left to right: root or stem, addition, ending. Walk onto a place with the right part in your स्यूतः. English adds small words (you carry, they carry, you will carry); Sanskrit adds affixes and endings: bharasi, bharanti, bhariṣyasi. When all six words are forged, the door on the right opens."
+    },
+    {
+     "g": "गुरुः",
+     "n": 2,
+     "x": 21,
+     "y": 13,
+     "k": "np",
+     "t": "guruḥ",
+     "m": "teacher",
+     "cls": "guru",
+     "id": "guru3a",
+     "wander": [
+      19,
+      23,
+      11,
+      20
+     ],
+     "info": "A teacher walks through the workshop. Once you can read his name, talk to him again and again: each time he tells you something else.",
+     "tips": [
+      "A root is like the seed of a word: √viś “enter” is the seed of viśati “he enters”, but you never say “viś” on its own.",
+      "In a dictionary a verb stands under its root, with its class and one finished form: √dā (III dadāti) “to give”.",
+      "There are ten ways to make a present stem from a root – ten verb classes. They change only the form, never the meaning.",
+      "Where a place says शून्यम्, nothing is needed: √as takes its ending directly, and bhara- is already a stem.",
+      "English says “you will carry” with extra words. Sanskrit puts the future marker -iṣya- into the word: bhar-iṣya-si.",
+      "bharati means both “he carries” and “he is carrying”. Sanskrit makes no difference between the two.",
+      "The ending -ti can mean he, she or it. Only the context tells you which."
+     ]
     },
     {
      "g": "द्वारम्",
      "label": "द्वा",
      "n": 1,
      "x": 46,
-     "y": 9,
+     "y": 11,
      "k": "dr",
      "t": "dvāram",
      "m": "door",
@@ -7161,7 +7270,7 @@
      "g": "सोपानम्",
      "n": 3,
      "x": 49,
-     "y": 11,
+     "y": 13,
      "k": "ex",
      "t": "sopānam",
      "m": "stairs",
@@ -7175,7 +7284,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 47,
-     "y": 7,
+     "y": 9,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -7185,7 +7294,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 52,
-     "y": 7,
+     "y": 9,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -7195,7 +7304,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 1,
-     "y": 17,
+     "y": 20,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -7205,7 +7314,7 @@
      "g": "दीपः",
      "n": 2,
      "x": 44,
-     "y": 17,
+     "y": 20,
      "k": "lp",
      "t": "dīpaḥ",
      "m": "lamp",
@@ -7261,7 +7370,7 @@
      "to": "l3-forge",
      "at": [
       50,
-      10
+      12
      ]
     },
     {
@@ -7790,6 +7899,32 @@
       "a": 1,
       "why": "Sanskrit has a dual for exactly two."
      }
+    },
+    {
+     "g": "गुरुः",
+     "n": 2,
+     "x": 26,
+     "y": 11,
+     "k": "np",
+     "t": "guruḥ",
+     "m": "teacher",
+     "cls": "guru",
+     "id": "guru3b",
+     "wander": [
+      23,
+      32,
+      9,
+      15
+     ],
+     "info": "The teacher has come down to the village. Talk to him again and again.",
+     "tips": [
+      "Every verb you meet here ends in -ti: it is the 3rd person singular, “he, she or it” does something.",
+      "Sanskrit has three numbers: singular, dual for exactly two, and plural.",
+      "ca “and” comes after the word it joins: gacchati viśati ca – never “ca viśati”.",
+      "kim at the start of a sentence makes it a question: kim icchati? “What does he want?”",
+      "The daṇḍa । ends every sentence – statement, question or exclamation. ॥ ends a verse.",
+      "A finite verb tells person, number, tense, mood and voice all at once: bharati = 3rd singular present indicative active."
+     ]
     },
     {
      "g": "दीपः",
