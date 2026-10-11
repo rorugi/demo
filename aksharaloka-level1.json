@@ -4818,6 +4818,24 @@
      "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
     },
     {
+     "g": "दीपः",
+     "n": 2,
+     "x": 20,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.3,
+     "boost": [
+      "p2_14_3",
+      "p2_16_3",
+      "p2_18_3",
+      "p2_20_3",
+      "p2_22_3"
+     ],
+     "info": "A lamp of the hall. It shines up when the five letters of the chamber above are in their places."
+    },
+    {
      "g": "अ",
      "n": 1,
      "x": 15,
@@ -4936,6 +4954,24 @@
       "p2_34_3"
      ],
      "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 32,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 0.7,
+     "boost": [
+      "p2_26_3",
+      "p2_28_3",
+      "p2_30_3",
+      "p2_32_3",
+      "p2_34_3"
+     ],
+     "info": "A lamp of the hall. It shines up when the five letters of the chamber above are in their places."
     },
     {
      "g": "इ",
@@ -5065,6 +5101,24 @@
      "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
     },
     {
+     "g": "दीपः",
+     "n": 2,
+     "x": 44,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.1,
+     "boost": [
+      "p2_38_3",
+      "p2_40_3",
+      "p2_42_3",
+      "p2_44_3",
+      "p2_46_3"
+     ],
+     "info": "A lamp of the hall. It shines up when the five letters of the chamber above are in their places."
+    },
+    {
      "g": "ऋ",
      "n": 1,
      "x": 39,
@@ -5192,6 +5246,24 @@
      "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
     },
     {
+     "g": "दीपः",
+     "n": 2,
+     "x": 56,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.5000000000000002,
+     "boost": [
+      "p2_50_3",
+      "p2_52_3",
+      "p2_54_3",
+      "p2_56_3",
+      "p2_58_3"
+     ],
+     "info": "A lamp of the hall. It shines up when the five letters of the chamber above are in their places."
+    },
+    {
      "g": "ऌ",
      "n": 1,
      "x": 51,
@@ -5310,6 +5382,24 @@
       "p2_70_3"
      ],
      "info": "It burns low. When all five letters of this place are on their pedestals, it blazes up."
+    },
+    {
+     "g": "दीपः",
+     "n": 2,
+     "x": 68,
+     "y": 9,
+     "k": "lp",
+     "t": "dīpaḥ",
+     "m": "lamp",
+     "d": 1.9000000000000001,
+     "boost": [
+      "p2_62_3",
+      "p2_64_3",
+      "p2_66_3",
+      "p2_68_3",
+      "p2_70_3"
+     ],
+     "info": "A lamp of the hall. It shines up when the five letters of the chamber above are in their places."
     },
     {
      "g": "उ",
