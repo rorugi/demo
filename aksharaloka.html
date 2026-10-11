@@ -109,8 +109,8 @@ select{background:var(--surface-2);padding:6px 8px}
 .ent.lp::after{display:none}
 .lp span{animation:glow 4s ease-in-out infinite}
 .ent.hz{z-index:3;animation:fireshine 2.6s ease-in-out infinite}
-@keyframes fireshine{0%,100%{box-shadow:0 0 36px 20px rgba(239,159,39,.45),0 0 96px 60px rgba(239,159,39,.20)}35%{box-shadow:0 0 42px 24px rgba(216,90,48,.48),0 0 108px 66px rgba(216,90,48,.22)}70%{box-shadow:0 0 34px 18px rgba(239,159,39,.42),0 0 90px 56px rgba(239,159,39,.19)}}
-@media (prefers-reduced-motion:reduce){.ent.hz{animation:none;box-shadow:0 0 36px 20px rgba(239,159,39,.45),0 0 96px 60px rgba(239,159,39,.20)}}
+@keyframes fireshine{0%,100%{box-shadow:0 0 72px 40px rgba(239,159,39,.45),0 0 192px 120px rgba(239,159,39,.20)}35%{box-shadow:0 0 84px 48px rgba(216,90,48,.48),0 0 216px 132px rgba(216,90,48,.22)}70%{box-shadow:0 0 68px 36px rgba(239,159,39,.42),0 0 180px 112px rgba(239,159,39,.19)}}
+@media (prefers-reduced-motion:reduce){.ent.hz{animation:none;box-shadow:0 0 72px 40px rgba(239,159,39,.45),0 0 192px 120px rgba(239,159,39,.20)}}
 .ent.lp{z-index:3;animation:lampshine 6s ease-in-out infinite}
 .c.w{position:relative;z-index:4}
 @keyframes lampshine{0%,100%{box-shadow:0 0 22px 12px rgba(250,199,117,.30),0 0 60px 40px rgba(250,199,117,.15)}40%{box-shadow:0 0 24px 13px rgba(250,199,117,.33),0 0 64px 42px rgba(250,199,117,.17)}70%{box-shadow:0 0 21px 11px rgba(239,159,39,.28),0 0 58px 38px rgba(239,159,39,.14)}}
@@ -127,7 +127,7 @@ select{background:var(--surface-2);padding:6px 8px}
 .st{background:#B4B2A9;color:#000;font-weight:500}
 .ent.st,.ent.st::after,.ent.wa,.ent.wa::after{border-radius:0}
 .ent.wa{margin:0}
-.st.open{background:var(--surface-1);color:var(--text-primary);border:0.5px dashed var(--border-stronger)}
+.st.open{background:linear-gradient(160deg,#F7F6F2 0%,#DEDCD5 55%,#C4C2BA 100%);color:#2C2C2A;border:none}
 .dw{background:#0C447C;color:#B5D4F4;font-size:14px;cursor:pointer}
 @media (prefers-color-scheme:dark){.dw{background:#042C53;color:#85B7EB}}
 .dw span{animation:deep 2.1s ease-in-out infinite}
@@ -140,6 +140,8 @@ select{background:var(--surface-2);padding:6px 8px}
 .qp.done{color:var(--text-success)}
 .sg{color:var(--text-secondary);background:var(--surface-2);border:0.5px dashed var(--border-stronger);opacity:.5}
 .ent.sg.unread{opacity:1;color:#fff;font-weight:500;background:#888780}
+.ent.sg.unread span{animation:lblpulse 2.6s ease-in-out infinite}
+@keyframes lblpulse{0%,100%{opacity:1}50%{opacity:.4}}
 @media (prefers-color-scheme:dark){.ent.sg.unread{background:var(--surface-2)}}
 .lblok{margin-top:6px;color:var(--text-success);font-weight:500}
 .wa span{animation:flow 3.2s ease-in-out infinite}
