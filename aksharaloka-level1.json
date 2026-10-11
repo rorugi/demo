@@ -5786,6 +5786,17 @@
      "info": "Each row of five has the same order, from simple to complex: unvoiced unaspirated (k), unvoiced aspirated (kh), voiced unaspirated (g), voiced aspirated (gh), nasal (ṅ). Stops in the same row share their place; stops in the same column share their manner. Voiced: put a finger on your throat and say d, then t; with d you feel the vocal cords vibrate. Aspirated: hold your hand before your mouth and say pot, then spot; the puff of air in pot is aspiration. kh, th, ph … are one sound each, and th is never the English th of thanks."
     },
     {
+     "g": "फलम्",
+     "n": 2,
+     "x": 7,
+     "y": 7,
+     "k": "it",
+     "t": "phalam",
+     "m": "fruit",
+     "cls": "fruit",
+     "info": "A ripe fruit. Someone on this floor would like it."
+    },
+    {
      "g": "दीपः",
      "n": 2,
      "x": 1,
@@ -6352,6 +6363,21 @@
      "t": "dīpaḥ",
      "m": "lamp",
      "d": 1.7
+    },
+    {
+     "g": "शुकः",
+     "n": 2,
+     "x": 41,
+     "y": 1,
+     "k": "en",
+     "t": "śukaḥ",
+     "m": "parrot",
+     "tame": 0,
+     "id": "parrot1",
+     "cls": "parrot",
+     "wants": "फलम्",
+     "d": 0.3,
+     "info": "A parrot sits in the doorway and does not move. Naming it is not enough: it moves only for a fruit, फलम्."
     },
     {
      "g": "भक्तिः",
