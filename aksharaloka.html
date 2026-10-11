@@ -271,10 +271,20 @@ if(r.__orig!==undefined){const want=t==='system'?r.__orig:(t==='dark'?'all':'not
 <div class="row">
 <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="edtool" value="draw" checked> <i class="ti ti-pencil" aria-hidden="true"></i> Draw</label>
 <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="edtool" value="del"> <i class="ti ti-eraser" aria-hidden="true"></i> Delete</label>
+<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="edtool" value="move"> <i class="ti ti-arrows-move" aria-hidden="true"></i> Move</label>
+<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="edtool" value="edit"> <i class="ti ti-adjustments" aria-hidden="true"></i> Edit</label>
 <select id="edtype" class="dev" style="flex:1;min-width:0"></select>
 <select id="edletter" class="dev" style="display:none;width:80px"></select>
 </div>
 <div id="edlabel" style="display:none;margin-top:8px"><div class="row"><input id="edltext" class="dev" placeholder="सूचना" style="flex:1;min-width:0;font-size:14px;padding:4px 6px"><input id="edlmean" placeholder="meaning, e.g. notice" style="flex:1;min-width:0;font-size:13px;padding:4px 6px"></div><textarea id="edlinfo" rows="2" placeholder="Info shown on hover or when stepped on" style="width:100%;margin-top:6px;font:inherit;font-size:13px;padding:4px 6px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary)"></textarea><div class="row" style="margin-top:4px"><span class="muted" style="font-size:12px">Tap an empty field to place, or tap a label to edit it.</span><button id="edlupd" class="tw abtn" style="margin-left:auto;display:none">Update label</button></div>
+</div>
+<div id="edprops" style="display:none;margin-top:8px">
+<div class="row"><input id="epg" class="dev" placeholder="text (Devanagari)" style="flex:2;min-width:0;font-size:14px;padding:4px 6px"><input id="ept" placeholder="transliteration" style="flex:2;min-width:0;font-size:13px;padding:4px 6px"><input id="epn" type="number" min="1" max="20" title="fields" style="width:56px;font-size:13px;padding:4px 6px"></div>
+<div class="row" style="margin-top:6px"><input id="epm" placeholder="meaning" style="flex:2;min-width:0;font-size:13px;padding:4px 6px"><input id="epcls" placeholder="style class (gold, divine, end …)" style="flex:2;min-width:0;font-size:13px;padding:4px 6px"></div>
+<textarea id="epinfo" rows="2" placeholder="info text" style="width:100%;margin-top:6px;font:inherit;font-size:13px;padding:4px 6px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary)"></textarea>
+<div class="muted" style="font-size:12px;margin-top:4px">More properties (JSON): id, need, needSlots, tame, wants, boost, to/at …</div>
+<textarea id="epjson" rows="4" spellcheck="false" style="width:100%;margin-top:2px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:4px 6px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary)"></textarea>
+<div class="row" style="margin-top:6px"><button id="epapply" class="tw abtn">Apply</button><button id="epcancel" class="tw">Done</button></div>
 </div>
 <div class="row" id="edtame" style="display:none;margin-top:8px"><span class="muted">To pass</span><select id="edtlvl"><option value="-1">−1 · read along (tap syllables)</option><option value="0" selected>0 · read its name</option><option value="1">1 · build its name</option><option value="2">2 · build + meaning</option></select><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="edleave"> goes away when named</label>
 </div>
@@ -651,6 +661,11 @@ function cellFromEvent(ev){const mp=document.getElementById('map'),r=mp.getBound
 return [ED.cx+Math.floor((ev.clientX-left)/24),ED.cy+Math.floor((ev.clientY-r.top)/28)];}
 function editClick(ev){const [x,y]=cellFromEvent(ev);editAt(x,y);}
 function editAt(x,y){if(x<0||y<0||x>=W||y>=H)return;const tool=document.querySelector('input[name=edtool]:checked').value;const e=entAt(x,y);
+if(tool==='move'){if(!ED.mv){if(!e){edMsg('Click an object to move');return}ED.mv=e;sel=e;edMsg('Selected '+e.g+' · now click where to place it');draw();return}
+const o=ED.mv;if(!E.includes(o)){ED.mv=null;return}if(e===o&&x===o.x){ED.mv=null;sel=null;edMsg('Move cancelled');draw();return}
+for(let i=0;i<o.n;i++){const q=entAt(x+i,y);if(!floor(x+i,y)&&o.k!=='dr'||(q&&q!==o)||(x+i===P.x&&y===P.y&&!walkE(o))){edMsg('No room for '+o.g+' at '+x+','+y+' (needs '+o.n+' free fields) · click another place');return}}
+editedLevel();const j=LV.entities.findIndex(q=>sameE(q,o));o.x=x;o.y=y;if(j>=0){LV.entities[j].x=x;LV.entities[j].y=y;}ED.mv=null;sel=null;editedLevel();edMsg('Moved '+o.g+' to '+x+','+y);draw();return}
+if(tool==='edit'){if(!e){edMsg('Click an object to edit it');return}openProps(e);return}
 if(tool==='del'){if(e){removeEnt(e);edMsg('Deleted '+e.g);}else if(M[y][x]!=='.'){if(x===0||y===0||x===W-1||y===H-1){edMsg('The outer wall stays');}else{M[y][x]='.';computeDWB();computeRooms();edMsg('Cleared field '+x+','+y);}}else edMsg('Nothing to delete at '+x+','+y);editedLevel();quiz=null;draw();return}
 const d=EDT[+document.getElementById('edtype').value];const isP=(px,py)=>px===P.x&&py===P.y;
 if(d[0]==='t'){if(isP(x,y)&&(d[1]==='#'||d[1]==='~')){edMsg('Move the player first');return}if(d[1]!=='.'&&e)removeEnt(e);M[y][x]=d[1];computeDWB();computeRooms();edMsg(d[2]+' at '+x+','+y);}
@@ -665,8 +680,23 @@ if(TAMEK.includes(o.k)){o.tame=+document.getElementById('edtlvl').value;if(o.k==
 o.x=x;o.y=y;editedLevel();LV.entities.push(JSON.parse(JSON.stringify(o)));o.full=o.full||o.g;E.push(o);
 if(o.k!=='ch'&&o.k!=='st')WINFO[o.g]={t:o.t,m:o.m};if(o.k==='it')IINFO[o.g]={t:o.t,m:o.m};edMsg('Placed '+o.g+' at '+x+','+y);}
 editedLevel();draw();}
+const EDKEEP=['g','t','m','n','info','cls','x','y','k','full'];
+function openProps(e){ED.ed=e;sel=e;const v=id=>document.getElementById(id);v('edprops').style.display='';v('epg').value=e.g||'';v('ept').value=e.t||'';v('epn').value=e.n||1;v('epm').value=e.m||'';v('epcls').value=e.cls||'';v('epinfo').value=e.info||'';
+const rest={};for(const k in e)if(!EDKEEP.includes(k))rest[k]=e[k];v('epjson').value=Object.keys(rest).length?JSON.stringify(rest,null,1):'';edMsg('Editing '+e.g+' ('+(L0kind(e.k))+') at '+e.x+','+e.y+' · change the fields and press Apply');draw();}
+function L0kind(k){return (LV.kinds&&LV.kinds[k]&&LV.kinds[k].name)||k;}
+function applyProps(){const e=ED.ed;if(!e||!E.includes(e))return;const v=id=>document.getElementById(id).value;let rest={};
+if(v('epjson').trim()){try{rest=JSON.parse(v('epjson'));if(typeof rest!=='object'||Array.isArray(rest))throw 0;}catch(_){edMsg('The JSON field is not valid · nothing changed');return}}
+const g=v('epg').trim();if(!g){edMsg('The text must not be empty');return}const n=Math.max(1,Math.min(20,parseInt(v('epn'))||1));
+for(let i=0;i<n;i++){const q=entAt(e.x+i,e.y);if((!floor(e.x+i,e.y)&&e.k!=='dr')||(q&&q!==e)){edMsg('Not enough room for '+n+' fields at '+e.x+','+e.y);return}}
+editedLevel();const j=LV.entities.findIndex(q=>sameE(q,e));
+const o={...rest,g,n,k:e.k,x:e.x,y:e.y};const t=v('ept').trim(),m=v('epm').trim(),c=v('epcls').trim(),inf=v('epinfo').trim();if(t)o.t=t;if(m)o.m=m;if(c)o.cls=c;if(inf)o.info=inf;
+for(const k of Object.keys(e))delete e[k];Object.assign(e,o,{full:o.full||o.g});if(j>=0)LV.entities[j]=JSON.parse(JSON.stringify(o));
+if(e.k!=='ch'&&e.k!=='st')WINFO[e.g]={t:e.t,m:e.m};if(e.k==='it')IINFO[e.g]={t:e.t,m:e.m};editedLevel();edMsg('Updated '+e.g);draw();}
 function labelFromForm(){const g=document.getElementById('edltext').value.trim();if(!g){edMsg('Enter the label text first');return null}
 const o={g,n:Math.max(2,Math.min(8,(g.match(AKS)||[g]).length+1)),k:'sg',t:tr(g)||g,m:document.getElementById('edlmean').value.trim()||'label'};const inf=document.getElementById('edlinfo').value.trim();if(inf)o.info=inf;return o;}
+document.getElementById('epapply').onclick=applyProps;
+document.getElementById('epcancel').onclick=()=>{ED.ed=null;sel=null;document.getElementById('edprops').style.display='none';edMsg('');draw();};
+document.querySelectorAll('input[name=edtool]').forEach(r=>r.onchange=()=>{const t=document.querySelector('input[name=edtool]:checked').value;ED.mv=null;ED.ed=null;document.getElementById('edprops').style.display='none';document.getElementById('edtype').style.display=t==='draw'?'':'none';if(t!=='draw'){document.getElementById('edletter').style.display='none';document.getElementById('edlabel').style.display='none';document.getElementById('edtame').style.display='none';}else document.getElementById('edtype').onchange({target:document.getElementById('edtype')});sel=null;edMsg(t==='move'?'Click an object, then click where to place it':t==='edit'?'Click an object to edit its properties':t==='del'?'Click an object or field to delete it':'Tap fields on the map to draw');draw();});
 document.getElementById('edlupd').onclick=()=>{const e=ED.lab;if(!e||!E.includes(e))return;const o=labelFromForm();if(!o)return;
 for(let i=0;i<o.n;i++){const q=entAt(e.x+i,e.y);if(!floor(e.x+i,e.y)||(q&&q!==e)){edMsg('Not enough room to the right for '+o.g+' ('+o.n+' fields)');return}}
 editedLevel();const j=LV.entities.findIndex(x=>sameE(x,e));Object.assign(e,o,{full:o.g});if(!o.info)delete e.info;if(j>=0){const c=JSON.parse(JSON.stringify(e));delete c.full;LV.entities[j]=c;}
