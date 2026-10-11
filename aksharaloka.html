@@ -341,12 +341,17 @@ const now=()=>Date.now()+warp;
 function load(){learned=new Set();try{const s=JSON.parse(localStorage.getItem('skt-rogue-v2')||'{}');K=s.K||{};bag=s.bag||{};warp=s.warp||0;voiceName=s.voice||'';learned=new Set(s.L||[]);doors=s.D||{};}catch(e){}}
 function save(){try{localStorage.setItem('skt-rogue-v2',JSON.stringify({K,bag,warp,voice:voiceName,L:[...learned],D:doors}));}catch(e){}}
 const hasTTS='speechSynthesis' in window;
-function listVoices(){if(!hasTTS)return;voices=speechSynthesis.getVoices();const pr=v=>/^(sa|hi|mr|ne)/i.test(v.lang)?0:1;
+function listVoices(){if(!hasTTS)return;voices=speechSynthesis.getVoices();const pr=v=>/^sa/i.test(v.lang)?0:/^(kn|te|ml)/i.test(v.lang)?1:/^(hi|mr|ne)/i.test(v.lang)?2:3;
 const sorted=voices.slice().sort((a,b)=>pr(a)-pr(b)||a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name));
-const s=document.getElementById('voice');s.innerHTML='<option value="">Off</option>'+(sorted.length?sorted.map(v=>'<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' ('+v.lang+')</option>').join(''):'<option disabled>No voices available</option>');
+const s=document.getElementById('voice');s.innerHTML='<option value="">Off</option>'+(sorted.length?sorted.map(v=>'<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' ('+v.lang+')'+(/^(kn|te|ml)/i.test(v.lang)?' · keeps the a':/^(hi|mr|ne)/i.test(v.lang)?' · drops final a':'')+'</option>').join(''):'<option disabled>No voices available</option>');
 if(voices.some(v=>v.name===voiceName))s.value=voiceName;else{s.value='';}
-const vh=document.getElementById('vhint');if(vh)vh.textContent=!voices.length?'':voices.some(v=>/^sa/i.test(v.lang))?'':'This browser offers no Sanskrit (sa) voice. A Hindi voice (hi) reads Devanagari well.';}
+const vh=document.getElementById('vhint');if(vh)vh.textContent=!voices.length?'':voices.some(v=>/^sa/i.test(v.lang))?'':voices.some(v=>/^(kn|te|ml)/i.test(v.lang))?'No Sanskrit voice here. A Kannada, Telugu or Malayalam voice pronounces Sanskrit best: it keeps every inherent a, which Hindi voices drop.':'This browser offers no Sanskrit (sa) voice. A Hindi voice (hi) reads Devanagari, but drops the inherent a at word ends (rām instead of rāma). Microsoft Edge offers Kannada and Telugu voices that keep it.';}
+// Hindi voices drop the inherent a (schwa deletion). Kannada, Telugu and Malayalam voices keep it,
+// so for those voices Devanagari is rewritten into their script (same Unicode layout) before speaking.
+const SCRIPT_SHIFT={kn:0x380,te:0x300,ml:0x400};
+function toScript(t,sh){let o='';for(const ch of t){const c=ch.codePointAt(0);o+=(c>=0x0901&&c<=0x0963&&c!==0x0964&&c!==0x0965)||(c>=0x0966&&c<=0x096F)?String.fromCodePoint(c+sh):ch;}return o;}
 function speak(text){if(!hasTTS||!voiceName||!text)return;let v=voices.find(x=>x.name===voiceName);if(!v){voices=speechSynthesis.getVoices();v=voices.find(x=>x.name===voiceName);}if(!v)return;
+const sh=SCRIPT_SHIFT[(v.lang||'').slice(0,2).toLowerCase()];if(sh)text=toScript(text,sh);
 const go=()=>{const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=0.85;u.volume=1;speechSynthesis.speak(u);speechSynthesis.resume();};
 if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(go,80);}else go();}
 const sayOf=e=>(e.k==='ch'||e.k==='st')?INFO[e.g].s:e.full;
