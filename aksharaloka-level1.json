@@ -6376,8 +6376,14 @@
      "id": "parrot1",
      "cls": "parrot",
      "wants": "फलम्",
+     "flyRoom": [
+      42,
+      49,
+      2,
+      6
+     ],
      "d": 0.3,
-     "info": "A parrot sits in the doorway and does not move. Naming it is not enough: it moves only for a fruit, फलम्."
+     "info": "A parrot sits in the doorway and does not move. Naming it is not enough: it moves only for a fruit, फलम्. Then it flies around in its room."
     },
     {
      "g": "भक्तिः",
