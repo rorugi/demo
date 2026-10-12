@@ -455,7 +455,9 @@ function drawStroke(i, token){
   return new Promise(res=>{
     const t0=performance.now();
     function f(now){
-      if(token.cancel){ activeIdx=-1; render(); paint(); return res(false); }
+      // A cancelled run only clears the board if no newer run has taken over in the meantime.
+      // (Before, it wiped the state of the new run, which then drew nothing and looked frozen.)
+      if(token.cancel){ if(running===null){ activeIdx=-1; render(); paint(); } return res(false); }
       const p=Math.min(1,(now-t0)/dur);
       activeP=ease(p); renderStep();
       if(p<1) nextFrame(f);
@@ -483,8 +485,10 @@ async function play(){
   if(running===token){ running=null; setPlayLabel(false); }
 }
 async function step(){
-  stop();
-  if(done>=strokes.length) clearStrokes();
+  // Tapping while a stroke is drawn finishes that stroke at once, then the next one starts.
+  const was=activeIdx; stop();
+  if(was>=0){ done=Math.max(done,was+1); activeIdx=-1; render(); paint(); if(done>=strokes.length) return; }
+  else if(done>=strokes.length) clearStrokes();
   const token={cancel:false}; running=token;
   await drawStroke(done,token);
   if(running===token) running=null;
