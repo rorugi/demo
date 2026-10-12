@@ -150,6 +150,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <label class="speed" for="ang">Federwinkel <input id="ang" type="range" min="-90" max="90" step="5" value="45"><output id="angOut">45°</output></label>
     <label class="speed" for="nib">Federbreite <input id="nib" type="range" min="30" max="120" step="5" value="80"><output id="nibOut">80</output></label>
     <label class="speed" for="thk">Federdicke <input id="thk" type="range" min="2" max="40" step="2" value="14"><output id="thkOut">14</output></label>
+    <label class="speed" for="stp">Schrittweite <input id="stp" type="range" min="1" max="60" step="1" value="3"><output id="stpOut">3</output></label>
     <label class="speed" for="spd">Tempo <input id="spd" type="range" min="0.25" max="2" step="0.25" value="1"><output id="spdOut">1×</output></label>
   </div>
   <div class="toggles">
@@ -187,6 +188,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <h2>So funktioniert der Pinsel</h2>
     <ul>
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
+      <li>Die <b>Schrittweite</b> ist der Abstand der Punkte entlang der Mittellinie, an denen die Feder aufgesetzt wird, in Zeicheneinheiten (die Tafel ist 1200 Einheiten breit) und umgerechnet in Bildschirmpixel. Große Schritte machen die einzelnen Federstellungen sichtbar.</li>
       <li>Der Pinsel ist eine kurze Kante im festen Winkel. Zwischen zwei Punkten wird das Viereck gefüllt, das diese Kante überstreicht, auf einem <code>&lt;canvas&gt;</code>.</li>
       <li>Das Raster folgt den vier Zonen der Schrift: oben Vokalzeichen wie i und e, in der Mitte zwei Zeilen für den Buchstaben, unten u, ū und ṛ. Die Kopflinie liegt auf der Grenze zwischen erster und zweiter Zeile.</li>
       <li>Die Schriftwahl ändert die Zeichen in der Auswahl und die Schriftform zum Vergleich. Sanskrit 2020 wird verwendet, wenn sie auf dem Gerät installiert ist; sonst kann die Datei (z. B. <code>Sanskrit2020U.otf</code>) über „Schriftdatei laden …“ gewählt werden. Sie bleibt nur in diesem Browser gespeichert. Die Striche selbst folgen der Tiro Devanagari Hindi; bei anderen Schriften zeigt der Vergleich, wie sehr die Formen voneinander abweichen.</li>
@@ -233,10 +235,8 @@ function build(){
   const helper=el("g",{visibility:"hidden"},svg);
   strokes=d.strokes.map(raw=>{
     if(isDot(raw)) return dotStroke(raw);
-    const p=raw, hp=el("path",{d:p},helper);
-    const len=hp.getTotalLength(), n=Math.max(2,Math.ceil(len/3)), pts=[];
-    for(let k=0;k<=n;k++){ const q=hp.getPointAtLength(len*k/n); pts.push([q.x,q.y]); }
-    return {path:p,len,pts};
+    const p=raw, hp=el("path",{d:p},helper), len=hp.getTotalLength();
+    return {path:p,len,hp,pts:samplePath(hp,len)};
   });
   const marks=el("g",{},svg);
   strokes.forEach((s,i)=>{
@@ -302,7 +302,7 @@ function dotPath(raw){
   return `M${r(cx-dx)} ${r(cy-dy)} L${r(cx+dx)} ${r(cy+dy)}`;
 }
 function dotStroke(raw){
-  const [x0,y0,x1,y1]=dotPath(raw).match(/-?\d+/g).map(Number), len=Math.hypot(x1-x0,y1-y0), n=Math.max(2,Math.ceil(len/3)), pts=[];
+  const [x0,y0,x1,y1]=dotPath(raw).match(/-?\d+/g).map(Number), len=Math.hypot(x1-x0,y1-y0), n=Math.max(2,Math.ceil(len/stepLen)), pts=[];
   for(let k=0;k<=n;k++) pts.push([x0+(x1-x0)*k/n, y0+(y1-y0)*k/n]);
   return {path:dotPath(raw),raw,dot:true,len,pts};
 }
@@ -410,9 +410,25 @@ $("font").onchange=e=>{
 // Bring back a font file from the last visit
 readFontFile().then(async rec=>{ if(!rec) return; try{ await registerFontFile(rec.name,rec.buf); if(fontName===FILE_FAMILY){ $("font").value=FILE_FAMILY; fontPrev=FILE_FAMILY; applyFont(FILE_FAMILY,false); } }catch(e){} });
 
+// Step length: distance between the points the nib is stamped at, in drawing units (the board is 1200 units wide).
+// Small steps give a smooth stroke; large steps show the single nib positions.
+let stepLen=3;
+function samplePath(hp,len){
+  const n=Math.max(2,Math.ceil(len/stepLen)), pts=[];
+  for(let k=0;k<=n;k++){ const q=hp.getPointAtLength(len*k/n); pts.push([q.x,q.y]); }
+  return pts;
+}
+function resampleAll(){
+  strokes.forEach(s=>{ if(s.dot){ const f=dotStroke(s.raw); s.pts=f.pts; } else s.pts=samplePath(s.hp,s.len); });
+}
+function stepLabel(){
+  const w=svg.getBoundingClientRect().width||400, px=stepLen*w/VB_W;
+  $("stpOut").textContent=`${stepLen} · ${px<1?px.toFixed(2):px.toFixed(1)} px`;
+}
+
 // Canvas sizing: match the SVG's box, map viewBox units to pixels
 function resize(){
-  fitSvg();
+  fitSvg(); if($("stpOut")) stepLabel();
   const r=cv.getBoundingClientRect(), dpr=Math.min(2,window.devicePixelRatio||1);   // cap: big phone canvases are slow
   cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
   render();
@@ -547,6 +563,7 @@ $("spd").oninput=e=>{ speed=+e.target.value; $("spdOut").textContent=speed+"×";
 $("ang").oninput=e=>{ angle=+e.target.value; $("angOut").textContent=angle+"°"; refreshDots(); render(); };
 $("nib").oninput=e=>{ nibW=+e.target.value; $("nibOut").textContent=nibW; render(); };
 $("thk").oninput=e=>{ nibT=+e.target.value; $("thkOut").textContent=nibT; render(); };
+$("stp").oninput=e=>{ stepLen=+e.target.value; stepLabel(); resampleAll(); render(); };
 $("tNums").onchange=e=>board.classList.toggle("hide-nums",!e.target.checked);
 $("tGhost").onchange=e=>board.classList.toggle("show-ghost",e.target.checked);
 { const mq=matchMedia("(prefers-color-scheme: dark)"); if(mq.addEventListener) mq.addEventListener("change",render); else if(mq.addListener) mq.addListener(render); }
