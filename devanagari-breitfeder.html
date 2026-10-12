@@ -157,6 +157,11 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <label class="tog" for="tNums"><input id="tNums" type="checkbox" checked><span>Startpunkte nummerieren</span></label>
     <label class="tog" for="tGhost"><input id="tGhost" type="checkbox"><span>Schriftform zum Vergleich</span></label>
     <label class="tog" for="tLoop"><input id="tLoop" type="checkbox"><span>Wiederholen</span></label>
+    <label class="tog fontsel" for="mode"><span>Darstellung</span><select id="mode">
+      <option value="canvas">Canvas: Federabdrücke Schritt für Schritt</option>
+      <option value="line">SVG 1: Linie, die sich zeichnet</option>
+      <option value="mask">SVG 2: Federform mit Maske</option>
+    </select></label>
     <label class="tog fontsel" for="font"><span>Schrift</span><select id="font"></select><span class="fontmsg" id="fontMsg"></span></label>
   </div>
 
@@ -188,6 +193,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <h2>So funktioniert der Pinsel</h2>
     <ul>
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
+      <li><b>Darstellung</b>: <i>Canvas</i> setzt die Feder Punkt für Punkt auf einen <code>&lt;canvas&gt;</code>. <i>SVG 1</i> zeichnet nur die Mittellinie mit <code>stroke-dashoffset</code>, gleich breit, ohne dick und dünn. <i>SVG 2</i> baut die ganze Federform als SVG und deckt sie mit einer Maske auf; der Strich ist dafür in kurze Stücke geteilt, damit Schleifen nicht zu früh sichtbar werden. Die SVG-Animationen laufen im Browser selbst (Web Animations API).</li>
       <li>Die <b>Schrittweite</b> ist der Abstand der Punkte entlang der Mittellinie, an denen die Feder aufgesetzt wird, in Zeicheneinheiten (die Tafel ist 1200 Einheiten breit) und umgerechnet in Bildschirmpixel. Große Schritte machen die einzelnen Federstellungen sichtbar.</li>
       <li>Der Pinsel ist eine kurze Kante im festen Winkel. Zwischen zwei Punkten wird das Viereck gefüllt, das diese Kante überstreicht, auf einem <code>&lt;canvas&gt;</code>.</li>
       <li>Das Raster folgt den vier Zonen der Schrift: oben Vokalzeichen wie i und e, in der Mitte zwei Zeilen für den Buchstaben, unten u, ū und ṛ. Die Kopflinie liegt auf der Grenze zwischen erster und zweiter Zeile.</li>
@@ -205,6 +211,8 @@ const $ = id => document.getElementById(id);
 const svg = $("svg"), board = $("board"), cv = $("cv"), ctx = cv.getContext("2d");
 const VB_Y = -235, VB_W = 1200, VB_H = 1290;
 let cur = 0, strokes = [], done = 0, running = null, speed = 1, angle = 45, nibW = 80, nibT = 14;
+let mode = "canvas", inkG = null, svgAnims = [], maskUid = 0;
+try{ const m=localStorage.getItem("deva-nib-mode"); if(m==="line"||m==="mask") mode=m; }catch(e){}
 let vbX = 0, activeIdx = -1, activeP = 0, pen = null, ghostEl = null, drawnK = 0, inkChalk = "#eef2e9", inkAcc = "#e9a23b";
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -232,6 +240,7 @@ function build(){
   for(let c=0;c<=3;c++){ const x=gx0+(gx1-gx0)*c/3; el("line",{x1:x,x2:x,y1:gy0,y2:gy1},grid); }
   for(let r=0;r<=4;r++){ const y=gy0+Z*r; el("line",{x1:gx0,x2:gx1,y1:y,y2:y,class:(r===1||r===3)?"zone":""},grid); }
   ghostEl = drawGhost(d);
+  inkG = el("g",{class:"ink"},svg);   // SVG modes draw here, under the numbers
   const helper=el("g",{visibility:"hidden"},svg);
   strokes=d.strokes.map(raw=>{
     if(isDot(raw)) return dotStroke(raw);
@@ -457,6 +466,11 @@ function nibStroke(pts, upto, color, from=1){
 
 // Full redraw: used after settings changes, resizes and at the end of each stroke.
 function render(){
+  if(mode!=="canvas"){
+    if(cv.width){ ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); }
+    svgRender(); if(pen) pen.classList.remove("on"); return;
+  }
+  if(inkG) inkG.innerHTML="";
   if(!cv.width||!cv.height) return;
   const s=cv.width/VB_W;
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
@@ -495,6 +509,95 @@ function paint(){
   $("count").textContent=`${done} / ${strokes.length}`;
 }
 
+/* ---------- SVG modes ----------
+   line: the centre line itself is drawn, revealed with stroke-dashoffset (one width, no thick and thin).
+   mask: the full broad-nib shape is built as SVG and uncovered by a mask whose wide centre line is revealed
+         with stroke-dashoffset. The stroke is cut into short pieces, each with its own shape and mask,
+         so loops and sharp turns (क, द्धि) are not uncovered ahead of time.
+   The browser runs these animations itself (Web Animations API); a frame loop is the fallback. */
+const SVGNS="http://www.w3.org/2000/svg";
+const lineWidth=()=>Math.round((nibW+nibT)/2);
+function quadsPath(pts,from,to){
+  const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L, r=v=>Math.round(v*10)/10;
+  let d="";
+  for(let k=Math.max(1,from);k<=to;k++){
+    const [x0,y0]=pts[k-1], [x1,y1]=pts[k];
+    let q=[[x0-hx,y0-hy],[x0+hx,y0+hy],[x1+hx,y1+hy],[x1-hx,y1-hy]];
+    // same winding for every quad, so overlapping quads never cancel each other out
+    const area=(q[1][0]-q[0][0])*(q[2][1]-q[0][1])-(q[2][0]-q[0][0])*(q[1][1]-q[0][1]);
+    if(area<0) q=[q[0],q[3],q[2],q[1]];
+    d+=`M${r(q[0][0])} ${r(q[0][1])}L${r(q[1][0])} ${r(q[1][1])}L${r(q[2][0])} ${r(q[2][1])}L${r(q[3][0])} ${r(q[3][1])}Z`;
+  }
+  return d;
+}
+function nibShape(st,color,from,to){
+  return el("path",{d:quadsPath(st.pts,from??1,to??st.pts.length-1),fill:color,stroke:color,"stroke-width":nibT,"stroke-linejoin":"round"});
+}
+function lineShape(st,color){
+  return el("path",{d:st.path,fill:"none",stroke:color,"stroke-width":lineWidth(),"stroke-linecap":"round","stroke-linejoin":"round"});
+}
+function svgRender(){
+  if(!inkG) return;
+  const keep=svgAnims.length?inkG.querySelector("[data-active]"):null;
+  [...inkG.children].forEach(c=>{ if(c!==keep) c.remove(); });
+  strokes.forEach((st,i)=>{ if(i<done) inkG.insertBefore(mode==="line"?lineShape(st,"var(--chalk)"):nibShape(st,"var(--chalk)"), keep); });
+}
+function cancelSvgAnims(){ const a=svgAnims; svgAnims=[]; a.forEach(x=>{ try{ x.cancel(); }catch(e){} }); }
+// Animate stroke-dashoffset from 1 to 0 (paths use pathLength="1"). Web Animations API, or a frame loop as fallback.
+function dashAnim(node,delay,dur,easing,easeFn){
+  if(node.animate){
+    return node.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{delay,duration:Math.max(1,dur),easing,fill:"both"});
+  }
+  let cancelled=false, resolve, reject; const finished=new Promise((r,j)=>{ resolve=r; reject=j; });
+  const t0=performance.now()+delay; node.style.strokeDashoffset=1;
+  (function f(){ if(cancelled) return; const p=Math.min(1,Math.max(0,(performance.now()-t0)/Math.max(1,dur)));
+    node.style.strokeDashoffset=1-easeFn(p); if(p<1) nextFrame(f); else resolve(); })();
+  return {finished, cancel(){ if(!cancelled){ cancelled=true; reject(new Error("cancelled")); } }};
+}
+// inverse of the ease curve: when (as a share of the duration) a given share of the stroke is reached
+const invEase=y=>y<.5?Math.sqrt(y/2):1-Math.sqrt((1-y)/2);
+function startActiveSVG(i,dur){
+  const st=strokes[i], g=el("g",{"data-active":"1"},inkG), acc="var(--accent)", anims=[];
+  if(mode==="line"){
+    const pth=lineShape(st,acc); pth.setAttribute("pathLength","1"); pth.setAttribute("stroke-dasharray","1 2"); pth.style.strokeDashoffset=1; g.appendChild(pth);
+    anims.push(dashAnim(pth,0,dur,"cubic-bezier(.45,0,.55,1)",ease));
+  } else {
+    // The nib reaches up to R beyond the centre line, also along it. Each piece's mask therefore runs R further
+    // on both sides (and the whole line is extended by R at start and end), so the angled nib is never cut off.
+    const P=st.pts, n=P.length-1, ds=st.len/n, R=nibW/2+nibT, defs=el("defs",{},g), W=nibW+nibT+8;
+    const unit=(p,q)=>{ const dx=q[0]-p[0], dy=q[1]-p[1], l=Math.hypot(dx,dy)||1; return [dx/l,dy/l]; };
+    const u0=unit(P[0],P[1]), un=unit(P[n-1],P[n]);
+    const ext=[[P[0][0]-u0[0]*R,P[0][1]-u0[1]*R],...P,[P[n][0]+un[0]*R,P[n][1]+un[1]*R]];
+    const sOf=e=> e===0 ? -R : e===n+2 ? st.len+R : (e-1)*ds;
+    const T=s=>invEase(Math.min(1,Math.max(0,s/st.len)))*dur;
+    const size=Math.max(3,Math.round(110/stepLen)), margin=Math.ceil(R/ds)+1;
+    for(let a=0;a<n;a+=size){
+      const b=Math.min(n,a+size), id="mk"+(++maskUid);
+      const e0=Math.max(0,a+1-margin), e1=Math.min(n+2,b+1+margin);
+      const m=el("mask",{id,maskUnits:"userSpaceOnUse",x:vbX-50,y:VB_Y-50,width:VB_W+100,height:VB_H+100},defs);
+      const seg=ext.slice(e0,e1+1).map(([x,y],k)=>(k?"L":"M")+Math.round(x*10)/10+" "+Math.round(y*10)/10).join("");
+      const mp=el("path",{d:seg,fill:"none",stroke:"#fff","stroke-width":W,"stroke-linecap":"butt","stroke-linejoin":"round",pathLength:"1","stroke-dasharray":"1 2"},m);
+      mp.style.strokeDashoffset=1;
+      const shape=nibShape(st,acc,a+1,b); shape.setAttribute("mask",`url(#${id})`); g.appendChild(shape);
+      const t0=T(sOf(e0)), t1=T(sOf(e1));
+      anims.push(dashAnim(mp,t0,t1-t0,"linear",x=>x));
+    }
+  }
+  svgAnims=anims; return anims;
+}
+function drawStrokeSVG(i, token){
+  activeIdx=i; activeP=0; paint(); cancelSvgAnims(); svgRender();
+  const s=strokes[i], dur = reduced ? 1 : Math.max(450, s.len*1.9)/speed;
+  const anims=startActiveSVG(i,dur);
+  return Promise.all(anims.map(a=>a.finished)).then(()=>{
+    if(token.cancel) return false;
+    svgAnims=[]; done=i+1; activeIdx=-1; render(); paint(); return true;
+  },()=>{
+    if(running===null && !token.replaced){ activeIdx=-1; render(); paint(); }
+    return false;
+  });
+}
+
 // requestAnimationFrame, with a timer fallback: some browsers pause rAF in embedded or background frames,
 // which used to freeze the animation.
 function nextFrame(fn){
@@ -504,6 +607,7 @@ function nextFrame(fn){
 }
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 function drawStroke(i, token){
+  if(mode!=="canvas") return drawStrokeSVG(i, token);
   const s=strokes[i];
   activeIdx=i; activeP=0; drawnK=0; paint();
   const dur = reduced ? 1 : Math.max(450, s.len*1.9)/speed;
@@ -522,7 +626,7 @@ function drawStroke(i, token){
   });
 }
 const wait=(ms,token)=>new Promise(r=>setTimeout(()=>r(!token.cancel),reduced?0:ms/speed));
-function stop(){ if(running){ running.cancel=true; running=null; } setPlayLabel(false); }
+function stop(){ if(running){ running.cancel=true; running=null; } cancelSvgAnims(); setPlayLabel(false); }
 function clearStrokes(){ done=0; activeIdx=-1; render(); paint(); }
 function setPlayLabel(on){ $("play").querySelector("span").textContent = on ? "Pause" : "Abspielen"; }
 
@@ -563,6 +667,8 @@ $("spd").oninput=e=>{ speed=+e.target.value; $("spdOut").textContent=speed+"×";
 $("ang").oninput=e=>{ angle=+e.target.value; $("angOut").textContent=angle+"°"; refreshDots(); render(); };
 $("nib").oninput=e=>{ nibW=+e.target.value; $("nibOut").textContent=nibW; render(); };
 $("thk").oninput=e=>{ nibT=+e.target.value; $("thkOut").textContent=nibT; render(); };
+$("mode").value=mode;
+$("mode").onchange=e=>{ mode=e.target.value; try{ localStorage.setItem("deva-nib-mode",mode); }catch(e){} stop(); clearStrokes(); play(); };
 $("stp").oninput=e=>{ stepLen=+e.target.value; stepLabel(); resampleAll(); render(); };
 $("tNums").onchange=e=>board.classList.toggle("hide-nums",!e.target.checked);
 $("tGhost").onchange=e=>board.classList.toggle("show-ghost",e.target.checked);
