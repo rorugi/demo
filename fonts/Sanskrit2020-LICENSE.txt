@@ -1,0 +1,12 @@
+Sanskrit 2020 (Version 1.30, November 17, 2020)
+
+Copyright 2014 Omkarananda Ashram Himalayas, Rishikesh, INDIA.
+This Devanagari font also contains the Latin font URW Palladio,
+Copyright 2014 (URW)++ Design & Development.
+
+Licensed under the SIL Open Font License, Version 1.1 (OFL),
+as stated in the font's own name table.
+Full licence text: https://openfontlicense.org/open-font-license-official-text/
+
+The font file is included unmodified. Source:
+https://sourceforge.net/projects/advaita-sharada-font/files/Devanagari/
