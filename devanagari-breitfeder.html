@@ -45,6 +45,7 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .board{background:var(--slate);border:10px solid var(--slate-edge);border-radius:14px;position:relative;
   box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
 .board .stage svg{display:block;width:100%;height:auto;aspect-ratio:1200/1290}
+.board{width:100%;max-width:400px;margin-inline:auto;box-sizing:border-box}
 .board .tag{position:absolute;left:14px;top:10px;color:var(--chalk);opacity:.6;font-size:13px;letter-spacing:.06em}
 .board .count{position:absolute;right:14px;top:10px;color:var(--accent);font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.06em}
 .guide{stroke:var(--guide);stroke-width:3}
@@ -188,7 +189,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
       <li>Der Pinsel ist eine kurze Kante im festen Winkel. Zwischen zwei Punkten wird das Viereck gefüllt, das diese Kante überstreicht, auf einem <code>&lt;canvas&gt;</code>.</li>
       <li>Das Raster folgt den vier Zonen der Schrift: oben Vokalzeichen wie i und e, in der Mitte zwei Zeilen für den Buchstaben, unten u, ū und ṛ. Die Kopflinie liegt auf der Grenze zwischen erster und zweiter Zeile.</li>
-      <li>Die Schriftwahl ändert die Zeichen in der Auswahl und die Schriftform zum Vergleich. Die Striche selbst folgen der Tiro Devanagari Hindi; bei anderen Schriften zeigt der Vergleich, wie sehr die Formen voneinander abweichen.</li>
+      <li>Die Schriftwahl ändert die Zeichen in der Auswahl und die Schriftform zum Vergleich. Sanskrit 2020 wird verwendet, wenn sie auf dem Gerät installiert ist; sonst kann die Datei (z. B. <code>Sanskrit2020U.otf</code>) über „Schriftdatei laden …“ gewählt werden. Sie bleibt nur in diesem Browser gespeichert. Die Striche selbst folgen der Tiro Devanagari Hindi; bei anderen Schriften zeigt der Vergleich, wie sehr die Formen voneinander abweichen.</li>
       <li>Läuft der Strich quer zur Kante, wird er breit. Läuft er parallel zur Kante, wird er schmal, aber nie dünner als die Federdicke. Dafür werden die Vierecke zusätzlich mit dieser Dicke umrandet. Eine Maske gibt es nicht.</li>
     </ul>
     <p class="note">Die Reihenfolge folgt der verbreiteten Schulvariante mit der Kopflinie zuletzt.</p>
@@ -322,10 +323,31 @@ const FONTS=[
   {n:"Kalam",note:"Handschrift"},
   {n:"Yatra One"},
   {n:"Rozha One"},
+  {n:"Sanskrit 2020",local:true,note:"wenn installiert"},
   {n:"",label:"Systemschrift"},
+  {n:"__file",label:"Schriftdatei laden …"},
 ];
+const FILE_FAMILY="Eigene Schrift";
 let fontName="Tiro Devanagari Hindi", fontFit=null;
-try{ const f=localStorage.getItem("deva-nib-font"); if(f!==null && FONTS.some(x=>x.n===f)) fontName=f; }catch(e){}
+try{ const f=localStorage.getItem("deva-nib-font"); if(f!==null && (FONTS.some(x=>x.n===f&&f!=="__file")||f===FILE_FAMILY)) fontName=f; }catch(e){}
+// Is a locally installed font present? Compare text widths against two generic fallbacks.
+function hasLocalFont(n){
+  const c=document.createElement("canvas").getContext("2d"), s="कखगघ क्ष ज्ञ द्धि";
+  const w=f=>{ c.font=`80px ${f}`; return c.measureText(s).width; };
+  return w(`"${n}",monospace`)!==w("monospace") || w(`"${n}",sans-serif`)!==w("sans-serif");
+}
+// A font file picked by the user (e.g. Sanskrit2020U.otf): registered with FontFace, kept in IndexedDB for the next visit.
+const fontDB=()=>new Promise((res,rej)=>{ try{ const r=indexedDB.open("deva-nib",1); r.onupgradeneeded=()=>r.result.createObjectStore("f"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } });
+async function storeFontFile(name,buf){ try{ const db=await fontDB(); db.transaction("f","readwrite").objectStore("f").put({name,buf},"font"); }catch(e){} }
+async function readFontFile(){ try{ const db=await fontDB(); return await new Promise(res=>{ const q=db.transaction("f").objectStore("f").get("font"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+let fileFontLabel="";
+async function registerFontFile(name,buf){
+  const ff=new FontFace(FILE_FAMILY,buf); await ff.load(); document.fonts.add(ff);
+  fileFontLabel=name.replace(/\.(otf|ttf|woff2?)$/i,"");
+  let o=$("font").querySelector(`option[value="${FILE_FAMILY}"]`);
+  if(!o){ o=document.createElement("option"); o.value=FILE_FAMILY; $("font").insertBefore(o,$("font").querySelector('option[value="__file"]')); }
+  o.textContent=`${fileFontLabel} (Datei)`;
+}
 const fontStack=n=>(n?`"${n}",`:"")+`"Noto Serif Devanagari","Kohinoor Devanagari","Devanagari Sangam MN","Mangal",serif`;
 const cssLoads={};
 function loadFontCss(n){
@@ -359,17 +381,34 @@ function applyFont(n,user){
   fontName=n; try{ localStorage.setItem("deva-nib-font",n); }catch(e){}
   document.documentElement.style.setProperty("--f-deva",fontStack(n));
   $("fontMsg").textContent="";
-  loadFontCss(n).then(()=> n && document.fonts && document.fonts.load ? document.fonts.load(`200px "${n}"`,"क") : []).catch(()=>[]).then(list=>{
+  const def=FONTS.find(f=>f.n===n), local=def&&def.local;
+  const loading = local||n===FILE_FAMILY ? Promise.resolve() : loadFontCss(n).then(()=> n && document.fonts && document.fonts.load ? document.fonts.load(`200px "${n}"`,"क") : []).catch(()=>[]);
+  loading.then(list=>{
     if(fontName!==n) return;
-    if(n && (!list || !list.length)) $("fontMsg").textContent="nicht geladen, Ersatzschrift";
+    if(local){ if(!hasLocalFont(n)) $("fontMsg").textContent="nicht installiert: Ersatzschrift. Unter „Schriftdatei laden …“ kann die Datei gewählt werden."; }
+    else if(n && n!==FILE_FAMILY && (!list || !list.length)) $("fontMsg").textContent="nicht geladen, Ersatzschrift";
     fontFit=measureFont(n);
     if(ghostEl){ const old=ghostEl; ghostEl=drawGhost(DATA[cur]); old.replaceWith(ghostEl); }
   });
   if(user && n!=="Tiro Devanagari Hindi" && !$("tGhost").checked){ $("tGhost").checked=true; board.classList.add("show-ghost"); }
 }
 $("font").innerHTML=FONTS.map(f=>`<option value="${f.n}">${f.label||f.n}${f.note?" ("+f.note+")":""}</option>`).join("");
-$("font").value=fontName;
-$("font").onchange=e=>applyFont(e.target.value,true);
+$("font").value=fontName===FILE_FAMILY?"Tiro Devanagari Hindi":fontName;
+let fontPrev=$("font").value;
+const fileIn=document.createElement("input"); fileIn.type="file"; fileIn.accept=".otf,.ttf,.woff,.woff2,font/otf,font/ttf,font/woff,font/woff2"; fileIn.hidden=true; document.body.appendChild(fileIn);
+fileIn.onchange=async()=>{
+  const f=fileIn.files&&fileIn.files[0]; fileIn.value="";
+  if(!f){ $("font").value=fontPrev; return; }
+  try{ const buf=await f.arrayBuffer(); await registerFontFile(f.name,buf); storeFontFile(f.name,buf); $("font").value=FILE_FAMILY; fontPrev=FILE_FAMILY; applyFont(FILE_FAMILY,true); }
+  catch(e){ $("font").value=fontPrev; $("fontMsg").textContent="Diese Datei ist keine lesbare Schrift."; }
+};
+$("font").onchange=e=>{
+  const v=e.target.value;
+  if(v==="__file"){ fileIn.click(); return; }
+  fontPrev=v; applyFont(v,true);
+};
+// Bring back a font file from the last visit
+readFontFile().then(async rec=>{ if(!rec) return; try{ await registerFontFile(rec.name,rec.buf); if(fontName===FILE_FAMILY){ $("font").value=FILE_FAMILY; fontPrev=FILE_FAMILY; applyFont(FILE_FAMILY,false); } }catch(e){} });
 
 // Canvas sizing: match the SVG's box, map viewBox units to pixels
 function resize(){
