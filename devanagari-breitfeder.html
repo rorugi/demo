@@ -79,6 +79,8 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .fontsel select{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px;max-width:100%}
 .fontsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fontmsg{font-size:12px;color:var(--muted)}
+.fitglyph{fill:var(--chalk);opacity:0;transition:opacity .7s ease;pointer-events:none}
+.fitglyph.on{opacity:1}
 /* Sanskrit 2020 (SIL OFL, Omkarananda Ashram): installed copy first, else the file next to this page */
 @font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
 .ghost-text{font-family:var(--f-deva)}
@@ -164,6 +166,10 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <option value="line">SVG 1: Linie, die sich zeichnet</option>
       <option value="mask">SVG 2: Federform mit Maske</option>
     </select></label>
+    <label class="tog fontsel" for="penmode"><span>Feder</span><select id="penmode">
+      <option value="fixed">fest (Kalligrafie)</option>
+      <option value="fit">an die Schrift angepasst</option>
+    </select></label>
     <label class="tog fontsel" for="font"><span>Schrift</span><select id="font"></select><span class="fontmsg" id="fontMsg"></span></label>
   </div>
 
@@ -195,6 +201,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <h2>So funktioniert der Pinsel</h2>
     <ul>
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
+      <li><b>Feder</b>: <i>fest</i> ist die Breitfeder mit Winkel, Breite und Dicke. <i>An die Schrift angepasst</i> misst an jedem Punkt der Mittellinie, wie breit die Schrift dort links und rechts ist, und stellt die Feder quer zum Strich genau so breit. So entsteht das dick und dünn der gewählten Schrift; Winkel und Breite spielen dann keine Rolle. Wo Striche sich kreuzen, werden Ausreißer begrenzt, und am Ende wird die echte Schriftform eingeblendet.</li>
       <li><b>Darstellung</b>: <i>Canvas</i> setzt die Feder Punkt für Punkt auf einen <code>&lt;canvas&gt;</code>. <i>SVG 1</i> zeichnet nur die Mittellinie mit <code>stroke-dashoffset</code>, gleich breit, ohne dick und dünn. <i>SVG 2</i> baut die ganze Federform als SVG und deckt sie mit einer Maske auf; der Strich ist dafür in kurze Stücke geteilt, damit Schleifen nicht zu früh sichtbar werden. Die SVG-Animationen laufen im Browser selbst (Web Animations API).</li>
       <li>Die <b>Schrittweite</b> ist der Abstand der Punkte entlang der Mittellinie, an denen die Feder aufgesetzt wird, in Zeicheneinheiten (die Tafel ist 1200 Einheiten breit) und umgerechnet in Bildschirmpixel. Große Schritte machen die einzelnen Federstellungen sichtbar.</li>
       <li>Der Pinsel ist eine kurze Kante im festen Winkel. Zwischen zwei Punkten wird das Viereck gefüllt, das diese Kante überstreicht, auf einem <code>&lt;canvas&gt;</code>.</li>
@@ -219,6 +226,8 @@ const $ = id => document.getElementById(id);
 const svg = $("svg"), board = $("board"), cv = $("cv"), ctx = cv.getContext("2d");
 const VB_Y = -235, VB_W = 1200, VB_H = 1290;
 let cur = 0, strokes = [], done = 0, running = null, speed = 1, angle = 45, nibW = 80, nibT = 14;
+let penMode = "fixed", fitG = null, raster = null;
+try{ if(localStorage.getItem("deva-nib-pen")==="fit") penMode="fit"; }catch(e){}
 let mode = "canvas", inkG = null, svgAnims = [], maskUid = 0;
 try{ const m=localStorage.getItem("deva-nib-mode"); if(m==="line"||m==="mask") mode=m; }catch(e){}
 let vbX = 0, activeIdx = -1, activeP = 0, pen = null, ghostEl = null, drawnK = 0, inkChalk = "#eef2e9", inkAcc = "#e9a23b";
@@ -249,6 +258,8 @@ function build(){
   for(let r=0;r<=4;r++){ const y=gy0+Z*r; el("line",{x1:gx0,x2:gx1,y1:y,y2:y,class:(r===1||r===3)?"zone":""},grid); }
   ghostEl = drawGhost(d);
   inkG = el("g",{class:"ink"},svg);   // SVG modes draw here, under the numbers
+  raster = makeRaster(d);
+  fitG = d.page ? el("path",{d:d.glyph,class:"fitglyph"},svg) : el("path",{d:d.glyph,transform:"matrix(1 0 0 -1 0 700)",class:"fitglyph"},svg);
   const helper=el("g",{visibility:"hidden"},svg);
   strokes=d.strokes.map(raw=>{
     if(isDot(raw)) return dotStroke(raw);
@@ -324,7 +335,7 @@ function dotStroke(raw){
   return {path:dotPath(raw),raw,dot:true,len,pts};
 }
 function refreshDots(){
-  strokes.forEach((s,i)=>{ if(s.dot){ const f=dotStroke(s.raw); s.path=f.path; s.len=f.len; s.pts=f.pts; } });
+  strokes.forEach((s,i)=>{ if(s.dot){ const f=dotStroke(s.raw); s.path=f.path; s.len=f.len; s.pts=f.pts; s.fit=null; } });
   if(typeof showSplines==="function") showSplines();
 }
 
@@ -441,7 +452,7 @@ function samplePath(hp,len){
   return pts;
 }
 function resampleAll(){
-  strokes.forEach(s=>{ if(s.dot){ const f=dotStroke(s.raw); s.pts=f.pts; } else s.pts=samplePath(s.hp,s.len); });
+  strokes.forEach(s=>{ s.fit=null; if(s.dot){ const f=dotStroke(s.raw); s.pts=f.pts; } else s.pts=samplePath(s.hp,s.len); });
 }
 function stepLabel(){
   const w=svg.getBoundingClientRect().width||400, px=stepLen*w/VB_W;
@@ -464,8 +475,14 @@ window.addEventListener("orientationchange",()=>setTimeout(()=>{ fitSvg(); resiz
 
 // Broad-nib sweep: the nib is a rounded rectangle, nibW long and nibT thick.
 // Fill the quads its long edge covers, then stroke them with nibT so the nib never gets thinner than nibT.
-function nibStroke(pts, upto, color, from=1){
+function nibStroke(pts, upto, color, from=1, st=null){
   if(upto<from) return;
+  if(penMode==="fit" && st){
+    ctx.fillStyle=color; ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin="round";
+    ctx.beginPath();
+    for(let k=Math.max(1,from);k<=upto;k++) for(const q of fitQuads(st,k)){ ctx.moveTo(q[0][0],q[0][1]); for(let i=1;i<4;i++) ctx.lineTo(q[i][0],q[i][1]); ctx.closePath(); }
+    ctx.fill(); ctx.stroke(); return;
+  }
   const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L;
   ctx.fillStyle=color; ctx.strokeStyle=color;
   ctx.lineWidth=nibT; ctx.lineCap="round"; ctx.lineJoin="round";
@@ -475,6 +492,83 @@ function nibStroke(pts, upto, color, from=1){
     ctx.moveTo(x0-hx,y0-hy); ctx.lineTo(x0+hx,y0+hy); ctx.lineTo(x1+hx,y1+hy); ctx.lineTo(x1-hx,y1-hy); ctx.closePath();
   }
   ctx.fill(); ctx.stroke();
+}
+
+/* ---------- Nib fitted to the font ----------
+   The letter's outline is drawn once into a small bitmap. For every point on the centre line we walk
+   across the stroke (along the normal) to the left and to the right until we leave the outline.
+   Those two distances set the nib for that point, so the drawn stroke follows the font's own thick and thin.
+   Where strokes cross or meet, the walk runs into the other stroke; such spikes are capped and smoothed. */
+const RS=0.5;   // bitmap pixels per drawing unit
+function makeRaster(d){
+  const x0=-250, y0=-320, w=Math.ceil((d.adv+500)*RS), h=Math.ceil(1400*RS);
+  const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d");
+  g.setTransform(RS,0,0,RS,-x0*RS,-y0*RS);
+  try{ const path=new Path2D(d.glyph); if(!d.page){ g.translate(0,700); g.scale(1,-1); } g.fillStyle="#000"; g.fill(path); }catch(e){ return null; }
+  const a=g.getImageData(0,0,w,h).data, m=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++) m[i]=a[i*4+3]>127?1:0;
+  return {x0,y0,w,h,m};
+}
+function inside(x,y){
+  if(!raster) return false;
+  const i=Math.round((x-raster.x0)*RS), j=Math.round((y-raster.y0)*RS);
+  return i>=0&&j>=0&&i<raster.w&&j<raster.h&&raster.m[j*raster.w+i]===1;
+}
+function reach(x,y,nx,ny,max){
+  // distance from (x,y) along (nx,ny) to the edge of the outline
+  if(!inside(x,y)){ return 0; }
+  let d=0; while(d<max && inside(x+nx*(d+1),y+ny*(d+1))) d+=1;
+  return d;
+}
+function smooth(a,r){ return a.map((v,i)=>{ let s=0,c=0; for(let k=-r;k<=r;k++){ const j=i+k; if(j>=0&&j<a.length){ s+=a[j]; c++; } } return s/c; }); }
+const median=a=>{ const b=a.filter(v=>v>0).sort((x,y)=>x-y); return b.length?b[b.length>>1]:20; };
+// Distances to the outline on both sides of a centre point. If the centre line runs just outside the
+// outline, the nearest inside point along the normal is used, so no ink lands outside the letter.
+function sides(x,y,nx,ny,MAX){
+  if(inside(x,y)) return [reach(x,y,nx,ny,MAX), reach(x,y,-nx,-ny,MAX)];
+  for(let t=2;t<=40;t+=2){
+    for(const s of [t,-t]){ const qx=x+nx*s, qy=y+ny*s;
+      if(inside(qx,qy)){ const l=s+reach(qx,qy,nx,ny,MAX), r=reach(qx,qy,-nx,-ny,MAX)-s; return [Math.max(0,l),Math.max(0,r),true]; } }
+  }
+  return [0,0];
+}
+function computeFit(st){
+  let P=st.pts; const MAX=180;
+  if(st.dot){
+    // a dot fills the font's whole dot: stretch its short line to the outline in both directions
+    const n0=P.length-1, [ax,ay]=P[0], [bx,by]=P[n0], cx=(ax+bx)/2, cy=(ay+by)/2, l=Math.hypot(bx-ax,by-ay)||1, ux=(bx-ax)/l, uy=(by-ay)/l;
+    if(inside(cx,cy)){ const r1=reach(cx,cy,-ux,-uy,MAX), r2=reach(cx,cy,ux,uy,MAX), m=Math.max(8,Math.ceil((r1+r2)/stepLen));
+      P=[]; for(let k=0;k<=m;k++){ const s=-r1+(r1+r2)*k/m; P.push([cx+ux*s,cy+uy*s]); } st.fitPts=P; }
+  }
+  const n=P.length-1, L=[], R=[], N=[];
+  for(let k=0;k<=n;k++){
+    const a=P[Math.max(0,k-1)], b=P[Math.min(n,k+1)], dx=b[0]-a[0], dy=b[1]-a[1], l=Math.hypot(dx,dy)||1;
+    const nx=-dy/l, ny=dx/l; N.push([nx,ny]);
+    const [lv,rv]=sides(P[k][0],P[k][1],nx,ny,MAX); L.push(lv); R.push(rv);
+  }
+  // points just outside the outline (centre line slightly off): take the neighbours' values
+  const fill=a=>{ for(let k=0;k<=n;k++) if(a[k]===0){ let j=k; while(j<=n&&a[j]===0) j++; const v=(k>0?a[k-1]:0)||(j<=n?a[j]:0)||4; for(let q=k;q<j;q++) a[q]=v; k=j; } return a; };
+  fill(L); fill(R);
+  // cap spikes where another stroke is crossed, then smooth
+  const cl=1.7*median(L), cr=1.7*median(R);
+  const Lc=L.map(v=>Math.min(v,cl)), Rc=R.map(v=>Math.min(v,cr));
+  // smooth, but never wider than measured, so the ink stays inside the letter
+  const Ls=smooth(Lc,3).map((v,k)=>Math.min(v,Lc[k])), Rs=smooth(Rc,3).map((v,k)=>Math.min(v,Rc[k]));
+  const A=[], B=[]; let mx=0;
+  for(let k=0;k<=n;k++){ const [x,y]=P[k], [nx,ny]=N[k]; A.push([x+nx*Ls[k],y+ny*Ls[k]]); B.push([x-nx*Rs[k],y-ny*Rs[k]]); mx=Math.max(mx,Ls[k],Rs[k]); }
+  st.fit={A,B,max:mx};
+  return st.fit;
+}
+// With the fitted nib, the true outline fades in once the letter is complete: it covers the small rests
+// (slanted stroke ends, joins) the nib cannot reach.
+function showFitGlyph(){ if(fitG) fitG.classList.toggle("on", penMode==="fit" && mode!=="line" && strokes.length>0 && done>=strokes.length && activeIdx<0); }
+const fitOf=st=> st.fit||computeFit(st);
+// k runs over the stroke's own points; a stretched dot has its own number of points, so map the index
+function fitQuads(st,k){
+  const f=fitOf(st), m=f.A.length-1, n=st.pts.length-1, out=[];
+  const j0=m===n?k:Math.round((k-1)*m/n)+1, j1=m===n?k:Math.round(k*m/n);
+  for(let j=Math.max(1,j0);j<=j1;j++) out.push([f.A[j-1],f.B[j-1],f.B[j],f.A[j]]);
+  return out;
 }
 
 // Full redraw: used after settings changes, resizes and at the end of each stroke.
@@ -491,22 +585,24 @@ function render(){
   inkChalk=css("--chalk")||inkChalk; inkAcc=css("--accent")||inkAcc;
   drawnK=0;
   strokes.forEach((st,i)=>{
-    if(i<done) nibStroke(st.pts, st.pts.length-1, inkChalk);
-    else if(i===activeIdx){ drawnK=Math.round(activeP*(st.pts.length-1)); nibStroke(st.pts, drawnK, inkAcc); }
+    if(i<done) nibStroke(st.pts, st.pts.length-1, inkChalk, 1, st);
+    else if(i===activeIdx){ drawnK=Math.round(activeP*(st.pts.length-1)); nibStroke(st.pts, drawnK, inkAcc, 1, st); }
   });
-  moveNib();
+  moveNib(); showFitGlyph();
 }
 // During the animation only the new piece of the active stroke is added, so each frame stays cheap on slow devices.
 function renderStep(){
   if(activeIdx<0||!cv.width) return;
   const st=strokes[activeIdx], k=Math.round(activeP*(st.pts.length-1));
-  if(k>drawnK){ const s=cv.width/VB_W; ctx.setTransform(s,0,0,s,-vbX*s,-VB_Y*s); nibStroke(st.pts, k, inkAcc, Math.max(1,drawnK)); drawnK=k; }
+  if(k>drawnK){ const s=cv.width/VB_W; ctx.setTransform(s,0,0,s,-vbX*s,-VB_Y*s); nibStroke(st.pts, k, inkAcc, Math.max(1,drawnK), st); drawnK=k; }
   moveNib();
 }
 function moveNib(){
   // nib indicator
   if(activeIdx>=0 && pen){
-    const st=strokes[activeIdx], [x,y]=st.pts[Math.round(activeP*(st.pts.length-1))];
+    const st=strokes[activeIdx], kk=Math.round(activeP*(st.pts.length-1)), [x,y]=st.pts[kk];
+    if(penMode==="fit"){ const f=fitOf(st), jj=Math.round(kk*(f.A.length-1)/(st.pts.length-1)), A=f.A[jj], B=f.B[jj]; pen.style.strokeWidth=5;
+      pen.setAttribute("x1",A[0]); pen.setAttribute("y1",A[1]); pen.setAttribute("x2",B[0]); pen.setAttribute("y2",B[1]); pen.classList.add("on"); return; }
     const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L;
     pen.style.strokeWidth=Math.max(4,nibT*0.6);
     pen.setAttribute("x1",x-hx); pen.setAttribute("y1",y-hy); pen.setAttribute("x2",x+hx); pen.setAttribute("y2",y+hy);
@@ -544,6 +640,11 @@ function quadsPath(pts,from,to){
   return d;
 }
 function nibShape(st,color,from,to){
+  if(penMode==="fit"){
+    const r=v=>Math.round(v*10)/10; let d="";
+    for(let k=Math.max(1,from??1);k<=(to??st.pts.length-1);k++) for(const q of fitQuads(st,k)){ d+=`M${r(q[0][0])} ${r(q[0][1])}L${r(q[1][0])} ${r(q[1][1])}L${r(q[2][0])} ${r(q[2][1])}L${r(q[3][0])} ${r(q[3][1])}Z`; }
+    return el("path",{d,fill:color,stroke:color,"stroke-width":2,"stroke-linejoin":"round","fill-rule":"nonzero"});
+  }
   return el("path",{d:quadsPath(st.pts,from??1,to??st.pts.length-1),fill:color,stroke:color,"stroke-width":nibT,"stroke-linejoin":"round"});
 }
 function lineShape(st,color){
@@ -554,6 +655,7 @@ function svgRender(){
   const keep=svgAnims.length?inkG.querySelector("[data-active]"):null;
   [...inkG.children].forEach(c=>{ if(c!==keep) c.remove(); });
   strokes.forEach((st,i)=>{ if(i<done) inkG.insertBefore(mode==="line"?lineShape(st,"var(--chalk)"):nibShape(st,"var(--chalk)"), keep); });
+  showFitGlyph();
 }
 function cancelSvgAnims(){ const a=svgAnims; svgAnims=[]; a.forEach(x=>{ try{ x.cancel(); }catch(e){} }); }
 // Animate stroke-dashoffset from 1 to 0 (paths use pathLength="1"). Web Animations API, or a frame loop as fallback.
@@ -577,7 +679,8 @@ function startActiveSVG(i,dur){
   } else {
     // The nib reaches up to R beyond the centre line, also along it. Each piece's mask therefore runs R further
     // on both sides (and the whole line is extended by R at start and end), so the angled nib is never cut off.
-    const P=st.pts, n=P.length-1, ds=st.len/n, R=nibW/2+nibT, defs=el("defs",{},g), W=nibW+nibT+8;
+    const reachMax = penMode==="fit" ? fitOf(st).max+4 : nibW/2+nibT;
+    const P=st.pts, n=P.length-1, ds=st.len/n, R=reachMax, defs=el("defs",{},g), W=2*reachMax+8;
     const unit=(p,q)=>{ const dx=q[0]-p[0], dy=q[1]-p[1], l=Math.hypot(dx,dy)||1; return [dx/l,dy/l]; };
     const u0=unit(P[0],P[1]), un=unit(P[n-1],P[n]);
     const ext=[[P[0][0]-u0[0]*R,P[0][1]-u0[1]*R],...P,[P[n][0]+un[0]*R,P[n][1]+un[1]*R]];
@@ -680,6 +783,8 @@ $("spd").oninput=e=>{ speed=+e.target.value; $("spdOut").textContent=speed+"×";
 $("ang").oninput=e=>{ angle=+e.target.value; $("angOut").textContent=angle+"°"; refreshDots(); render(); };
 $("nib").oninput=e=>{ nibW=+e.target.value; $("nibOut").textContent=nibW; render(); };
 $("thk").oninput=e=>{ nibT=+e.target.value; $("thkOut").textContent=nibT; render(); };
+$("penmode").value=penMode;
+$("penmode").onchange=e=>{ penMode=e.target.value; try{ localStorage.setItem("deva-nib-pen",penMode); }catch(e){} stop(); clearStrokes(); play(); };
 $("mode").value=mode;
 $("mode").onchange=e=>{ mode=e.target.value; try{ localStorage.setItem("deva-nib-mode",mode); }catch(e){} stop(); clearStrokes(); play(); };
 $("stp").oninput=e=>{ stepLen=+e.target.value; stepLabel(); resampleAll(); render(); };
