@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devanagari Ligaturen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Layout: single column like the Breitfeder page — header, slate board comparing one cluster in both fonts, controls, category grids, free text, notes */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --slate-edge:#3a4a47; --chalk:#eef2e9; --chalk-dim:rgba(238,242,233,.62); --guide:rgba(238,242,233,.16);
+  --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.16);
+  --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
+  --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:22px}
+header{display:grid;gap:4px}
+.back{font-size:14px;color:var(--muted);text-decoration:none;width:max-content}
+.back:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+h1 .deva{font-family:var(--f-sa);font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+.hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa)}
+
+/* Board */
+.board{background:var(--slate);border:10px solid var(--slate-edge);border-radius:14px;position:relative;color:var(--chalk);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.35);padding:44px 12px 18px;display:grid;gap:10px}
+.board .tag{position:absolute;left:14px;top:10px;opacity:.7;font-size:13px;letter-spacing:.06em}
+.board .count{position:absolute;right:14px;top:10px;color:var(--accent);font-size:13px;letter-spacing:.06em;font-weight:600}
+.board .count.same{color:var(--chalk-dim);font-weight:400}
+.pair{display:grid;grid-template-columns:1fr 1fr;position:relative}
+.pair::before{content:"";position:absolute;left:50%;top:6%;bottom:10%;border-left:3px dashed var(--guide)}
+.pair .big{font-size:clamp(84px,24vw,168px);line-height:1.5;white-space:nowrap;text-align:center;min-width:0}
+.pair .big.sa{color:var(--accent)}
+.pair .lbl{font-size:13px;color:var(--chalk-dim);letter-spacing:.04em;text-align:center;padding-inline:6px}
+.pair .lbl b{display:block;color:var(--chalk);font-weight:500;font-size:14px}
+.overlay{display:none;justify-items:center}
+.overlay .stack{display:inline-grid;font-size:clamp(110px,34vw,230px);line-height:1.45}
+.overlay .stack span{grid-area:1/1;white-space:nowrap}
+.overlay .stack .hi{color:var(--chalk);opacity:.92}
+.overlay .stack .sa{color:var(--accent);mix-blend-mode:screen;opacity:.9}
+.board.ov .pair{display:none}.board.ov .overlay{display:grid}
+.legend{display:flex;gap:16px;justify-content:center;font-size:13px;color:var(--chalk-dim)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.facts{border-top:1px solid var(--guide);padding-top:10px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;color:var(--chalk-dim)}
+.facts dt{color:var(--chalk-dim)}
+.facts dd{margin:0;color:var(--chalk)}
+.facts .w{font-size:22px;line-height:1.4}
+.facts .w .sa{color:var(--accent);margin-left:14px}
+.facts code{font-family:var(--f-hi);font-size:18px;letter-spacing:.06em}
+
+/* Controls */
+.controls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.btn{appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:9px 16px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--fg);display:inline-flex;gap:8px;align-items:center}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{appearance:none;font:inherit;font-size:14px;font-weight:500;border:0;background:var(--panel);color:var(--muted);padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--fg)}
+.tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer;font-size:14px;color:var(--muted)}
+.tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.nav{margin-left:auto;display:flex;gap:6px}
+.btn:focus-visible,.seg button:focus-visible,.cell:focus-visible,.tog input:focus-visible,.chip:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stat{font-size:14px;color:var(--muted)}
+.stat b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Category grids */
+.cats{display:grid;gap:22px}
+.cat{display:grid;gap:8px}
+.cat h2{margin:0;font-size:18px;font-weight:600;display:flex;gap:10px;align-items:baseline}
+.cat h2 small{font-size:13px;color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.cat p{margin:0;color:var(--muted);font-size:15px;max-width:62ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.cell{appearance:none;font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:6px 4px 5px;cursor:pointer;display:grid;gap:0;position:relative;transition:border-color .15s,background .15s}
+.cell:hover{border-color:var(--accent)}
+.cell[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.cell .duo{display:grid;grid-template-columns:1fr 1fr;align-items:center}
+.cell .duo span{font-size:30px;line-height:1.55;text-align:center;white-space:nowrap}
+.cell .duo .sa{color:var(--accent)}
+.cell small{font-size:12px;color:var(--muted);letter-spacing:.03em;text-align:center}
+.cell.d::after{content:"";position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.only-diff .cell:not(.d){display:none}
+.only-diff .cat.empty{display:none}
+
+/* Free text */
+.text{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:18px}
+.text h2,.how h2{margin:0;font-size:18px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+textarea{font-family:var(--f-hi);font-size:20px;line-height:1.6;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;min-height:84px;width:100%}
+.out{display:grid;gap:8px}
+.out .row{display:grid;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.out .row small{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.out .row div{font-size:clamp(22px,5vw,28px);line-height:1.75;overflow-wrap:anywhere}
+.out .row.rsa small{color:var(--accent)}
+
+.how{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px}
+.how p,.how li{margin:0;max-width:65ch;color:var(--muted)}
+.how ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.how .k{font-family:var(--f-hi);color:var(--fg);font-size:1.15em}
+@media (max-width:520px){.nav{margin-left:0}.board{padding-inline:6px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <div class="eyebrow">Schriftvergleich · Ligaturen</div>
+    <h1>Devanagari-Ligaturen in Hindi und Sanskrit <span class="deva">ङ्क्ष</span></h1>
+    <p class="lede">Gleicher Text, zwei Schriften aus derselben Familie: Tiro Devanagari Hindi folgt der modernen Hindi-Praxis mit Halbformen und sichtbarem Halant, Tiro Devanagari Sanskrit setzt die gestapelten Ligaturen klassischer Sanskritdrucke.</p>
+  </header>
+
+  <section class="board" id="board" aria-label="Vergleichstafel" aria-live="polite">
+    <span class="tag" id="tag"></span>
+    <span class="count" id="count"></span>
+    <div class="pair">
+      <span class="big hi" lang="hi" id="bigHi"></span>
+      <span class="big sa" lang="sa" id="bigSa"></span>
+      <span class="lbl"><b>Hindi</b>Tiro Devanagari Hindi</span>
+      <span class="lbl"><b>Sanskrit</b>Tiro Devanagari Sanskrit</span>
+    </div>
+    <div class="overlay">
+      <div class="stack"><span class="hi" lang="hi" id="ovHi"></span><span class="sa" lang="sa" id="ovSa"></span></div>
+      <div class="legend"><span><i style="background:var(--chalk)"></i>Hindi</span><span><i style="background:var(--accent)"></i>Sanskrit</span></div>
+    </div>
+    <dl class="facts">
+      <dt>Aufbau</dt><dd><code id="parts"></code></dd>
+      <dt>Satz</dt><dd id="form"></dd>
+      <dt id="wordDt">Beispiel</dt><dd class="w" id="word"></dd>
+    </dl>
+  </section>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Ansicht">
+      <button type="button" id="vSide" aria-pressed="true">Nebeneinander</button>
+      <button type="button" id="vOver" aria-pressed="false">Übereinander</button>
+    </div>
+    <label class="tog"><input type="checkbox" id="onlyDiff"><span>Nur Unterschiede</span></label>
+    <div class="nav">
+      <button class="btn" type="button" id="prev" aria-label="Vorheriges Zeichen"><svg viewBox="0 0 10 10"><path d="M7 1L2 5l5 4z"/></svg></button>
+      <button class="btn" type="button" id="next" aria-label="Nächstes Zeichen"><svg viewBox="0 0 10 10"><path d="M3 1l5 4-5 4z"/></svg></button>
+    </div>
+  </div>
+  <div class="stat" id="stat"></div>
+
+  <div class="cats" id="cats"></div>
+
+  <section class="text">
+    <h2>Eigener Text</h2>
+    <div class="chips" id="chips"></div>
+    <textarea id="txt" lang="sa" spellcheck="false" aria-label="Text in Devanagari"></textarea>
+    <div class="out">
+      <div class="row"><small>Tiro Devanagari Hindi</small><div class="hi" lang="hi" id="outHi"></div></div>
+      <div class="row rsa"><small>Tiro Devanagari Sanskrit</small><div class="sa" lang="sa" id="outSa"></div></div>
+    </div>
+  </section>
+
+  <section class="how">
+    <h2>Was hier verglichen wird</h2>
+    <p>Eine Ligatur (संयुक्ताक्षर) entsteht, wenn Konsonanten ohne Vokal dazwischen aufeinandertreffen. Im Text steht dafür der Halant <span class="k">्</span>: <span class="k">क + ् + ल</span> ergibt <span class="k">क्ल</span>. Wie das Ergebnis aussieht, entscheidet allein die Schrift.</p>
+    <ul>
+      <li><b>Halbform:</b> der erste Konsonant verliert seinen senkrechten Strich und lehnt sich links an den zweiten. Typisch für Hindi.</li>
+      <li><b>Stapel:</b> der zweite Konsonant hängt unter dem ersten. Typisch für Sanskrit, besonders bei Zeichen ohne senkrechten Strich wie ङ ट ड.</li>
+      <li><b>Halant sichtbar:</b> gibt es weder Halbform noch Ligatur, bleibt der Strich unter dem ersten Zeichen stehen.</li>
+    </ul>
+    <p>Die Markierung „verschieden“ ist nicht geschätzt: Jedes Beispiel wurde vorab mit HarfBuzz in beiden Schriften gesetzt und die Glyphenumrisse verglichen. Der Browser setzt die Zeichen hier live mit denselben Schriften von Google Fonts.</p>
+  </section>
+</main>
+
+<script>
+const DATA = {"sections":[{"id":"formen","title":"Buchstabenformen","note":"Schon einzelne Zeichen unterscheiden sich: Die Sanskrit-Schrift zeichnet ल, श, ऋ und einige Ziffern in der älteren, in Sanskritdrucken üblichen Form.","items":[{"t":"ल","tr":"la","w":"लता","d":1},{"t":"श","tr":"śa","w":"शान्ति","d":1},{"t":"ऋ","tr":"ṛ","w":"ऋषि","d":1},{"t":"ॠ","tr":"ṝ","d":1},{"t":"१","tr":"1","d":1},{"t":"५","tr":"5","d":1},{"t":"८","tr":"8","d":1},{"t":"९","tr":"9","d":1}]},{"id":"stapel","title":"Stapel statt Halbform","note":"Hindi setzt die erste Konsonante meist als Halbform links neben die zweite. Sanskrit stapelt sie häufig übereinander, wie in klassischen Drucken.","items":[{"t":"क्क","tr":"kka","d":1},{"t":"क्त","tr":"kta","w":"भक्ति","d":1},{"t":"क्व","tr":"kva","w":"पक्व","d":1},{"t":"क्ल","tr":"kla","w":"शुक्ल","d":1},{"t":"ग्ज","tr":"gja","d":1},{"t":"ग्ल","tr":"gla","w":"ग्लानि","d":1},{"t":"च्च","tr":"cca","w":"उच्च","d":1},{"t":"प्त","tr":"pta","w":"सप्त","d":1},{"t":"प्ल","tr":"pla","w":"प्लव","d":1},{"t":"ब्ल","tr":"bla","d":1},{"t":"म्ल","tr":"mla","w":"अम्ल","d":1},{"t":"घ्व","tr":"ghva","d":1,"bh":1},{"t":"च्व","tr":"cva","d":1,"bh":1},{"t":"भ्म","tr":"bhma","d":1,"bh":1},{"t":"भ्न","tr":"bhna","d":1,"bh":1},{"t":"न्ग","tr":"nga","d":1,"bh":1}]},{"id":"nasal","title":"ङ und ञ","note":"Vor den Gaumen- und Kehllauten bilden beide Schriften Ligaturen. Bei seltenen Verbindungen zeigt Hindi den Halant (्), Sanskrit stapelt weiter.","items":[{"t":"ङ्क","tr":"ṅka","w":"अङ्क","d":0},{"t":"ङ्ग","tr":"ṅga","w":"गङ्गा","d":0},{"t":"ङ्म","tr":"ṅma","w":"वाङ्मय","d":0},{"t":"ङ्न","tr":"ṅna","d":1,"hh":1},{"t":"ङ्त","tr":"ṅta","d":1,"hh":1},{"t":"ङ्व","tr":"ṅva","d":1,"hh":1},{"t":"ङ्स","tr":"ṅsa","d":1,"hh":1},{"t":"ङ्ह","tr":"ṅha","d":1,"hh":1},{"t":"ञ्ञ","tr":"ñña","d":1,"bh":1},{"t":"ञ्ह","tr":"ñha","d":1,"bh":1}]},{"id":"retro","title":"Retroflexe ट ड","note":"ट und ड haben keine Halbform. Hindi greift deshalb oft zum sichtbaren Halant, die Sanskrit-Schrift hat viel mehr gestapelte Formen.","items":[{"t":"ट्ट","tr":"ṭṭa","w":"पट्ट","d":0},{"t":"ड्ग","tr":"ḍga","w":"खड्ग","d":0},{"t":"ट्म","tr":"ṭma","d":1,"hh":1},{"t":"ट्स","tr":"ṭsa","d":1,"hh":1},{"t":"ट्क","tr":"ṭka","d":0},{"t":"ड्म","tr":"ḍma","d":1,"hh":1},{"t":"ड्द","tr":"ḍda","d":1,"hh":1},{"t":"ड्ब","tr":"ḍba","d":1,"hh":1}]},{"id":"la","title":"Mit ल und श","note":"Hier ist die Bauweise oft gleich, aber die andere Grundform von ल und श zieht sich durch jede Ligatur.","items":[{"t":"ल्क","tr":"lka","w":"उल्का","d":1},{"t":"ल्प","tr":"lpa","w":"कल्प","d":1},{"t":"ल्ल","tr":"lla","w":"पल्लव","d":1},{"t":"ल्म","tr":"lma","w":"गुल्म","d":1},{"t":"ल्य","tr":"lya","w":"कल्याण","d":1},{"t":"ल्व","tr":"lva","w":"बिल्व","d":1},{"t":"श्च","tr":"śca","w":"पश्चात्","d":0},{"t":"श्व","tr":"śva","w":"अश्व","d":0},{"t":"श्ल","tr":"śla","w":"श्लोक","d":1},{"t":"श्न","tr":"śna","w":"प्रश्न","d":0},{"t":"श्म","tr":"śma","d":1},{"t":"श्य","tr":"śya","w":"पश्य","d":1}]},{"id":"vokal","title":"Vokalzeichen unten","vowel":true,"note":"Wie ु ू ृ unter einer Ligatur sitzen, ist in beiden Schriften verschieden gelöst: mal als eigene Ligatur, mal in anderer Form.","items":[{"t":"कू","tr":"kū","w":"कूप","d":1},{"t":"द्रु","tr":"dru","w":"द्रुत","d":1},{"t":"ह्रु","tr":"hru","d":1},{"t":"ह्रू","tr":"hrū","d":1},{"t":"द्दृ","tr":"ddṛ","d":1},{"t":"ह्वू","tr":"hvū","d":1},{"t":"स्दु","tr":"sdu","d":1},{"t":"घ्नु","tr":"ghnu","d":1}]},{"id":"mehr","title":"Drei und mehr","note":"Lange Cluster sind der Härtetest. Die Sanskrit-Schrift fasst sie oft in einem Zeichen zusammen.","items":[{"t":"र्त्स्न्य","tr":"rtsnya","w":"कार्त्स्न्य","d":1,"bh":1},{"t":"ज्ञ्र","tr":"jñra","d":1},{"t":"ड्ढ्य","tr":"ḍḍhya","d":1},{"t":"त्क्व","tr":"tkva","d":1},{"t":"त्प्ल","tr":"tpla","d":1},{"t":"क्त्य","tr":"ktya","d":1},{"t":"ङ्क्ष","tr":"ṅkṣa","d":1},{"t":"न्ह्य","tr":"nhya","d":1}]},{"id":"gleich","title":"In beiden gleich","note":"Die häufigsten Ligaturen sehen in beiden Schriften genau gleich aus.","items":[{"t":"क्ष","tr":"kṣa","w":"क्षमा","d":0},{"t":"ज्ञ","tr":"jña","w":"ज्ञान","d":0},{"t":"त्र","tr":"tra","w":"मित्र","d":0},{"t":"श्र","tr":"śra","w":"श्रम","d":0},{"t":"द्ध","tr":"ddha","w":"बुद्ध","d":0},{"t":"द्व","tr":"dva","w":"द्वार","d":0},{"t":"द्य","tr":"dya","w":"विद्या","d":0},{"t":"द्म","tr":"dma","w":"पद्म","d":0}]}]};
+const H = "्";
+const $ = id => document.getElementById(id);
+const flat = [];
+DATA.sections.forEach(s => s.items.forEach(it => { it.sec = s; flat.push(it); }));
+let cur = 0;
+
+// "ट्म" -> "ट् + म": dead consonants keep their halant, so no dotted circle appears
+function parts(t){
+  const out = [];
+  for (const c of t){ if (c === H && out.length) out[out.length-1] += c; else out.push(c); }
+  return out.join(" + ");
+}
+function formText(it){
+  if (it.sec.vowel || ![...it.t].includes(H)) return it.d ? "andere Glyphenform" : "gleiche Glyphe";
+  const f = (h, b) => h ? "Halant sichtbar" : b ? "Halbform" : "Ligatur";
+  const a = f(it.hh, it.bh), b = f(it.hs, it.bs);
+  if (!it.d) return "in beiden gleich gesetzt";
+  return a === b ? `beide ${a}, aber anders gezeichnet` : `Hindi: ${a} · Sanskrit: ${b}`;
+}
+
+function show(i, focus){
+  cur = (i + flat.length) % flat.length;
+  const it = flat[cur];
+  ["bigHi","bigSa","ovHi","ovSa"].forEach(id => $(id).textContent = it.t);
+  $("tag").textContent = `${it.sec.title} · ${it.tr}`;
+  const c = $("count"); c.textContent = it.d ? "verschieden" : "gleich"; c.classList.toggle("same", !it.d);
+  $("parts").textContent = parts(it.t);
+  $("form").textContent = formText(it);
+  const w = $("word");
+  w.innerHTML = "";
+  $("wordDt").style.display = w.style.display = it.w ? "" : "none";
+  if (it.w){
+    const a = document.createElement("span"); a.className = "hi"; a.lang = "hi"; a.textContent = it.w;
+    const b = document.createElement("span"); b.className = "sa"; b.lang = "sa"; b.textContent = it.w;
+    w.append(a, b);
+  }
+  document.querySelectorAll(".cell").forEach(el => el.setAttribute("aria-pressed", el.dataset.i == cur ? "true" : "false"));
+  if (focus) document.querySelector(`.cell[data-i="${cur}"]`)?.focus({preventScroll:true});
+  try { history.replaceState(null, "", "#" + encodeURIComponent(it.t)); } catch(e){}
+}
+
+function buildCats(){
+  const root = $("cats");
+  let n = 0;
+  DATA.sections.forEach(s => {
+    const sec = document.createElement("section"); sec.className = "cat";
+    const nd = s.items.filter(x => x.d).length;
+    if (!nd) sec.classList.add("empty");
+    sec.innerHTML = `<h2>${s.title} <small>${nd} von ${s.items.length} verschieden</small></h2><p>${s.note}</p>`;
+    const g = document.createElement("div"); g.className = "grid";
+    s.items.forEach(it => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "cell" + (it.d ? " d" : ""); b.dataset.i = n++;
+      b.setAttribute("aria-label", `${it.tr}, ${it.d ? "verschieden" : "gleich"}`);
+      b.innerHTML = `<span class="duo"><span class="hi" lang="hi"></span><span class="sa" lang="sa"></span></span><small></small>`;
+      b.querySelector(".hi").textContent = it.t; b.querySelector(".sa").textContent = it.t;
+      b.querySelector("small").textContent = it.tr;
+      b.addEventListener("click", () => { show(+b.dataset.i); $("board").scrollIntoView({behavior:"smooth", block:"nearest"}); });
+      g.append(b);
+    });
+    sec.append(g); root.append(sec);
+  });
+  const total = flat.filter(x => x.d).length;
+  $("stat").innerHTML = `<b>${total}</b> von <b>${flat.length}</b> Beispielen sehen in den beiden Schriften verschieden aus. Punkt oben rechts = Unterschied.`;
+}
+
+function step(dir){
+  const only = $("onlyDiff").checked;
+  let i = cur;
+  for (let k = 0; k < flat.length; k++){
+    i = (i + dir + flat.length) % flat.length;
+    if (!only || flat[i].d) break;
+  }
+  show(i, true);
+}
+
+function view(ov){
+  $("board").classList.toggle("ov", ov);
+  $("vSide").setAttribute("aria-pressed", !ov); $("vOver").setAttribute("aria-pressed", ov);
+}
+
+const SAMPLES = [
+  {n:"Unterschiede auf einen Blick", t:"शुक्ल पक्व भक्ति उच्च सप्त ग्लानि पल्लव श्लोक द्रुत ऋषि कार्त्स्न्य १५८९"},
+  {n:"Sanskrit · Gītā 2.47", t:"कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥"},
+  {n:"Sanskrit · Ṛgveda 1.1.1", t:"अग्निमीळे पुरोहितं यज्ञस्य देवमृत्विजम् ।\nहोतारं रत्नधातमम् ॥"},
+  {n:"Hindi · Satz", t:"दिल्ली की उल्का-वर्षा देखकर शुक्ल जी ने कहा: यह प्रश्न विद्या का नहीं, कल्पना का है।"},
+];
+function setText(t){ $("txt").value = t; renderText(); }
+function renderText(){ const t = $("txt").value; $("outHi").textContent = t; $("outSa").textContent = t; }
+function buildChips(){
+  SAMPLES.forEach((s, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = s.n;
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b));
+      setText(s.t);
+    });
+    if (i === 0) b.setAttribute("aria-pressed", "true");
+    $("chips").append(b);
+  });
+  $("txt").addEventListener("input", () => { document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false")); renderText(); });
+  setText(SAMPLES[0].t);
+}
+
+buildCats(); buildChips();
+$("vSide").onclick = () => view(false);
+$("vOver").onclick = () => view(true);
+$("prev").onclick = () => step(-1);
+$("next").onclick = () => step(1);
+$("onlyDiff").onchange = e => {
+  $("cats").classList.toggle("only-diff", e.target.checked);
+  if (e.target.checked && !flat[cur].d) step(1);
+};
+document.addEventListener("keydown", e => {
+  if (e.target.closest("textarea,input")) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+});
+let start = flat.findIndex(x => x.t === "क्ल");
+try { const h = decodeURIComponent(location.hash.slice(1)); const j = flat.findIndex(x => x.t === h); if (j >= 0) start = j; } catch(e){}
+show(Math.max(0, start));
+</script>
+</body>
+</html>
