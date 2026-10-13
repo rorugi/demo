@@ -226,7 +226,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <h2>So funktioniert der Pinsel</h2>
     <ul>
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
-      <li><b>Punkte bearbeiten</b>: zeigt die Punkte der Striche des aktuellen Zeichens. Gefüllte Punkte liegen auf der Linie, hohle sind Steuerpunkte der Kurven. Ziehen verschiebt, „Punkt löschen“ entfernt einen Punkt. Die Änderungen gelten für die gewählte Schrift, bleiben in diesem Browser gespeichert und erscheinen auch im Splines-Export; „Änderungen verwerfen“ stellt die Originalstriche wieder her.</li>
+      <li><b>Punkte bearbeiten</b>: zeigt die Punkte der Striche des aktuellen Zeichens. Gefüllte Punkte liegen auf der Linie, hohle sind Steuerpunkte der Kurven. Ziehen verschiebt, „Punkt löschen“ entfernt einen Punkt. Die Änderungen gelten für die gewählte Schrift, bleiben in diesem Browser gespeichert und erscheinen auch im Splines-Export; „Änderungen verwerfen“ stellt die Originalstriche wieder her. Bearbeitete Zeichen tragen in der Auswahl einen kleinen Punkt. Wird ein eingebauter Strich später geändert, gilt die alte Bearbeitung dieses Strichs nicht mehr.</li>
       <li><b>Feder</b>: <i>fest</i> ist die Breitfeder mit Winkel, Breite und Dicke. <i>An die Schrift angepasst</i> misst an jedem Punkt der Mittellinie, wie breit die Schrift dort links und rechts ist, und stellt die Feder quer zum Strich genau so breit. So entsteht das dick und dünn der gewählten Schrift; Winkel und Breite spielen dann keine Rolle. Wo Striche sich kreuzen, werden Ausreißer begrenzt, und am Ende wird die echte Schriftform eingeblendet.</li>
       <li><b>Darstellung</b>: <i>Canvas</i> setzt die Feder Punkt für Punkt auf einen <code>&lt;canvas&gt;</code>. <i>SVG 1</i> zeichnet nur die Mittellinie mit <code>stroke-dashoffset</code>, gleich breit, ohne dick und dünn. <i>SVG 2</i> baut die ganze Federform als SVG und deckt sie mit einer Maske auf; der Strich ist dafür in kurze Stücke geteilt, damit Schleifen nicht zu früh sichtbar werden. Die SVG-Animationen laufen im Browser selbst (Web Animations API).</li>
       <li>Die <b>Schrittweite</b> ist der Abstand der Punkte entlang der Mittellinie, an denen die Feder aufgesetzt wird, in Zeicheneinheiten (die Tafel ist 1200 Einheiten breit) und umgerechnet in Bildschirmpixel. Große Schritte machen die einzelnen Federstellungen sichtbar.</li>
@@ -245,10 +245,20 @@ const DATA = [{"ch": "अ", "tr": "a", "adv": 787, "glyph": "M309 71Q244 71 195.
 // Edited strokes are kept per font and letter in the browser and replace the built-in ones.
 let EDITS={};
 try{ EDITS=JSON.parse(localStorage.getItem("deva-nib-edits")||"{}")||{}; }catch(e){ EDITS={}; }
+// Each edit remembers the built-in strokes it was made on ({base, strokes}). When a built-in stroke is
+// changed later, the old edit of that stroke is no longer applied. Edits from older versions of this page
+// (plain arrays, no base) are moved aside to "deva-nib-edits-old" instead of being applied.
+{ const old={}; for(const k in EDITS) if(Array.isArray(EDITS[k])){ old[k]=EDITS[k]; delete EDITS[k]; }
+  if(Object.keys(old).length) try{ localStorage.setItem("deva-nib-edits-old",JSON.stringify(old)); localStorage.setItem("deva-nib-edits",JSON.stringify(EDITS)); }catch(e){} }
 const saveEdits=()=>{ try{ localStorage.setItem("deva-nib-edits",JSON.stringify(EDITS)); }catch(e){} markEdited(); };
 // One set of strokes for every font; the chosen font only changes the letter shown behind them.
 const editKey = d => d.ch;
-const letter = i => { const d=DATA[i], e=EDITS[editKey(d)]; return e && e.length===d.strokes.length ? {...d, strokes:e, edited:true} : d; };
+const letter = i => {
+  const d=DATA[i], e=EDITS[editKey(d)];
+  if(!e || !e.base || e.base.length!==d.strokes.length || e.strokes.length!==d.strokes.length) return d;
+  const s=d.strokes.map((p,k)=> e.base[k]===p ? e.strokes[k] : p);
+  return s.some((p,k)=>p!==d.strokes[k]) ? {...d, strokes:s, edited:true} : d;
+};
 const NS = "http://www.w3.org/2000/svg";
 const $ = id => document.getElementById(id);
 const svg = $("svg"), board = $("board"), cv = $("cv"), ctx = cv.getContext("2d");
@@ -331,7 +341,7 @@ function build(){
   });
   pen=el("line",{class:"pen-nib"},svg);
   editG=el("g",{class:"edit"},svg); if(editing) drawEdit();
-  $("tag").textContent=`${d.ch} · ${d.tr}`;
+  $("tag").textContent=`${d.ch} · ${d.tr}`+(d.edited?" · bearbeitet":"");
   $("stepsTitle").textContent=`Striche für ${d.ch}`;
   $("steps").innerHTML=d.notes.map(n=>`<li>${n}</li>`).join("");
   showSplines();
@@ -852,7 +862,7 @@ function edApply(i){
   st.fit=null;
 }
 function edSave(){
-  const d=letter(cur); EDITS[editKey(d)]=strokes.map((s,i)=>edRaw(i)); saveEdits(); showSplines(); edMsg("Gespeichert (nur in diesem Browser).");
+  const d=letter(cur); EDITS[editKey(d)]={base:DATA[cur].strokes.slice(), strokes:strokes.map((s,i)=>edRaw(i))}; saveEdits(); showSplines(); edMsg("Gespeichert (nur in diesem Browser).");
 }
 const edMsg=t=>{ $("editMsg").textContent=t; clearTimeout(edMsg.tm); edMsg.tm=setTimeout(()=>{ $("editMsg").textContent=""; },2500); };
 function edPoints(){
