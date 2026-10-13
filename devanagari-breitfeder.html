@@ -26,7 +26,8 @@
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
-.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:22px}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.pick{min-width:0}
 header{display:grid;gap:4px}
 .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
@@ -81,6 +82,8 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
 .fontsel select{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px;max-width:100%}
 .fontsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fontsel{flex-wrap:wrap;max-width:100%;min-width:0}
+.fontsel select{min-width:0;flex:1 1 160px}
 .fontmsg{font-size:12px;color:var(--muted)}
 #editBtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .editbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 12px;border:1px solid var(--accent);border-radius:12px;background:var(--accent-soft)}
@@ -94,6 +97,10 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .ed-pt.anchor .vis{fill:var(--accent)}
 .ed-pt.sel .vis{fill:#e2685a;stroke:#fff}
 .ed-pt .hit{fill:transparent}
+.ptype{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ptype-l{font-size:13px;color:var(--muted)}
+.ptype .btn[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ptype .btn:disabled{opacity:.45}
 .fitglyph{fill:var(--chalk);opacity:0;transition:opacity .7s ease;pointer-events:none}
 .fitglyph.on{opacity:1}
 /* Sanskrit 2020 (SIL OFL, Omkarananda Ashram): installed copy first, else the file next to this page */
@@ -167,7 +174,14 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <button class="btn" id="editBtn" type="button" aria-pressed="false">Punkte bearbeiten</button>
   </div>
   <div class="editbar" id="editBar" hidden>
-    <span class="edithint">Punkte ziehen zum Verschieben. Einen Punkt antippen, dann „Punkt löschen“ oder die Entf-Taste. Gefüllt: Punkte auf der Linie; hohl: Steuerpunkte. Zwei Finger: auseinanderziehen zum Vergrößern, gemeinsam bewegen zum Verschieben (am Trackpad genauso, mit der Maus Strg + Rad).</span>
+    <span class="edithint">Punkte ziehen zum Verschieben. Einen Punkt antippen, dann „Punkt löschen“ oder die Entf-Taste, oder die Punktart wählen. Gefüllt: Punkte auf der Linie; hohl: Steuerpunkte. Zwei Finger: auseinanderziehen zum Vergrößern, gemeinsam bewegen zum Verschieben (am Trackpad genauso, mit der Maus Strg + Rad).</span>
+    <span class="ptype" id="ptype" role="group" aria-label="Punktart">
+      <span class="ptype-l">Punktart</span>
+      <button class="btn" type="button" data-t="corner" disabled title="Nur Punkt, ohne Steuerpunkte: hier entsteht eine Ecke">Punkt</button>
+      <button class="btn" type="button" data-t="one" disabled title="Ein Steuerpunkt, nur auf einer Seite">1 Griff</button>
+      <button class="btn" type="button" data-t="sym" disabled title="Zwei Steuerpunkte in einer Linie und gleich lang; bewegt sich einer, folgt der andere">2 Griffe symmetrisch</button>
+      <button class="btn" type="button" data-t="free" disabled title="Zwei Steuerpunkte, unabhängig voneinander">2 Griffe frei</button>
+    </span>
     <button class="btn" id="delPt" type="button" disabled>Punkt löschen</button>
     <button class="btn" id="discardEd" type="button">Änderungen verwerfen</button>
     <button class="btn" id="zoomIn" type="button" aria-label="Vergrößern">+</button>
@@ -226,7 +240,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <h2>So funktioniert der Pinsel</h2>
     <ul>
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
-      <li><b>Punkte bearbeiten</b>: zeigt die Punkte der Striche des aktuellen Zeichens. Gefüllte Punkte liegen auf der Linie, hohle sind Steuerpunkte der Kurven. Ziehen verschiebt, „Punkt löschen“ entfernt einen Punkt. Die Änderungen gelten für die gewählte Schrift, bleiben in diesem Browser gespeichert und erscheinen auch im Splines-Export; „Änderungen verwerfen“ stellt die Originalstriche wieder her. Bearbeitete Zeichen tragen in der Auswahl einen kleinen Punkt. Wird ein eingebauter Strich später geändert, gilt die alte Bearbeitung dieses Strichs nicht mehr.</li>
+      <li><b>Punkte bearbeiten</b>: zeigt die Punkte der Striche des aktuellen Zeichens. Gefüllte Punkte liegen auf der Linie, hohle sind Steuerpunkte der Kurven. Ziehen verschiebt, „Punkt löschen“ entfernt einen Punkt. Die Punktart legt fest, welche Steuerpunkte ein Punkt hat: „Punkt“ ohne Steuerpunkte (eckig gezeichnet, hier entsteht eine Ecke), „1 Griff“ nur auf einer Seite, „2 Griffe symmetrisch“ in einer Linie und gleich lang, sodass der Strich glatt durchläuft, „2 Griffe frei“ unabhängig voneinander. Die Änderungen gelten für die gewählte Schrift, bleiben in diesem Browser gespeichert und erscheinen auch im Splines-Export; „Änderungen verwerfen“ stellt die Originalstriche wieder her. Bearbeitete Zeichen tragen in der Auswahl einen kleinen Punkt. Wird ein eingebauter Strich später geändert, gilt die alte Bearbeitung dieses Strichs nicht mehr.</li>
       <li><b>Feder</b>: <i>fest</i> ist die Breitfeder mit Winkel, Breite und Dicke. <i>An die Schrift angepasst</i> misst an jedem Punkt der Mittellinie, wie breit die Schrift dort links und rechts ist, und stellt die Feder quer zum Strich genau so breit. So entsteht das dick und dünn der gewählten Schrift; Winkel und Breite spielen dann keine Rolle. Wo Striche sich kreuzen, werden Ausreißer begrenzt, und am Ende wird die echte Schriftform eingeblendet.</li>
       <li><b>Darstellung</b>: <i>Canvas</i> setzt die Feder Punkt für Punkt auf einen <code>&lt;canvas&gt;</code>. <i>SVG 1</i> zeichnet nur die Mittellinie mit <code>stroke-dashoffset</code>, gleich breit, ohne dick und dünn. <i>SVG 2</i> baut die ganze Federform als SVG und deckt sie mit einer Maske auf; der Strich ist dafür in kurze Stücke geteilt, damit Schleifen nicht zu früh sichtbar werden. Die SVG-Animationen laufen im Browser selbst (Web Animations API).</li>
       <li>Die <b>Schrittweite</b> ist der Abstand der Punkte entlang der Mittellinie, an denen die Feder aufgesetzt wird, in Zeicheneinheiten (die Tafel ist 1200 Einheiten breit) und umgerechnet in Bildschirmpixel. Große Schritte machen die einzelnen Federstellungen sichtbar.</li>
@@ -847,12 +861,84 @@ function parsePath(d){
 const r1=v=>Math.round(v);
 const pathStr=segs=>segs.map(s=>s.t==="C"?`C${r1(s.c1[0])} ${r1(s.c1[1])} ${r1(s.c2[0])} ${r1(s.c2[1])} ${r1(s.p[0])} ${r1(s.p[1])}`:`${s.t}${r1(s.p[0])} ${r1(s.p[1])}`).join(" ");
 let edSegs=[];   // per stroke: segments, or {dot:[cx,cy,len]}
+let edTypes=[];  // per stroke: point type of each anchor (see below), null for dots
 function edLoad(){
   edSegs=strokes.map(st=>{
     if(st.dot){ const [cx,cy,len]=st.raw.trim().split(/\s+/).slice(1).map(Number); return {dot:[cx,cy,len]}; }
     return parsePath(st.path);
   });
+  // point types chosen earlier are kept with the edit; otherwise they are read off the handles
+  const e=EDITS[editKey(DATA[cur])];
+  edTypes=edSegs.map((segs,i)=>{
+    if(segs.dot) return null;
+    const saved=e&&e.types&&e.types[i]&&e.strokes[i]===strokes[i].path&&e.types[i].length===segs.length?e.types[i]:null;
+    return segs.map((_,k)=>saved&&saved[k]?saved[k]:edTypeOf(segs,k));
+  });
 }
+/* Point types of an anchor:
+   "corner" just a point, no handles (a corner or a straight join),
+   "one"    one handle, on one side only,
+   "sym"    two handles in one line and of equal length (dragging one moves the other),
+   "free"   two independent handles.
+   The first and last point of a stroke have only one side, so they can be "corner" or "one". */
+const same=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<0.5;
+function edHandles(segs,k){
+  const s=segs[k], n=segs[k+1];
+  return { inn: s.t==="C"&&!same(s.c2,s.p)?s.c2:null, out: n&&n.t==="C"&&!same(n.c1,s.p)?n.c1:null };
+}
+function edTypeOf(segs,k){
+  const {inn,out}=edHandles(segs,k), p=segs[k].p;
+  if(!inn&&!out) return "corner";
+  if(!inn||!out) return "one";
+  const a=[inn[0]-p[0],inn[1]-p[1]], b=[out[0]-p[0],out[1]-p[1]], la=Math.hypot(...a), lb=Math.hypot(...b);
+  const opp=-(a[0]*b[0]+a[1]*b[1])/(la*lb);
+  return opp>0.998&&Math.abs(la-lb)<=Math.max(3,0.04*(la+lb)) ? "sym" : "free";
+}
+// a curve whose two handles both sit on their points is a straight line again
+function edStraighten(segs,k){ const s=segs[k]; if(s&&s.t==="C"&&same(s.c1,segs[k-1].p)&&same(s.c2,s.p)){ segs[k]={t:"L",p:s.p}; } }
+// set (or with pt=null remove) the handle of anchor k on side "in" (towards the previous point) or "out"
+function edSetHandle(segs,k,side,pt){
+  if(side==="in"){
+    const s=segs[k]; if(k===0) return;
+    if(s.t==="L"){ if(!pt) return; segs[k]={t:"C",c1:[...segs[k-1].p],c2:pt,p:s.p}; }
+    else s.c2=pt?pt:[...s.p];
+    edStraighten(segs,k);
+  } else {
+    const n=segs[k+1]; if(!n) return;
+    if(n.t==="L"){ if(!pt) return; segs[k+1]={t:"C",c1:pt,c2:[...n.p],p:n.p}; }
+    else n.c1=pt?pt:[...segs[k].p];
+    edStraighten(segs,k+1);
+  }
+}
+function edSetType(i,k,type,keepSide){
+  const segs=edSegs[i]; if(!segs||segs.dot) return;
+  const last=k===segs.length-1, p=segs[k].p, prev=k>0?segs[k-1].p:null, next=!last?segs[k+1].p:null;
+  if((k===0||last)&&(type==="sym"||type==="free")) return;
+  const {inn,out}=edHandles(segs,k);
+  const unit=v=>{ const l=Math.hypot(v[0],v[1])||1; return [v[0]/l,v[1]/l]; };
+  // default direction: along the line from the previous to the next point
+  const tan=unit(prev&&next?[next[0]-prev[0],next[1]-prev[1]]:next?[next[0]-p[0],next[1]-p[1]]:[p[0]-prev[0],p[1]-prev[1]]);
+  const lin=prev?Math.hypot(p[0]-prev[0],p[1]-prev[1])/3:0, lout=next?Math.hypot(next[0]-p[0],next[1]-p[1])/3:0;
+  const at=(d,l)=>[p[0]+d[0]*l,p[1]+d[1]*l];
+  if(type==="corner"){ edSetHandle(segs,k,"in",null); edSetHandle(segs,k,"out",null); }
+  else if(type==="one"){
+    let side=keepSide||(out?"out":inn?"in":(last?"in":"out"));
+    if(side==="in"&&k===0) side="out"; if(side==="out"&&last) side="in";
+    const h=side==="in"?(inn||at([-tan[0],-tan[1]],lin)):(out||at(tan,lout));
+    edSetHandle(segs,k,side,[...h]); edSetHandle(segs,k,side==="in"?"out":"in",null);
+  } else {
+    let d=tan;
+    if(inn&&out) d=unit([out[0]-inn[0],out[1]-inn[1]]);
+    else if(out) d=unit([out[0]-p[0],out[1]-p[1]]);
+    else if(inn) d=unit([p[0]-inn[0],p[1]-inn[1]]);
+    const li=inn?Math.hypot(inn[0]-p[0],inn[1]-p[1]):lin, lo=out?Math.hypot(out[0]-p[0],out[1]-p[1]):lout;
+    if(type==="sym"){ const l=(inn&&out)?(li+lo)/2:(inn?li:out?lo:(lin+lout)/2); edSetHandle(segs,k,"in",at([-d[0],-d[1]],l)); edSetHandle(segs,k,"out",at(d,l)); }
+    else { edSetHandle(segs,k,"in",inn?[...inn]:at([-d[0],-d[1]],li)); edSetHandle(segs,k,"out",out?[...out]:at(d,lo)); }
+  }
+  edTypes[i][k]=type;
+}
+// the anchor a selected point belongs to: a handle c1 of segment k belongs to point k-1, c2 to point k
+const edAnchorOf=s=>s&&s.w!=="dot"?{i:s.i,k:s.w==="c1"?s.k-1:s.k,side:s.w==="c1"?"out":s.w==="c2"?"in":null}:null;
 function edRaw(i){ const s=edSegs[i]; return s.dot?`DOT ${r1(s.dot[0])} ${r1(s.dot[1])} ${s.dot[2]}`:pathStr(s); }
 // Rebuild one stroke after an edit: geometry, samples, fitted nib
 function edApply(i){
@@ -862,7 +948,7 @@ function edApply(i){
   st.fit=null;
 }
 function edSave(){
-  const d=letter(cur); EDITS[editKey(d)]={base:DATA[cur].strokes.slice(), strokes:strokes.map((s,i)=>edRaw(i))}; saveEdits(); showSplines(); edMsg("Gespeichert (nur in diesem Browser).");
+  const d=letter(cur); EDITS[editKey(d)]={base:DATA[cur].strokes.slice(), strokes:strokes.map((s,i)=>edRaw(i)), types:edTypes}; saveEdits(); showSplines(); edMsg("Gespeichert (nur in diesem Browser).");
 }
 const edMsg=t=>{ $("editMsg").textContent=t; clearTimeout(edMsg.tm); edMsg.tm=setTimeout(()=>{ $("editMsg").textContent=""; },2500); };
 function edPoints(){
@@ -870,8 +956,8 @@ function edPoints(){
   edSegs.forEach((segs,i)=>{
     if(segs.dot){ out.push({i,k:0,w:"dot",p:segs.dot,anchor:true}); return; }
     segs.forEach((s,k)=>{
-      if(s.t==="C"){ out.push({i,k,w:"c1",p:s.c1,from:segs[k-1].p}); out.push({i,k,w:"c2",p:s.c2,from:s.p}); }
-      out.push({i,k,w:"p",p:s.p,anchor:true});
+      if(s.t==="C"){ if(!same(s.c1,segs[k-1].p)) out.push({i,k,w:"c1",p:s.c1,from:segs[k-1].p}); if(!same(s.c2,s.p)) out.push({i,k,w:"c2",p:s.c2,from:s.p}); }
+      out.push({i,k,w:"p",p:s.p,anchor:true,corner:edTypes[i]&&edTypes[i][k]==="corner"});
     });
   });
   return out;
@@ -884,11 +970,18 @@ function drawEdit(){
     const sel=edSel&&edSel.i===q.i&&edSel.k===q.k&&edSel.w===q.w;
     const g=el("g",{class:"ed-pt"+(q.anchor?" anchor":"")+(sel?" sel":"")},editG);
     const z=view.w/VB_W;
-    el("circle",{cx:q.p[0],cy:q.p[1],r:(q.anchor?17:13)*z,class:"vis","stroke-width":5*z},g);
+    if(q.corner){ const r=15*z; el("rect",{x:q.p[0]-r,y:q.p[1]-r,width:2*r,height:2*r,class:"vis","stroke-width":5*z},g); }
+    else el("circle",{cx:q.p[0],cy:q.p[1],r:(q.anchor?17:13)*z,class:"vis","stroke-width":5*z},g);
     el("circle",{cx:q.p[0],cy:q.p[1],r:46*z,class:"hit"},g);
 
   });
   $("delPt").disabled=!edSel;
+  // point type buttons for the selected point (or the point a selected handle belongs to)
+  const a=edAnchorOf(edSel), segs=a&&edSegs[a.i], ok=segs&&!segs.dot&&a.k>=0;
+  const end=ok&&(a.k===0||a.k===segs.length-1), ty=ok?edTypes[a.i][a.k]:null;
+  document.querySelectorAll("#ptype [data-t]").forEach(b=>{
+    const t=b.dataset.t; b.disabled=!ok||(end&&(t==="sym"||t==="free")); b.setAttribute("aria-pressed",ok&&ty===t);
+  });
 }
 function svgPoint(e){ return toBoard(e.clientX,e.clientY); }
 function edDown(e,q){
@@ -910,7 +1003,14 @@ svg.addEventListener("pointermove",e=>{
       if(s.t==="C"){ s.c2[0]+=ox; s.c2[1]+=oy; }
       const n=segs[q.k+1]; if(n&&n.t==="C"){ n.c1[0]+=ox; n.c1[1]+=oy; }
       s.p[0]=nx; s.p[1]=ny;
-    } else { s[q.w][0]=nx; s[q.w][1]=ny; }
+    } else {
+      s[q.w][0]=nx; s[q.w][1]=ny;
+      const a=edAnchorOf(q);
+      if(edTypes[q.i][a.k]==="sym"){
+        const P=segs[a.k].p, o=a.side==="in"?segs[a.k+1]:segs[a.k], key=a.side==="in"?"c1":"c2";
+        if(o&&o.t==="C"){ o[key]=[2*P[0]-nx,2*P[1]-ny]; }
+      }
+    }
   }
   edDrag.moved=true; edApply(q.i); render(); drawEdit();
 });
@@ -934,8 +1034,16 @@ function edDelete(){
       segs.splice(k,2,m);
     }
   }
+  edTypes[i]=segs.map((_,k)=>edTypeOf(segs,k));
   edSel=null; edApply(i); render(); drawEdit(); edSave();
 }
+document.querySelectorAll("#ptype [data-t]").forEach(b=>b.addEventListener("click",()=>{
+  const a=edAnchorOf(edSel); if(!a||a.k<0) return;
+  edSetType(a.i,a.k,b.dataset.t,a.side);
+  // keep the selection on the point itself: a removed handle can no longer be selected
+  edSel={i:a.i,k:a.k,w:"p"};
+  edApply(a.i); render(); drawEdit(); edSave();
+}));
 /* ---------- Zoom and pan while editing ----------
    Two fingers: pinch to zoom, move both to scroll. Trackpad or mouse: scroll to pan, pinch (or Ctrl + wheel) to zoom. */
 function setView(x,y,w){
