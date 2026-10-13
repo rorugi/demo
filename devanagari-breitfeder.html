@@ -34,9 +34,22 @@ h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text
 h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .lede{margin:0;color:var(--muted);max-width:60ch}
 
-.picker{display:grid;gap:5px}
+/* Picker: three groups. Phone: stacked, seven columns. Desktop: vowels on top, the 25 stops and the
+   other 12 signs side by side below, with smaller buttons. */
+.picker{display:grid;gap:10px}
+.pick-group{display:grid;gap:5px;align-content:start}
 .pick-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
-.pick-row.gap{margin-top:8px}
+.pick-group.rest{gap:10px}
+.pick-group.rest .pick-sub{display:grid;gap:5px}
+@media (min-width:640px){
+  .picker{grid-template-columns:auto auto;justify-content:start;column-gap:24px}
+  .pick-group.vowels{grid-column:1 / -1}
+  .pick-group.vowels .pick-row{grid-template-columns:repeat(7,52px)}
+  .pick-group.stops .pick-row{grid-template-columns:repeat(5,52px)}
+  .pick-group.rest .pick-row{grid-template-columns:repeat(4,52px)}
+  .pick{padding:5px 0 4px;border-radius:8px}
+  .pick span{font-size:11px}
+}
 .pick.ed::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .pick{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:10px;
   padding:8px 0 6px;cursor:pointer;display:grid;position:relative;justify-items:center;gap:0;font:inherit;transition:border-color .15s,background .15s}
@@ -298,10 +311,13 @@ const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).
 // Picker rows: vowels in two lines, each group of five stop consonants (varga) in its own line,
 // then the semivowels, the sibilants with ha, and the combined signs.
 const ROWS=["अ आ इ ई उ ऊ ऋ","ॠ ऌ ॡ ए ऐ ओ औ","क ख ग घ ङ","च छ ज झ ञ","ट ठ ड ढ ण","त थ द ध न","प फ ब भ म","य र ल व","श ष स ह"].map(r=>r.split(" "));
-const GAP_BEFORE=new Set([2,7]);   // a little space between vowels, stops and the rest
 { const used=new Set(), rows=[...ROWS, DATA.map(d=>d.ch).filter(c=>!ROWS.flat().includes(c))];
+  const grp=cls=>{ const g=document.createElement("div"); g.className="pick-group "+cls; $("picker").appendChild(g); return g; };
+  const gV=grp("vowels"), gS=grp("stops"), gR=grp("rest"), sub=[0,1].map(()=>{ const s=document.createElement("div"); s.className="pick-sub"; gR.appendChild(s); return s; });
+  // rows 0–1 vowels, 2–6 stops, 7–8 semivowels and sibilants, then the combined signs
+  const home=k=>k<2?gV:k<7?gS:k<9?sub[0]:sub[1];
   rows.forEach((r,k)=>{
-    const row=document.createElement("div"); row.className="pick-row"+(GAP_BEFORE.has(k)||k===rows.length-1?" gap":"");
+    const row=document.createElement("div"); row.className="pick-row";
     r.forEach(ch=>{
       const i=DATA.findIndex(d=>d.ch===ch); if(i<0||used.has(i)) return; used.add(i);
       const d=DATA[i], b=document.createElement("button");
@@ -310,7 +326,7 @@ const GAP_BEFORE=new Set([2,7]);   // a little space between vowels, stops and t
       b.addEventListener("click",()=>select(i,true));
       row.appendChild(b);
     });
-    if(row.children.length) $("picker").appendChild(row);
+    if(row.children.length) home(k).appendChild(row);
   });
 }
 // a small dot on letters whose strokes were changed in the editor
