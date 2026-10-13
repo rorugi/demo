@@ -182,6 +182,10 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <button class="btn" type="button" data-t="sym" disabled title="Zwei Steuerpunkte in einer Linie und gleich lang; bewegt sich einer, folgt der andere">2 Griffe symmetrisch</button>
       <button class="btn" type="button" data-t="free" disabled title="Zwei Steuerpunkte, unabhängig voneinander">2 Griffe frei</button>
     </span>
+    <span class="ptype" role="group" aria-label="Glätten">
+      <button class="btn" id="smoothPt" type="button" disabled title="Die Steuerpunkte dieses Punktes in eine Linie bringen, entlang der Richtung vom vorigen zum nächsten Punkt">Punkt glätten</button>
+      <button class="btn" id="smoothSt" type="button" disabled title="Alle Punkte dieses Strichs glätten, die zwischen zwei Bögen liegen; Ecken und gerade Stücke bleiben">Strich glätten</button>
+    </span>
     <button class="btn" id="delPt" type="button" disabled>Punkt löschen</button>
     <button class="btn" id="discardEd" type="button">Änderungen verwerfen</button>
     <button class="btn" id="zoomIn" type="button" aria-label="Vergrößern">+</button>
@@ -240,7 +244,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <h2>So funktioniert der Pinsel</h2>
     <ul>
       <li>Jeder Strich ist eine Mittellinie als SVG-Pfad. Mit <code>getPointAtLength()</code> wird sie in kleine Schritte zerlegt.</li>
-      <li><b>Punkte bearbeiten</b>: zeigt die Punkte der Striche des aktuellen Zeichens. Gefüllte Punkte liegen auf der Linie, hohle sind Steuerpunkte der Kurven. Ziehen verschiebt, „Punkt löschen“ entfernt einen Punkt. Die Punktart legt fest, welche Steuerpunkte ein Punkt hat: „Punkt“ ohne Steuerpunkte (eckig gezeichnet, hier entsteht eine Ecke), „1 Griff“ nur auf einer Seite, „2 Griffe symmetrisch“ in einer Linie und gleich lang, sodass der Strich glatt durchläuft, „2 Griffe frei“ unabhängig voneinander. Die Änderungen gelten für die gewählte Schrift, bleiben in diesem Browser gespeichert und erscheinen auch im Splines-Export; „Änderungen verwerfen“ stellt die Originalstriche wieder her. Bearbeitete Zeichen tragen in der Auswahl einen kleinen Punkt. Wird ein eingebauter Strich später geändert, gilt die alte Bearbeitung dieses Strichs nicht mehr.</li>
+      <li><b>Punkte bearbeiten</b>: zeigt die Punkte der Striche des aktuellen Zeichens. Gefüllte Punkte liegen auf der Linie, hohle sind Steuerpunkte der Kurven. Ziehen verschiebt, „Punkt löschen“ entfernt einen Punkt. Die Punktart legt fest, welche Steuerpunkte ein Punkt hat: „Punkt“ ohne Steuerpunkte (eckig gezeichnet, hier entsteht eine Ecke), „1 Griff“ nur auf einer Seite, „2 Griffe symmetrisch“ in einer Linie und gleich lang, sodass der Strich glatt durchläuft, „2 Griffe frei“ unabhängig voneinander. „Punkt glätten“ legt die Steuerpunkte des gewählten Punktes in eine Linie, entlang der Richtung vom vorigen zum nächsten Punkt, sodass die Linie dort ohne Knick durchläuft; „Strich glätten“ macht das für alle Punkte des Strichs, die zwischen zwei Bögen liegen; Ecken und gerade Stücke bleiben. Die Punkte selbst bleiben an ihrem Platz. Die Änderungen gelten für die gewählte Schrift, bleiben in diesem Browser gespeichert und erscheinen auch im Splines-Export; „Änderungen verwerfen“ stellt die Originalstriche wieder her. Bearbeitete Zeichen tragen in der Auswahl einen kleinen Punkt. Wird ein eingebauter Strich später geändert, gilt die alte Bearbeitung dieses Strichs nicht mehr.</li>
       <li><b>Feder</b>: <i>fest</i> ist die Breitfeder mit Winkel, Breite und Dicke. <i>An die Schrift angepasst</i> misst an jedem Punkt der Mittellinie, wie breit die Schrift dort links und rechts ist, und stellt die Feder quer zum Strich genau so breit. So entsteht das dick und dünn der gewählten Schrift; Winkel und Breite spielen dann keine Rolle. Wo Striche sich kreuzen, werden Ausreißer begrenzt, und am Ende wird die echte Schriftform eingeblendet.</li>
       <li><b>Darstellung</b>: <i>Canvas</i> setzt die Feder Punkt für Punkt auf einen <code>&lt;canvas&gt;</code>. <i>SVG 1</i> zeichnet nur die Mittellinie mit <code>stroke-dashoffset</code>, gleich breit, ohne dick und dünn. <i>SVG 2</i> baut die ganze Federform als SVG und deckt sie mit einer Maske auf; der Strich ist dafür in kurze Stücke geteilt, damit Schleifen nicht zu früh sichtbar werden. Die SVG-Animationen laufen im Browser selbst (Web Animations API).</li>
       <li>Die <b>Schrittweite</b> ist der Abstand der Punkte entlang der Mittellinie, an denen die Feder aufgesetzt wird, in Zeicheneinheiten (die Tafel ist 1200 Einheiten breit) und umgerechnet in Bildschirmpixel. Große Schritte machen die einzelnen Federstellungen sichtbar.</li>
@@ -937,6 +941,19 @@ function edSetType(i,k,type,keepSide){
   }
   edTypes[i][k]=type;
 }
+/* Smoothing: the handles of a point are laid along the line from the previous to the next point,
+   each a third as long as its segment (a Catmull-Rom style curve through the same points).
+   The points themselves stay where they are. Start and end points and corner points are left alone. */
+function edSmooth(i,k){
+  const segs=edSegs[i]; if(!segs||segs.dot||k<=0||k>=segs.length-1) return false;
+  const p=segs[k].p, a=segs[k-1].p, b=segs[k+1].p;
+  const dx=b[0]-a[0], dy=b[1]-a[1], l=Math.hypot(dx,dy); if(l<1) return false;
+  const u=[dx/l,dy/l], li=Math.hypot(p[0]-a[0],p[1]-a[1])/3, lo=Math.hypot(b[0]-p[0],b[1]-p[1])/3;
+  edSetHandle(segs,k,"in",[p[0]-u[0]*li,p[1]-u[1]*li]);
+  edSetHandle(segs,k,"out",[p[0]+u[0]*lo,p[1]+u[1]*lo]);
+  edTypes[i][k]=edTypeOf(segs,k);
+  return true;
+}
 // the anchor a selected point belongs to: a handle c1 of segment k belongs to point k-1, c2 to point k
 const edAnchorOf=s=>s&&s.w!=="dot"?{i:s.i,k:s.w==="c1"?s.k-1:s.k,side:s.w==="c1"?"out":s.w==="c2"?"in":null}:null;
 function edRaw(i){ const s=edSegs[i]; return s.dot?`DOT ${r1(s.dot[0])} ${r1(s.dot[1])} ${s.dot[2]}`:pathStr(s); }
@@ -979,6 +996,7 @@ function drawEdit(){
   // point type buttons for the selected point (or the point a selected handle belongs to)
   const a=edAnchorOf(edSel), segs=a&&edSegs[a.i], ok=segs&&!segs.dot&&a.k>=0;
   const end=ok&&(a.k===0||a.k===segs.length-1), ty=ok?edTypes[a.i][a.k]:null;
+  $("smoothPt").disabled=!ok||end; $("smoothSt").disabled=!ok||segs.length<3;
   document.querySelectorAll("#ptype [data-t]").forEach(b=>{
     const t=b.dataset.t; b.disabled=!ok||(end&&(t==="sym"||t==="free")); b.setAttribute("aria-pressed",ok&&ty===t);
   });
@@ -1037,6 +1055,19 @@ function edDelete(){
   edTypes[i]=segs.map((_,k)=>edTypeOf(segs,k));
   edSel=null; edApply(i); render(); drawEdit(); edSave();
 }
+$("smoothPt").onclick=()=>{
+  const a=edAnchorOf(edSel); if(!a||a.k<0) return;
+  if(!edSmooth(a.i,a.k)){ edMsg("Anfangs- und Endpunkte haben nur eine Seite."); return; }
+  edSel={i:a.i,k:a.k,w:"p"}; edApply(a.i); render(); drawEdit(); edSave();
+};
+$("smoothSt").onclick=()=>{
+  const a=edAnchorOf(edSel); if(!a) return; const segs=edSegs[a.i]; if(!segs||segs.dot) return;
+  // only points between two curves: straight pieces and their joins stay as they are
+  const cand=[]; for(let k=1;k<segs.length-1;k++) if(edTypes[a.i][k]!=="corner" && segs[k].t==="C" && segs[k+1].t==="C") cand.push(k);
+  let n=0; cand.forEach(k=>{ if(edSmooth(a.i,k)) n++; });
+  edSel=a.k>=0?{i:a.i,k:a.k,w:"p"}:null; edApply(a.i); render(); drawEdit(); edSave();
+  edMsg(n?`${n} Punkte geglättet. Ecken und gerade Stücke bleiben.`:"Nichts zu glätten: der Strich hat keine Punkte zwischen zwei Bögen.");
+};
 document.querySelectorAll("#ptype [data-t]").forEach(b=>b.addEventListener("click",()=>{
   const a=edAnchorOf(edSel); if(!a||a.k<0) return;
   edSetType(a.i,a.k,b.dataset.t,a.side);
