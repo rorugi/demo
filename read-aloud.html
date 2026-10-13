@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Read Aloud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one centered working column — text sheet on top, a "transport deck" of controls below */
+:root {
+  --bg: #eef1f4;
+  --sheet: #ffffff;
+  --fg: #16202b;
+  --muted: #5b6878;
+  --line: #d3dae2;
+  --accent: #1f5fbf;
+  --accent-fg: #ffffff;
+  --mark: #ffe08a;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151c; --sheet: #17202a; --fg: #e6ebf1; --muted: #93a0b0;
+    --line: #2a3644; --accent: #6ea2f2; --accent-fg: #0b1420; --mark: #6b5a1c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151c; --sheet: #17202a; --fg: #e6ebf1; --muted: #93a0b0;
+  --line: #2a3644; --accent: #6ea2f2; --accent-fg: #0b1420; --mark: #6b5a1c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: 1rem; line-height: 1.5;
+  padding: 0 16px;
+}
+.wrap { max-width: 44rem; margin: 0 auto; padding-block: 2rem 3rem; display: grid; gap: 1.25rem; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(1.8rem, 5vw, 2.4rem); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.status { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+.dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--line); }
+.status[data-state="speaking"] .dot { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+.status[data-state="paused"] .dot { background: var(--muted); }
+@keyframes pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .status[data-state="speaking"] .dot { animation: none; } }
+
+.sheet { background: var(--sheet); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+textarea {
+  display: block; width: 100%; min-height: 14rem; resize: vertical;
+  border: 0; outline: none; background: transparent; color: var(--fg);
+  font: 1.125rem/1.65 var(--body); padding: 1.25rem;
+}
+.reader { padding: 1.25rem; font-size: 1.125rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 14rem; }
+.reader mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 1px; }
+.sheet-foot { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 1.25rem; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.linkish { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 0; }
+
+.deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
+label, .lbl { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.35rem; }
+select {
+  width: 100%; font: 1rem var(--body); color: var(--fg); background: var(--sheet);
+  border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 0.75rem;
+}
+.range-row { display: flex; align-items: center; gap: 0.75rem; }
+input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 0; }
+.val { font-variant-numeric: tabular-nums; min-width: 3.2ch; text-align: right; font-size: 0.9rem; }
+
+.transport { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+button.btn {
+  font: 700 1rem var(--body); border-radius: 999px; padding: 0.75rem 1.4rem; cursor: pointer;
+  border: 1px solid var(--line); background: var(--sheet); color: var(--fg);
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+button.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); flex: 1; justify-content: center; min-width: 9rem; }
+button.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn svg { width: 1rem; height: 1rem; fill: currentColor; }
+.note { font-size: 0.85rem; color: var(--muted); margin: 0; }
+.note[data-kind="warn"] { color: var(--fg); background: var(--mark); padding: 0.6rem 0.8rem; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Read Aloud</h1>
+    <div class="status" id="status" data-state="idle"><span class="dot"></span><span id="statusText">Ready</span></div>
+  </header>
+
+  <div class="sheet">
+    <textarea id="text" aria-label="Text to read" placeholder="Paste or type text here…"></textarea>
+    <div class="reader" id="reader" hidden aria-live="off"></div>
+    <div class="sheet-foot">
+      <span id="count">0 words</span>
+      <span><button class="linkish" id="paste" type="button">Clear</button></span>
+    </div>
+  </div>
+
+  <div class="deck">
+    <div>
+      <label for="lang">Language</label>
+      <select id="lang"></select>
+    </div>
+    <div>
+      <label for="voice">Voice</label>
+      <select id="voice"></select>
+    </div>
+    <div>
+      <label for="rate">Speed</label>
+      <div class="range-row"><input type="range" id="rate" min="0.5" max="2" step="0.1" value="1"><span class="val" id="rateVal">1.0×</span></div>
+    </div>
+    <div>
+      <label for="pitch">Pitch</label>
+      <div class="range-row"><input type="range" id="pitch" min="0.5" max="1.5" step="0.1" value="1"><span class="val" id="pitchVal">1.0</span></div>
+    </div>
+  </div>
+
+  <div class="transport">
+    <button class="btn primary" id="play" type="button">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg><span id="playLbl">Read aloud</span>
+    </button>
+    <button class="btn" id="stop" type="button" disabled>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg>Stop
+    </button>
+  </div>
+
+  <p class="note" id="note">Uses the voices built into your device and browser, so the list differs between phone and computer.</p>
+</div>
+
+<script>
+const synth = window.speechSynthesis;
+const $ = id => document.getElementById(id);
+const textEl = $("text"), reader = $("reader"), langSel = $("lang"), voiceSel = $("voice");
+const rate = $("rate"), pitch = $("pitch"), playBtn = $("play"), stopBtn = $("stop");
+
+const SAMPLES = {
+  en: "The quick brown fox jumps over the lazy dog. Paste any text here, pick a language, and press Read aloud.",
+  de: "Zwölf Boxkämpfer jagen Viktor quer über den großen Sylter Deich. Füge hier einen beliebigen Text ein, wähle eine Sprache und tippe auf Vorlesen.",
+  fr: "Portez ce vieux whisky au juge blond qui fume. Collez un texte ici, choisissez une langue et appuyez sur Lire.",
+  es: "El veloz murciélago hindú comía feliz cardillo y kiwi. Pega aquí cualquier texto, elige un idioma y pulsa Leer.",
+  it: "Quel vituperabile xenofobo zelante assaggia il whisky ed esclama alleluja. Incolla un testo, scegli una lingua e premi Leggi.",
+  nl: "Pa's wijze lynx bezag vroom het fikse aquaduct. Plak hier een tekst, kies een taal en druk op Voorlezen.",
+  pt: "Luís argüia à Júlia que «brações, fé, chá, óxido, pôr, zângão» eram palavras do português.",
+  pl: "Pchnąć w tę łódź jeża lub ośm skrzyń fig.",
+  ja: "いろはにほへと ちりぬるを わかよたれそ つねならむ。",
+  zh: "我能吞下玻璃而不伤身体。"
+};
+const FALLBACK_LANGS = ["en-US","en-GB","de-DE","de-AT","fr-FR","es-ES","it-IT","nl-NL","pt-BR","pl-PL","ru-RU","tr-TR","ja-JP","zh-CN","ko-KR","ar-SA","hi-IN"];
+
+let names;
+try { names = new Intl.DisplayNames([navigator.language || "en"], { type: "language" }); } catch (e) { names = null; }
+const langName = code => { try { return names ? names.of(code) : code; } catch (e) { return code; } };
+const base = code => code.split(/[-_]/)[0].toLowerCase();
+const norm = code => code.replace("_", "-");
+
+let voices = [];
+let currentSample = null;
+
+function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+function buildLanguages() {
+  voices = synth ? synth.getVoices() : [];
+  const codes = new Set(voices.map(v => norm(v.lang)).filter(Boolean));
+  const list = codes.size ? [...codes] : FALLBACK_LANGS;
+  list.sort((a, b) => langName(a).localeCompare(langName(b)));
+  const prev = langSel.value || load("lang") || norm(navigator.language || "en-US");
+  langSel.innerHTML = list.map(c => `<option value="${c}">${langName(c)}</option>`).join("");
+  const exact = list.find(c => c.toLowerCase() === prev.toLowerCase());
+  const loose = list.find(c => base(c) === base(prev));
+  langSel.value = exact || loose || list[0];
+  buildVoices();
+  if (!codes.size && synth) note("No voices reported yet. Reading may still work with your device's default voice.", true);
+}
+
+function buildVoices() {
+  const lang = langSel.value;
+  let matches = voices.filter(v => norm(v.lang).toLowerCase() === lang.toLowerCase());
+  if (!matches.length) matches = voices.filter(v => base(v.lang) === base(lang));
+  matches.sort((a, b) => (b.localService - a.localService) || a.name.localeCompare(b.name));
+  if (!matches.length) {
+    voiceSel.innerHTML = `<option value="">Device default</option>`;
+  } else {
+    voiceSel.innerHTML = matches.map(v => `<option value="${v.voiceURI}">${v.name}${v.localService ? "" : " (online)"}</option>`).join("");
+    const saved = load("voice:" + lang);
+    if (saved && matches.some(v => v.voiceURI === saved)) voiceSel.value = saved;
+  }
+  swapSample();
+}
+
+function swapSample() {
+  const b = base(langSel.value);
+  const isSample = !textEl.value.trim() || Object.values(SAMPLES).includes(textEl.value);
+  if (isSample && SAMPLES[b]) { textEl.value = SAMPLES[b]; }
+  updateCount();
+}
+
+function updateCount() {
+  const t = textEl.value.trim();
+  const words = t ? t.split(/\s+/).length : 0;
+  const mins = words / (150 * Number(rate.value));
+  const est = words ? ` · about ${mins < 1 ? Math.max(1, Math.round(mins * 60)) + " s" : Math.round(mins) + " min"}` : "";
+  $("count").textContent = `${words} word${words === 1 ? "" : "s"} · ${t.length} characters${est}`;
+}
+
+function note(msg, warn) { const n = $("note"); n.textContent = msg; n.dataset.kind = warn ? "warn" : ""; }
+
+function setState(s) {
+  $("status").dataset.state = s;
+  $("statusText").textContent = { idle: "Ready", speaking: "Reading", paused: "Paused" }[s];
+  $("playLbl").textContent = s === "speaking" ? "Pause" : s === "paused" ? "Resume" : "Read aloud";
+  playBtn.querySelector("path").setAttribute("d", s === "speaking" ? "M4 2.5h3v11H4zM9 2.5h3v11H9z" : "M4 2.5v11l9-5.5z");
+  stopBtn.disabled = s === "idle";
+  const reading = s !== "idle";
+  textEl.hidden = reading; reader.hidden = !reading;
+}
+
+function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+function highlight(text, start, len) {
+  if (len == null) { const m = text.slice(start).match(/^\S+/); len = m ? m[0].length : 0; }
+  reader.innerHTML = esc(text.slice(0, start)) + "<mark>" + esc(text.slice(start, start + len)) + "</mark>" + esc(text.slice(start + len));
+  const m = reader.querySelector("mark");
+  if (m && m.scrollIntoView) m.scrollIntoView({ block: "nearest" });
+}
+
+function speak() {
+  const text = textEl.value;
+  if (!text.trim()) { note("Paste some text first.", true); textEl.focus(); return; }
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = langSel.value;
+  const v = voices.find(v => v.voiceURI === voiceSel.value);
+  if (v) u.voice = v;
+  u.rate = Number(rate.value);
+  u.pitch = Number(pitch.value);
+  reader.textContent = text;
+  u.onstart = () => setState("speaking");
+  u.onboundary = e => { if (e.name === "word" || e.name === undefined) highlight(text, e.charIndex, e.charLength || null); };
+  u.onend = () => setState("idle");
+  u.onerror = e => {
+    setState("idle");
+    if (e.error !== "interrupted" && e.error !== "canceled") note(`Couldn't read the text (${e.error}). Try another voice or language.`, true);
+  };
+  setState("speaking");
+  synth.speak(u);
+  note("Uses the voices built into your device and browser, so the list differs between phone and computer.");
+}
+
+playBtn.addEventListener("click", () => {
+  if (!synth) return;
+  const s = $("status").dataset.state;
+  if (s === "speaking") { synth.pause(); setState("paused"); }
+  else if (s === "paused") { synth.resume(); setState("speaking"); }
+  else speak();
+});
+stopBtn.addEventListener("click", () => { synth.cancel(); setState("idle"); });
+$("paste").addEventListener("click", () => { synth && synth.cancel(); setState("idle"); textEl.value = ""; updateCount(); textEl.focus(); });
+textEl.addEventListener("input", updateCount);
+langSel.addEventListener("change", () => { store("lang", langSel.value); buildVoices(); });
+voiceSel.addEventListener("change", () => store("voice:" + langSel.value, voiceSel.value));
+rate.addEventListener("input", () => { $("rateVal").textContent = Number(rate.value).toFixed(1) + "×"; updateCount(); });
+pitch.addEventListener("input", () => { $("pitchVal").textContent = Number(pitch.value).toFixed(1); });
+
+if (!synth || typeof SpeechSynthesisUtterance === "undefined") {
+  playBtn.disabled = true;
+  note("This browser doesn't support speech. Try a current Chrome, Safari, Edge or Firefox.", true);
+  buildLanguages();
+} else {
+  buildLanguages();
+  if ("onvoiceschanged" in synth) synth.addEventListener("voiceschanged", buildLanguages);
+  setTimeout(() => { if (!voices.length) buildLanguages(); }, 800);
+}
+window.addEventListener("pagehide", () => synth && synth.cancel());
+</script>
+</body>
+</html>
