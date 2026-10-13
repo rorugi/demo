@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devanagari writing for Hindi/Sanskrit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<style>
+/* Layout: single column workbench, canvas ink under an SVG overlay — letter picker, slate (Schiefertafel) as the hero, controls, stroke list, technique note */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --slate-edge:#3a4a47; --chalk:#eef2e9; --ghost:rgba(238,242,233,.13); --guide:rgba(238,242,233,.16);
+  --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.16);
+  --f-deva:"Tiro Devanagari Hindi","Noto Serif Devanagari","Kohinoor Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.pick{min-width:0}
+header{display:grid;gap:4px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+
+/* Picker: three groups. Phone: stacked, seven columns. Desktop: vowels on top, the 25 stops and the
+   other 12 signs side by side below, with smaller buttons. */
+.picker{display:grid;gap:10px}
+.pick-group{display:grid;gap:5px;align-content:start}
+.pick-row{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px}
+.pick-group.rest{gap:10px}
+.pick-group.rest .pick-sub{display:grid;gap:5px}
+@media (min-width:640px){
+  .picker{grid-template-columns:auto auto;justify-content:start;column-gap:24px}
+  .pick-group.vowels{grid-column:1 / -1}
+  .pick-group.vowels .pick-row{grid-template-columns:repeat(8,52px)}
+  .pick-group.stops .pick-row{grid-template-columns:repeat(5,52px)}
+  .pick-group.rest .pick-row{grid-template-columns:repeat(5,52px)}
+  .pick{padding:5px 0 4px;border-radius:8px}
+  .pick span{font-size:11px}
+}
+.pick.ed::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.pick{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:10px;
+  padding:8px 0 6px;cursor:pointer;display:grid;position:relative;justify-items:center;gap:0;font:inherit;transition:border-color .15s,background .15s}
+.pick b{font-family:var(--f-deva);font-weight:400;font-size:24px;line-height:1}
+.pick span{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.pick:hover{border-color:var(--accent)}
+.pick[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.pick:focus-visible,.btn:focus-visible,.tog input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+
+.board{background:var(--slate);border:10px solid var(--slate-edge);border-radius:14px;position:relative;
+  box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+.board .stage svg{display:block;width:100%;height:auto;aspect-ratio:1200/1290}
+.board{width:100%;max-width:400px;margin-inline:auto;box-sizing:border-box}
+.board .tag{position:absolute;left:14px;top:10px;color:var(--chalk);opacity:.6;font-size:13px;letter-spacing:.06em}
+.board .count{position:absolute;right:14px;top:10px;color:var(--accent);font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.guide{stroke:var(--guide);stroke-width:3}
+.guide.dash{stroke-dasharray:14 14}
+.grid line{stroke:var(--chalk);opacity:.22;stroke-width:3;stroke-dasharray:12 12}
+.grid line.zone{opacity:.4;stroke-dasharray:26 10}
+.ghost{fill:var(--ghost)}
+.done{fill:var(--chalk)}
+.active{fill:var(--accent)}
+.center{fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:2 16;stroke-linecap:round;opacity:0;transition:opacity .2s}
+.show-center .center{opacity:.85}
+.marker{opacity:0;transition:opacity .25s}
+.marker.on{opacity:1}
+.marker circle{fill:var(--slate);stroke:var(--accent);stroke-width:5}
+.marker text{fill:var(--accent);font:600 40px var(--f-ui);text-anchor:middle;dominant-baseline:central}
+.hide-nums .marker{display:none}
+.pen{fill:var(--accent);opacity:0}
+.pen.on{opacity:1}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:9px 16px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--fg);display:inline-flex;gap:8px;align-items:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.speed{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted);font-size:14px}
+.speed input{width:110px;accent-color:var(--accent)}
+.speed output{font-variant-numeric:tabular-nums;min-width:4ch;color:var(--fg)}
+.toggles{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted)}
+.tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer}
+.tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.fontsel select{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px;max-width:100%}
+.fontsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fontsel{flex-wrap:wrap;max-width:100%;min-width:0}
+.fontsel select{min-width:0;flex:1 1 160px}
+.fontmsg{font-size:12px;color:var(--muted)}
+#editBtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.editbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 12px;border:1px solid var(--accent);border-radius:12px;background:var(--accent-soft)}
+.editbar[hidden]{display:none}
+.edithint{font-size:13px;color:var(--fg);flex:1 1 100%}
+.edtools{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.btn.icon{padding:0;width:40px;height:40px;display:inline-grid;place-items:center}
+.btn.icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.btn.icon svg .f{fill:currentColor;stroke:none}
+.btn.icon svg circle{fill:var(--panel)}
+.btn.icon[aria-pressed="true"] svg circle{fill:var(--accent)}
+.editmsg{font-size:13px;color:var(--accent);min-height:1.2em}
+.board.editing svg{touch-action:none}
+.ed-handle{stroke:var(--accent);stroke-width:3;opacity:.7;vector-effect:non-scaling-stroke}
+.ed-pt{cursor:grab}
+.ed-pt .vis{fill:var(--slate);stroke:var(--accent)}
+.ed-pt.anchor .vis{fill:var(--accent)}
+.ed-pt.sel .vis{fill:#e2685a;stroke:#fff}
+.ed-pt .hit{fill:transparent}
+.ptype{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ptype-l{font-size:13px;color:var(--muted)}
+.ptype .btn[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ptype .btn:disabled{opacity:.45}
+.fitglyph{fill:var(--chalk);opacity:0;transition:opacity .7s ease;pointer-events:none}
+.fitglyph.on{opacity:1}
+/* Sanskrit 2020 (SIL OFL, Omkarananda Ashram): installed copy first, else the file next to this page */
+@font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
+.ghost-text{font-family:var(--f-deva)}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:10px 12px;border-radius:10px;color:var(--muted);transition:background .2s,color .2s}
+.steps li::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;border:2px solid var(--line);
+  display:grid;place-items:center;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.steps li.now{background:var(--accent-soft);color:var(--fg)}
+.steps li.now::before{border-color:var(--accent);color:var(--accent)}
+.steps li.past{color:var(--fg)}
+.steps li.past::before{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+h2{margin:0 0 6px;font-size:18px;font-weight:600}
+.how{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px}
+.how p,.how li{margin:0;max-width:65ch;color:var(--muted)}
+.how ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.how code{font-family:var(--f-mono);font-size:.88em;color:var(--fg)}
+.note{font-size:13px;color:var(--muted)}
+.spl{display:grid;gap:10px}
+.spl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{appearance:none;font:inherit;font-size:14px;font-weight:500;border:0;background:var(--panel);color:var(--muted);padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--fg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.spl pre{margin:0;background:var(--slate);color:var(--chalk);border-radius:12px;padding:14px 16px;overflow:auto;max-height:360px;
+  font:13px/1.55 var(--f-mono,ui-monospace),"SF Mono",Menlo,Consolas,monospace;white-space:pre;tab-size:2}
+.spl .copied{font-size:13px;color:var(--accent);min-height:1.2em}
+@media (max-width:520px){.speed{margin-left:0;width:100%}.speed input{flex:1}}
+
+.stage{position:relative}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage svg{position:relative}
+.ghost{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:8 8;opacity:0;transition:opacity .2s}
+.show-ghost .ghost{opacity:.55}
+.ghost-text{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:8 8}
+.pen-nib{stroke:var(--accent);stroke-width:7;stroke-linecap:round;opacity:0}
+.pen-nib.on{opacity:1}
+.sliders{display:flex;flex-wrap:wrap;gap:10px 24px}
+.sliders .speed{margin-left:0}
+@media (max-width:520px){.sliders .speed{width:100%}.sliders .speed input{flex:1}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Writing practice · broad nib</div>
+    <h1>Devanagari writing for Hindi/Sanskrit <span class="deva">क्ष</span></h1>
+    <p class="lede">Only the centre lines, drawn with a flat nib at a fixed angle. Thick and thin come from the direction of the stroke alone.</p>
+  </header>
+
+  <nav class="picker" id="picker" aria-label="Choose a letter"></nav>
+
+  <section class="board" id="board" aria-label="Writing board">
+    <span class="tag" id="tag"></span>
+    <span class="count" id="count"></span>
+    <div class="stage">
+      <canvas id="cv"></canvas>
+      <svg id="svg" viewBox="0 -235 1200 1290" role="img"></svg>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="btn primary" id="play"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg><span>Play</span></button>
+    <button class="btn" id="step"><svg viewBox="0 0 10 10"><path d="M1 1l5 4-5 4zM7 1h2v8H7z"/></svg>Next stroke</button>
+    <button class="btn" id="reset">Reset</button>
+    <button class="btn" id="editBtn" type="button" aria-pressed="false">Edit points</button>
+  </div>
+  <div class="editbar" id="editBar" hidden>
+    <span class="edithint">Drag points to move them. Tap a point, then pick a tool below (hover for its name) or press Delete. Filled: points on the line; hollow: control handles. Two fingers: pinch to zoom, move together to scroll (same on a trackpad; with a mouse, Ctrl + wheel).</span>
+    <div class="edtools">
+    <span class="ptype" id="ptype" role="group" aria-label="Point type">
+      <button class="btn icon" type="button" data-t="corner" disabled title="Point type: corner (no handles)" aria-label="Point type: corner (no handles)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 L12 6 L20 19"/><rect x="9.5" y="3.5" width="5" height="5" class="f"/></svg></button>
+      <button class="btn icon" type="button" data-t="one" disabled title="Point type: one handle (on one side only)" aria-label="Point type: one handle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 C6 12 9 8 12 8 L20 19"/><path d="M12 8 H19"/><rect x="9.5" y="5.5" width="5" height="5" class="f"/><circle cx="19" cy="8" r="2.2"/></svg></button>
+      <button class="btn icon" type="button" data-t="sym" disabled title="Point type: two symmetric handles (in line, equal length; one follows the other)" aria-label="Point type: two symmetric handles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17 C6 9 9 9 12 9 C15 9 18 9 21 17"/><path d="M5 9 H19"/><rect x="9.5" y="6.5" width="5" height="5" class="f"/><circle cx="5" cy="9" r="2.2"/><circle cx="19" cy="9" r="2.2"/></svg></button>
+      <button class="btn icon" type="button" data-t="free" disabled title="Point type: two independent handles" aria-label="Point type: two independent handles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 C5 11 8 9 12 9 C15 12 18 15 21 19"/><path d="M6 6 L12 9 L18 14"/><rect x="9.5" y="6.5" width="5" height="5" class="f"/><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="14" r="2.2"/></svg></button>
+    </span>
+    <span class="ptype" role="group" aria-label="Smooth">
+      <button class="btn icon" id="smoothPt" type="button" disabled title="Smooth point (lay its handles along the line from the previous to the next point)" aria-label="Smooth point"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15 C7 6 10 6 12 12 C14 18 17 18 21 9"/><path d="M8 7.5 L16 16.5" stroke-dasharray="2 2"/><rect x="9.5" y="9.5" width="5" height="5" class="f"/></svg></button>
+      <button class="btn icon" id="smoothSt" type="button" disabled title="Smooth stroke (every point between two curves; corners and straight parts stay)" aria-label="Smooth stroke"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 14 C5 6 8 6 10 12 C12 18 15 18 17 11 C18 8 20 7 22 8"/><path d="M5 3 l1 2 2 1 -2 1 -1 2 -1 -2 -2 -1 2 -1z" class="f"/></svg></button>
+    </span>
+    <span class="ptype" role="group" aria-label="Edit">
+      <button class="btn icon" id="delPt" type="button" disabled title="Delete point (Delete key)" aria-label="Delete point"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 H19"/><path d="M9 7 V4.5 H15 V7"/><path d="M7 7 L8 20 H16 L17 7"/><path d="M10.5 11 V16 M13.5 11 V16"/></svg></button>
+      <button class="btn icon" id="discardEd" type="button" title="Discard changes (restore the original strokes)" aria-label="Discard changes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 L4 11 L9 15"/><path d="M4 11 H14 C18 11 20 14 20 16.5 C20 19 18 20 16 20 H11"/></svg></button>
+    </span>
+    <span class="ptype" role="group" aria-label="Zoom">
+      <button class="btn icon" id="zoomIn" type="button" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15 L20 20"/><path d="M10.5 7.5 V13.5 M7.5 10.5 H13.5"/></svg></button>
+      <button class="btn icon" id="zoomOut" type="button" title="Show the whole board" aria-label="Show the whole board" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 V4 H9 M15 4 H20 V9 M20 15 V20 H15 M9 20 H4 V15"/></svg></button>
+    </span>
+    </div>
+    <span class="editmsg" id="zoomInfo"></span>
+    <span class="editmsg" id="editMsg" aria-live="polite"></span>
+  </div>
+  <div class="sliders">
+    <label class="speed" for="ang">Nib angle <input id="ang" type="range" min="-90" max="90" step="5" value="-45"><output id="angOut">-45°</output></label>
+    <label class="speed" for="nib">Nib width <input id="nib" type="range" min="30" max="120" step="5" value="80"><output id="nibOut">80</output></label>
+    <label class="speed" for="thk">Nib thickness <input id="thk" type="range" min="2" max="40" step="2" value="20"><output id="thkOut">20</output></label>
+    <label class="speed" for="stp">Step length <input id="stp" type="range" min="1" max="60" step="1" value="10"><output id="stpOut">10</output></label>
+    <label class="speed" for="spd">Speed <input id="spd" type="range" min="0.25" max="2" step="0.25" value="1"><output id="spdOut">1×</output></label>
+  </div>
+  <div class="toggles">
+    <label class="tog" for="tNums"><input id="tNums" type="checkbox" checked><span>Number the start points</span></label>
+    <label class="tog" for="tGhost"><input id="tGhost" type="checkbox"><span>Font outline for comparison</span></label>
+    <label class="tog" for="tLoop"><input id="tLoop" type="checkbox"><span>Loop</span></label>
+    <label class="tog fontsel" for="mode"><span>Display</span><select id="mode">
+      <option value="canvas">Canvas: nib prints step by step</option>
+      <option value="line">SVG 1: a line that draws itself</option>
+      <option value="mask">SVG 2: nib shape revealed by a mask</option>
+    </select></label>
+    <label class="tog fontsel" for="penmode"><span>Nib</span><select id="penmode">
+      <option value="fixed">fixed (calligraphy)</option>
+      <option value="fit">fitted to the font</option>
+    </select></label>
+    <label class="tog fontsel" for="font"><span>Font</span><select id="font"></select><span class="fontmsg" id="fontMsg"></span></label>
+  </div>
+
+  <section>
+    <h2 id="stepsTitle">Strokes</h2>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <section class="spl">
+    <h2 id="splTitle">Splines</h2>
+    <p class="note">The centre lines as SVG paths (cubic Bézier splines), in stroke order. Dots are drawn across the current nib angle. Coordinates are in font units: y points down, head line at y = 117, baseline at y = 700, width = adv. <b>Variable width</b>: the frame is as wide as the letter (adv + 40 on each side), good for setting words (next letter at x = adv). <b>Fixed frame</b>: 1200 × 1290 for every letter, centred, good for cards, icons and grids.</p>
+    <div class="spl-bar">
+      <div class="seg" role="group" aria-label="Format">
+        <button type="button" data-fmt="json" aria-pressed="true">JSON</button>
+        <button type="button" data-fmt="svg" aria-pressed="false">SVG</button>
+      </div>
+      <div class="seg" role="group" aria-label="Frame">
+        <button type="button" data-box="var" aria-pressed="true">Variable width</button>
+        <button type="button" data-box="fix" aria-pressed="false">Fixed frame</button>
+      </div>
+      <button class="btn" id="splCopy" type="button">Copy</button>
+      <button class="btn" id="splAll" type="button">Copy all letters</button>
+      <span class="copied" id="splMsg" aria-live="polite"></span>
+    </div>
+    <pre id="splCode"></pre>
+  </section>
+
+  <section class="how">
+    <h2>How the nib works</h2>
+    <ul>
+      <li>Each stroke is a centre line stored as an SVG path. <code>getPointAtLength()</code> splits it into small steps.</li>
+      <li><b>Edit points</b>: shows the points of the strokes of the current letter. Filled points lie on the line, hollow ones are the control handles of the curves. Drag to move a point; the bin removes the selected point. The point type sets which handles a point has: corner (no handles, drawn as a square), one handle (on one side only), two symmetric handles (in line and of equal length, so the stroke runs through smoothly) and two independent handles. “Smooth point” lays the handles of the selected point along the line from the previous to the next point, so the line passes through without a kink; “Smooth stroke” does this for every point of the stroke that lies between two curves, while corners and straight parts stay. The points themselves stay where they are. Changes are saved in this browser and also appear in the splines export; “Discard changes” restores the original strokes. Edited letters carry a small dot in the picker. If a built-in stroke is changed later, the old edit of that stroke no longer applies.</li>
+      <li><b>Nib</b>: <i>fixed</i> is the broad nib with angle, width and thickness. <i>Fitted to the font</i> measures at each point of the centre line how wide the font is to the left and right, and sets the nib across the stroke to exactly that width. This gives the thick and thin of the font; angle and width then do not matter. Where strokes cross, outliers are limited, and at the end the real letter shape fades in.</li>
+      <li><b>Display</b>: <i>Canvas</i> sets the nib down point by point on a <code>&lt;canvas&gt;</code>. <i>SVG 1</i> only draws the centre line with <code>stroke-dashoffset</code>, at one width, without thick and thin. <i>SVG 2</i> builds the whole nib shape as SVG and reveals it with a mask; for this the stroke is split into short pieces, so loops do not show too early. The SVG animations run in the browser itself (Web Animations API).</li>
+      <li>The <b>step length</b> is the distance between the points along the centre line where the nib is set down, in drawing units (the board is 1200 units wide) and converted to screen pixels. Long steps make the single nib positions visible.</li>
+      <li>The nib is a short edge at a fixed angle. Between two points the quadrilateral that this edge sweeps over is filled, on a <code>&lt;canvas&gt;</code>.</li>
+      <li>The grid follows the four zones of the script: at the top vowel signs such as i and e, in the middle two rows for the letter, at the bottom u, ū and ṛ. The head line lies on the border between the first and second row.</li>
+      <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) comes with the page as a file and loads without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
+      <li>Where the stroke runs across the edge it gets wide; where it runs along the edge it gets narrow, but never thinner than the nib thickness. For this the quadrilaterals are also outlined with that thickness. There is no mask.</li>
+    </ul>
+    <p class="note">The stroke order follows the common school variant, with the head line last.</p>
+  </section>
+</main>
+
+<script>
+const DATA = [{"ch": "अ", "tr": "a", "adv": 787, "glyph": "M309 71Q244 71 195.5 103.5Q147 136 109 190.5Q71 245 36 311L74 333Q100 286 127.5 242.5Q155 199 191 171.5Q227 144 279 144Q312 144 341.5 158.5Q371 173 390 199Q409 225 409 260Q409 297 384.5 316Q360 335 327 335Q299 335 269 323.5Q239 312 216 301L173 374Q200 389 232.5 401Q265 413 299 413Q304 413 308 413Q335 430 349 453.5Q363 477 363 501Q363 527 347 544Q331 561 296 561Q268 561 224 547.5Q180 534 139 508L95 583Q139 609 183.5 621Q228 633 260 633Q306 633 338 613.5Q370 594 390 564Q410 534 419.5 502.5Q429 471 429 447Q429 431 424 413Q419 395 400 374Q406 369 413 360Q430 341 452.5 326Q475 311 519 311Q574 311 612 344L614 545H507L473 610V620H781L815 555V545H698L700 -10H690L610 42L611 243Q603 240 594 239Q585 238 575 238Q547 238 519.5 248Q492 258 472 271L468 269Q474 255 476.5 240.5Q479 226 479 213Q479 172 456.5 140Q434 108 396 89.5Q358 71 309 71Z", "strokes": ["M98 117 C180 95 300 85 360 130 C400 165 405 260 360 318 C330 340 260 335 200 336 C300 340 400 360 432 420 C460 500 410 590 300 590 C200 590 110 510 60 395", "M439 410 C500 405 580 425 650 409", "M655 122 L655 695", "M490 117 L800 117"], "notes": ["The 3-shaped curve: start at the top left, curve right and in to the middle, a short move left into the point, then let the big lower curve run out to the bottom left.", "Cross stroke from the curve to the right, up to the stem.", "Vertical stem, from the head line down.", "Head line over the right part, from left to right."]}, {"ch": "आ", "tr": "ā", "adv": 1047, "glyph": "M309 71Q244 71 195.5 103.5Q147 136 109 190.5Q71 245 36 311L74 333Q100 286 127.5 242.5Q155 199 191 171.5Q227 144 279 144Q312 144 341.5 158.5Q371 173 390 199Q409 225 409 260Q409 297 384.5 316Q360 335 327 335Q299 335 269 323.5Q239 312 216 301L173 374Q200 389 232.5 401Q265 413 299 413H308Q335 430 349 453.5Q363 477 363 501Q363 527 347 544Q331 561 296 561Q268 561 224 547.5Q180 534 139 508L95 583Q139 609 183.5 621Q228 633 260 633Q306 633 338 613.5Q370 594 390 564Q410 534 419.5 502.5Q429 471 429 447Q429 431 424 413Q419 395 400 374Q406 369 413 360Q430 341 452.5 326Q475 311 519 311Q574 311 612 344L614 545H507L473 610V620H1041L1075 555V545H958L960 -15H950L870 37L874 545H698L700 -10H690L610 42L611 243Q603 240 594 239Q585 238 575 238Q547 238 519.5 248Q492 258 472 271L468 269Q474 255 476.5 240.5Q479 226 479 213Q479 172 456.5 140Q434 108 396 89.5Q358 71 309 71Z", "strokes": ["M98 117 C180 95 300 85 360 130 C400 165 405 260 360 318 C330 340 260 335 200 336 C300 340 400 360 432 420 C460 500 410 590 300 590 C200 590 110 510 60 395", "M439 410 C500 405 580 425 650 409", "M655 122 L655 695", "M915 122 L915 695", "M490 117 L1060 117"], "notes": ["The 3-shaped curve: start at the top left, curve right and in to the middle, a short move left into the point, then let the big lower curve run out to the bottom left.", "Cross stroke from the curve to the right, up to the stem.", "Vertical stem, from the head line down.", "Second stem, the ā sign ा, from top to bottom.", "Head line over the right part, from left to right."]}, {"ch": "इ", "tr": "i", "adv": 528, "glyph": "M337 -155H328L227 21Q172 27 130.5 53.5Q89 80 89 126Q89 146 98 161.5Q107 177 125 177Q145 177 177 155Q209 133 243 87Q286 89 324 103Q362 117 386.5 142Q411 167 411 201Q411 229 397 238Q383 247 366 247Q348 247 318 240.5Q288 234 256 227Q224 220 201 220Q159 220 124 246.5Q89 273 68 311Q47 349 47 385Q47 432 84.5 450.5Q122 469 191 469H353V545H6L-28 610V620H522L556 555V545H432Q433 509 433.5 471.5Q434 434 434 403L422 395H218Q174 395 151.5 388Q129 381 121.5 370Q114 359 114 346Q114 327 127.5 309Q141 291 169 291Q184 291 208 295Q232 299 259.5 305Q287 311 311.5 315Q336 319 350 319Q375 319 397.5 303.5Q420 288 438 264Q456 240 466.5 213Q477 186 477 163Q477 125 449 95Q421 65 377 46Q333 27 285 22L389 -122Z", "strokes": ["M392 119 L387 265 C387 270 380 272 370 272 L150 272 C105 274 80 300 85 345 C92 410 150 445 220 440 C290 435 350 415 400 432 C440 450 450 520 430 570 C405 620 330 650 256 645 C200 640 145 605 122 565 C110 542 125 522 150 532 C190 550 235 600 262 660 C290 720 320 780 358 822", "M5 117 L545 117"], "notes": ["From the head line a short way down, then left, and round to the right; at the bottom make a small crossing loop to the left, and from it the tail runs down to the right.", "Head line, from left to right."]}, {"ch": "ई", "tr": "ī", "adv": 528, "glyph": "M337 -155H328L227 21Q172 27 130.5 53.5Q89 80 89 126Q89 146 98 161.5Q107 177 125 177Q145 177 177 155Q209 133 243 87Q286 89 324 103Q362 117 386.5 142Q411 167 411 201Q411 229 397 238Q383 247 366 247Q348 247 318 240.5Q288 234 256 227Q224 220 201 220Q159 220 124 246.5Q89 273 68 311Q47 349 47 385Q47 432 84.5 450.5Q122 469 191 469H353V545H6L-28 610V620H355Q318 659 295 697Q267 741 267 789Q267 820 280 847.5Q293 875 321.5 893Q350 911 394 911Q481 911 509 830L505 824Q489 831 470.5 835.5Q452 840 432 840Q383 840 361 816Q339 792 339 757Q339 719 361 685Q379 656 409 620H522L556 555V545H432Q433 509 433.5 471.5Q434 434 434 403L422 395H218Q174 395 151.5 388Q129 381 121.5 370Q114 359 114 346Q114 327 127.5 309Q141 291 169 291Q184 291 208 295Q232 299 259.5 305Q287 311 311.5 315Q336 319 350 319Q375 319 397.5 303.5Q420 288 438 264Q456 240 466.5 213Q477 186 477 163Q477 125 449 95Q421 65 377 46Q333 27 285 22L389 -122Z", "strokes": ["M392 119 L387 265 C387 270 380 272 370 272 L150 272 C105 274 80 300 85 345 C92 410 150 445 220 440 C290 435 350 415 400 432 C440 450 450 520 430 570 C405 620 330 650 256 645 C200 640 145 605 122 565 C110 542 125 522 150 532 C190 550 235 600 262 660 C290 720 320 780 358 822", "M381 116 C350 60 300 0 305 -80 C310 -150 380 -185 440 -170 C470 -162 490 -148 503 -130", "M5 117 L545 117"], "notes": ["From the head line a short way down, then left, and round to the right; at the bottom make a small crossing loop to the left, and from it the tail runs down to the right.", "The hook on top: start at the head line, go up to the left and curve round to the right.", "Head line, from left to right."]}, {"ch": "उ", "tr": "u", "adv": 565, "glyph": "M361 316Q339 316 310 305.5Q281 295 226 286L184 356V362Q262 378 304.5 392.5Q347 407 364 426.5Q381 446 381 473Q381 503 362 545H6L-28 610V620H559L593 555V545H420Q433 520 442.5 493.5Q452 467 452 442Q452 418 442 396.5Q432 375 416 357Q462 322 491.5 275.5Q521 229 521 180Q521 138 499 101.5Q477 65 436.5 43Q396 21 340 21Q283 21 238.5 44Q194 67 157.5 106Q121 145 91 194.5Q61 244 34 297L72 319Q90 284 113 245Q136 206 165 172Q194 138 231 116.5Q268 95 315 95Q370 95 409 125.5Q448 156 448 208Q448 235 437 259.5Q426 284 406.5 300Q387 316 361 316Z", "strokes": ["M391 118 C405 180 420 250 395 300 C380 330 340 345 290 350 C260 352 230 352 212 352 C300 360 400 365 450 415 C490 460 495 560 450 595 C400 640 300 645 230 610 C160 575 100 500 60 405", "M5 117 L580 117"], "notes": ["From the head line curve down to the middle, a short move left into the point, then the big curve round to the right and out to the bottom left.", "Head line, from left to right."]}, {"ch": "ऊ", "tr": "ū", "adv": 760, "glyph": "M340 21Q283 21 238.5 44Q194 67 157.5 106Q121 145 91 194.5Q61 244 34 297L72 319Q90 284 113 245Q136 206 165 172Q194 138 231 116.5Q268 95 315 95Q370 95 409 125.5Q448 156 448 208Q448 235 437 259.5Q426 284 406.5 300Q387 316 361 316Q339 316 310 305.5Q281 295 226 286L184 356V362Q263 378 305.5 393Q348 408 364.5 427Q381 446 381 474Q381 488 376.5 505.5Q372 523 361 545H6L-28 610V620H754L788 555V545H421Q434 520 443 494Q452 468 452 445Q452 419 442 397Q432 375 415 357Q432 344 448 329Q475 350 511.5 370Q548 390 586 390Q619 390 653 368Q687 346 709.5 306.5Q732 267 732 215Q732 172 714 128.5Q696 85 664 38H658L589 94Q611 122 628.5 153.5Q646 185 657 215Q668 245 668 267Q668 296 651.5 307Q635 318 615 318Q584 318 550.5 300Q517 282 497 264Q508 244 514.5 222.5Q521 201 521 180Q521 138 499 101.5Q477 65 436.5 43Q396 21 340 21Z", "strokes": ["M391 118 C405 180 414 236 389 291 C374 327 327 339 290 350 C265 357 187 344 212 352 C295 378 402 346 466 405 C509 445 500 537 460 580 C413 630 323 655 260 628 C169 588 110 520 60 405", "M467 402 C520 370 576 337 630 355 C675 370 697 433 697 480 C697 525 660 568 628 596", "M5 117 L775 117"], "notes": ["From the head line curve down to the middle, a short move left into the point, then the big curve round to the right and out to the bottom left.", "The extra curve for the long ū: out of the belly up to the right, then curve down.", "Head line, from left to right."]}, {"ch": "ऋ", "tr": "ṛ", "adv": 811, "glyph": "M468 -10H458L378 42L379 243L143 80L84 138L361 318Q313 354 281 375.5Q249 397 221 397Q195 397 158.5 378.5Q122 360 88 343L35 412V417Q79 436 119 453Q159 470 190 470Q218 470 241 459Q264 448 295 422.5Q326 397 380 354L382 545H6L-28 610V620H805L839 555V545H466L467 328Q514 328 548 340.5Q582 353 599 368Q588 389 581.5 405Q575 421 575 436Q575 454 584 461Q593 468 609 468Q630 468 657 455.5Q684 443 703.5 422.5Q723 402 723 377Q723 360 714 345Q705 330 690 319Q772 230 772 157Q772 106 731 71Q690 36 595 22L542 91V96Q620 109 662 131Q704 153 704 195Q704 237 649 296Q622 285 590 279.5Q558 274 528 274Q514 274 498.5 275Q483 276 467 278Z", "strokes": ["M76 318 C110 301 160 260 250 282 C320 300 380 360 410 398 C390 420 142 583 142 583", "M423 122 L423 695", "M425 396 C500 398 570 392 620 375 C665 360 688 322 680 292 C672 262 632 252 612 268 C595 285 608 330 640 370 C690 420 725 470 732 525 C738 585 690 625 619 630 C595 630 575 622 560 615", "M5 117 L825 117"], "notes": ["Start at the top left, go diagonally right to the stem, and from there diagonally down to the left.", "Vertical stem, from the head line down.", "The ṛ sign in one stroke: from the stem to the right, a small loop at the top, then curve down and run out to the left.", "Head line, from left to right."]}, {"ch": "ॠ", "tr": "ṝ", "adv": 851, "glyph": "M716 -28Q658 -28 620 -3.5Q582 21 563.5 55Q545 89 545 115Q545 156 582 186.5Q619 217 699 238Q693 254 685.5 269Q678 284 668 302Q611 278 549 278Q532 278 510 279.5Q488 281 467 285L468 -10H458L378 42L379 243L143 80L84 138L361 318Q312 354 280.5 375.5Q249 397 221 397Q195 397 158.5 378.5Q122 360 88 343L35 412V417Q79 436 119 453Q159 470 190 470Q218 470 241 459Q264 448 295.5 423Q327 398 380 355L382 545H6L-28 610V620H845L879 555V545H466L467 331H490Q537 331 570.5 345Q604 359 621 376Q610 397 604 413.5Q598 430 598 445Q598 463 607 470Q616 477 632 477Q653 477 680.5 464.5Q708 452 728 431.5Q748 411 748 386Q748 370 738.5 355Q729 340 713 328Q733 294 749.5 260.5Q766 227 783 184L781 179Q706 164 669 147.5Q632 131 620.5 115Q609 99 609 84Q609 70 622.5 55Q636 40 676 40Q701 40 730.5 48Q760 56 797 77L847 13Q831 2 797 -13Q763 -28 716 -28Z", "strokes": ["M64 318 C147 281 169 263 250 282 C320 300 380 360 410 398 C390 420 139 585 139 585", "M423 122 L423 695", "M425 392 C500 394 600 382 652 362 C700 345 718 305 706 275 C694 248 648 240 628 262 C612 282 630 330 665 362 C700 395 722 445 728 493 C690 505 630 520 596 552 C570 580 575 640 610 666 C650 690 730 700 790 672", "M5 117 L865 117"], "notes": ["Start at the top left, go diagonally right to the stem, and from there diagonally down to the left.", "Vertical stem, from the head line down.", "The sign for the long ṝ in one stroke: from the stem to the right, a small loop at the top, then a double curve down, running out to the right.", "Head line, from left to right."]}, {"ch": "ऌ", "tr": "ḷ", "adv": 682, "glyph": "M569 -87Q523 -87 490 -66.5Q457 -46 439.5 -16Q422 14 422 43Q422 71 435.5 95.5Q449 120 469 143.5Q489 167 509 191Q529 215 542.5 241.5Q556 268 556 298Q556 331 538.5 351Q521 371 492 371Q455 371 416 335.5Q377 300 339 223L263 261Q280 302 306 339Q291 356 269 368Q247 380 222 380Q182 380 155.5 349.5Q129 319 129 264Q129 228 144 194Q159 160 195.5 119.5Q232 79 297 25L254 -10H244Q186 50 142 100Q98 150 73.5 198Q49 246 49 298Q49 340 65.5 375.5Q82 411 113 432.5Q144 454 186 454Q235 454 268.5 427.5Q302 401 330 370Q352 395 378.5 414Q405 433 434 440L433 545H6L-28 610V620H676L710 555V545H514L515 431Q560 410 589.5 361.5Q619 313 619 257Q619 219 606 190Q593 161 574.5 137.5Q556 114 537 94Q518 74 505 55Q492 36 492 14Q492 -5 504 -18.5Q516 -32 541 -32Q602 -32 668 51L732 -4Q702 -41 659.5 -64Q617 -87 569 -87Z", "strokes": ["M473 120 L474 287 C440 298 380 330 344 366 C335 395 310 425 270 438", "M344 366 C300 320 230 280 170 285 C110 295 85 350 92 410 C100 480 160 560 220 625 C245 655 265 675 290 675", "M474 288 C530 300 575 330 582 400 C590 460 540 530 480 610 C450 650 455 720 510 750 C570 770 640 740 675 690", "M5 117 L700 117"], "notes": ["From the head line a short way down, diagonally left to the middle, and the small hook down to the left.", "The big curve on the left: from the middle up to the left, round the outside and down.", "Right part: curve right and down, and run out at the bottom with the hook to the right.", "Head line, from left to right."]}, {"ch": "ॡ", "tr": "ḹ", "adv": 682, "glyph": "M254 -10H244Q186 50 142 100Q98 150 73.5 198Q49 246 49 298Q49 340 65.5 375.5Q82 411 113 432.5Q144 454 186 454Q235 454 269 427.5Q303 401 330 369Q353 395 379.5 413.5Q406 432 434 439L433 545H6L-28 610V620H676L710 555V545H514L515 430Q561 410 590.5 365.5Q620 321 620 273Q620 237 606 210Q592 183 571.5 162Q551 141 530.5 123Q510 105 496 87Q482 69 482 48Q482 34 489.5 21Q497 8 518 -1Q540 16 570 26.5Q600 37 635 44L681 -17V-23Q609 -33 577 -54.5Q545 -76 545 -102Q545 -123 562.5 -131.5Q580 -140 605 -140Q635 -140 664 -130.5Q693 -121 726 -102L774 -164Q759 -174 723 -189Q687 -204 644 -204Q605 -204 567.5 -188Q530 -172 506 -143.5Q482 -115 482 -76Q482 -53 491 -34Q445 -10 428.5 19Q412 48 412 76Q412 103 426.5 126Q441 149 462.5 170Q484 191 505.5 212.5Q527 234 541.5 257.5Q556 281 556 309Q556 337 538.5 354Q521 371 492 371Q455 371 416 335.5Q377 300 339 223L263 261Q279 301 306 339Q291 356 269 368Q247 380 222 380Q182 380 155.5 349.5Q129 319 129 264Q129 228 144 194Q159 160 195.5 119.5Q232 79 297 25Z", "strokes": ["M473 120 L474 287 C440 298 380 330 344 366 C335 395 310 425 270 438", "M344 366 C300 320 230 280 170 285 C110 295 85 350 92 410 C100 480 160 560 220 625 C245 655 265 675 290 675", "M474 288 C530 300 575 330 582 400 C590 460 540 530 490 580 C448 622 440 690 478 722 C520 745 600 702 677 719", "M520 737 C500 775 508 840 560 866 C620 886 700 872 746 856", "M5 117 L700 117"], "notes": ["From the head line a short way down, diagonally left to the middle, and the small hook down to the left.", "The big curve on the left: from the middle up to the left, round the outside and down.", "Right part: curve right and down, through the wave to the left and down, then run out with the hook to the right.", "The lower curve for the long ḹ: start below the hook, go down and curve round to the right.", "Head line, from left to right."]}, {"ch": "ए", "tr": "e", "adv": 560, "glyph": "M471 -164 412 -100Q437 -82 437 -62Q437 -49 425 -35Q413 -21 379 2.5Q345 26 279 69Q211 114 171.5 142Q132 170 113.5 191Q95 212 89.5 234Q84 256 84 288Q84 340 84 381Q84 422 84.5 461Q85 500 86 545H6L-28 610V620H554L588 555V545H470Q471 512 471.5 474Q472 436 472.5 402.5Q473 369 473 348Q473 289 463.5 256Q454 223 434 202Q414 181 381 158L321 223Q344 239 359.5 254Q375 269 383 294.5Q391 320 391 364Q391 411 390.5 451.5Q390 492 389 545H170Q169 490 169 449.5Q169 409 169 368.5Q169 328 169 275Q169 250 173 232.5Q177 215 191.5 198.5Q206 182 236 159.5Q266 137 318 103Q384 60 425.5 31Q467 2 488.5 -18Q510 -38 518 -53Q526 -68 526 -85Q526 -129 471 -164Z", "strokes": ["M127 122 L126 400 C128 470 160 510 220 555 C300 615 400 680 445 715 C470 740 475 780 470 815", "M429 120 L429 388 C428 430 405 478 330 478", "M5 117 L575 117"], "notes": ["Left stroke: from the head line straight down, then diagonally down to the right.", "Right stroke: from the head line down, turning left into the middle.", "Head line, from left to right."]}, {"ch": "ऐ", "tr": "ai", "adv": 560, "glyph": "M471 -164 412 -100Q437 -82 437 -62Q437 -49 425 -35Q413 -21 379 2.5Q345 26 279 69Q211 114 171.5 142Q132 170 113.5 191Q95 212 89.5 234Q84 256 84 288V381Q84 422 84.5 461Q85 500 86 545H6L-28 610V620H400Q357 694 327 737Q294 782 269 800.5Q244 819 216 819Q200 819 171.5 816Q143 813 120 808L74 893L75 900Q114 907 142 909Q170 911 179 911Q230 911 274 873Q318 835 363 767Q405 703 454 620H554L588 555V545H470Q471 512 471.5 474Q472 436 472.5 402.5Q473 369 473 348Q473 289 463.5 256Q454 223 434 202Q414 181 381 158L321 223Q344 239 359.5 254Q375 269 383 294.5Q391 320 391 364Q391 411 390.5 451.5Q390 492 389 545H170Q169 490 169 450V275Q169 250 173 232.5Q177 215 191.5 198.5Q206 182 236 159.5Q266 137 318 103Q384 60 425.5 31Q467 2 488.5 -18Q510 -38 518 -53Q526 -68 526 -85Q526 -129 471 -164Z", "strokes": ["M127 122 L126 400 C128 470 160 510 220 555 C300 615 400 680 445 715 C470 740 475 780 470 815", "M429 120 L429 388 C428 430 405 478 330 478", "M426 116 C410 50 360 -40 300 -100 C250 -145 180 -165 110 -180", "M5 117 L575 117"], "notes": ["Left stroke: from the head line straight down, then diagonally down to the right.", "Right stroke: from the head line down, turning left into the middle.", "The hook on top: start at the head line and go diagonally up to the left.", "Head line, from left to right."]}, {"ch": "ओ", "tr": "o", "adv": 1045, "glyph": "M309 71Q244 71 195.5 103.5Q147 136 109 190.5Q71 245 36 311L74 333Q100 286 127.5 242.5Q155 199 191 171.5Q227 144 279 144Q312 144 341.5 158.5Q371 173 390 199Q409 225 409 260Q409 297 384.5 316Q360 335 327 335Q299 335 269 323.5Q239 312 216 301L173 374Q200 389 232.5 401Q265 413 299 413H308Q335 430 349 453.5Q363 477 363 501Q363 527 347 544Q331 561 296 561Q268 561 224 547.5Q180 534 139 508L95 583Q139 609 183.5 621Q228 633 260 633Q306 633 338 613.5Q370 594 390 564Q410 534 419.5 502.5Q429 471 429 447Q429 431 424 413Q419 395 400 374Q406 369 413 360Q430 341 452.5 326Q475 311 519 311Q574 311 612 344L614 545H507L473 610V620H883Q840 694 810 737Q777 782 752 800.5Q727 819 699 819Q683 819 654.5 816Q626 813 603 808L557 893L558 900Q597 907 625 909Q653 911 662 911Q713 911 757 873Q801 835 846 767Q888 703 937 620H1039L1073 555V545H956L958 -15H948L868 37L872 545H698L700 -10H690L610 42L611 243Q603 240 594 239Q585 238 575 238Q547 238 519.5 248Q492 258 472 271L468 269Q474 255 476.5 240.5Q479 226 479 213Q479 172 456.5 140Q434 108 396 89.5Q358 71 309 71Z", "strokes": ["M98 117 C180 95 300 85 360 130 C400 165 405 260 360 318 C330 340 260 335 200 336 C300 340 400 360 432 420 C460 500 410 590 300 590 C200 590 110 510 60 395", "M439 410 C500 405 580 425 650 409", "M655 122 L655 695", "M913 122 L913 695", "M909 116 C895 50 850 -40 790 -100 C740 -145 670 -165 600 -180", "M490 117 L1060 117"], "notes": ["The 3-shaped curve: start at the top left, curve right and in to the middle, a short move left into the point, then let the big lower curve run out to the bottom left.", "Cross stroke from the curve to the right, up to the stem.", "Vertical stem, from the head line down.", "Second stem, the ā sign ा, from top to bottom.", "The hook on top: start at the head line and go diagonally up to the left (together with ा this makes ो).", "Head line over the right part, from left to right."]}, {"ch": "औ", "tr": "au", "adv": 1045, "glyph": "M309 71Q244 71 195.5 103.5Q147 136 109 190.5Q71 245 36 311L74 333Q100 286 127.5 242.5Q155 199 191 171.5Q227 144 279 144Q312 144 341.5 158.5Q371 173 390 199Q409 225 409 260Q409 297 384.5 316Q360 335 327 335Q299 335 269 323.5Q239 312 216 301L173 374Q200 389 232.5 401Q265 413 299 413H308Q335 430 349 453.5Q363 477 363 501Q363 527 347 544Q331 561 296 561Q268 561 224 547.5Q180 534 139 508L95 583Q139 609 183.5 621Q228 633 260 633Q306 633 338 613.5Q370 594 390 564Q410 534 419.5 502.5Q429 471 429 447Q429 431 424 413Q419 395 400 374Q406 369 413 360Q430 341 452.5 326Q475 311 519 311Q574 311 612 344L614 545H507L473 610V620H858Q826 662 801 684Q773 708 751 716Q729 724 709 724Q685 724 660.5 720.5Q636 717 608 711L566 788L567 795Q612 804 634.5 806.5Q657 809 670 809Q710 809 742 791Q774 773 811.5 731.5Q849 690 903 620H906Q864 703 836.5 754.5Q809 806 788.5 833Q768 860 748 869.5Q728 879 701 879Q680 879 657.5 876Q635 873 617 869L575 947L576 954Q602 958 628.5 961Q655 964 672 964Q730 964 771.5 925Q813 886 854 808Q893 733 945 620H1039L1073 555V545H956L958 -15H948L868 37L872 545H698L700 -10H690L610 42L611 243Q603 240 594 239Q585 238 575 238Q547 238 519.5 248Q492 258 472 271L468 269Q474 255 476.5 240.5Q479 226 479 213Q479 172 456.5 140Q434 108 396 89.5Q358 71 309 71Z", "strokes": ["M98 117 C180 95 300 85 360 130 C400 165 405 260 360 318 C330 340 260 335 200 336 C300 340 400 360 432 420 C460 500 410 590 300 590 C200 590 110 510 60 395", "M439 410 C500 405 580 425 650 409", "M655 122 L655 695", "M913 122 L913 695", "M879 116 C870 60 800 -20 740 -50 C700 -65 650 -68 600 -75", "M924 116 C915 50 850 -100 790 -165 C760 -200 700 -225 610 -235", "M490 117 L1060 117"], "notes": ["The 3-shaped curve: start at the top left, curve right and in to the middle, a short move left into the point, then let the big lower curve run out to the bottom left.", "Cross stroke from the curve to the right, up to the stem.", "Vertical stem, from the head line down.", "Second stem, the ā sign ा, from top to bottom.", "First, lower hook: start at the head line and go diagonally up to the left.", "Second, upper hook the same way, above it (together with ा this makes ौ).", "Head line over the right part, from left to right."]}, {"ch": "ं", "tr": "ṃ", "adv": 252, "glyph": "M125 737 202 661 125 588 50 661Z", "strokes": ["DOT 126 40 66"], "notes": ["Dot (anusvāra): a short stroke across the nib edge, above the head line. Anusvāra stands for a nasal after the vowel, e.g. संस्कृत saṃskṛta. It has no head line."]}, {"ch": "ः", "tr": "ḥ", "adv": 252, "glyph": "M125 213 202 137 125 64 50 137ZM125 485 202 409 125 336 50 409Z", "strokes": ["DOT 126 290 66", "DOT 126 563 66"], "notes": ["Upper dot (visarga): a short stroke across the nib edge. It sits halfway between the head line and the middle.", "Lower dot the same way, directly below at the height of the baseline. Visarga is a breathy sound after the vowel, e.g. देवः devaḥ. It has no head line."]}, {"ch": "क", "tr": "ka", "adv": 763, "glyph": "M645 68H637L568 127Q603 168 627.5 216.0Q652 264 652 297Q652 323 637.5 336.5Q623 350 604 350Q583 350 556.0 336.5Q529 323 502.0 304.0Q475 285 453 268L454 -10H444L364 44L365 203Q330 177 307.5 163.0Q285 149 266.0 143.5Q247 138 224 138Q173 138 132.5 165.0Q92 192 68.5 233.5Q45 275 45 316Q45 359 68.0 390.0Q91 421 127.5 438.0Q164 455 203 455Q254 455 295.5 428.5Q337 402 367 365L369 545H6L-28 610V620H757L791 555V545H451L452 369Q485 392 516.5 408.5Q548 425 571 425Q589 425 613.5 413.5Q638 402 661.5 379.0Q685 356 700.5 322.0Q716 288 716 243Q716 197 697.5 156.0Q679 115 645 68ZM366 304V310Q340 338 304.0 358.0Q268 378 229 378Q186 378 151.5 352.0Q117 326 117 277Q117 239 137.0 220.5Q157 202 184 202Q208 202 238.5 217.5Q269 233 302.0 256.0Q335 279 366 304Z", "strokes": ["M402 418 C331 277 221 263 148 295 C75 327 71 388 81 439 C90 490 135 528 198 528 C261 528 339 456 408 418 C469 384 519 304 588 312 C643 318 688 363 683 439 C678 515 638 560 603 600", "M405 117 L405 695", "M5 117 L758 117"], "notes": ["Curve: start in the middle, draw a loop to the left, then go through the middle up to the right and curve down to finish.", "Stem through the middle, from top to bottom.", "Head line (shirorekha), from left to right."]}, {"ch": "ख", "tr": "kha", "adv": 815, "glyph": "M322 -20H312L114 223Q77 268 61.5 296.5Q46 325 46 342Q46 374 97 374Q111 374 134.5 372Q158 370 176 368Q181 393 182.5 425.5Q184 458 184 482Q184 502 183.5 516.5Q183 531 182 545H6L-28 610V620H809L843 555V545H726L728 -10H718L638 42L639 211Q597 178 568 166.5Q539 155 501 155Q458 155 418 179Q378 203 352.5 243.5Q327 284 327 331Q327 372 348 401.5Q369 431 404 447Q439 463 480 463Q573 463 640 378L642 545H265Q267 523 267.5 501.5Q268 480 268 471Q268 389 256 341Q244 293 221 269Q198 245 165 237L373 22ZM640 312V324Q611 355 575 372Q539 389 504 389Q461 389 430 364.5Q399 340 399 289Q399 252 421 234.5Q443 217 473 217Q502 217 539.5 235.5Q577 254 640 312Z", "strokes": ["M223 120 L224 260 C224 330 200 370 150 388 C125 400 128 450 150 485 C200 560 270 630 330 690", "M679 345 C620 330 560 275 480 275 C410 278 360 320 365 380 C370 450 410 505 490 508 C570 510 630 455 679 442", "M683 122 L683 695", "M5 117 L830 117"], "notes": ["Left part: from the head line down, turn left and run out diagonally down to the right.", "The round part: start at the stem, go left along the top, round and back to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ग", "tr": "ga", "adv": 583, "glyph": "M611 545H494L496 -10H486L407 41L411 545H225L227 195Q227 170 204 170Q188 170 162.5 186.0Q137 202 112.0 226.5Q87 251 70.0 277.5Q53 304 53 324Q53 333 59.0 340.0Q65 347 78 347H142L143 545H6L-28 610V620H577L611 555Z", "strokes": ["M80 375 C100 440 150 500 192 512 C186 400 184 260 184 117", "M443 117 L443 695", "M5 117 L578 117"], "notes": ["Start on the left with the small hook, go round at the bottom and straight up to the head line.", "Right stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "घ", "tr": "gha", "adv": 624, "glyph": "M323 133Q281 133 246 150.5Q211 168 186 195.5Q161 223 147 254.5Q133 286 133 313Q133 344 152 367Q117 394 86.5 426Q56 458 56 499Q56 525 70 545H6L-28 610V620H618L652 555V545H535L537 -10H527L447 42L448 170Q413 150 382 141.5Q351 133 323 133ZM451 545H216Q183 537 164 519.5Q145 502 145 476Q145 459 155 437.5Q165 416 190 397Q217 411 251 418Q285 425 323 428L363 346Q278 345 242.5 321.5Q207 298 207 266Q207 238 229 218Q251 198 284 198Q310 198 351.5 215Q393 232 449 273Z", "strokes": ["M162 118 C108 162 98 172 96 210 C94 246 121 283 151 303 C185 325 231 323 272 325 C289 326 336 302 322 312 C275 344 196 341 172 393 C154 433 165 489 230 512 C295 535 411 529 487 458", "M490 122 L490 695", "M5 117 L640 117"], "notes": ["Two curves in one stroke, like the curve of अ mirrored: start at the head line, the upper curve round to the left into the middle, a short move right into the point and back, then the lower curve round to the left and on to the right up to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ङ", "tr": "ṅa", "adv": 653, "glyph": "M355 7Q258 7 171.0 72.0Q84 137 26 259L64 281Q91 228 127.5 182.5Q164 137 214.0 109.5Q264 82 331 82Q387 82 416.5 99.5Q446 117 457.0 141.5Q468 166 468 187Q468 204 458.0 214.5Q448 225 430 225Q411 225 379.5 219.0Q348 213 318.0 207.0Q288 201 271 201Q246 201 218.5 216.5Q191 232 167.0 257.5Q143 283 128.0 314.5Q113 346 113 378Q113 415 142.0 437.5Q171 460 232 460H383V545H6L-28 610V620H647L681 555V545H465Q465 507 465.5 465.5Q466 424 466 393L454 385H250Q185 385 185 339Q185 308 202.5 290.5Q220 273 238 273Q247 273 268.0 277.0Q289 281 315.0 285.5Q341 290 365.0 294.0Q389 298 404 298Q432 298 462.5 275.0Q493 252 514.5 215.0Q536 178 536 137Q536 111 518.0 80.5Q500 50 460.0 28.5Q420 7 355 7ZM647 341 577 273 508 341 577 411Z", "strokes": ["M423 117 L423 279 L250 279 C185 279 148 300 150 340 C155 400 200 462 250 462 C320 458 380 440 430 440 C480 440 500 500 497 560 C490 620 420 650 346 650 C220 650 120 560 45 433", "DOT 577 358 66", "M5 117 L648 117"], "notes": ["From the head line down, then left, a small loop and right, then run out in a big curve to the bottom left.", "Dot: a short stroke across the nib edge. The nib sets down its full width and makes a diamond, at any nib angle.", "Head line, from left to right."]}, {"ch": "च", "tr": "ca", "adv": 676, "glyph": "M361 128Q310 128 271 145Q232 162 204.5 189.5Q177 217 163 249Q149 281 149 310Q149 323 153 338.5Q157 354 167 370H72L37 436V446H411L444 382V372Q428 373 420.5 373Q413 373 402 373Q358 373 316.5 367.5Q275 362 248 341.5Q221 321 221 277Q221 231 249.5 211.5Q278 192 314 192Q343 192 387.5 209Q432 226 501 283L503 545H6L-28 610V620H670L704 555V545H587L589 -10H579L499 42L500 180Q455 147 423 137.5Q391 128 361 128Z", "strokes": ["M440 322 C380 288 280 292 214 301 C140 300 80 290 45 262 C80 300 150 312 205 312 C185 350 182 430 215 475 C260 528 360 545 430 515 C470 500 505 480 539 472", "M542 122 L542 695", "M5 117 L692 117"], "notes": ["In one stroke: start at the right tip of the cross stroke, go left to the left tip, turn tightly, back to the middle, and curve down and right to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "छ", "tr": "cha", "adv": 751, "glyph": "M361 10Q312 10 269 26Q226 42 193 68Q160 94 141.5 124.5Q123 155 123 184Q123 203 130 218.5Q137 234 150 247Q54 314 54 383Q54 419 74.5 444.5Q95 470 128.5 483Q162 496 200 496Q241 496 264 482Q287 468 298.5 449Q310 430 314 413Q301 416 279.5 418.5Q258 421 238 421Q194 421 161 404Q128 387 128 351Q128 326 144.5 307Q161 288 184 273Q216 292 257 302Q298 312 337 316L364 239Q280 232 239 207Q198 182 198 147Q198 123 216 106Q234 89 262.5 80.5Q291 72 322 72Q386 72 449.5 104.5Q513 137 557 188Q522 211 484.5 240.5Q447 270 422 306.5Q397 343 397 386Q397 425 420.5 455.5Q444 486 484 496V545H6L-28 610V620H745L779 555V545H565V493Q619 477 655.5 428Q692 379 692 308Q692 245 662 190.5Q632 136 583.5 95.5Q535 55 476.5 32.5Q418 10 361 10ZM583 221Q603 251 614 283.5Q625 316 625 349Q625 402 602 423Q579 444 552 444Q521 444 501 422Q481 400 481 362Q481 324 505 288.5Q529 253 583 221Z", "strokes": ["M312 285 C270 255 190 238 140 258 C100 280 88 340 115 390 C140 430 165 450 187 464 C160 520 175 600 240 635 C320 670 440 640 530 585 C560 565 585 540 594 517 C640 480 660 420 655 360 C650 290 610 232 540 232 C470 245 440 300 450 360 C460 420 520 470 594 516", "M524 120 L524 228", "M5 117 L768 117"], "notes": ["Left part: start at the top, curve left and down, a small turn, then the big curve right to the point; from there the loop goes up on the right, round the top and down on the left back to the point.", "The short vertical stroke from the head line down to the loop.", "Head line, from left to right."]}, {"ch": "ज", "tr": "ja", "adv": 735, "glyph": "M325 85Q274 85 230.5 110.5Q187 136 150 179.5Q113 223 81.5 278Q50 333 22 393L63 411Q115 302 173 234Q231 166 298 166Q339 166 362 189.5Q385 213 385 246Q385 278 360.5 308.5Q336 339 287 361L260 419V430H561L562 545H6L-28 610V620H729L763 555V545H646L648 -10H638L558 42L560 355H383Q423 314 443.5 280Q464 246 464 208Q464 169 444.5 141.5Q425 114 393.5 99.5Q362 85 325 85Z", "strokes": ["M52 318 C110 440 200 565 320 572 C390 575 425 530 420 480 C415 420 380 360 344 309 C320 290 290 280 266 275 C300 285 325 300 345 308 L601 307", "M603 122 L603 695", "M5 117 L757 117"], "notes": ["Start on the left, big curve down and to the right, up again, curl in to the left at the top, turn tightly and go right as the cross stroke to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "झ", "tr": "jha", "adv": 758, "glyph": "M337 -155H328L227 21Q195 25 163 37Q131 49 110 71Q89 93 89 126Q89 146 98 161.5Q107 177 125 177Q145 177 177 155Q209 133 243 87Q285 89 323.5 103Q362 117 386.5 142Q411 167 411 201Q411 229 397 238Q383 247 366 247Q348 247 318 240.5Q288 234 256 227Q224 220 201 220Q159 220 124 246.5Q89 273 68 311Q47 349 47 385Q47 432 84.5 450.5Q122 469 191 469H353V545H6L-28 610V620H752L786 555V545H669L671 -10H661L581 42L582 217Q575 215 566.5 214.5Q558 214 551 214Q517 214 491.5 225Q466 236 450 249L448 247Q461 226 469 203.5Q477 181 477 162Q477 124 447.5 94Q418 64 374 44.5Q330 25 286 21L389 -122ZM405 296Q419 289 439.5 283Q460 277 488 277Q544 277 583 309L585 545H433Q433 509 433.5 471Q434 433 434 403L422 395H218Q174 395 151.5 388Q129 381 121.5 370Q114 359 114 346Q114 327 127.5 309Q141 291 169 291Q183 291 207.5 295Q232 299 259.5 305Q287 311 311.5 315Q336 319 349 319Q363 319 377.5 313Q392 307 405 296Z", "strokes": ["M392 120 L387 265 C387 270 380 272 370 272 L150 272 C105 274 80 300 85 345 C92 410 150 445 220 440 C290 435 350 420 425 442 C445 480 448 540 430 570 C405 620 330 650 256 645 C200 640 145 605 122 565 C110 542 125 522 150 532 C190 550 235 600 262 660 C290 720 320 780 358 822", "M425 442 C480 435 560 455 624 438", "M626 122 L626 695", "M5 117 L775 117"], "notes": ["As in इ: from the head line down, then left, round, a small crossing loop at the bottom and the tail down to the right.", "Cross stroke out of the belly to the right, up to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ञ", "tr": "ña", "adv": 775, "glyph": "M321 117Q270 117 223 141Q176 165 128 220.5Q80 276 26 370L64 393Q98 336 133.5 290.5Q169 245 209.5 219Q250 193 299 193Q331 193 358.5 205Q386 217 403.5 243Q421 269 421 311Q421 351 402.5 372.5Q384 394 346 394Q318 394 286.5 383.5Q255 373 228 360L185 437Q218 454 251 462Q284 470 310 470Q357 470 392.5 446.5Q428 423 451 385.5Q474 348 483 308Q492 303 503.5 299Q515 295 532 295Q570 295 600 321L602 545H6L-28 610V620H769L803 555V545H686L688 -10H678L598 42L599 220Q587 217 576 217Q549 217 526.5 231Q504 245 492 257L488 255Q486 209 462.5 178.5Q439 148 401.5 132.5Q364 117 321 117Z", "strokes": ["M190 262 C230 270 300 262 360 278 C420 295 455 360 453 426 C450 500 390 545 310 542 C210 538 120 450 57 338", "M454 425 C520 420 580 445 638 432", "M641 122 L641 695", "M5 117 L795 117"], "notes": ["Start at the top left, go right, curve round to the right and down, and run out far up to the left.", "Cross stroke from the curve to the right, up to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ट", "tr": "ṭa", "adv": 539, "glyph": "M567 545H411Q411 517 411.5 483.5Q412 450 412 419.5Q412 389 412 368L400 360H272Q208 360 168.5 330Q129 300 129 239Q129 196 149.5 167.5Q170 139 204 125Q238 111 279 111Q333 111 376.5 132Q420 153 454 187L514 126Q475 84 427 60.5Q379 37 325 37Q276 37 228 56Q180 75 140.5 109.5Q101 144 77.5 189.5Q54 235 54 289Q54 346 81 377.5Q108 409 156.5 422Q205 435 269 435H329V545H6L-28 610V620H533L567 555Z", "strokes": ["M369 121 L367 295 C367 302 360 305 350 305 L210 307 C140 315 92 360 95 420 C100 520 170 610 270 618 C350 625 440 585 480 557", "M5 117 L555 117"], "notes": ["From the head line down, then left, round in a big curve, down and out to the right.", "Head line, from left to right. ट has no stem."]}, {"ch": "ठ", "tr": "ṭha", "adv": 577, "glyph": "M322 37Q266 37 216.5 58.5Q167 80 129.5 115.5Q92 151 70.5 194.5Q49 238 49 283Q49 329 74 364Q99 399 155.5 418.5Q212 438 305 438Q325 438 331 445Q337 452 337 485V545H6L-28 610V620H571L605 555V545H417Q417 541 417 536.5Q417 532 418 527Q418 511 418.5 489.5Q419 468 419 438Q419 414 417 401Q470 365 501.5 317.5Q533 270 533 218Q533 168 504.5 127Q476 86 428.5 61.5Q381 37 322 37ZM388 365Q377 363 358 363Q230 363 177.5 333Q125 303 125 238Q125 195 146 166Q167 137 202 122.5Q237 108 277 108Q323 108 363 126Q403 144 428.5 175.5Q454 207 454 247Q454 282 435 314.5Q416 347 388 365Z", "strokes": ["M376 120 L368 298 C294 302 200 300 140 340 C95 375 85 450 110 515 C140 585 220 625 320 626 C410 625 478 571 488 498 C498 425 479 306 336 300", "M5 117 L595 117"], "notes": ["From the head line down, then draw the big round belly round to the left until it closes again at the top.", "Head line, from left to right. ठ has no stem."]}, {"ch": "ड", "tr": "ḍa", "adv": 577, "glyph": "M355 7Q258 7 171 72Q84 137 26 259L64 281Q91 228 127.5 182.5Q164 137 214 109.5Q264 82 331 82Q387 82 416.5 99.5Q446 117 457 141.5Q468 166 468 187Q468 204 458 214.5Q448 225 430 225Q411 225 379.5 219Q348 213 318 207Q288 201 271 201Q246 201 218.5 216.5Q191 232 167 257.5Q143 283 128 314.5Q113 346 113 378Q113 415 142 437.5Q171 460 232 460H390V545H6L-28 610V620H571L605 555V545H471Q472 508 472.5 467Q473 426 473 393L461 385H250Q185 385 185 339Q185 308 202.5 290.5Q220 273 238 273Q247 273 268 277Q289 281 315 285.5Q341 290 365 294Q389 298 404 298Q432 298 462.5 275Q493 252 514.5 215Q536 178 536 137Q536 111 518 80.5Q500 50 460 28.5Q420 7 355 7Z", "strokes": ["M430 120 L430 268 C430 276 422 280 410 280 L210 280 C165 282 148 315 155 355 C165 410 220 460 300 455 C360 450 420 435 465 460 C495 480 505 560 470 610 C430 655 330 665 250 635 C170 605 105 530 55 450", "M5 117 L595 117"], "notes": ["From the head line down, then left, a small loop to the right, then the big curve round to the right and out to the bottom left.", "Head line, from left to right. ड has no stem."]}, {"ch": "ढ", "tr": "ḍha", "adv": 558, "glyph": "M355 17Q304 17 251 38.5Q198 60 152.5 99Q107 138 79 192Q51 246 51 311Q51 365 77.5 396Q104 427 151.5 440Q199 453 262 453H370V545H6L-28 610V620H552L586 555V545H451Q452 502 452.5 460.5Q453 419 453 386L441 378H265Q201 378 163.5 348Q126 318 126 257Q126 190 164 151Q202 112 261 99Q248 130 243.5 153.5Q239 177 239 197Q239 229 256.5 253.5Q274 278 301 292Q328 306 358 306Q391 306 428 290Q465 274 490.5 240Q516 206 516 152Q516 115 495.5 84Q475 53 439 35Q403 17 355 17ZM303 93Q314 92 325 92Q367 92 397.5 106Q428 120 444 141.5Q460 163 460 185Q460 209 441.5 224Q423 239 397 239Q351 239 324.5 207Q298 175 298 127Q298 108 303 93Z", "strokes": ["M410 120 L410 275 C410 282 402 285 390 285 L240 285 C150 290 88 340 90 410 C95 510 170 610 272 629 C360 650 460 610 486 548 C500 490 450 435 380 430 C310 428 270 480 272 530 C273 570 278 600 273 628", "M5 117 L578 117"], "notes": ["From the head line down, then left, a big curve round to the right, and curl a small loop inside.", "Head line, from left to right. ढ has no stem."]}, {"ch": "ण", "tr": "ṇa", "adv": 713, "glyph": "M273 158Q235 158 200 176Q165 194 137 222Q109 250 92.5 280.5Q76 311 74 337Q73 351 73 363Q73 375 73 386Q73 418 73.5 461Q74 504 74 545H6L-28 610V620H707L741 555V545H624L626 -10H616L536 42L540 545H416V308Q416 273 400.5 238Q385 203 353.5 180.5Q322 158 273 158ZM159 545 161 315Q161 267 182 245Q203 223 236 223Q274 223 303 248.5Q332 274 332 326V545Z", "strokes": ["M116 122 L116 320 C116 430 180 505 265 507 C340 508 373 440 373 370 L373 122", "M581 122 L581 695", "M5 117 L730 117"], "notes": ["Left part: from the head line down, curve right and back up to the head line.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "त", "tr": "ta", "adv": 573, "glyph": "M223 -10H213Q142 82 95 156Q48 230 48 294Q48 368 105.5 401.5Q163 435 258 435H399L400 545H6L-28 610V620H567L601 555V545H484L486 -10H476L396 42L398 360H269Q196 360 160.5 327.5Q125 295 125 248Q125 226 131.5 206Q138 186 153.5 162Q169 138 196.5 105.5Q224 73 266 25Z", "strokes": ["M440 302 L210 306 C130 315 85 360 90 420 C95 500 150 590 225 675", "M441 122 L441 695", "M5 117 L595 117"], "notes": ["From where it meets the stem, go left, curve down and run out diagonally down to the right.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "थ", "tr": "tha", "adv": 652, "glyph": "M339 133Q279 133 229 163.5Q179 194 144.5 245.5Q110 297 97 358Q188 384 241 414.5Q294 445 294 500Q294 534 274 548Q254 562 226 562Q204 562 182 553Q160 544 146 528Q132 512 132 490Q132 468 147 455Q162 442 181 432V421Q171 420 166.5 419.5Q162 419 156 419Q109 419 81.5 448.5Q54 478 54 518Q54 565 90.5 599Q127 633 186 633Q238 633 278 605Q318 577 341 535.5Q364 494 364 454Q364 413 341.5 384.5Q319 356 279 335.5Q239 315 187 296Q187 266 203 244Q219 222 245.5 209.5Q272 197 301 197Q345 197 392 222.5Q439 248 477 286L479 545H407L373 610V620H646L680 555V545H563L565 -10H555L475 42L476 183Q438 155 406 144Q374 133 339 133Z", "strokes": ["M175 273 C120 255 92 200 105 150 C120 110 190 95 250 113 C300 130 325 190 322 250 C318 300 240 340 152 370 C160 440 200 510 280 525 C360 535 440 495 515 470", "M519 122 L519 695", "M445 117 L670 117"], "notes": ["The small loop at the top left, then down to the left and curve right up to the stem.", "Vertical stem, from top to bottom.", "Head line over the right part, from left to right. The left part rises above it."]}, {"ch": "द", "tr": "da", "adv": 527, "glyph": "M487 -98H478L386 63Q358 55 323 55Q271 55 223 76.5Q175 98 137 135Q99 172 77 218.5Q55 265 55 316Q55 368 81.5 397Q108 426 155 437.5Q202 449 265 449H340V545H6L-28 610V620H521L555 555V545H422Q422 503 422.5 458.5Q423 414 423 382L411 374H270Q206 374 168 349Q130 324 130 273Q130 226 150.5 192.5Q171 159 203 141.5Q235 124 270 124Q288 124 308.5 127.5Q329 131 344 140Q332 164 324.5 184Q317 204 317 218Q317 235 326.5 242.5Q336 250 352 250Q375 250 403.5 237Q432 224 453.5 203.5Q475 183 475 159Q475 148 466 126Q457 104 431 85L539 -65Z", "strokes": ["M380 121 L380 278 C380 285 372 288 360 288 L222 290 C150 295 92 340 95 400 C100 500 190 605 300 607 C340 607 385 595 395 560 C400 530 380 505 360 490 C350 520 370 570 388 593 C420 640 460 700 490 755", "M5 117 L545 117"], "notes": ["From the head line down, then left, round, a loop at the bottom and the tail down to the right.", "Head line, from left to right. द has no stem."]}, {"ch": "ध", "tr": "dha", "adv": 654, "glyph": "M215 417Q244 417 275.5 427Q307 437 352 441L389 363Q283 353 241.5 324.5Q200 296 200 260Q200 226 229.5 205Q259 184 299 184Q329 184 374 200.5Q419 217 480 264L482 545H393L359 610V620H648L682 555V545H565L567 -10H557L478 41L479 161Q439 137 404 128Q369 119 340 119Q291 119 251.5 137Q212 155 184.5 183.5Q157 212 142 244Q127 276 127 304Q127 346 162 378Q118 401 86 439.5Q54 478 54 525Q54 575 89.5 604Q125 633 180 633Q223 633 248.5 616.5Q274 600 286 573.5Q298 547 298 518Q298 511 297.5 504Q297 497 296 491H287Q274 532 253.5 548Q233 564 204 564Q170 564 148.5 544.5Q127 525 127 493Q127 454 155 435.5Q183 417 215 417Z", "strokes": ["M291 203 C285 150 245 105 175 105 C120 108 90 150 95 200 C100 255 150 295 204 326 C250 318 300 300 345 272 C330 300 300 325 250 335 C215 343 190 355 180 390 C168 440 175 480 228 520 C290 560 420 520 517 491", "M521 122 L521 695", "M432 117 L672 117"], "notes": ["In one stroke: the small loop at the top round to the left into the middle, a short move up to the right into the point and back, then the curve round the bottom to the right, up to the stem.", "Vertical stem, from top to bottom.", "Head line over the right part, from left to right. The left part rises above it."]}, {"ch": "न", "tr": "na", "adv": 570, "glyph": "M598 545H481L483 -10H473L393 42L395 293H219Q219 235 213 212Q207 189 184 189Q163 189 139 202Q115 215 94.5 236Q74 257 61 282Q48 307 48 330Q48 358 70.5 364.5Q93 371 132 371Q150 371 191 370.5Q232 370 285.5 368.5Q339 367 395 366L397 545H6L-28 610V620H564L598 555Z", "strokes": ["M90 371 C104 371 106 390 94 397 C82 403 72 392 76 381 C81 369 98 368 110 376 C140 395 160 440 165 488 C160 450 155 410 162 386 C220 372 320 369 438 370", "M438 122 L438 695", "M5 117 L590 117"], "notes": ["In one stroke: begin with a very small circle, go diagonally down to the right into the drop, turn tightly, go up and right as the cross stroke to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "प", "tr": "pa", "adv": 557, "glyph": "M278 168Q239 168 203.0 186.0Q167 204 138.0 232.0Q109 260 92.0 291.0Q75 322 74 347Q73 361 73.0 373.0Q73 385 73 396Q73 428 73.5 467.0Q74 506 74 545H6L-28 610V620H551L585 555V545H468L470 -10H460L380 42L381 200Q328 168 278 168ZM384 545H159L161 325Q161 277 183.0 255.0Q205 233 230 233Q260 233 297.5 252.0Q335 271 382 304Z", "strokes": ["M112 117 L112 380 C112 470 190 520 260 515 C320 510 380 450 445 405", "M423 117 L423 695", "M5 117 L552 117"], "notes": ["Left stem down, then curve right and up to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "फ", "tr": "pha", "adv": 772, "glyph": "M656 63H648L579 122Q614 163 637.5 212.5Q661 262 661 296Q661 319 645 334Q629 349 609 349Q582 349 539.5 324Q497 299 451 265L452 -10H442L362 44L363 201Q338 184 317.5 176Q297 168 273 168Q237 168 202.5 185.5Q168 203 139.5 231Q111 259 93.5 289.5Q76 320 75 347Q74 361 74 373Q74 385 74 396Q74 425 74.5 465.5Q75 506 75 545H6L-28 610V620H766L800 555V545H449L450 367Q499 400 527 412Q555 424 575 424Q593 424 618.5 412Q644 400 668.5 377Q693 354 709 319.5Q725 285 725 240Q725 194 707.5 152Q690 110 656 63ZM364 305 366 545H160L162 325Q162 278 183.5 255.5Q205 233 227 233Q256 233 288.5 253Q321 273 364 305Z", "strokes": ["M117 122 L118 330 C120 430 180 495 270 495 C320 494 360 470 400 450 C440 432 465 385 500 356 C535 330 570 318 600 320 C660 325 692 390 688 460 C684 520 660 555 643 570 C620 578 605 578 591 577", "M407 122 L407 695", "M5 117 L790 117"], "notes": ["In one stroke: the left part as in प, down and curving up to the stem, on up to the right into the curve, curve down and turn briefly to the left.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ब", "tr": "ba", "adv": 602, "glyph": "M256 128Q202 128 161.5 147Q121 166 94 195.5Q67 225 54 258.5Q41 292 41 321Q41 365 67 397.5Q93 430 137.5 448.5Q182 467 235 467Q299 467 349.5 438Q400 409 425 357H428L429 545H6L-28 610V620H596L630 555V545H513L515 -10H505L425 42L426 202H424Q399 164 351 146Q303 128 256 128ZM226 192Q262 192 294 204L164 367Q141 352 126.5 331Q112 310 112 282Q112 242 145 217Q178 192 226 192ZM205 385 333 224Q356 241 370 264Q384 287 384 315Q384 359 349 376.5Q314 394 268 394Q235 394 205 385Z", "strokes": ["M448 420 C430 390 420 355 390 325 C340 280 240 268 168 293 C80 340 70 420 100 470 C140 525 240 545 320 520 C380 500 420 455 448 420", "M168 293 L330 511", "M470 122 L470 695", "M5 117 L620 117"], "notes": ["The closed belly: start at the stem, go round to the left along the top and back to the right along the bottom to the start.", "The diagonal inside the belly, from top left to bottom right.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "भ", "tr": "bha", "adv": 716, "glyph": "M188 310H258Q263 357 265 387Q267 417 267 449Q267 516 249 539.5Q231 563 196 563Q171 563 151 548Q131 533 131 507Q131 481 152 464Q173 447 195 435V424Q185 423 180.5 422.5Q176 422 175 422Q117 422 85 457Q53 492 53 538Q53 569 69 590Q85 611 109.5 622Q134 633 159 633Q197 633 231 614.5Q265 596 291.5 565Q318 534 333 497Q348 460 348 424Q348 398 347 367Q346 336 345 310H541L543 545H403L369 610V620H710L744 555V545H627L629 -10H619L539 42L540 235H338Q332 182 326.5 160Q321 138 302 138Q286 138 262.5 153.5Q239 169 216 193Q193 217 178 242Q163 267 163 286Q163 296 169 303Q175 310 188 310Z", "strokes": ["M189 270 C130 255 95 210 98 165 C102 120 150 100 205 108 C260 118 300 170 302 250 L302 525 C304 560 255 555 222 512 C195 478 172 442 180 420 C192 402 240 424 302 425 L582 427", "M584 122 L584 695", "M440 117 L735 117"], "notes": ["The loop at the top left, then straight down, at the bottom curve back up to the left (a loop as in म) and go straight right to the stem.", "Vertical stem, from top to bottom.", "Head line over the right part, from left to right. The left part rises above it."]}, {"ch": "म", "tr": "ma", "adv": 612, "glyph": "M78 310H132L133 545H6L-28 610V620H606L640 555V545H523L525 -10H515L435 42L436 235H217V163Q217 138 194 138Q179 138 155.5 153.5Q132 169 108.5 193.0Q85 217 69.0 242.5Q53 268 53 287Q53 296 59.0 303.0Q65 310 78 310ZM439 545H215L216 310H437Z", "strokes": ["M170 117 C172 300 178 480 182 520 C185 555 130 545 100 500 C80 470 68 435 80 425 C100 410 140 428 210 428 L477 428", "M477 117 L477 695", "M5 117 L607 117"], "notes": ["Straight down, at the bottom curve back up to the left (a loop), then carry on straight to the right.", "Right stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "य", "tr": "ya", "adv": 582, "glyph": "M289 136Q230 136 177.5 167.5Q125 199 88.5 252Q52 305 40 371Q118 390 154.5 412.5Q191 435 191 469Q191 482 184.5 502Q178 522 162 545H6L-28 610V620H576L610 555V545H493L495 -10H485L405 42L406 172Q376 152 346 144Q316 136 289 136ZM409 545H217Q263 475 263 426Q263 388 231.5 359Q200 330 127 310Q128 280 144.5 254.5Q161 229 188.5 214Q216 199 250 199Q284 199 323 216Q362 233 407 270Z", "strokes": ["M190 118 C210 170 225 240 210 285 C190 325 140 345 92 358 C95 440 160 520 280 530 C350 535 400 500 447 482", "M450 122 L450 695", "M5 117 L600 117"], "notes": ["From the head line down, turn left, and curve right to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "र", "tr": "ra", "adv": 394, "glyph": "M322 -20H312L114 223Q77 268 61.5 296.5Q46 325 46 342Q46 374 97 374Q112 374 138.0 372.0Q164 370 182 368Q187 393 188.5 425.5Q190 458 190 482Q190 503 189.5 518.0Q189 533 188 545H6L-28 610V620H388L422 555V545H271Q272 526 273.0 503.0Q274 480 274 471Q274 389 262.0 341.0Q250 293 225.5 269.0Q201 245 165 237L373 22Z", "strokes": ["M222 117 C224 260 228 350 200 385 C170 410 110 360 72 345 L335 700", "M5 117 L389 117"], "notes": ["From the head line down, curl in to the left and run out diagonally down to the right.", "Head line, from left to right. र has no stem."]}, {"ch": "ल", "tr": "la", "adv": 686, "glyph": "M264 -10H254Q192 50 146 100Q100 150 74.5 198Q49 246 49 299Q49 341 65.5 375Q82 409 113 429.5Q144 450 187 450Q233 450 265.5 426Q298 402 324 372Q347 400 376 419.5Q405 439 439 439Q475 439 512 414L513 545H6L-28 610V620H680L714 555V545H597L599 -10H589L509 42L511 368Q504 370 496.5 372Q489 374 481 374Q442 374 409.5 339.5Q377 305 340 225L263 263Q270 281 280 301Q290 321 302 340Q286 356 265.5 366Q245 376 222 376Q182 376 155.5 347Q129 318 129 265Q129 229 144.5 194.5Q160 160 199 120Q238 80 307 25Z", "strokes": ["M552 317 C512 299 480 286 431 296 C382 305 318 403 298 451 C350 376 340 369 340 369 C340 345 287 312 253 294 C220 277 171 283 133 313 C95 343 87 390 91 445 C97 515 206 623 276 693", "M554 122 L554 695", "M5 117 L705 117"], "notes": ["Two curves in one stroke: start at the stem, the small curve left to the middle and the hook down to the left, turn tightly, then the big curve up to the left, round the outside, down and out to the right.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "व", "tr": "va", "adv": 597, "glyph": "M251 133Q199 133 160 151Q121 169 94.5 198Q68 227 54.5 260Q41 293 41 322Q41 364 66.5 397Q92 430 134 448.5Q176 467 225 467Q285 467 335 439Q385 411 422 368L424 545H6L-28 610V620H591L625 555V545H508L510 -10H500L420 42L421 201Q386 178 360 163Q334 148 308.5 140.5Q283 133 251 133ZM422 313Q390 344 342.5 366.5Q295 389 247 389Q192 389 153 360.5Q114 332 114 279Q114 239 142 218Q170 197 208 197Q245 197 294 221Q343 245 422 305Z", "strokes": ["M464 358 C400 340 330 275 230 273 C140 275 80 330 82 400 C85 480 160 535 240 533 C330 530 400 475 460 451", "M465 122 L465 695", "M5 117 L615 117"], "notes": ["The belly: start at the stem, go up to the left, round, and back to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "श", "tr": "śa", "adv": 708, "glyph": "M160 177Q126 177 98.5 194Q71 211 55.5 234.5Q40 258 40 277Q40 288 47.5 295Q55 302 74 302Q102 302 131.5 288Q161 274 187 257Q243 272 282 303Q95 375 95 486Q95 518 112 545H6L-28 610V620H702L736 555V545H619L621 -15H611L531 37L535 545H378Q400 521 414.5 488.5Q429 456 429 417Q429 361 402 317Q375 273 333 242.5Q291 212 248 195L418 22L367 -20H357L195 180Q176 177 160 177ZM313 334Q352 382 352 448Q352 490 337 512.5Q322 535 300.5 543.5Q279 552 259 552Q216 552 198 526Q180 500 180 471Q180 433 211 399Q242 365 313 334Z", "strokes": ["M318 398 C250 365 150 320 135 250 C125 195 132 154 170 135 C208 115 298 117 339 136 C380 155 395 200 392 260 C387 326 354 387 315 426 C275 464 198 578 173 576 C147 574 134 557 130 526 C127 496 162 496 182 504 C202 510 247 546 276 575 C305 603 330 625 385 700", "M576 122 L576 695", "M5 117 L725 117"], "notes": ["In one stroke: start in the middle, the big loop up on the left, across the top to the right and down on the right; on down to the left into the small loop, round it, and the tail diagonally down to the right.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ष", "tr": "ṣa", "adv": 572, "glyph": "M289 155Q250 155 212 173Q174 191 143 219Q112 247 93.5 278Q75 309 74 335Q73 349 73 363Q73 377 73 388Q73 421 73.5 463Q74 505 74 545H6L-28 610V620H566L600 555V545H483L485 -10H475L395 42L396 187Q369 170 342 162.5Q315 155 289 155ZM159 493 161 312Q162 280 175 259.5Q188 239 206.5 229.5Q225 220 241 220Q295 220 380 277ZM399 545H168L397 319Z", "strokes": ["M121 128 L119 350 C122 440 190 505 280 510 C340 512 390 485 432 461", "M440 122 L440 695", "M122 160 C145 182 170 192 200 220 L430 432", "M5 117 L590 117"], "notes": ["Left part: down, then curve up to the stem.", "Vertical stem, from top to bottom.", "The diagonal, from top left to bottom right.", "Head line, from left to right."]}, {"ch": "स", "tr": "sa", "adv": 679, "glyph": "M316 -20H306L129 196Q80 257 63 288.5Q46 320 46 342Q46 374 97 374Q112 374 138.5 372Q165 370 183 368Q188 393 189.5 425.5Q191 458 191 482Q191 504 190.5 518.5Q190 533 189 545H6L-28 610V620H673L707 555V545H590L592 -10H582L502 42L503 239Q462 224 417 224Q389 224 345 235.5Q301 247 244 293Q220 249 159 237L367 22ZM260 333Q272 326 294.5 318.5Q317 311 342.5 306Q368 301 391 301Q426 301 457 312.5Q488 324 504 338L506 545H270Q272 526 272.5 503Q273 480 273 471Q273 427 269.5 391Q266 355 260 333Z", "strokes": ["M229 120 L230 245 C230 300 222 340 190 362 C160 382 110 398 80 384 C52 370 48 336 75 328 C103 320 128 350 138 390 C150 440 225 560 315 676", "M196 370 C235 401 330 425 400 433 C450 437 500 425 543 414", "M546 122 L546 695", "M5 117 L700 117"], "notes": ["Left part: from the head line down, then left, a small loop in the middle, then run out diagonally down to the right.", "Cross stroke from the left part to the right, up to the stem.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ह", "tr": "ha", "adv": 532, "glyph": "M440 -121 429 -164Q309 -134 236 -91Q163 -48 129.5 2Q96 52 96 103Q96 154 125 198Q94 224 71.5 262.5Q49 301 49 341Q49 394 92.5 427Q136 460 229 460H364V545H6L-28 610V620H526L560 555V545H446Q446 507 446.5 465.5Q447 424 447 393L435 385H247Q188 385 155 366Q122 347 122 306Q122 286 132 266.5Q142 247 155 234Q187 263 229.5 280Q272 297 319 297Q366 297 398.5 281.5Q431 266 450.5 242Q470 218 479 192Q488 166 488 145Q488 62 383 18L336 85Q369 101 393.5 124.5Q418 148 418 183Q418 212 398 225.5Q378 239 343 239Q296 239 258.5 216.5Q221 194 199.5 158.5Q178 123 178 84Q178 49 201 11.5Q224 -26 281.5 -60Q339 -94 440 -121Z", "strokes": ["M404 121 L404 268 C404 276 396 280 385 280 L207 280 C132 282 88 328 88 370 C88 444 96 477 173 486 C251 495 276 441 350 435 C424 429 452 490 450 545 C448 590 409 624 370 643", "M260 467 C153 531 102 598 147 677 C193 756 330 820 412 836", "M5 117 L550 117"], "notes": ["From the head line down, then left, round, then the small curve down on the right.", "The tail: out of the belly down to the left, round and out to the right.", "Head line, from left to right. ह has no stem."]}, {"ch": "क्ष", "tr": "kṣa", "adv": 719, "glyph": "M306 31Q260 31 218.5 48Q177 65 144.5 93Q112 121 93.5 155Q75 189 75 224Q75 258 91 284Q107 310 133 330Q159 350 188 368Q141 397 111.5 435Q82 473 82 517Q82 564 117 598.5Q152 633 209 633Q254 633 294.5 610Q335 587 360 549.5Q385 512 385 467Q385 431 368 405.5Q351 380 323 359Q364 351 403 351Q445 351 477.5 361Q510 371 545 389L546 545H438L404 610V620H713L747 555V545H630L632 -15H622L542 37L544 299Q526 294 506 291Q486 288 463 288Q418 288 368 298Q318 308 271 326Q242 310 215.5 292Q189 274 172.5 250Q156 226 156 192Q156 148 184 123Q212 98 257 98Q292 98 321 114Q313 130 304 149.5Q295 169 295 187Q295 203 304 212.5Q313 222 331 222Q353 222 380.5 209.5Q408 197 428.5 177Q449 157 449 133Q449 114 438.5 95Q428 76 407 61L516 -93L464 -126H454L362 39Q336 31 306 31ZM228 393Q264 416 290.5 440Q317 464 317 501Q317 531 297 549Q277 567 245 567Q211 567 184.5 544.5Q158 522 158 487Q158 458 177.5 434Q197 410 228 393Z", "strokes": ["M586 356 C540 365 480 378 420 378 C360 375 305 362 285 334 C330 300 350 270 346 230 C342 170 300 110 230 105 C165 102 120 150 125 200 C130 260 180 320 223 343 C180 380 120 420 118 482 C116 560 170 620 260 630 C320 635 375 620 372 575 C370 540 345 520 335 535 C325 555 350 600 368 625 C395 670 430 730 467 783", "M586 122 L586 695", "M430 117 L740 117"], "notes": ["In one stroke: start at the stem, go left as the cross stroke to the middle, the big loop up on the right, round to the left and back to the middle; on in the big curve round to the left and down, a small loop at the bottom, and the tail diagonally down to the right.", "Vertical stem, from top to bottom.", "Head line over the right part, from left to right. The loop on the left rises above it."]}, {"ch": "त्र", "tr": "tra", "adv": 575, "glyph": "M399 248 163 85 104 143 371 314Q322 351 293 364.5Q264 378 241 378Q224 378 197 370Q170 362 142 351Q114 340 92 331L39 400V405Q66 415 97.5 425.5Q129 436 159 443.5Q189 451 210 451Q238 451 260.5 442Q283 433 314.5 410.5Q346 388 400 345L402 545H6L-28 610V620H569L603 555V545H486L488 -10H478L398 42L400 248Z", "strokes": ["M50 305 C100 300 150 280 210 287 C280 295 370 355 425 402 C380 435 200 545 120 560", "M438 122 L438 695", "M5 117 L595 117"], "notes": ["Start on the left, curve right to the stem and from there diagonally down to the left: the र that sits below the त.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "ज्ञ", "tr": "jña", "adv": 617, "glyph": "M299 -125H290L189 51Q161 54 129 65Q97 76 74 98Q51 120 51 156Q51 176 60 192Q69 208 87 208Q107 208 137.5 186.5Q168 165 201 122Q238 122 257 143.5Q276 165 276 199Q276 244 249 279.5Q222 315 182 341Q142 367 104 381L77 439V450H443L444 545H6L-28 610V620H611L645 555V545H528L530 -10H520L440 42L442 375H214V373Q243 354 276.5 324Q310 294 334 256.5Q358 219 358 177Q358 132 327 97.5Q296 63 246 53L351 -92Z", "strokes": ["M483 288 L175 290 C140 285 110 272 85 258 C115 280 150 292 178 296 C205 345 280 400 305 470 C320 530 300 590 213 612 C160 612 110 580 95 545 C88 525 105 515 125 530 C165 560 200 600 230 665 C255 715 280 750 302 782", "M484 122 L484 695", "M5 117 L640 117"], "notes": ["In one stroke: start at the stem, go left as the cross stroke to the left tip, turn tightly, curve down to the right; at the bottom make a small crossing loop to the left, and the tail diagonally down to the right.", "Vertical stem, from top to bottom.", "Head line, from left to right."]}, {"ch": "श्र", "tr": "śra", "adv": 679, "glyph": "M96 204 34 268Q69 285 113.5 309.5Q158 334 199 361Q148 392 115.5 431.5Q83 471 83 517Q83 564 118 598.5Q153 633 210 633Q255 633 295.5 610Q336 587 361 549.5Q386 512 386 467Q386 434 370 405Q354 376 325 350Q369 336 415.5 327.5Q462 319 504 314L506 545H420L386 610V620H673L707 555V545H590L592 -15H582L502 37L504 243L235 58L179 118L419 275Q385 283 351.5 294Q318 305 286 318Q248 290 199 262Q150 234 96 204ZM236 387Q272 413 295 440Q318 467 318 501Q318 531 298 549Q278 567 246 567Q212 567 185.5 544.5Q159 522 159 487Q159 456 180.5 431.5Q202 407 236 387Z", "strokes": ["M290 340 C320 310 350 270 349 224 C345 160 300 105 220 102 C160 102 120 150 125 200 C130 260 190 320 236 351 C200 380 120 440 40 432 C110 425 190 380 240 356 C260 348 275 345 287 342 C320 375 400 395 456 423 C400 470 300 550 240 588 C220 595 200 590 185 582", "M547 122 L547 695", "M430 117 L700 117"], "notes": ["In one stroke: start in the middle, the loop up on the right and round to the left into the middle, diagonally down to the left, turn tightly and come back through the middle so the loop closes; then right to the stem and from there diagonally down to the left: the र.", "Vertical stem, from top to bottom.", "Head line over the right part, from left to right."]}, {"ch": "द्य", "tr": "dya", "adv": 658, "glyph": "M328 5Q267 5 223 31.5Q179 58 155.5 96Q132 134 132 167Q132 197 153 221Q103 251 76.5 296.5Q50 342 50 378Q50 415 79 437.5Q108 460 169 460H290V545H6L-28 610V620H652L686 555V545H569L571 -60H561L481 -8V51Q439 25 403 15Q367 5 328 5ZM485 545H371Q372 508 372.5 467Q373 426 373 393L361 385H187Q122 385 122 339Q122 313 141 288.5Q160 264 204 255Q239 271 279 277Q319 283 346 283Q362 283 371 271Q380 259 384.5 245Q389 231 389 225Q389 215 374.5 205.5Q360 196 307 196Q290 196 274 197Q235 185 220 166.5Q205 148 205 129Q205 108 224 89Q243 70 293 70Q333 70 378 89Q423 108 482 151Z", "strokes": ["M330 120 L330 262 C330 272 322 278 310 278 L150 280 C110 285 90 315 92 355 C95 405 140 455 191 483 C240 470 300 458 355 467 C300 470 230 478 195 495 C170 530 172 590 205 625 C240 652 300 662 340 660 C400 655 460 615 521 602", "M524 122 L524 750", "M5 117 L680 117"], "notes": ["As in द: from the head line down, then left and round into the middle; a short move right into the hook and back, then the lower curve round to the right, up to the stem: the य.", "Stem from top to bottom, a little below the baseline.", "Head line, from left to right."]}];
+// The letter as drawn with the chosen font: its own strokes if they exist, the Tiro strokes otherwise.
+// Edited strokes are kept per font and letter in the browser and replace the built-in ones.
+let EDITS={};
+try{ EDITS=JSON.parse(localStorage.getItem("deva-nib-edits")||"{}")||{}; }catch(e){ EDITS={}; }
+// Each edit remembers the built-in strokes it was made on ({base, strokes}). When a built-in stroke is
+// changed later, the old edit of that stroke is no longer applied. Edits from older versions of this page
+// (plain arrays, no base) are moved aside to "deva-nib-edits-old" instead of being applied.
+{ const old={}; for(const k in EDITS) if(Array.isArray(EDITS[k])){ old[k]=EDITS[k]; delete EDITS[k]; }
+  if(Object.keys(old).length) try{ localStorage.setItem("deva-nib-edits-old",JSON.stringify(old)); localStorage.setItem("deva-nib-edits",JSON.stringify(EDITS)); }catch(e){} }
+const saveEdits=()=>{ try{ localStorage.setItem("deva-nib-edits",JSON.stringify(EDITS)); }catch(e){} markEdited(); };
+// One set of strokes for every font; the chosen font only changes the letter shown behind them.
+const editKey = d => d.ch;
+const letter = i => {
+  const d=DATA[i], e=EDITS[editKey(d)];
+  if(!e || !e.base || e.base.length!==d.strokes.length || e.strokes.length!==d.strokes.length) return d;
+  const s=d.strokes.map((p,k)=> e.base[k]===p ? e.strokes[k] : p);
+  return s.some((p,k)=>p!==d.strokes[k]) ? {...d, strokes:s, edited:true} : d;
+};
+const NS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const svg = $("svg"), board = $("board"), cv = $("cv"), ctx = cv.getContext("2d");
+const VB_Y = -235, VB_W = 1200, VB_H = 1290;
+let cur = 0, strokes = [], done = 0, running = null, speed = 1, angle = -45, nibW = 80, nibT = 20;
+let penMode = "fixed", fitG = null, raster = null, editG = null, editing = false, edSel = null, edDrag = null;
+try{ if(localStorage.getItem("deva-nib-pen")==="fit") penMode="fit"; }catch(e){}
+let mode = "canvas", inkG = null, svgAnims = [], maskUid = 0;
+try{ const m=localStorage.getItem("deva-nib-mode"); if(m==="line"||m==="mask") mode=m; }catch(e){}
+// The visible part of the board. Normally the full 1200-unit board; zoomed and panned while editing.
+let view = {x:0, y:-235, w:1200};
+const viewH = () => view.w*1290/1200;
+let vbX = 0, activeIdx = -1, activeP = 0, pen = null, ghostEl = null, drawnK = 0, inkChalk = "#eef2e9", inkAcc = "#e9a23b";
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// Picker rows: vowels with anusvāra and visarga in two lines, each group of five stop consonants (varga)
+// in its own line, then the semivowels, the sibilants with ha, and the five common ligatures.
+const ROWS=["अ आ इ ई उ ऊ ऋ ॠ","ऌ ॡ ए ऐ ओ औ ं ः","क ख ग घ ङ","च छ ज झ ञ","ट ठ ड ढ ण","त थ द ध न","प फ ब भ म","य र ल व","श ष स ह","क्ष त्र ज्ञ श्र द्य"].map(r=>r.split(" "));
+{ const used=new Set(), rows=[...ROWS, DATA.map(d=>d.ch).filter(c=>!ROWS.flat().includes(c))];
+  const grp=cls=>{ const g=document.createElement("div"); g.className="pick-group "+cls; $("picker").appendChild(g); return g; };
+  const gV=grp("vowels"), gS=grp("stops"), gR=grp("rest"), sub=[0,1].map(()=>{ const s=document.createElement("div"); s.className="pick-sub"; gR.appendChild(s); return s; });
+  // rows 0–1 vowels, 2–6 stops, 7–8 semivowels and sibilants, then the ligatures
+  const home=k=>k<2?gV:k<7?gS:k<9?sub[0]:sub[1];
+  rows.forEach((r,k)=>{
+    const row=document.createElement("div"); row.className="pick-row";
+    r.forEach(ch=>{
+      const i=DATA.findIndex(d=>d.ch===ch); if(i<0||used.has(i)) return; used.add(i);
+      const d=DATA[i], b=document.createElement("button");
+      b.className="pick"; b.id="pick-"+d.tr; b.dataset.i=i; b.setAttribute("aria-pressed", i===0);
+      b.innerHTML=`<b>${d.ch}</b><span>${d.tr}</span>`;
+      b.addEventListener("click",()=>select(i,true));
+      row.appendChild(b);
+    });
+    if(row.children.length) home(k).appendChild(row);
+  });
+}
+// a small dot on letters whose strokes were changed in the editor
+function markEdited(){ document.querySelectorAll(".pick").forEach(b=>b.classList.toggle("ed", !!letter(+b.dataset.i).edited)); }
+markEdited();
+
+function build(){
+  const d=letter(cur);
+  svg.innerHTML="";
+  const cx=d.adv/2; vbX=cx-600;
+  view={x:vbX, y:VB_Y, w:VB_W};
+  svg.setAttribute("viewBox",`${vbX} ${VB_Y} ${VB_W} ${VB_H}`);
+  svg.setAttribute("aria-label",`Stroke order for ${d.ch} (${d.tr}) with a broad nib`);
+  // 3 × 4 practice grid. Rows = Devanagari zones: matras above (i, e), two rows for the letter body,
+  // matras below (u, ū, ṛ). The headline sits on the border between row 1 and 2, the baseline between row 3 and 4.
+  const HEAD=117, BASE=700, Z=(BASE-HEAD)/2;
+  const gx0=-40, gx1=d.adv+40, gy0=HEAD-Z, gy1=BASE+Z, grid=el("g",{class:"grid"},svg);
+  for(let c=0;c<=3;c++){ const x=gx0+(gx1-gx0)*c/3; el("line",{x1:x,x2:x,y1:gy0,y2:gy1},grid); }
+  for(let r=0;r<=4;r++){ const y=gy0+Z*r; el("line",{x1:gx0,x2:gx1,y1:y,y2:y,class:(r===1||r===3)?"zone":""},grid); }
+  ghostEl = drawGhost(d);
+  inkG = el("g",{class:"ink"},svg);   // SVG modes draw here, under the numbers
+  raster = makeRaster(d);
+  fitG = el("path",{d:d.glyph,transform:"matrix(1 0 0 -1 0 700)",class:"fitglyph"},svg);
+  const helper=el("g",{visibility:"hidden"},svg);
+  strokes=d.strokes.map(raw=>{
+    if(isDot(raw)) return dotStroke(raw);
+    const p=raw, hp=el("path",{d:p},helper), len=hp.getTotalLength();
+    return {path:p,len,hp,pts:samplePath(hp,len)};
+  });
+  const marks=el("g",{},svg), placed=[];
+  strokes.forEach((s,i)=>{
+    const a=s.pts[Math.min(15,s.pts.length-1)], b=s.pts[Math.min(28,s.pts.length-1)];
+    const ang=Math.atan2(b[1]-a[1],b[0]-a[0]);
+    let mx=a[0]-Math.cos(ang+Math.PI/2)*72, my=a[1]-Math.sin(ang+Math.PI/2)*72;
+    if(/^M5 117/.test(s.path)){ mx=20; my=200; }
+    if(/^M400 452/.test(s.path)){ mx=478; my=575; } // ra stroke: number right of the stem, clear of the loop
+    // keep the numbers apart: try a few nearby spots until none is closer than 62 units to an earlier number
+    for(const [ox,oy] of [[0,0],[64,0],[-64,0],[0,-64],[0,64],[64,-64],[-64,-64],[64,64],[-64,64],[128,0],[-128,0]]){
+      if(!placed.some(([px,py])=>Math.hypot(px-(mx+ox),py-(my+oy))<62)){ mx+=ox; my+=oy; break; }
+    }
+    placed.push([mx,my]);
+    const g=el("g",{class:"marker"},marks);
+    el("circle",{cx:mx,cy:my,r:30},g);
+    el("text",{x:mx,y:my+2},g).textContent=i+1;
+    s.marker=g;
+  });
+  pen=el("line",{class:"pen-nib"},svg);
+  editG=el("g",{class:"edit"},svg); if(editing) drawEdit();
+  $("tag").textContent=`${d.ch} · ${d.tr}`+(d.edited?" · edited":"");
+  $("stepsTitle").textContent=`Strokes for ${d.ch}`;
+  $("steps").innerHTML=d.notes.map(n=>`<li>${n}</li>`).join("");
+  showSplines();
+  done=0; activeIdx=-1; paint(); resize();
+}
+
+// Splines below the board: the stroke paths of the current letter, ready to copy
+let splFmt="json";
+try{ splFmt=localStorage.getItem("deva-nib-fmt")||"json"; }catch(e){}
+let splBox="var";
+try{ splBox=localStorage.getItem("deva-nib-box")||"var"; }catch(e){}
+// Frame of the exported SVG: variable (letter width) or fixed (same 1200 × 1290 box for every letter, centred)
+function splViewBox(d){
+  if(splBox==="fix") return [Math.round(d.adv/2-600),-235,1200,1290];
+  const HEAD=117, BASE=700, Z=(BASE-HEAD)/2, y0=Math.floor(HEAD-Z), y1=Math.ceil(BASE+Z);
+  return [-40,y0,d.adv+80,y1-y0];
+}
+const splJSON=d=>`{\n  "ch": "${d.ch}",\n  "tr": "${d.tr}",\n  "adv": ${d.adv},\n  "viewBox": "${splViewBox(d).join(" ")}",\n  "strokes": [\n${d.strokes.map(s=>`    "${(isDot(s)?dotPath(s):s).replace(/\s+/g," ").trim()}"`).join(",\n")}\n  ]\n}`;
+function splSVG(d){
+  const [x0,y0,w,h]=splViewBox(d);
+  return `<!-- ${d.ch} (${d.tr}) -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${w} ${h}" fill="none" stroke="currentColor" stroke-width="40" stroke-linecap="round" stroke-linejoin="round">\n${d.strokes.map((s,i)=>`  <path d="${(isDot(s)?dotPath(s):s).replace(/\s+/g," ").trim()}"/> <!-- ${i+1}${isDot(s)?`, dot at ${angle}°`:""} -->`).join("\n")}\n</svg>`;
+}
+const splText=d=>splFmt==="svg"?splSVG(d):splJSON(d);
+function showSplines(){
+  const d=letter(cur);
+  $("splTitle").textContent=`Splines for ${d.ch}`;
+  $("splCode").textContent=splText(d);
+  document.querySelectorAll(".seg [data-fmt]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.fmt===splFmt));
+  document.querySelectorAll(".seg [data-box]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.box===splBox));
+  $("splMsg").textContent="";
+}
+function copyText(txt,msg){
+  const done=()=>{ $("splMsg").textContent=msg; setTimeout(()=>{ $("splMsg").textContent=""; },2500); };
+  const fallback=()=>{ const r=document.createRange(); r.selectNodeContents($("splCode")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $("splMsg").textContent="Selected. Press Ctrl/⌘+C to copy."; };
+  try{ navigator.clipboard.writeText(txt).then(done,fallback); }catch(e){ fallback(); }
+}
+document.querySelectorAll(".seg [data-fmt]").forEach(b=>b.onclick=()=>{ splFmt=b.dataset.fmt; try{ localStorage.setItem("deva-nib-fmt",splFmt); }catch(e){} showSplines(); });
+document.querySelectorAll(".seg [data-box]").forEach(b=>b.onclick=()=>{ splBox=b.dataset.box; try{ localStorage.setItem("deva-nib-box",splBox); }catch(e){} showSplines(); });
+$("splCopy").onclick=()=>copyText($("splCode").textContent,`${DATA[cur].ch} copied.`);
+$("splAll").onclick=()=>{ const all=DATA.map((x,i)=>letter(i)); copyText(splFmt==="svg"?all.map(splSVG).join("\n\n"):"[\n"+all.map(d=>splJSON(d).replace(/^/gm,"  ")).join(",\n")+"\n]",`All ${DATA.length} letters copied.`); };
+
+// A dot is "DOT cx cy len": a short stroke across the nib edge, so the nib lays down its full width.
+// The nib edge points along (cos a, -sin a); the stroke runs along (sin a, cos a), centred on the dot.
+const isDot=s=>/^DOT\s/.test(s);
+function dotPath(raw){
+  const [cx,cy,len]=raw.trim().split(/\s+/).slice(1).map(Number), a=angle*Math.PI/180, h=len/2;
+  const dx=Math.sin(a)*h, dy=Math.cos(a)*h, r=v=>Math.round(v);
+  return `M${r(cx-dx)} ${r(cy-dy)} L${r(cx+dx)} ${r(cy+dy)}`;
+}
+function dotStroke(raw){
+  const [x0,y0,x1,y1]=dotPath(raw).match(/-?\d+/g).map(Number), len=Math.hypot(x1-x0,y1-y0), n=Math.max(2,Math.ceil(len/stepLen)), pts=[];
+  for(let k=0;k<=n;k++) pts.push([x0+(x1-x0)*k/n, y0+(y1-y0)*k/n]);
+  return {path:dotPath(raw),raw,dot:true,len,pts};
+}
+function refreshDots(){
+  strokes.forEach((s,i)=>{ if(s.dot){ const f=dotStroke(s.raw); s.path=f.path; s.len=f.len; s.pts=f.pts; s.fit=null; } });
+  if(typeof showSplines==="function") showSplines();
+}
+
+// ---------- Font choice: the Devanagari face for the picker and the comparison outline ----------
+const FONTS=[
+  {n:"Tiro Devanagari Hindi",note:"template for the strokes"},
+  {n:"Tiro Devanagari Sanskrit"},
+  {n:"Noto Serif Devanagari"},
+  {n:"Noto Sans Devanagari"},
+  {n:"Martel"},
+  {n:"Hind"},
+  {n:"Gotu"},
+  {n:"Kalam",note:"handwriting"},
+  {n:"Yatra One"},
+  {n:"Rozha One"},
+  {n:"Sanskrit 2020",bundled:true,note:"OFL, Omkarananda Ashram"},
+  {n:"",label:"System font"},
+  {n:"__file",label:"Load a font file …"},
+];
+const FILE_FAMILY="Own font";
+let fontName="Tiro Devanagari Hindi", fontFit=null;
+try{ const f=localStorage.getItem("deva-nib-font"); if(f!==null && (FONTS.some(x=>x.n===f&&f!=="__file")||f===FILE_FAMILY)) fontName=f; }catch(e){}
+// Is a locally installed font present? Compare text widths against two generic fallbacks.
+function hasLocalFont(n){
+  const c=document.createElement("canvas").getContext("2d"), s="कखगघ क्ष ज्ञ द्धि";
+  const w=f=>{ c.font=`80px ${f}`; return c.measureText(s).width; };
+  return w(`"${n}",monospace`)!==w("monospace") || w(`"${n}",sans-serif`)!==w("sans-serif");
+}
+// A font file picked by the user (e.g. Sanskrit2020U.otf): registered with FontFace, kept in IndexedDB for the next visit.
+const fontDB=()=>new Promise((res,rej)=>{ try{ const r=indexedDB.open("deva-nib",1); r.onupgradeneeded=()=>r.result.createObjectStore("f"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } });
+async function storeFontFile(name,buf){ try{ const db=await fontDB(); db.transaction("f","readwrite").objectStore("f").put({name,buf},"font"); }catch(e){} }
+async function readFontFile(){ try{ const db=await fontDB(); return await new Promise(res=>{ const q=db.transaction("f").objectStore("f").get("font"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+let fileFontLabel="";
+async function registerFontFile(name,buf){
+  const ff=new FontFace(FILE_FAMILY,buf); await ff.load(); document.fonts.add(ff);
+  fileFontLabel=name.replace(/\.(otf|ttf|woff2?)$/i,"");
+  let o=$("font").querySelector(`option[value="${FILE_FAMILY}"]`);
+  if(!o){ o=document.createElement("option"); o.value=FILE_FAMILY; $("font").insertBefore(o,$("font").querySelector('option[value="__file"]')); }
+  o.textContent=`${fileFontLabel} (file)`;
+}
+const fontStack=n=>(n?`"${n}",`:"")+`"Noto Serif Devanagari","Kohinoor Devanagari","Devanagari Sangam MN","Mangal",serif`;
+const cssLoads={};
+function loadFontCss(n){
+  if(!n) return Promise.resolve();
+  if(cssLoads[n]) return cssLoads[n];
+  if(n==="Tiro Devanagari Hindi"||n==="Hind"||n==="Sanskrit 2020") return cssLoads[n]=Promise.resolve();   // already declared in the page
+  return cssLoads[n]=new Promise(res=>{
+    const l=document.createElement("link"); l.rel="stylesheet"; l.dataset.font=n;
+    l.href="https://fonts.googleapis.com/css2?family="+n.replace(/ /g,"+")+"&display=swap";
+    l.onload=res; l.onerror=res; setTimeout(res,4000);
+    document.head.appendChild(l);
+  });
+}
+// Measure the chosen font: where its head line starts and where क ends, so the outline sits on the same grid as the strokes.
+function measureFont(n){
+  const c=document.createElement("canvas"); c.width=400; c.height=420; const x=c.getContext("2d");
+  x.font=`200px ${fontStack(n)}`; x.textBaseline="alphabetic"; x.fillStyle="#000"; x.fillText("क",60,300);
+  const px=x.getImageData(0,0,c.width,c.height).data; let top=-1,bot=-1;
+  for(let r=0;r<c.height;r++){ let ink=false; for(let q=0;q<c.width;q++){ if(px[(r*c.width+q)*4+3]>100){ ink=true; break; } } if(ink){ if(top<0) top=r; bot=r; } }
+  if(top<0||bot<=top) return null;
+  const F=630*200/(bot-top);                 // head line top 80 → stem foot 710 in the stroke coordinates
+  return {size:F, base:80+F*(300-top)/200};
+}
+function drawGhost(d){
+  if(fontName==="Tiro Devanagari Hindi") return el("path",{d:d.glyph,transform:"matrix(1 0 0 -1 0 700)",class:"ghost"},svg);
+  const fit=fontFit||{size:1000,base:700};
+  const t=el("text",{x:d.adv/2,y:fit.base,"text-anchor":"middle","font-size":fit.size,class:"ghost ghost-text"},svg);
+  t.style.fontFamily=fontStack(fontName); t.textContent=d.ch; return t;
+}
+function applyFont(n,user){
+  fontName=n; try{ localStorage.setItem("deva-nib-font",n); }catch(e){}
+  document.documentElement.style.setProperty("--f-deva",fontStack(n));
+  $("fontMsg").textContent="";
+  const def=FONTS.find(f=>f.n===n), local=def&&def.local;
+  const loading = local||n===FILE_FAMILY ? Promise.resolve() : loadFontCss(n).then(()=> n && document.fonts && document.fonts.load ? document.fonts.load(`200px "${n}"`,"क") : []).catch(()=>[]);
+  loading.then(list=>{
+    if(fontName!==n) return;
+    if(local){ if(!hasLocalFont(n)) $("fontMsg").textContent="not installed: fallback font. Choose the file under “Load a font file …”."; }
+    else if(def&&def.bundled && (!list || !list.length) && !hasLocalFont(n)) $("fontMsg").textContent="File fonts/Sanskrit2020.otf not found: fallback font. You can choose it under “Load a font file …”.";
+    else if(n && n!==FILE_FAMILY && !(def&&def.bundled) && (!list || !list.length)) $("fontMsg").textContent="not loaded, fallback font";
+    fontFit=measureFont(n);
+    if(ghostEl){ const old=ghostEl; ghostEl=drawGhost(letter(cur)); old.replaceWith(ghostEl); }
+  });
+  if(user && n!=="Tiro Devanagari Hindi" && !$("tGhost").checked){ $("tGhost").checked=true; board.classList.add("show-ghost"); }
+}
+$("font").innerHTML=FONTS.map(f=>`<option value="${f.n}">${f.label||f.n}${f.note?" ("+f.note+")":""}</option>`).join("");
+$("font").value=fontName===FILE_FAMILY?"Tiro Devanagari Hindi":fontName;
+let fontPrev=$("font").value;
+const fileIn=document.createElement("input"); fileIn.type="file"; fileIn.accept=".otf,.ttf,.woff,.woff2,font/otf,font/ttf,font/woff,font/woff2"; fileIn.hidden=true; document.body.appendChild(fileIn);
+fileIn.onchange=async()=>{
+  const f=fileIn.files&&fileIn.files[0]; fileIn.value="";
+  if(!f){ $("font").value=fontPrev; return; }
+  try{ const buf=await f.arrayBuffer(); await registerFontFile(f.name,buf); storeFontFile(f.name,buf); $("font").value=FILE_FAMILY; fontPrev=FILE_FAMILY; applyFont(FILE_FAMILY,true); }
+  catch(e){ $("font").value=fontPrev; $("fontMsg").textContent="This file is not a readable font."; }
+};
+$("font").onchange=e=>{
+  const v=e.target.value;
+  if(v==="__file"){ fileIn.click(); return; }
+  fontPrev=v; applyFont(v,true);
+};
+// Bring back a font file from the last visit
+readFontFile().then(async rec=>{ if(!rec) return; try{ await registerFontFile(rec.name,rec.buf); if(fontName===FILE_FAMILY){ $("font").value=FILE_FAMILY; fontPrev=FILE_FAMILY; applyFont(FILE_FAMILY,false); } }catch(e){} });
+
+// Step length: distance between the points the nib is stamped at, in drawing units (the board is 1200 units wide).
+// Small steps give a smooth stroke; large steps show the single nib positions.
+let stepLen=10;
+function samplePath(hp,len){
+  const n=Math.max(2,Math.ceil(len/stepLen)), pts=[];
+  for(let k=0;k<=n;k++){ const q=hp.getPointAtLength(len*k/n); pts.push([q.x,q.y]); }
+  return pts;
+}
+function resampleAll(){
+  strokes.forEach(s=>{ s.fit=null; if(s.dot){ const f=dotStroke(s.raw); s.pts=f.pts; } else s.pts=samplePath(s.hp,s.len); });
+}
+function stepLabel(){
+  const w=svg.getBoundingClientRect().width||400, px=stepLen*w/VB_W;
+  $("stpOut").textContent=`${stepLen} · ${px<1?px.toFixed(2):px.toFixed(1)} px`;
+}
+
+// Canvas sizing: match the SVG's box, map viewBox units to pixels
+function resize(){
+  fitSvg(); if($("stpOut")) stepLabel();
+  const r=cv.getBoundingClientRect(), dpr=Math.min(2,window.devicePixelRatio||1);   // cap: big phone canvases are slow
+  cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
+  render();
+}
+// Older browsers: no ResizeObserver, no CSS aspect-ratio. Fall back to window resize and an explicit height.
+const noAspect = !(window.CSS && CSS.supports && CSS.supports("aspect-ratio","1"));
+function fitSvg(){ if(noAspect){ const w=svg.getBoundingClientRect().width; if(w) svg.style.height=(w*VB_H/VB_W)+"px"; } }
+if("ResizeObserver" in window) new ResizeObserver(()=>{ fitSvg(); resize(); }).observe(board);
+else window.addEventListener("resize",()=>{ fitSvg(); resize(); });
+window.addEventListener("orientationchange",()=>setTimeout(()=>{ fitSvg(); resize(); },300));
+
+// Broad-nib sweep: the nib is a rounded rectangle, nibW long and nibT thick.
+// Fill the quads its long edge covers, then stroke them with nibT so the nib never gets thinner than nibT.
+function nibStroke(pts, upto, color, from=1, st=null){
+  if(upto<from) return;
+  if(penMode==="fit" && st){
+    ctx.fillStyle=color; ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin="round";
+    ctx.beginPath();
+    for(let k=Math.max(1,from);k<=upto;k++) for(const q of fitQuads(st,k)){ ctx.moveTo(q[0][0],q[0][1]); for(let i=1;i<4;i++) ctx.lineTo(q[i][0],q[i][1]); ctx.closePath(); }
+    ctx.fill(); ctx.stroke(); return;
+  }
+  const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L;
+  ctx.fillStyle=color; ctx.strokeStyle=color;
+  ctx.lineWidth=nibT; ctx.lineCap="round"; ctx.lineJoin="round";
+  ctx.beginPath();
+  for(let k=Math.max(1,from);k<=upto;k++){
+    const [x0,y0]=pts[k-1], [x1,y1]=pts[k];
+    ctx.moveTo(x0-hx,y0-hy); ctx.lineTo(x0+hx,y0+hy); ctx.lineTo(x1+hx,y1+hy); ctx.lineTo(x1-hx,y1-hy); ctx.closePath();
+  }
+  ctx.fill(); ctx.stroke();
+}
+
+/* ---------- Nib fitted to the font ----------
+   The letter's outline is drawn once into a small bitmap. For every point on the centre line we walk
+   across the stroke (along the normal) to the left and to the right until we leave the outline.
+   Those two distances set the nib for that point, so the drawn stroke follows the font's own thick and thin.
+   Where strokes cross or meet, the walk runs into the other stroke; such spikes are capped and smoothed. */
+const RS=0.5;   // bitmap pixels per drawing unit
+function makeRaster(d){
+  const x0=-250, y0=-320, w=Math.ceil((d.adv+500)*RS), h=Math.ceil(1400*RS);
+  const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d");
+  g.setTransform(RS,0,0,RS,-x0*RS,-y0*RS);
+  try{ const path=new Path2D(d.glyph); g.translate(0,700); g.scale(1,-1); g.fillStyle="#000"; g.fill(path); }catch(e){ return null; }
+  const a=g.getImageData(0,0,w,h).data, m=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++) m[i]=a[i*4+3]>127?1:0;
+  return {x0,y0,w,h,m};
+}
+function inside(x,y){
+  if(!raster) return false;
+  const i=Math.round((x-raster.x0)*RS), j=Math.round((y-raster.y0)*RS);
+  return i>=0&&j>=0&&i<raster.w&&j<raster.h&&raster.m[j*raster.w+i]===1;
+}
+function reach(x,y,nx,ny,max){
+  // distance from (x,y) along (nx,ny) to the edge of the outline
+  if(!inside(x,y)){ return 0; }
+  let d=0; while(d<max && inside(x+nx*(d+1),y+ny*(d+1))) d+=1;
+  return d;
+}
+function smooth(a,r){ return a.map((v,i)=>{ let s=0,c=0; for(let k=-r;k<=r;k++){ const j=i+k; if(j>=0&&j<a.length){ s+=a[j]; c++; } } return s/c; }); }
+const median=a=>{ const b=a.filter(v=>v>0).sort((x,y)=>x-y); return b.length?b[b.length>>1]:20; };
+// Distances to the outline on both sides of a centre point. If the centre line runs just outside the
+// outline, the nearest inside point along the normal is used, so no ink lands outside the letter.
+function sides(x,y,nx,ny,MAX){
+  if(inside(x,y)) return [reach(x,y,nx,ny,MAX), reach(x,y,-nx,-ny,MAX)];
+  for(let t=2;t<=40;t+=2){
+    for(const s of [t,-t]){ const qx=x+nx*s, qy=y+ny*s;
+      if(inside(qx,qy)){ const l=s+reach(qx,qy,nx,ny,MAX), r=reach(qx,qy,-nx,-ny,MAX)-s; return [Math.max(0,l),Math.max(0,r),true]; } }
+  }
+  return [0,0];
+}
+function computeFit(st){
+  let P=st.pts; const MAX=180;
+  if(st.dot){
+    // a dot fills the font's whole dot: stretch its short line to the outline in both directions
+    const n0=P.length-1, [ax,ay]=P[0], [bx,by]=P[n0], cx=(ax+bx)/2, cy=(ay+by)/2, l=Math.hypot(bx-ax,by-ay)||1, ux=(bx-ax)/l, uy=(by-ay)/l;
+    if(inside(cx,cy)){ const r1=reach(cx,cy,-ux,-uy,MAX), r2=reach(cx,cy,ux,uy,MAX), m=Math.max(8,Math.ceil((r1+r2)/stepLen));
+      P=[]; for(let k=0;k<=m;k++){ const s=-r1+(r1+r2)*k/m; P.push([cx+ux*s,cy+uy*s]); } st.fitPts=P; }
+  }
+  const n=P.length-1, L=[], R=[], N=[];
+  for(let k=0;k<=n;k++){
+    const a=P[Math.max(0,k-1)], b=P[Math.min(n,k+1)], dx=b[0]-a[0], dy=b[1]-a[1], l=Math.hypot(dx,dy)||1;
+    const nx=-dy/l, ny=dx/l; N.push([nx,ny]);
+    const [lv,rv]=sides(P[k][0],P[k][1],nx,ny,MAX); L.push(lv); R.push(rv);
+  }
+  // points just outside the outline (centre line slightly off): take the neighbours' values
+  const fill=a=>{ for(let k=0;k<=n;k++) if(a[k]===0){ let j=k; while(j<=n&&a[j]===0) j++; const v=(k>0?a[k-1]:0)||(j<=n?a[j]:0)||4; for(let q=k;q<j;q++) a[q]=v; k=j; } return a; };
+  fill(L); fill(R);
+  // cap spikes where another stroke is crossed, then smooth
+  const cl=1.7*median(L), cr=1.7*median(R);
+  const Lc=L.map(v=>Math.min(v,cl)), Rc=R.map(v=>Math.min(v,cr));
+  // smooth, but never wider than measured, so the ink stays inside the letter
+  const Ls=smooth(Lc,3).map((v,k)=>Math.min(v,Lc[k])), Rs=smooth(Rc,3).map((v,k)=>Math.min(v,Rc[k]));
+  const A=[], B=[]; let mx=0;
+  for(let k=0;k<=n;k++){ const [x,y]=P[k], [nx,ny]=N[k]; A.push([x+nx*Ls[k],y+ny*Ls[k]]); B.push([x-nx*Rs[k],y-ny*Rs[k]]); mx=Math.max(mx,Ls[k],Rs[k]); }
+  st.fit={A,B,max:mx};
+  return st.fit;
+}
+// With the fitted nib, the true outline fades in once the letter is complete: it covers the small rests
+// (slanted stroke ends, joins) the nib cannot reach.
+function showFitGlyph(){ if(fitG) fitG.classList.toggle("on", penMode==="fit" && mode!=="line" && strokes.length>0 && done>=strokes.length && activeIdx<0); }
+const fitOf=st=> st.fit||computeFit(st);
+// k runs over the stroke's own points; a stretched dot has its own number of points, so map the index
+function fitQuads(st,k){
+  const f=fitOf(st), m=f.A.length-1, n=st.pts.length-1, out=[];
+  const j0=m===n?k:Math.round((k-1)*m/n)+1, j1=m===n?k:Math.round(k*m/n);
+  for(let j=Math.max(1,j0);j<=j1;j++) out.push([f.A[j-1],f.B[j-1],f.B[j],f.A[j]]);
+  return out;
+}
+
+// Full redraw: used after settings changes, resizes and at the end of each stroke.
+function render(){
+  if(mode!=="canvas"){
+    if(cv.width){ ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); }
+    svgRender(); if(pen) pen.classList.remove("on"); return;
+  }
+  if(inkG) inkG.innerHTML="";
+  if(!cv.width||!cv.height) return;
+  const s=cv.width/view.w;
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.setTransform(s,0,0,s,-view.x*s,-view.y*s);
+  inkChalk=css("--chalk")||inkChalk; inkAcc=css("--accent")||inkAcc;
+  drawnK=0;
+  strokes.forEach((st,i)=>{
+    if(i<done) nibStroke(st.pts, st.pts.length-1, inkChalk, 1, st);
+    else if(i===activeIdx){ drawnK=Math.round(activeP*(st.pts.length-1)); nibStroke(st.pts, drawnK, inkAcc, 1, st); }
+  });
+  moveNib(); showFitGlyph();
+}
+// During the animation only the new piece of the active stroke is added, so each frame stays cheap on slow devices.
+function renderStep(){
+  if(activeIdx<0||!cv.width) return;
+  const st=strokes[activeIdx], k=Math.round(activeP*(st.pts.length-1));
+  if(k>drawnK){ const s=cv.width/view.w; ctx.setTransform(s,0,0,s,-view.x*s,-view.y*s); nibStroke(st.pts, k, inkAcc, Math.max(1,drawnK), st); drawnK=k; }
+  moveNib();
+}
+function moveNib(){
+  // nib indicator
+  if(activeIdx>=0 && pen){
+    const st=strokes[activeIdx], kk=Math.round(activeP*(st.pts.length-1)), [x,y]=st.pts[kk];
+    if(penMode==="fit"){ const f=fitOf(st), jj=Math.round(kk*(f.A.length-1)/(st.pts.length-1)), A=f.A[jj], B=f.B[jj]; pen.style.strokeWidth=5;
+      pen.setAttribute("x1",A[0]); pen.setAttribute("y1",A[1]); pen.setAttribute("x2",B[0]); pen.setAttribute("y2",B[1]); pen.classList.add("on"); return; }
+    const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L;
+    pen.style.strokeWidth=Math.max(4,nibT*0.6);
+    pen.setAttribute("x1",x-hx); pen.setAttribute("y1",y-hy); pen.setAttribute("x2",x+hx); pen.setAttribute("y2",y+hy);
+    pen.classList.add("on");
+  } else if(pen) pen.classList.remove("on");
+}
+
+function paint(){
+  strokes.forEach((s,i)=>s.marker.classList.toggle("on", i<done || i===activeIdx || (i===done && activeIdx<0)));
+  [...$("steps").children].forEach((li,i)=>{
+    li.className = i<done ? "past" : (i===activeIdx || (activeIdx<0 && i===done) ? "now" : "");
+  });
+  $("count").textContent=`${done} / ${strokes.length}`;
+}
+
+/* ---------- SVG modes ----------
+   line: the centre line itself is drawn, revealed with stroke-dashoffset (one width, no thick and thin).
+   mask: the full broad-nib shape is built as SVG and uncovered by a mask whose wide centre line is revealed
+         with stroke-dashoffset. The stroke is cut into short pieces, each with its own shape and mask,
+         so loops and sharp turns (क, द्धि) are not uncovered ahead of time.
+   The browser runs these animations itself (Web Animations API); a frame loop is the fallback. */
+const SVGNS="http://www.w3.org/2000/svg";
+const lineWidth=()=>Math.round((nibW+nibT)/2);
+function quadsPath(pts,from,to){
+  const a=angle*Math.PI/180, L=Math.max(0,(nibW-nibT)/2), hx=Math.cos(a)*L, hy=-Math.sin(a)*L, r=v=>Math.round(v*10)/10;
+  let d="";
+  for(let k=Math.max(1,from);k<=to;k++){
+    const [x0,y0]=pts[k-1], [x1,y1]=pts[k];
+    let q=[[x0-hx,y0-hy],[x0+hx,y0+hy],[x1+hx,y1+hy],[x1-hx,y1-hy]];
+    // same winding for every quad, so overlapping quads never cancel each other out
+    const area=(q[1][0]-q[0][0])*(q[2][1]-q[0][1])-(q[2][0]-q[0][0])*(q[1][1]-q[0][1]);
+    if(area<0) q=[q[0],q[3],q[2],q[1]];
+    d+=`M${r(q[0][0])} ${r(q[0][1])}L${r(q[1][0])} ${r(q[1][1])}L${r(q[2][0])} ${r(q[2][1])}L${r(q[3][0])} ${r(q[3][1])}Z`;
+  }
+  return d;
+}
+function nibShape(st,color,from,to){
+  if(penMode==="fit"){
+    const r=v=>Math.round(v*10)/10; let d="";
+    for(let k=Math.max(1,from??1);k<=(to??st.pts.length-1);k++) for(const q of fitQuads(st,k)){ d+=`M${r(q[0][0])} ${r(q[0][1])}L${r(q[1][0])} ${r(q[1][1])}L${r(q[2][0])} ${r(q[2][1])}L${r(q[3][0])} ${r(q[3][1])}Z`; }
+    return el("path",{d,fill:color,stroke:color,"stroke-width":2,"stroke-linejoin":"round","fill-rule":"nonzero"});
+  }
+  return el("path",{d:quadsPath(st.pts,from??1,to??st.pts.length-1),fill:color,stroke:color,"stroke-width":nibT,"stroke-linejoin":"round"});
+}
+function lineShape(st,color){
+  return el("path",{d:st.path,fill:"none",stroke:color,"stroke-width":lineWidth(),"stroke-linecap":"round","stroke-linejoin":"round"});
+}
+function svgRender(){
+  if(!inkG) return;
+  const keep=svgAnims.length?inkG.querySelector("[data-active]"):null;
+  [...inkG.children].forEach(c=>{ if(c!==keep) c.remove(); });
+  strokes.forEach((st,i)=>{ if(i<done) inkG.insertBefore(mode==="line"?lineShape(st,"var(--chalk)"):nibShape(st,"var(--chalk)"), keep); });
+  showFitGlyph();
+}
+function cancelSvgAnims(){ const a=svgAnims; svgAnims=[]; a.forEach(x=>{ try{ x.cancel(); }catch(e){} }); }
+// Animate stroke-dashoffset from 1 to 0 (paths use pathLength="1"). Web Animations API, or a frame loop as fallback.
+function dashAnim(node,delay,dur,easing,easeFn){
+  if(node.animate){
+    return node.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{delay,duration:Math.max(1,dur),easing,fill:"both"});
+  }
+  let cancelled=false, resolve, reject; const finished=new Promise((r,j)=>{ resolve=r; reject=j; });
+  const t0=performance.now()+delay; node.style.strokeDashoffset=1;
+  (function f(){ if(cancelled) return; const p=Math.min(1,Math.max(0,(performance.now()-t0)/Math.max(1,dur)));
+    node.style.strokeDashoffset=1-easeFn(p); if(p<1) nextFrame(f); else resolve(); })();
+  return {finished, cancel(){ if(!cancelled){ cancelled=true; reject(new Error("cancelled")); } }};
+}
+// inverse of the ease curve: when (as a share of the duration) a given share of the stroke is reached
+const invEase=y=>y<.5?Math.sqrt(y/2):1-Math.sqrt((1-y)/2);
+function startActiveSVG(i,dur){
+  const st=strokes[i], g=el("g",{"data-active":"1"},inkG), acc="var(--accent)", anims=[];
+  if(mode==="line"){
+    const pth=lineShape(st,acc); pth.setAttribute("pathLength","1"); pth.setAttribute("stroke-dasharray","1 2"); pth.style.strokeDashoffset=1; g.appendChild(pth);
+    anims.push(dashAnim(pth,0,dur,"cubic-bezier(.45,0,.55,1)",ease));
+  } else {
+    // The nib reaches up to R beyond the centre line, also along it. Each piece's mask therefore runs R further
+    // on both sides (and the whole line is extended by R at start and end), so the angled nib is never cut off.
+    const reachMax = penMode==="fit" ? fitOf(st).max+4 : nibW/2+nibT;
+    const P=st.pts, n=P.length-1, ds=st.len/n, R=reachMax, defs=el("defs",{},g), W=2*reachMax+8;
+    const unit=(p,q)=>{ const dx=q[0]-p[0], dy=q[1]-p[1], l=Math.hypot(dx,dy)||1; return [dx/l,dy/l]; };
+    const u0=unit(P[0],P[1]), un=unit(P[n-1],P[n]);
+    const ext=[[P[0][0]-u0[0]*R,P[0][1]-u0[1]*R],...P,[P[n][0]+un[0]*R,P[n][1]+un[1]*R]];
+    const sOf=e=> e===0 ? -R : e===n+2 ? st.len+R : (e-1)*ds;
+    const T=s=>invEase(Math.min(1,Math.max(0,s/st.len)))*dur;
+    const size=Math.max(3,Math.round(110/stepLen)), margin=Math.ceil(R/ds)+1;
+    for(let a=0;a<n;a+=size){
+      const b=Math.min(n,a+size), id="mk"+(++maskUid);
+      const e0=Math.max(0,a+1-margin), e1=Math.min(n+2,b+1+margin);
+      const m=el("mask",{id,maskUnits:"userSpaceOnUse",x:vbX-50,y:VB_Y-50,width:VB_W+100,height:VB_H+100},defs);
+      const seg=ext.slice(e0,e1+1).map(([x,y],k)=>(k?"L":"M")+Math.round(x*10)/10+" "+Math.round(y*10)/10).join("");
+      const mp=el("path",{d:seg,fill:"none",stroke:"#fff","stroke-width":W,"stroke-linecap":"butt","stroke-linejoin":"round",pathLength:"1","stroke-dasharray":"1 2"},m);
+      mp.style.strokeDashoffset=1;
+      const shape=nibShape(st,acc,a+1,b); shape.setAttribute("mask",`url(#${id})`); g.appendChild(shape);
+      const t0=T(sOf(e0)), t1=T(sOf(e1));
+      anims.push(dashAnim(mp,t0,t1-t0,"linear",x=>x));
+    }
+  }
+  svgAnims=anims; return anims;
+}
+function drawStrokeSVG(i, token){
+  activeIdx=i; activeP=0; paint(); cancelSvgAnims(); svgRender();
+  const s=strokes[i], dur = reduced ? 1 : Math.max(450, s.len*1.9)/speed;
+  const anims=startActiveSVG(i,dur);
+  return Promise.all(anims.map(a=>a.finished)).then(()=>{
+    if(token.cancel) return false;
+    svgAnims=[]; done=i+1; activeIdx=-1; render(); paint(); return true;
+  },()=>{
+    if(running===null && !token.replaced){ activeIdx=-1; render(); paint(); }
+    return false;
+  });
+}
+
+// requestAnimationFrame, with a timer fallback: some browsers pause rAF in embedded or background frames,
+// which used to freeze the animation.
+function nextFrame(fn){
+  let fired=false;
+  const id=requestAnimationFrame(t=>{ if(fired) return; fired=true; fn(performance.now()); });
+  setTimeout(()=>{ if(fired) return; fired=true; cancelAnimationFrame(id); fn(performance.now()); },60);
+}
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function drawStroke(i, token){
+  if(mode!=="canvas") return drawStrokeSVG(i, token);
+  const s=strokes[i];
+  activeIdx=i; activeP=0; drawnK=0; paint();
+  const dur = reduced ? 1 : Math.max(450, s.len*1.9)/speed;
+  return new Promise(res=>{
+    const t0=performance.now();
+    function f(now){
+      // A cancelled run only clears the board if no newer run has taken over in the meantime.
+      // (Before, it wiped the state of the new run, which then drew nothing and looked frozen.)
+      if(token.cancel){ if(running===null){ activeIdx=-1; render(); paint(); } return res(false); }
+      const p=Math.min(1,(now-t0)/dur);
+      activeP=ease(p); renderStep();
+      if(p<1) nextFrame(f);
+      else { done=i+1; activeIdx=-1; render(); paint(); res(true); }
+    }
+    nextFrame(f);
+  });
+}
+const wait=(ms,token)=>new Promise(r=>setTimeout(()=>r(!token.cancel),reduced?0:ms/speed));
+function stop(){ if(running){ running.cancel=true; running=null; } cancelSvgAnims(); setPlayLabel(false); }
+function clearStrokes(){ done=0; activeIdx=-1; render(); paint(); }
+function setPlayLabel(on){ $("play").querySelector("span").textContent = on ? "Pause" : "Play"; }
+
+async function play(){
+  if(editing) setEditing(false);
+  if(running){ stop(); return; }
+  const token={cancel:false}; running=token; setPlayLabel(true);
+  if(done>=strokes.length){ clearStrokes(); if(!await wait(350,token)) return; }
+  do{
+    for(let i=done;i<strokes.length;i++){
+      if(!await drawStroke(i,token)) return;
+      if(!await wait(300,token)) return;
+    }
+    if($("tLoop").checked){ if(!await wait(1200,token)) return; clearStrokes(); if(!await wait(400,token)) return; }
+  } while($("tLoop").checked && !token.cancel);
+  if(running===token){ running=null; setPlayLabel(false); }
+}
+async function step(){
+  if(editing) setEditing(false);
+  // Tapping while a stroke is drawn finishes that stroke at once, then the next one starts.
+  const was=activeIdx; stop();
+  if(was>=0){ done=Math.max(done,was+1); activeIdx=-1; render(); paint(); if(done>=strokes.length) return; }
+  else if(done>=strokes.length) clearStrokes();
+  const token={cancel:false}; running=token;
+  await drawStroke(done,token);
+  if(running===token) running=null;
+}
+/* ---------- Point editor ----------
+   Each stroke path (only M, L and C commands) is split into segments. Anchors (on the line) and
+   control points (C handles) are drawn as circles and can be dragged or deleted. Changes are saved
+   per font and letter in this browser; the splines export shows the edited paths. */
+function parsePath(d){
+  const tok=d.match(/[MLC]|-?\d*\.?\d+(?:e-?\d+)?/gi)||[], segs=[]; let i=0, cmd="M";
+  const num=()=>+tok[i++];
+  while(i<tok.length){
+    if(/[MLC]/i.test(tok[i])) cmd=tok[i++].toUpperCase();
+    if(cmd==="M"){ segs.push({t:"M",p:[num(),num()]}); cmd="L"; }
+    else if(cmd==="L") segs.push({t:"L",p:[num(),num()]});
+    else if(cmd==="C") segs.push({t:"C",c1:[num(),num()],c2:[num(),num()],p:[num(),num()]});
+    else i++;
+  }
+  return segs;
+}
+const r1=v=>Math.round(v);
+const pathStr=segs=>segs.map(s=>s.t==="C"?`C${r1(s.c1[0])} ${r1(s.c1[1])} ${r1(s.c2[0])} ${r1(s.c2[1])} ${r1(s.p[0])} ${r1(s.p[1])}`:`${s.t}${r1(s.p[0])} ${r1(s.p[1])}`).join(" ");
+let edSegs=[];   // per stroke: segments, or {dot:[cx,cy,len]}
+let edTypes=[];  // per stroke: point type of each anchor (see below), null for dots
+function edLoad(){
+  edSegs=strokes.map(st=>{
+    if(st.dot){ const [cx,cy,len]=st.raw.trim().split(/\s+/).slice(1).map(Number); return {dot:[cx,cy,len]}; }
+    return parsePath(st.path);
+  });
+  // point types chosen earlier are kept with the edit; otherwise they are read off the handles
+  const e=EDITS[editKey(DATA[cur])];
+  edTypes=edSegs.map((segs,i)=>{
+    if(segs.dot) return null;
+    const saved=e&&e.types&&e.types[i]&&e.strokes[i]===strokes[i].path&&e.types[i].length===segs.length?e.types[i]:null;
+    return segs.map((_,k)=>saved&&saved[k]?saved[k]:edTypeOf(segs,k));
+  });
+}
+/* Point types of an anchor:
+   "corner" just a point, no handles (a corner or a straight join),
+   "one"    one handle, on one side only,
+   "sym"    two handles in one line and of equal length (dragging one moves the other),
+   "free"   two independent handles.
+   The first and last point of a stroke have only one side, so they can be "corner" or "one". */
+const same=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<0.5;
+function edHandles(segs,k){
+  const s=segs[k], n=segs[k+1];
+  return { inn: s.t==="C"&&!same(s.c2,s.p)?s.c2:null, out: n&&n.t==="C"&&!same(n.c1,s.p)?n.c1:null };
+}
+function edTypeOf(segs,k){
+  const {inn,out}=edHandles(segs,k), p=segs[k].p;
+  if(!inn&&!out) return "corner";
+  if(!inn||!out) return "one";
+  const a=[inn[0]-p[0],inn[1]-p[1]], b=[out[0]-p[0],out[1]-p[1]], la=Math.hypot(...a), lb=Math.hypot(...b);
+  const opp=-(a[0]*b[0]+a[1]*b[1])/(la*lb);
+  return opp>0.998&&Math.abs(la-lb)<=Math.max(3,0.04*(la+lb)) ? "sym" : "free";
+}
+// a curve whose two handles both sit on their points is a straight line again
+function edStraighten(segs,k){ const s=segs[k]; if(s&&s.t==="C"&&same(s.c1,segs[k-1].p)&&same(s.c2,s.p)){ segs[k]={t:"L",p:s.p}; } }
+// set (or with pt=null remove) the handle of anchor k on side "in" (towards the previous point) or "out"
+function edSetHandle(segs,k,side,pt){
+  if(side==="in"){
+    const s=segs[k]; if(k===0) return;
+    if(s.t==="L"){ if(!pt) return; segs[k]={t:"C",c1:[...segs[k-1].p],c2:pt,p:s.p}; }
+    else s.c2=pt?pt:[...s.p];
+    edStraighten(segs,k);
+  } else {
+    const n=segs[k+1]; if(!n) return;
+    if(n.t==="L"){ if(!pt) return; segs[k+1]={t:"C",c1:pt,c2:[...n.p],p:n.p}; }
+    else n.c1=pt?pt:[...segs[k].p];
+    edStraighten(segs,k+1);
+  }
+}
+function edSetType(i,k,type,keepSide){
+  const segs=edSegs[i]; if(!segs||segs.dot) return;
+  const last=k===segs.length-1, p=segs[k].p, prev=k>0?segs[k-1].p:null, next=!last?segs[k+1].p:null;
+  if((k===0||last)&&(type==="sym"||type==="free")) return;
+  const {inn,out}=edHandles(segs,k);
+  const unit=v=>{ const l=Math.hypot(v[0],v[1])||1; return [v[0]/l,v[1]/l]; };
+  // default direction: along the line from the previous to the next point
+  const tan=unit(prev&&next?[next[0]-prev[0],next[1]-prev[1]]:next?[next[0]-p[0],next[1]-p[1]]:[p[0]-prev[0],p[1]-prev[1]]);
+  const lin=prev?Math.hypot(p[0]-prev[0],p[1]-prev[1])/3:0, lout=next?Math.hypot(next[0]-p[0],next[1]-p[1])/3:0;
+  const at=(d,l)=>[p[0]+d[0]*l,p[1]+d[1]*l];
+  if(type==="corner"){ edSetHandle(segs,k,"in",null); edSetHandle(segs,k,"out",null); }
+  else if(type==="one"){
+    let side=keepSide||(out?"out":inn?"in":(last?"in":"out"));
+    if(side==="in"&&k===0) side="out"; if(side==="out"&&last) side="in";
+    const h=side==="in"?(inn||at([-tan[0],-tan[1]],lin)):(out||at(tan,lout));
+    edSetHandle(segs,k,side,[...h]); edSetHandle(segs,k,side==="in"?"out":"in",null);
+  } else {
+    let d=tan;
+    if(inn&&out) d=unit([out[0]-inn[0],out[1]-inn[1]]);
+    else if(out) d=unit([out[0]-p[0],out[1]-p[1]]);
+    else if(inn) d=unit([p[0]-inn[0],p[1]-inn[1]]);
+    const li=inn?Math.hypot(inn[0]-p[0],inn[1]-p[1]):lin, lo=out?Math.hypot(out[0]-p[0],out[1]-p[1]):lout;
+    if(type==="sym"){ const l=(inn&&out)?(li+lo)/2:(inn?li:out?lo:(lin+lout)/2); edSetHandle(segs,k,"in",at([-d[0],-d[1]],l)); edSetHandle(segs,k,"out",at(d,l)); }
+    else { edSetHandle(segs,k,"in",inn?[...inn]:at([-d[0],-d[1]],li)); edSetHandle(segs,k,"out",out?[...out]:at(d,lo)); }
+  }
+  edTypes[i][k]=type;
+}
+/* Smoothing: the handles of a point are laid along the line from the previous to the next point,
+   each a third as long as its segment (a Catmull-Rom style curve through the same points).
+   The points themselves stay where they are. Start and end points and corner points are left alone. */
+function edSmooth(i,k){
+  const segs=edSegs[i]; if(!segs||segs.dot||k<=0||k>=segs.length-1) return false;
+  const p=segs[k].p, a=segs[k-1].p, b=segs[k+1].p;
+  const dx=b[0]-a[0], dy=b[1]-a[1], l=Math.hypot(dx,dy); if(l<1) return false;
+  const u=[dx/l,dy/l], li=Math.hypot(p[0]-a[0],p[1]-a[1])/3, lo=Math.hypot(b[0]-p[0],b[1]-p[1])/3;
+  edSetHandle(segs,k,"in",[p[0]-u[0]*li,p[1]-u[1]*li]);
+  edSetHandle(segs,k,"out",[p[0]+u[0]*lo,p[1]+u[1]*lo]);
+  edTypes[i][k]=edTypeOf(segs,k);
+  return true;
+}
+// the anchor a selected point belongs to: a handle c1 of segment k belongs to point k-1, c2 to point k
+const edAnchorOf=s=>s&&s.w!=="dot"?{i:s.i,k:s.w==="c1"?s.k-1:s.k,side:s.w==="c1"?"out":s.w==="c2"?"in":null}:null;
+function edRaw(i){ const s=edSegs[i]; return s.dot?`DOT ${r1(s.dot[0])} ${r1(s.dot[1])} ${s.dot[2]}`:pathStr(s); }
+// Rebuild one stroke after an edit: geometry, samples, fitted nib
+function edApply(i){
+  const raw=edRaw(i), st=strokes[i];
+  if(edSegs[i].dot){ const f=dotStroke(raw); Object.assign(st,f); }
+  else { st.path=raw; st.hp.setAttribute("d",raw); st.len=st.hp.getTotalLength(); st.pts=samplePath(st.hp,st.len); }
+  st.fit=null;
+}
+function edSave(){
+  const d=letter(cur); EDITS[editKey(d)]={base:DATA[cur].strokes.slice(), strokes:strokes.map((s,i)=>edRaw(i)), types:edTypes}; saveEdits(); showSplines(); edMsg("Saved (in this browser only).");
+}
+const edMsg=t=>{ $("editMsg").textContent=t; clearTimeout(edMsg.tm); edMsg.tm=setTimeout(()=>{ $("editMsg").textContent=""; },2500); };
+function edPoints(){
+  const out=[];
+  edSegs.forEach((segs,i)=>{
+    if(segs.dot){ out.push({i,k:0,w:"dot",p:segs.dot,anchor:true}); return; }
+    segs.forEach((s,k)=>{
+      if(s.t==="C"){ if(!same(s.c1,segs[k-1].p)) out.push({i,k,w:"c1",p:s.c1,from:segs[k-1].p}); if(!same(s.c2,s.p)) out.push({i,k,w:"c2",p:s.c2,from:s.p}); }
+      out.push({i,k,w:"p",p:s.p,anchor:true,corner:edTypes[i]&&edTypes[i][k]==="corner"});
+    });
+  });
+  return out;
+}
+function drawEdit(){
+  if(!editG) return; editG.innerHTML="";
+  const pts=edPoints();
+  pts.forEach(q=>{ if(q.from) el("line",{x1:q.from[0],y1:q.from[1],x2:q.p[0],y2:q.p[1],class:"ed-handle"},editG); });
+  pts.forEach(q=>{
+    const sel=edSel&&edSel.i===q.i&&edSel.k===q.k&&edSel.w===q.w;
+    const g=el("g",{class:"ed-pt"+(q.anchor?" anchor":"")+(sel?" sel":"")},editG);
+    const z=view.w/VB_W;
+    if(q.corner){ const r=15*z; el("rect",{x:q.p[0]-r,y:q.p[1]-r,width:2*r,height:2*r,class:"vis","stroke-width":5*z},g); }
+    else el("circle",{cx:q.p[0],cy:q.p[1],r:(q.anchor?17:13)*z,class:"vis","stroke-width":5*z},g);
+    el("circle",{cx:q.p[0],cy:q.p[1],r:46*z,class:"hit"},g);
+
+  });
+  $("delPt").disabled=!edSel;
+  // point type buttons for the selected point (or the point a selected handle belongs to)
+  const a=edAnchorOf(edSel), segs=a&&edSegs[a.i], ok=segs&&!segs.dot&&a.k>=0;
+  const end=ok&&(a.k===0||a.k===segs.length-1), ty=ok?edTypes[a.i][a.k]:null;
+  $("smoothPt").disabled=!ok||end; $("smoothSt").disabled=!ok||segs.length<3;
+  document.querySelectorAll("#ptype [data-t]").forEach(b=>{
+    const t=b.dataset.t; b.disabled=!ok||(end&&(t==="sym"||t==="free")); b.setAttribute("aria-pressed",ok&&ty===t);
+  });
+}
+function svgPoint(e){ return toBoard(e.clientX,e.clientY); }
+function edDown(e,q){
+  e.preventDefault(); e.stopPropagation();
+  edSel={i:q.i,k:q.k,w:q.w}; const [x,y]=svgPoint(e);
+  edDrag={q,dx:q.p[0]-x,dy:q.p[1]-y,moved:false,id:e.pointerId};
+  try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+  drawEdit();
+}
+svg.addEventListener("pointermove",e=>{
+  if(!edDrag) return; e.preventDefault();
+  const [x,y]=svgPoint(e), q=edDrag.q, nx=x+edDrag.dx, ny=y+edDrag.dy;
+  const segs=edSegs[q.i];
+  if(q.w==="dot"){ segs.dot[0]=nx; segs.dot[1]=ny; }
+  else {
+    const s=segs[q.k];
+    if(q.w==="p"){ // moving an anchor carries its two neighbouring control points along
+      const ox=nx-s.p[0], oy=ny-s.p[1];
+      if(s.t==="C"){ s.c2[0]+=ox; s.c2[1]+=oy; }
+      const n=segs[q.k+1]; if(n&&n.t==="C"){ n.c1[0]+=ox; n.c1[1]+=oy; }
+      s.p[0]=nx; s.p[1]=ny;
+    } else {
+      s[q.w][0]=nx; s[q.w][1]=ny;
+      const a=edAnchorOf(q);
+      if(edTypes[q.i][a.k]==="sym"){
+        const P=segs[a.k].p, o=a.side==="in"?segs[a.k+1]:segs[a.k], key=a.side==="in"?"c1":"c2";
+        if(o&&o.t==="C"){ o[key]=[2*P[0]-nx,2*P[1]-ny]; }
+      }
+    }
+  }
+  edDrag.moved=true; edApply(q.i); render(); drawEdit();
+});
+const edUp=e=>{ if(!edDrag) return; const moved=edDrag.moved; edDrag=null; try{ svg.releasePointerCapture(e.pointerId); }catch(_){} if(moved) edSave(); };
+svg.addEventListener("pointerup",edUp); svg.addEventListener("pointercancel",edUp);
+function edDelete(){
+  if(!edSel) return;
+  const {i,k,w}=edSel, segs=edSegs[i];
+  if(segs.dot){ edMsg("A dot can only be moved."); return; }
+  if(w==="c1"||w==="c2"){
+    // a deleted control point falls back onto its anchor; with both gone the segment becomes straight
+    const s=segs[k]; if(w==="c1") s.c1=[...segs[k-1].p]; else s.c2=[...s.p];
+    if(s.c1[0]===segs[k-1].p[0]&&s.c1[1]===segs[k-1].p[1]&&s.c2[0]===s.p[0]&&s.c2[1]===s.p[1]) segs[k]={t:"L",p:s.p};
+  } else {
+    if(segs.length<=2){ edMsg("A stroke needs at least two points."); return; }
+    if(k===0){ const n=segs[1]; segs.splice(0,2,{t:"M",p:n.p}); }
+    else if(k===segs.length-1) segs.pop();
+    else {
+      const a=segs[k], b=segs[k+1], prev=segs[k-1].p;
+      const m = (a.t==="L"&&b.t==="L") ? {t:"L",p:b.p} : {t:"C",c1:a.t==="C"?a.c1:[...prev],c2:b.t==="C"?b.c2:[...b.p],p:b.p};
+      segs.splice(k,2,m);
+    }
+  }
+  edTypes[i]=segs.map((_,k)=>edTypeOf(segs,k));
+  edSel=null; edApply(i); render(); drawEdit(); edSave();
+}
+$("smoothPt").onclick=()=>{
+  const a=edAnchorOf(edSel); if(!a||a.k<0) return;
+  if(!edSmooth(a.i,a.k)){ edMsg("Start and end points have only one side."); return; }
+  edSel={i:a.i,k:a.k,w:"p"}; edApply(a.i); render(); drawEdit(); edSave();
+};
+$("smoothSt").onclick=()=>{
+  const a=edAnchorOf(edSel); if(!a) return; const segs=edSegs[a.i]; if(!segs||segs.dot) return;
+  // only points between two curves: straight pieces and their joins stay as they are
+  const cand=[]; for(let k=1;k<segs.length-1;k++) if(edTypes[a.i][k]!=="corner" && segs[k].t==="C" && segs[k+1].t==="C") cand.push(k);
+  let n=0; cand.forEach(k=>{ if(edSmooth(a.i,k)) n++; });
+  edSel=a.k>=0?{i:a.i,k:a.k,w:"p"}:null; edApply(a.i); render(); drawEdit(); edSave();
+  edMsg(n?`${n} points smoothed. Corners and straight parts stay.`:"Nothing to smooth: the stroke has no points between two curves.");
+};
+document.querySelectorAll("#ptype [data-t]").forEach(b=>b.addEventListener("click",()=>{
+  const a=edAnchorOf(edSel); if(!a||a.k<0) return;
+  edSetType(a.i,a.k,b.dataset.t,a.side);
+  // keep the selection on the point itself: a removed handle can no longer be selected
+  edSel={i:a.i,k:a.k,w:"p"};
+  edApply(a.i); render(); drawEdit(); edSave();
+}));
+/* ---------- Zoom and pan while editing ----------
+   Two fingers: pinch to zoom, move both to scroll. Trackpad or mouse: scroll to pan, pinch (or Ctrl + wheel) to zoom. */
+function setView(x,y,w){
+  w=Math.max(120,Math.min(VB_W,w));
+  const h=w*VB_H/VB_W, m=200;   // keep the view near the board
+  x=Math.max(vbX-m,Math.min(vbX+VB_W+m-w,x)); y=Math.max(VB_Y-m,Math.min(VB_Y+VB_H+m-h,y));
+  view={x,y,w}; svg.setAttribute("viewBox",`${x} ${y} ${w} ${h}`);
+  // stroke numbers keep their size on screen
+  const z=w/VB_W;
+  svg.querySelectorAll(".marker").forEach(g=>{ const c=g.querySelector("circle"); if(!c) return; const mx=+c.getAttribute("cx"), my=+c.getAttribute("cy");
+    if(z<0.999) g.setAttribute("transform",`translate(${mx} ${my}) scale(${z}) translate(${-mx} ${-my})`); else g.removeAttribute("transform"); });
+  render(); if(editing) drawEdit();
+  $("zoomOut").disabled = w>=VB_W-0.5;
+  $("zoomInfo").textContent = w<VB_W-0.5 ? Math.round(VB_W/w*100)+" %" : "";
+}
+const resetView=()=>setView(vbX,VB_Y,VB_W);
+// client coordinates -> board units for the current view
+function toBoard(cx,cy){ const r=svg.getBoundingClientRect(); return [view.x+(cx-r.left)/r.width*view.w, view.y+(cy-r.top)/r.height*viewH()]; }
+const touches=new Map(); let pinch=null;
+svg.addEventListener("pointerdown",e=>{
+  if(!editing || e.pointerType==="mouse") return;
+  touches.set(e.pointerId,[e.clientX,e.clientY]);
+  if(touches.size===2){
+    edDrag=null;   // a second finger turns a point drag into a gesture
+    const [a,b]=[...touches.values()], mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])||1, anchor:toBoard(...mid), w:view.w};
+    try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+  }
+},true);
+svg.addEventListener("pointermove",e=>{
+  if(!touches.has(e.pointerId)) return;
+  touches.set(e.pointerId,[e.clientX,e.clientY]);
+  if(!pinch||touches.size<2) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const [a,b]=[...touches.values()], mid=[(a[0]+b[0])/2,(a[1]+b[1])/2], d=Math.hypot(a[0]-b[0],a[1]-b[1])||1;
+  const w=Math.max(120,Math.min(VB_W,pinch.w*pinch.d/d)), r=svg.getBoundingClientRect();
+  // keep the board point that was under the fingers' midpoint under the midpoint
+  const x=pinch.anchor[0]-(mid[0]-r.left)/r.width*w, y=pinch.anchor[1]-(mid[1]-r.top)/r.height*(w*VB_H/VB_W);
+  setView(x,y,w);
+},true);
+const endTouch=e=>{ touches.delete(e.pointerId); if(touches.size<2) pinch=null; };
+svg.addEventListener("pointerup",endTouch,true); svg.addEventListener("pointercancel",endTouch,true);
+svg.addEventListener("wheel",e=>{
+  if(!editing) return; e.preventDefault();
+  const r=svg.getBoundingClientRect(), u=view.w/r.width;
+  if(e.ctrlKey){   // trackpad pinch or Ctrl + wheel: zoom around the pointer
+    const f=Math.exp(e.deltaY*0.01), [px,py]=toBoard(e.clientX,e.clientY), w=Math.max(120,Math.min(VB_W,view.w*f));
+    setView(px-(e.clientX-r.left)/r.width*w, py-(e.clientY-r.top)/r.height*(w*VB_H/VB_W), w);
+  } else setView(view.x+e.deltaX*u, view.y+e.deltaY*u, view.w);   // two-finger scroll
+},{passive:false});
+
+function setEditing(on){
+  editing=on; $("editBtn").setAttribute("aria-pressed",on); $("editBar").hidden=!on; board.classList.toggle("editing",on);
+  if(on){ stop(); done=strokes.length; activeIdx=-1; render(); paint(); edLoad(); }
+  edSel=null; if(!on){ resetView(); if(editG) editG.innerHTML=""; } else drawEdit();
+}
+$("editBtn").onclick=()=>setEditing(!editing);
+$("zoomIn").onclick=()=>{ const w=view.w/1.6, cx=view.x+view.w/2, cy=view.y+viewH()/2; setView(cx-w/2, cy-(w*VB_H/VB_W)/2, w); };
+$("zoomOut").onclick=resetView;
+$("delPt").onclick=edDelete;
+$("discardEd").onclick=()=>{ const d=letter(cur); delete EDITS[editKey(d)]; saveEdits(); const was=editing; build(); done=strokes.length; render(); paint(); if(was){ edLoad(); drawEdit(); } showSplines(); edMsg("Original strokes restored."); };
+document.addEventListener("keydown",e=>{ if(editing && (e.key==="Delete"||e.key==="Backspace") && !e.target.closest("input,select,textarea")){ e.preventDefault(); edDelete(); } });
+// Pick the nearest point within reach of the finger or mouse; a tap on the empty board clears the selection.
+svg.addEventListener("pointerdown",e=>{
+  if(!editing || pinch || touches.size>1) return;
+  const [x,y]=toBoard(e.clientX,e.clientY), z=view.w/VB_W, reach=(e.pointerType==="mouse"?30:52)*z;
+  let best=null, bd=Infinity;
+  edPoints().forEach(q=>{ const d=Math.hypot(q.p[0]-x,q.p[1]-y); if(d<bd){ bd=d; best=q; } });
+  if(best && bd<=reach) edDown(e,best); else { edSel=null; drawEdit(); }
+});
+
+function select(i,auto){
+  stop(); cur=i;
+  document.querySelectorAll(".pick").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.i===i));
+  try{ localStorage.setItem("deva-nib-cur", DATA[i].ch); }catch(e){}
+  build();
+  if(editing){ done=strokes.length; edLoad(); edSel=null; resetView(); paint(); return; }
+  if(auto) play();
+}
+
+$("play").onclick=play;
+$("step").onclick=step;
+$("reset").onclick=()=>{ stop(); clearStrokes(); };
+$("spd").oninput=e=>{ speed=+e.target.value; $("spdOut").textContent=speed+"×"; };
+$("ang").oninput=e=>{ angle=+e.target.value; $("angOut").textContent=angle+"°"; refreshDots(); render(); };
+$("nib").oninput=e=>{ nibW=+e.target.value; $("nibOut").textContent=nibW; render(); };
+$("thk").oninput=e=>{ nibT=+e.target.value; $("thkOut").textContent=nibT; render(); };
+$("penmode").value=penMode;
+$("penmode").onchange=e=>{ penMode=e.target.value; try{ localStorage.setItem("deva-nib-pen",penMode); }catch(e){} stop(); clearStrokes(); play(); };
+$("mode").value=mode;
+$("mode").onchange=e=>{ mode=e.target.value; try{ localStorage.setItem("deva-nib-mode",mode); }catch(e){} stop(); clearStrokes(); play(); };
+$("stp").oninput=e=>{ stepLen=+e.target.value; stepLabel(); resampleAll(); render(); };
+$("tNums").onchange=e=>board.classList.toggle("hide-nums",!e.target.checked);
+$("tGhost").onchange=e=>board.classList.toggle("show-ghost",e.target.checked);
+{ const mq=matchMedia("(prefers-color-scheme: dark)"); if(mq.addEventListener) mq.addEventListener("change",render); else if(mq.addListener) mq.addListener(render); }
+if("MutationObserver" in window) new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+document.addEventListener("keydown",e=>{
+  if(e.target.closest("input,button")&&e.key!=="ArrowRight") return;
+  if(e.key===" "){ e.preventDefault(); play(); }
+  if(e.key==="ArrowRight"){ e.preventDefault(); step(); }
+});
+
+let start=0; try{ const s=localStorage.getItem("deva-nib-cur"); const j=DATA.findIndex(d=>d.ch===s); start=j>=0?j:0; }catch(e){}
+if(!(start>=0&&start<DATA.length)) start=0;
+applyFont(fontName,false);
+select(start,false);
+done=strokes.length; render(); paint();
+setTimeout(()=>{ if(!running && done===strokes.length) play(); }, 900);
+</script>
+
+</body>
+</html>
