@@ -17,19 +17,20 @@
   --accent: #1f5fbf;
   --accent-fg: #ffffff;
   --mark: #ffe08a;
+  --tint: #dde8fa;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0f151c; --sheet: #17202a; --fg: #e6ebf1; --muted: #93a0b0;
-    --line: #2a3644; --accent: #6ea2f2; --accent-fg: #0b1420; --mark: #6b5a1c;
+    --line: #2a3644; --accent: #6ea2f2; --accent-fg: #0b1420; --mark: #6b5a1c; --tint: #22344d;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f151c; --sheet: #17202a; --fg: #e6ebf1; --muted: #93a0b0;
-  --line: #2a3644; --accent: #6ea2f2; --accent-fg: #0b1420; --mark: #6b5a1c;
+  --line: #2a3644; --accent: #6ea2f2; --accent-fg: #0b1420; --mark: #6b5a1c; --tint: #22344d;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -54,8 +55,16 @@ textarea {
   border: 0; outline: none; background: transparent; color: var(--fg);
   font: 1.125rem/1.65 var(--body); padding: 1.25rem;
 }
-.reader { padding: 1.25rem; font-size: 1.125rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 14rem; }
+.reader-box { background: var(--sheet); border: 1px solid var(--line); border-radius: 14px; }
+.reader-head { padding: 0.6rem 1.25rem; border-bottom: 1px solid var(--line); }
+.reader-head .lbl { margin: 0; }
+.reader { padding: 1.25rem; font-size: 1.125rem; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 22rem; overflow-y: auto; color: var(--muted); }
+.reader .empty { font-style: italic; }
+.reader .s { border-radius: 4px; transition: background-color 0.15s, color 0.15s; }
+.reader .s.done { color: var(--fg); }
+.reader .s.cur { background: var(--tint); color: var(--fg); box-shadow: 0 0 0 2px var(--tint); }
 .reader mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 1px; }
+@media (prefers-reduced-motion: reduce) { .reader .s { transition: none; } }
 .sheet-foot { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 1.25rem; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .linkish { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 0; }
 
@@ -93,12 +102,16 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 
   <div class="sheet">
     <textarea id="text" aria-label="Text to read" placeholder="Paste or type text here…"></textarea>
-    <div class="reader" id="reader" hidden aria-live="off"></div>
     <div class="sheet-foot">
       <span id="count">0 words</span>
       <span><button class="linkish" id="paste" type="button">Clear</button></span>
     </div>
   </div>
+
+  <section class="reader-box" aria-label="Now reading">
+    <div class="reader-head"><p class="lbl">Now reading</p></div>
+    <div class="reader" id="reader" aria-live="off"></div>
+  </section>
 
   <div class="deck">
     <div>
@@ -111,11 +124,11 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
     </div>
     <div>
       <label for="rate">Speed</label>
-      <div class="range-row"><input type="range" id="rate" min="0.5" max="2" step="0.1" value="1"><span class="val" id="rateVal">1.0×</span></div>
+      <div class="range-row"><input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="1" autocomplete="off"><span class="val" id="rateVal">1×</span></div>
     </div>
     <div>
       <label for="pitch">Pitch</label>
-      <div class="range-row"><input type="range" id="pitch" min="0.5" max="1.5" step="0.1" value="1"><span class="val" id="pitchVal">1.0</span></div>
+      <div class="range-row"><input type="range" id="pitch" min="0.5" max="1.5" step="0.1" value="1" autocomplete="off"><span class="val" id="pitchVal">1</span></div>
     </div>
   </div>
 
@@ -205,6 +218,7 @@ function updateCount() {
   const mins = words / (150 * Number(rate.value));
   const est = words ? ` · about ${mins < 1 ? Math.max(1, Math.round(mins * 60)) + " s" : Math.round(mins) + " min"}` : "";
   $("count").textContent = `${words} word${words === 1 ? "" : "s"} · ${t.length} characters${est}`;
+  if ($("status").dataset.state === "idle") renderReader(textEl.value);
 }
 
 function note(msg, warn) { const n = $("note"); n.textContent = msg; n.dataset.kind = warn ? "warn" : ""; }
@@ -215,41 +229,100 @@ function setState(s) {
   $("playLbl").textContent = s === "speaking" ? "Pause" : s === "paused" ? "Resume" : "Read aloud";
   playBtn.querySelector("path").setAttribute("d", s === "speaking" ? "M4 2.5h3v11H4zM9 2.5h3v11H9z" : "M4 2.5v11l9-5.5z");
   stopBtn.disabled = s === "idle";
-  const reading = s !== "idle";
-  textEl.hidden = reading; reader.hidden = !reading;
+  textEl.readOnly = s !== "idle";
 }
 
 function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
-function highlight(text, start, len) {
-  if (len == null) { const m = text.slice(start).match(/^\S+/); len = m ? m[0].length : 0; }
-  reader.innerHTML = esc(text.slice(0, start)) + "<mark>" + esc(text.slice(start, start + len)) + "</mark>" + esc(text.slice(start + len));
-  const m = reader.querySelector("mark");
-  if (m && m.scrollIntoView) m.scrollIntoView({ block: "nearest" });
+// Split text into sentences, keeping each one's position in the original text.
+function sentences(text, lang) {
+  const out = [];
+  try {
+    const seg = new Intl.Segmenter(lang, { granularity: "sentence" });
+    for (const p of seg.segment(text)) out.push({ start: p.index, text: p.segment });
+  } catch (e) {
+    const re = /[^.!?。！？\n]+[.!?。！？]*[\s]*|\n+/g; let m;
+    while ((m = re.exec(text))) out.push({ start: m.index, text: m[0] });
+  }
+  return out.length ? out : [{ start: 0, text }];
 }
 
-function speak() {
-  const text = textEl.value;
-  if (!text.trim()) { note("Paste some text first.", true); textEl.focus(); return; }
-  synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+let parts = [], session = 0, current = -1;
+
+function renderReader(text) {
+  parts = sentences(text, langSel.value);
+  if (!text.trim()) { reader.innerHTML = '<span class="empty">The text appears here while it is read, with the current sentence and word highlighted.</span>'; return; }
+  reader.innerHTML = parts.map((p, i) => `<span class="s" data-i="${i}">${esc(p.text)}</span>`).join("");
+}
+
+function sentenceEl(i) { return reader.querySelector(`.s[data-i="${i}"]`); }
+
+function markSentence(i) {
+  reader.querySelectorAll(".s").forEach(el => {
+    const k = Number(el.dataset.i);
+    el.classList.toggle("done", k < i);
+    el.classList.toggle("cur", k === i);
+    if (k !== i && el.querySelector("mark")) el.textContent = parts[k].text;
+  });
+  const el = sentenceEl(i);
+  if (el) scrollInto(el);
+}
+
+function markWord(i, offset, len) {
+  const el = sentenceEl(i); if (!el) return;
+  const t = parts[i].text;
+  if (!len) { const m = t.slice(offset).match(/^\S+/); len = m ? m[0].length : 0; }
+  if (!len) return;
+  el.innerHTML = esc(t.slice(0, offset)) + "<mark>" + esc(t.slice(offset, offset + len)) + "</mark>" + esc(t.slice(offset + len));
+}
+
+function scrollInto(el) {
+  const r = reader.getBoundingClientRect(), e = el.getBoundingClientRect();
+  if (e.top < r.top || e.bottom > r.bottom) reader.scrollTop += e.top - r.top - 16;
+}
+
+function finish() {
+  current = -1;
+  setState("idle");
+  reader.querySelectorAll(".s").forEach(el => { el.classList.remove("cur", "done"); el.textContent = parts[el.dataset.i].text; });
+}
+
+function speakFrom(i, id) {
+  if (id !== session) return;
+  while (i < parts.length && !parts[i].text.trim()) i++;
+  if (i >= parts.length) { finish(); return; }
+  current = i;
+  markSentence(i);
+  const u = new SpeechSynthesisUtterance(parts[i].text);
   u.lang = langSel.value;
   const v = voices.find(v => v.voiceURI === voiceSel.value);
   if (v) u.voice = v;
   u.rate = Number(rate.value);
   u.pitch = Number(pitch.value);
-  reader.textContent = text;
-  u.onstart = () => setState("speaking");
-  u.onboundary = e => { if (e.name === "word" || e.name === undefined) highlight(text, e.charIndex, e.charLength || null); };
-  u.onend = () => setState("idle");
+  u.onboundary = e => { if (id === session && (e.name === "word" || e.name === undefined)) markWord(i, e.charIndex, e.charLength); };
+  u.onend = () => speakFrom(i + 1, id);
   u.onerror = e => {
-    setState("idle");
-    if (e.error !== "interrupted" && e.error !== "canceled") note(`Couldn't read the text (${e.error}). Try another voice or language.`, true);
+    if (id !== session) return;
+    if (e.error === "interrupted" || e.error === "canceled") return;
+    finish();
+    note(`Couldn't read the text (${e.error}). Try another voice or language.`, true);
   };
-  setState("speaking");
   synth.speak(u);
-  note("Uses the voices built into your device and browser, so the list differs between phone and computer.");
 }
+
+function speak() {
+  const text = textEl.value;
+  if (!text.trim()) { note("Paste some text first.", true); textEl.focus(); return; }
+  session++;
+  synth.cancel();
+  renderReader(text);
+  setState("speaking");
+  note("Uses the voices built into your device and browser, so the list differs between phone and computer.");
+  const id = session;
+  setTimeout(() => speakFrom(0, id), 50);
+}
+
+function stop() { session++; synth.cancel(); finish(); }
 
 playBtn.addEventListener("click", () => {
   if (!synth) return;
@@ -258,13 +331,17 @@ playBtn.addEventListener("click", () => {
   else if (s === "paused") { synth.resume(); setState("speaking"); }
   else speak();
 });
-stopBtn.addEventListener("click", () => { synth.cancel(); setState("idle"); });
-$("paste").addEventListener("click", () => { synth && synth.cancel(); setState("idle"); textEl.value = ""; updateCount(); textEl.focus(); });
+stopBtn.addEventListener("click", stop);
+$("paste").addEventListener("click", () => { if (synth) stop(); textEl.value = ""; updateCount(); textEl.focus(); });
 textEl.addEventListener("input", updateCount);
-langSel.addEventListener("change", () => { store("lang", langSel.value); buildVoices(); });
+langSel.addEventListener("change", () => { store("lang", langSel.value); if (synth) stop(); buildVoices(); });
 voiceSel.addEventListener("change", () => store("voice:" + langSel.value, voiceSel.value));
-rate.addEventListener("input", () => { $("rateVal").textContent = Number(rate.value).toFixed(1) + "×"; updateCount(); });
-pitch.addEventListener("input", () => { $("pitchVal").textContent = Number(pitch.value).toFixed(1); });
+const fmt = v => String(Number(Number(v).toFixed(1)));
+rate.addEventListener("input", () => { $("rateVal").textContent = fmt(rate.value) + "×"; updateCount(); });
+pitch.addEventListener("input", () => { $("pitchVal").textContent = fmt(pitch.value); });
+
+// Always start at normal speed and pitch, even if the browser restored old slider positions.
+rate.value = 1; pitch.value = 1;
 
 if (!synth || typeof SpeechSynthesisUtterance === "undefined") {
   playBtn.disabled = true;
@@ -275,7 +352,7 @@ if (!synth || typeof SpeechSynthesisUtterance === "undefined") {
   if ("onvoiceschanged" in synth) synth.addEventListener("voiceschanged", buildLanguages);
   setTimeout(() => { if (!voices.length) buildLanguages(); }, 800);
 }
-window.addEventListener("pagehide", () => synth && synth.cancel());
+window.addEventListener("pagehide", () => { session++; synth && synth.cancel(); });
 </script>
 </body>
 </html>
