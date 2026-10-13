@@ -85,9 +85,9 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .edithint{font-size:13px;color:var(--fg);flex:1 1 260px}
 .editmsg{font-size:13px;color:var(--accent);min-height:1.2em}
 .board.editing svg{touch-action:none}
-.ed-handle{stroke:var(--accent);stroke-width:3;opacity:.7}
+.ed-handle{stroke:var(--accent);stroke-width:3;opacity:.7;vector-effect:non-scaling-stroke}
 .ed-pt{cursor:grab}
-.ed-pt .vis{fill:var(--slate);stroke:var(--accent);stroke-width:5}
+.ed-pt .vis{fill:var(--slate);stroke:var(--accent)}
 .ed-pt.anchor .vis{fill:var(--accent)}
 .ed-pt.sel .vis{fill:#e2685a;stroke:#fff}
 .ed-pt .hit{fill:transparent}
@@ -164,9 +164,12 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
     <button class="btn" id="editBtn" type="button" aria-pressed="false">Punkte bearbeiten</button>
   </div>
   <div class="editbar" id="editBar" hidden>
-    <span class="edithint">Punkte ziehen zum Verschieben. Einen Punkt antippen, dann „Punkt löschen“ oder die Entf-Taste. Gefüllt: Punkte auf der Linie; hohl: Steuerpunkte.</span>
+    <span class="edithint">Punkte ziehen zum Verschieben. Einen Punkt antippen, dann „Punkt löschen“ oder die Entf-Taste. Gefüllt: Punkte auf der Linie; hohl: Steuerpunkte. Zwei Finger: auseinanderziehen zum Vergrößern, gemeinsam bewegen zum Verschieben (am Trackpad genauso, mit der Maus Strg + Rad).</span>
     <button class="btn" id="delPt" type="button" disabled>Punkt löschen</button>
     <button class="btn" id="discardEd" type="button">Änderungen verwerfen</button>
+    <button class="btn" id="zoomIn" type="button" aria-label="Vergrößern">+</button>
+    <button class="btn" id="zoomOut" type="button" aria-label="Ganze Tafel zeigen" disabled>Ganze Tafel</button>
+    <span class="editmsg" id="zoomInfo"></span>
     <span class="editmsg" id="editMsg" aria-live="polite"></span>
   </div>
   <div class="sliders">
@@ -256,6 +259,9 @@ let penMode = "fixed", fitG = null, raster = null, editG = null, editing = false
 try{ if(localStorage.getItem("deva-nib-pen")==="fit") penMode="fit"; }catch(e){}
 let mode = "canvas", inkG = null, svgAnims = [], maskUid = 0;
 try{ const m=localStorage.getItem("deva-nib-mode"); if(m==="line"||m==="mask") mode=m; }catch(e){}
+// The visible part of the board. Normally the full 1200-unit board; zoomed and panned while editing.
+let view = {x:0, y:-235, w:1200};
+const viewH = () => view.w*1290/1200;
 let vbX = 0, activeIdx = -1, activeP = 0, pen = null, ghostEl = null, drawnK = 0, inkChalk = "#eef2e9", inkAcc = "#e9a23b";
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -274,6 +280,7 @@ function build(){
   const d=letter(cur);
   svg.innerHTML="";
   const cx=d.adv/2; vbX=cx-600;
+  view={x:vbX, y:VB_Y, w:VB_W};
   svg.setAttribute("viewBox",`${vbX} ${VB_Y} ${VB_W} ${VB_H}`);
   svg.setAttribute("aria-label",`Strichfolge für ${d.ch} (${d.tr}) mit Breitfeder`);
   // 3 × 4 practice grid. Rows = Devanagari zones: matras above (i, e), two rows for the letter body,
@@ -611,9 +618,9 @@ function render(){
   }
   if(inkG) inkG.innerHTML="";
   if(!cv.width||!cv.height) return;
-  const s=cv.width/VB_W;
+  const s=cv.width/view.w;
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.setTransform(s,0,0,s,-vbX*s,-VB_Y*s);
+  ctx.setTransform(s,0,0,s,-view.x*s,-view.y*s);
   inkChalk=css("--chalk")||inkChalk; inkAcc=css("--accent")||inkAcc;
   drawnK=0;
   strokes.forEach((st,i)=>{
@@ -626,7 +633,7 @@ function render(){
 function renderStep(){
   if(activeIdx<0||!cv.width) return;
   const st=strokes[activeIdx], k=Math.round(activeP*(st.pts.length-1));
-  if(k>drawnK){ const s=cv.width/VB_W; ctx.setTransform(s,0,0,s,-vbX*s,-VB_Y*s); nibStroke(st.pts, k, inkAcc, Math.max(1,drawnK), st); drawnK=k; }
+  if(k>drawnK){ const s=cv.width/view.w; ctx.setTransform(s,0,0,s,-view.x*s,-view.y*s); nibStroke(st.pts, k, inkAcc, Math.max(1,drawnK), st); drawnK=k; }
   moveNib();
 }
 function moveNib(){
@@ -857,13 +864,14 @@ function drawEdit(){
   pts.forEach(q=>{
     const sel=edSel&&edSel.i===q.i&&edSel.k===q.k&&edSel.w===q.w;
     const g=el("g",{class:"ed-pt"+(q.anchor?" anchor":"")+(sel?" sel":"")},editG);
-    el("circle",{cx:q.p[0],cy:q.p[1],r:q.anchor?17:13,class:"vis"},g);
-    el("circle",{cx:q.p[0],cy:q.p[1],r:46,class:"hit"},g);
-    g.addEventListener("pointerdown",e=>edDown(e,q));
+    const z=view.w/VB_W;
+    el("circle",{cx:q.p[0],cy:q.p[1],r:(q.anchor?17:13)*z,class:"vis","stroke-width":5*z},g);
+    el("circle",{cx:q.p[0],cy:q.p[1],r:46*z,class:"hit"},g);
+
   });
   $("delPt").disabled=!edSel;
 }
-function svgPoint(e){ const m=svg.getScreenCTM(); if(!m) return [0,0]; const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m.inverse()); return [p.x,p.y]; }
+function svgPoint(e){ return toBoard(e.clientX,e.clientY); }
 function edDown(e,q){
   e.preventDefault(); e.stopPropagation();
   edSel={i:q.i,k:q.k,w:q.w}; const [x,y]=svgPoint(e);
@@ -909,24 +917,83 @@ function edDelete(){
   }
   edSel=null; edApply(i); render(); drawEdit(); edSave();
 }
+/* ---------- Zoom and pan while editing ----------
+   Two fingers: pinch to zoom, move both to scroll. Trackpad or mouse: scroll to pan, pinch (or Ctrl + wheel) to zoom. */
+function setView(x,y,w){
+  w=Math.max(120,Math.min(VB_W,w));
+  const h=w*VB_H/VB_W, m=200;   // keep the view near the board
+  x=Math.max(vbX-m,Math.min(vbX+VB_W+m-w,x)); y=Math.max(VB_Y-m,Math.min(VB_Y+VB_H+m-h,y));
+  view={x,y,w}; svg.setAttribute("viewBox",`${x} ${y} ${w} ${h}`);
+  // stroke numbers keep their size on screen
+  const z=w/VB_W;
+  svg.querySelectorAll(".marker").forEach(g=>{ const c=g.querySelector("circle"); if(!c) return; const mx=+c.getAttribute("cx"), my=+c.getAttribute("cy");
+    if(z<0.999) g.setAttribute("transform",`translate(${mx} ${my}) scale(${z}) translate(${-mx} ${-my})`); else g.removeAttribute("transform"); });
+  render(); if(editing) drawEdit();
+  $("zoomOut").disabled = w>=VB_W-0.5;
+  $("zoomInfo").textContent = w<VB_W-0.5 ? Math.round(VB_W/w*100)+" %" : "";
+}
+const resetView=()=>setView(vbX,VB_Y,VB_W);
+// client coordinates -> board units for the current view
+function toBoard(cx,cy){ const r=svg.getBoundingClientRect(); return [view.x+(cx-r.left)/r.width*view.w, view.y+(cy-r.top)/r.height*viewH()]; }
+const touches=new Map(); let pinch=null;
+svg.addEventListener("pointerdown",e=>{
+  if(!editing || e.pointerType==="mouse") return;
+  touches.set(e.pointerId,[e.clientX,e.clientY]);
+  if(touches.size===2){
+    edDrag=null;   // a second finger turns a point drag into a gesture
+    const [a,b]=[...touches.values()], mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])||1, anchor:toBoard(...mid), w:view.w};
+    try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+  }
+},true);
+svg.addEventListener("pointermove",e=>{
+  if(!touches.has(e.pointerId)) return;
+  touches.set(e.pointerId,[e.clientX,e.clientY]);
+  if(!pinch||touches.size<2) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const [a,b]=[...touches.values()], mid=[(a[0]+b[0])/2,(a[1]+b[1])/2], d=Math.hypot(a[0]-b[0],a[1]-b[1])||1;
+  const w=Math.max(120,Math.min(VB_W,pinch.w*pinch.d/d)), r=svg.getBoundingClientRect();
+  // keep the board point that was under the fingers' midpoint under the midpoint
+  const x=pinch.anchor[0]-(mid[0]-r.left)/r.width*w, y=pinch.anchor[1]-(mid[1]-r.top)/r.height*(w*VB_H/VB_W);
+  setView(x,y,w);
+},true);
+const endTouch=e=>{ touches.delete(e.pointerId); if(touches.size<2) pinch=null; };
+svg.addEventListener("pointerup",endTouch,true); svg.addEventListener("pointercancel",endTouch,true);
+svg.addEventListener("wheel",e=>{
+  if(!editing) return; e.preventDefault();
+  const r=svg.getBoundingClientRect(), u=view.w/r.width;
+  if(e.ctrlKey){   // trackpad pinch or Ctrl + wheel: zoom around the pointer
+    const f=Math.exp(e.deltaY*0.01), [px,py]=toBoard(e.clientX,e.clientY), w=Math.max(120,Math.min(VB_W,view.w*f));
+    setView(px-(e.clientX-r.left)/r.width*w, py-(e.clientY-r.top)/r.height*(w*VB_H/VB_W), w);
+  } else setView(view.x+e.deltaX*u, view.y+e.deltaY*u, view.w);   // two-finger scroll
+},{passive:false});
+
 function setEditing(on){
   editing=on; $("editBtn").setAttribute("aria-pressed",on); $("editBar").hidden=!on; board.classList.toggle("editing",on);
   if(on){ stop(); done=strokes.length; activeIdx=-1; render(); paint(); edLoad(); }
-  edSel=null; drawEdit(); if(!on && editG) editG.innerHTML="";
+  edSel=null; if(!on){ resetView(); if(editG) editG.innerHTML=""; } else drawEdit();
 }
 $("editBtn").onclick=()=>setEditing(!editing);
+$("zoomIn").onclick=()=>{ const w=view.w/1.6, cx=view.x+view.w/2, cy=view.y+viewH()/2; setView(cx-w/2, cy-(w*VB_H/VB_W)/2, w); };
+$("zoomOut").onclick=resetView;
 $("delPt").onclick=edDelete;
 $("discardEd").onclick=()=>{ const d=letter(cur); delete EDITS[editKey(d)]; saveEdits(); const was=editing; build(); done=strokes.length; render(); paint(); if(was){ edLoad(); drawEdit(); } showSplines(); edMsg("Originalstriche wiederhergestellt."); };
 document.addEventListener("keydown",e=>{ if(editing && (e.key==="Delete"||e.key==="Backspace") && !e.target.closest("input,select,textarea")){ e.preventDefault(); edDelete(); } });
-// a tap on the empty board clears the selection
-svg.addEventListener("pointerdown",e=>{ if(editing && !e.target.closest(".ed-pt")){ edSel=null; drawEdit(); } });
+// Pick the nearest point within reach of the finger or mouse; a tap on the empty board clears the selection.
+svg.addEventListener("pointerdown",e=>{
+  if(!editing || pinch || touches.size>1) return;
+  const [x,y]=toBoard(e.clientX,e.clientY), z=view.w/VB_W, reach=(e.pointerType==="mouse"?30:52)*z;
+  let best=null, bd=Infinity;
+  edPoints().forEach(q=>{ const d=Math.hypot(q.p[0]-x,q.p[1]-y); if(d<bd){ bd=d; best=q; } });
+  if(best && bd<=reach) edDown(e,best); else { edSel=null; drawEdit(); }
+});
 
 function select(i,auto){
   stop(); cur=i;
   document.querySelectorAll(".pick").forEach((b,j)=>b.setAttribute("aria-pressed", j===i));
   try{ localStorage.setItem("deva-nib-cur", DATA[i].ch); }catch(e){}
   build();
-  if(editing){ done=strokes.length; render(); paint(); edLoad(); edSel=null; drawEdit(); return; }
+  if(editing){ done=strokes.length; edLoad(); edSel=null; resetView(); paint(); return; }
   if(auto) play();
 }
 
