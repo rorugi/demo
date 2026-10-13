@@ -33,9 +33,12 @@ h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text
 h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .lede{margin:0;color:var(--muted);max-width:60ch}
 
-.picker{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.picker{display:grid;gap:5px}
+.pick-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.pick-row.gap{margin-top:8px}
+.pick.ed::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .pick{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:10px;
-  padding:8px 0 6px;cursor:pointer;display:grid;justify-items:center;gap:0;font:inherit;transition:border-color .15s,background .15s}
+  padding:8px 0 6px;cursor:pointer;display:grid;position:relative;justify-items:center;gap:0;font:inherit;transition:border-color .15s,background .15s}
 .pick b{font-family:var(--f-deva);font-weight:400;font-size:clamp(24px,6vw,32px);line-height:1.25}
 .pick span{font-size:12px;color:var(--muted);letter-spacing:.04em}
 .pick:hover{border-color:var(--accent)}
@@ -242,7 +245,7 @@ const DATA = [{"ch": "अ", "tr": "a", "adv": 787, "glyph": "M309 71Q244 71 195.
 // Edited strokes are kept per font and letter in the browser and replace the built-in ones.
 let EDITS={};
 try{ EDITS=JSON.parse(localStorage.getItem("deva-nib-edits")||"{}")||{}; }catch(e){ EDITS={}; }
-const saveEdits=()=>{ try{ localStorage.setItem("deva-nib-edits",JSON.stringify(EDITS)); }catch(e){} };
+const saveEdits=()=>{ try{ localStorage.setItem("deva-nib-edits",JSON.stringify(EDITS)); }catch(e){} markEdited(); };
 // One set of strokes for every font; the chosen font only changes the letter shown behind them.
 const editKey = d => d.ch;
 const letter = i => { const d=DATA[i], e=EDITS[editKey(d)]; return e && e.length===d.strokes.length ? {...d, strokes:e, edited:true} : d; };
@@ -264,13 +267,27 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-DATA.forEach((d,i)=>{
-  const b=document.createElement("button");
-  b.className="pick"; b.id="pick-"+d.tr; b.setAttribute("aria-pressed", i===0);
-  b.innerHTML=`<b>${d.ch}</b><span>${d.tr}</span>`;
-  b.addEventListener("click",()=>select(i,true));
-  $("picker").appendChild(b);
-});
+// Picker rows: vowels in two lines, each group of five stop consonants (varga) in its own line,
+// then the semivowels, the sibilants with ha, and the combined signs.
+const ROWS=["अ आ इ ई उ ऊ ऋ","ॠ ऌ ए ऐ ओ औ","क ख ग घ ङ","च छ ज झ ञ","ट ठ ड ढ ण","त थ द ध न","प फ ब भ म","य र ल व","श ष स ह"].map(r=>r.split(" "));
+const GAP_BEFORE=new Set([2,7]);   // a little space between vowels, stops and the rest
+{ const used=new Set(), rows=[...ROWS, DATA.map(d=>d.ch).filter(c=>!ROWS.flat().includes(c))];
+  rows.forEach((r,k)=>{
+    const row=document.createElement("div"); row.className="pick-row"+(GAP_BEFORE.has(k)||k===rows.length-1?" gap":"");
+    r.forEach(ch=>{
+      const i=DATA.findIndex(d=>d.ch===ch); if(i<0||used.has(i)) return; used.add(i);
+      const d=DATA[i], b=document.createElement("button");
+      b.className="pick"; b.id="pick-"+d.tr; b.dataset.i=i; b.setAttribute("aria-pressed", i===0);
+      b.innerHTML=`<b>${d.ch}</b><span>${d.tr}</span>`;
+      b.addEventListener("click",()=>select(i,true));
+      row.appendChild(b);
+    });
+    if(row.children.length) $("picker").appendChild(row);
+  });
+}
+// a small dot on letters whose strokes were changed in the editor
+function markEdited(){ document.querySelectorAll(".pick").forEach(b=>b.classList.toggle("ed", !!letter(+b.dataset.i).edited)); }
+markEdited();
 
 function build(){
   const d=letter(cur);
@@ -982,7 +999,7 @@ svg.addEventListener("pointerdown",e=>{
 
 function select(i,auto){
   stop(); cur=i;
-  document.querySelectorAll(".pick").forEach((b,j)=>b.setAttribute("aria-pressed", j===i));
+  document.querySelectorAll(".pick").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.i===i));
   try{ localStorage.setItem("deva-nib-cur", DATA[i].ch); }catch(e){}
   build();
   if(editing){ done=strokes.length; edLoad(); edSel=null; resetView(); paint(); return; }
