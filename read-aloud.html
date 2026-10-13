@@ -88,6 +88,16 @@ button.btn.primary { background: var(--accent); color: var(--accent-fg); border-
 button.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn svg { width: 1rem; height: 1rem; fill: currentColor; }
+.switch { display: flex; align-items: flex-start; gap: 0.85rem; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 1rem; color: var(--fg); margin: 0; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { flex: none; width: 2.6rem; height: 1.5rem; border-radius: 999px; background: var(--line); position: relative; transition: background-color 0.15s; margin-top: 0.1rem; }
+.switch .track::after { content: ""; position: absolute; top: 0.2rem; left: 0.2rem; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--sheet); box-shadow: 0 1px 2px rgba(0,0,0,0.25); transition: transform 0.15s; }
+.switch input:checked + .track { background: var(--accent); }
+.switch input:checked + .track::after { transform: translateX(1.1rem); }
+.switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch-text { display: grid; gap: 0.15rem; min-width: 0; }
+.switch-text span { font-size: 0.85rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .switch .track, .switch .track::after { transition: none; } }
 .note { font-size: 0.85rem; color: var(--muted); margin: 0; }
 .note[data-kind="warn"] { color: var(--fg); background: var(--mark); padding: 0.6rem 0.8rem; border-radius: 10px; }
 </style>
@@ -131,6 +141,12 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
       <div class="range-row"><input type="range" id="pitch" min="0.5" max="1.5" step="0.1" value="1" autocomplete="off"><span class="val" id="pitchVal">1</span></div>
     </div>
   </div>
+
+  <label class="switch" for="expressive">
+    <input type="checkbox" id="expressive" checked>
+    <span class="track" aria-hidden="true"></span>
+    <span class="switch-text"><strong>Expressive reading</strong><span>Livelier tone for questions and exclamations, softer asides, and natural pauses between sentences and paragraphs.</span></span>
+  </label>
 
   <div class="transport">
     <button class="btn primary" id="play" type="button">
@@ -287,6 +303,38 @@ function finish() {
   reader.querySelectorAll(".s").forEach(el => { el.classList.remove("cur", "done"); el.textContent = parts[el.dataset.i].text; });
 }
 
+const expressiveEl = $("expressive");
+let pending = null, pauseTimer = null;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// Expressive mode: shape pace, pitch, volume and the pause after each sentence from its punctuation.
+function toneFor(i) {
+  const raw = parts[i].text;
+  const t = raw.trim();
+  const prev = i > 0 ? parts[i - 1].text : "\n";
+  const t0 = { rate: 1, pitch: 1, volume: 1, pause: 220 };
+  const paraStart = /\n\s*$/.test(prev);
+  const paraEnd = /\n/.test(raw.slice(raw.trimEnd().length)) || i === parts.length - 1;
+  const words = t.split(/\s+/).length;
+
+  if (/[?？]["'”»)]*$/.test(t)) { t0.pitch *= 1.14; t0.rate *= 0.97; t0.pause = 380; }
+  else if (/[!！]["'”»)]*$/.test(t)) { t0.pitch *= 1.12; t0.rate *= 1.08; t0.pause = 320; }
+  else if (/(\.\.\.|…)["'”»)]*$/.test(t)) { t0.pitch *= 0.94; t0.rate *= 0.86; t0.pause = 650; }
+  else if (/[:;—–]$/.test(t)) { t0.pause = 300; }
+
+  if (/^[„"“«'‚‹]/.test(t)) { t0.pitch *= 1.07; t0.rate *= 1.03; }          // dialogue
+  if (/^\(.*\)$/.test(t)) { t0.pitch *= 0.92; t0.rate *= 1.05; t0.volume = 0.8; } // aside
+  if (/\b[A-ZÄÖÜ]{3,}\b/.test(t)) { t0.rate *= 0.95; t0.volume = 1; }        // SHOUTED words
+  if (paraStart) t0.rate *= 0.96;                                            // settle into a new paragraph
+  if (words <= 4) t0.rate *= 0.94;                                           // short punchy lines land slower
+  if (paraEnd) t0.pause = Math.max(t0.pause, 700);
+
+  // a little natural variation so consecutive sentences don't sound identical
+  const jitter = ((i * 37) % 7 - 3) / 100;
+  t0.pitch *= 1 + jitter;
+  return t0;
+}
+
 function speakFrom(i, id) {
   if (id !== session) return;
   while (i < parts.length && !parts[i].text.trim()) i++;
@@ -297,10 +345,17 @@ function speakFrom(i, id) {
   u.lang = langSel.value;
   const v = voices.find(v => v.voiceURI === voiceSel.value);
   if (v) u.voice = v;
-  u.rate = Number(rate.value);
-  u.pitch = Number(pitch.value);
+  const tone = expressiveEl.checked ? toneFor(i) : { rate: 1, pitch: 1, volume: 1, pause: 0 };
+  u.rate = clamp(Number(rate.value) * tone.rate, 0.1, 4);
+  u.pitch = clamp(Number(pitch.value) * tone.pitch, 0, 2);
+  u.volume = tone.volume;
   u.onboundary = e => { if (id === session && (e.name === "word" || e.name === undefined)) markWord(i, e.charIndex, e.charLength); };
-  u.onend = () => speakFrom(i + 1, id);
+  u.onend = () => {
+    if (id !== session) return;
+    if (!tone.pause) { speakFrom(i + 1, id); return; }
+    pending = { i: i + 1, id };
+    pauseTimer = setTimeout(() => { pauseTimer = null; if ($("status").dataset.state === "speaking") { pending = null; speakFrom(i + 1, id); } }, tone.pause / Number(rate.value));
+  };
   u.onerror = e => {
     if (id !== session) return;
     if (e.error === "interrupted" || e.error === "canceled") return;
@@ -322,15 +377,21 @@ function speak() {
   setTimeout(() => speakFrom(0, id), 50);
 }
 
-function stop() { session++; synth.cancel(); finish(); }
+function stop() { session++; clearTimeout(pauseTimer); pauseTimer = null; pending = null; synth.cancel(); finish(); }
 
 playBtn.addEventListener("click", () => {
   if (!synth) return;
   const s = $("status").dataset.state;
   if (s === "speaking") { synth.pause(); setState("paused"); }
-  else if (s === "paused") { synth.resume(); setState("speaking"); }
+  else if (s === "paused") {
+    setState("speaking");
+    if (pending && !pauseTimer) { const p = pending; pending = null; speakFrom(p.i, p.id); }
+    else synth.resume();
+  }
   else speak();
 });
+expressiveEl.addEventListener("change", () => store("expressive", expressiveEl.checked ? "1" : "0"));
+if (load("expressive") === "0") expressiveEl.checked = false;
 stopBtn.addEventListener("click", stop);
 $("paste").addEventListener("click", () => { if (synth) stop(); textEl.value = ""; updateCount(); textEl.focus(); });
 textEl.addEventListener("input", updateCount);
