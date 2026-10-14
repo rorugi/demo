@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Write Hindi/Sanskrit in Devanagari Online</title>
+<meta name="description" content="This online Hindi/Sanskrit Devanagari text editor allows to write you text directly in Devanagari or ITRANS and transcribes the text in Devanagari and ISTA. Additionally you have an online keyboard to learn writing with the Devanagari keyboard.">
+<link rel="canonical" href="https://www.russwurm.com/devanagari-writer">
+<style>
+/* Standalone page: minimal base styles replacing the site-wide stylesheet */
+body {margin:0;background:#ffffff;}
+.dw-back {display:block;max-width:1050px;margin:0 auto;padding:16px 20px 0;font:14px system-ui,sans-serif;color:#546361;text-decoration:none;}
+.dw-back:hover {color:#049514;}
+#devanagari-writer a {color:#007a70;}
+/* Original page styles from russwurm.com/devanagari-writer */
+.inputtext {
+	width:100%;
+	border: 1px solid #80808080;
+	padding: 0.5rem;
+}
+.outputtext {
+	border: 1px solid #80808040;
+	padding: 0.5rem;	
+}
+.codebox {
+background-color:#c0c0c040;
+padding: 0.5rem;
+margin: 0.5rem 0 1rem 0;
+}
+.keyboard {
+	height:auto;
+}
+.keyboardoff {
+ height:0;
+ visibility:hidden;
+}
+.keyboardkey {
+	overflow: hidden;
+	border: 1px solid #80808080;
+	margin:6px;
+	width:3rem;
+	height: 3rem;
+	display:inline-block;
+	position: relative;
+	box-shadow: 2px 2px 3px #80808080;
+	border-radius: 6px;
+	padding: 0;
+margin: 0px 0px 1px 1px;
+transition: 0.15s all ease;
+}
+.keyboardkey:hover {
+box-shadow:none;
+margin: 1px 1px 0px 0px;
+transition: 0.15s all ease;
+}
+.keyhigh {
+background-color: #80808040;
+transition: 0.15s all ease;
+}
+.keyboardkey > .key {
+	position: absolute;
+	font-weight:bold;
+	margin-top:16px;
+	padding: 6px;
+}
+.keyboardkey > .key-hindi {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	cursor: pointer;
+	padding: 2px 6px;
+}
+.keyboardkey > .key-hindi:hover {
+	background-color:#ff800080;
+transition: 0.15s all ease;
+}
+.keyboardkey > .key-shift {
+	position: absolute;
+	top: 0;
+	right: 0;
+	cursor: pointer;
+	padding: 2px 6px;
+}
+.keyboardkey > .key-shift:hover {
+	background-color:#ff800080;
+transition: 0.15s all ease;
+}
+.highlighted {
+	background-color:#ff8000;
+	color:#000000;
+transition: 0.15s all ease;
+}
+#devanagari-writer {font-family:system-ui,"Noto Sans Devanagari",sans-serif;line-height:1.65;color:#202526;max-width:1050px;margin:0 auto;padding:20px;--dw-accent:#049514}
+#devanagari-writer * {box-sizing:border-box}
+#devanagari-writer h1 {font-size:2rem;margin:0 0 6px}
+#devanagari-writer h2 {font-size:1.25rem;margin:25px 0 8px}
+#devanagari-writer label {display:inline-block;font-weight:550}
+#devanagari-writer select,#devanagari-writer input:not([type=checkbox]),#devanagari-writer textarea {font:inherit;border:1px solid #b9c5c4;border-radius:6px;padding:8px;background:#fff;color:#202526;max-width:100%}
+#devanagari-writer textarea {display:block;width:100%;font-size:1.2rem;resize:vertical;margin:6px 0 14px}
+#devanagari-writer :focus-visible {outline:3px solid #008f87;outline-offset:2px}
+#devanagari-writer .dw-controls {display:flex;gap:12px 20px;align-items:center;flex-wrap:wrap;margin:16px 0}
+#devanagari-writer .dw-output {white-space:pre-wrap;overflow-wrap:anywhere;min-height:56px;background:#f5f8f7;border:1px solid #dce4e2;border-radius:6px;padding:12px;font-size:1.2rem}
+#devanagari-writer #outiast {font-style:italic}
+#devanagari-writer .dw-small {font-size:.86rem;color:#546361}
+#devanagari-writer #dw-mode-note {border-left:4px solid var(--dw-accent);padding:8px 12px;background:#e2f1e5}
+#devanagari-writer .dw-scroll {overflow-x:auto;padding:4px 0}
+#devanagari-writer .dw-keyrow {display:flex;gap:4px;margin:4px 0;min-width:720px}
+#devanagari-writer .dw-keyrow:nth-child(2) {padding-left:22px}
+#devanagari-writer .dw-keyrow:nth-child(3) {padding-left:32px}
+#devanagari-writer .dw-keyrow:nth-child(4) {padding-left:12px}
+#devanagari-writer .dw-key {width:48px;height:64px;flex:none;background:white;border:1px solid #b9c5c4;border-radius:5px;cursor:pointer;color:#202526;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#devanagari-writer .dw-key small {font:11px system-ui;color:#63716e}
+#devanagari-writer .dw-key span {font-size:23px;line-height:1.5}
+#devanagari-writer .dw-key:disabled {opacity:.3;cursor:default}
+#devanagari-writer .dw-key:not(:disabled):hover {background:#ffeddf;border-color:var(--dw-accent)}
+#devanagari-writer table {border-collapse:collapse;width:100%;min-width:480px;font-size:1rem}
+#devanagari-writer th,#devanagari-writer td {border-bottom:1px solid #dce4e2;text-align:left;padding:9px 12px}
+#devanagari-writer th {background:#eaf3f1}
+#devanagari-writer td:nth-child(3) {font-style:italic}
+#devanagari-writer td:nth-child(4) {font-size:1.35rem}
+#devanagari-writer code {font-size:.95em;background:#edf0ef;padding:2px 4px;border-radius:3px}
+#devanagari-writer details {margin:20px 0}
+#devanagari-writer [hidden] {display:none!important}
+@media(max-width:600px){#devanagari-writer{padding:12px}#devanagari-writer h1{font-size:1.6rem}}
+
+#devanagari-writer .outputtext {white-space:pre-wrap;overflow-wrap:anywhere;min-height:2rem;}
+#devanagari-writer .dw-keyrow {min-width:710px;}
+
+
+/* Original keycap arrangement: Latin label at lower left, Shift above base.
+   The optional AltGr column sits to the right: AltGr+Shift above AltGr. */
+#devanagari-writer .dw-keyrow {width:max-content;min-width:0;gap:4px;}
+#devanagari-writer .dw-keycap {display:grid;grid-template-columns:20px 26px;grid-template-rows:24px 30px;border:1px solid #b9c5c4;border-radius:6px;background:white;overflow:hidden;flex:none;box-shadow:2px 2px 3px #80808050;}
+#devanagari-writer .dw-keycap.dw-all-levels {grid-template-columns:20px 26px 26px;}
+#devanagari-writer .dw-keycap.dw-home {background:#d4d4d4;}
+#devanagari-writer .dw-keylabel {grid-column:1;grid-row:1 / 3;align-self:end;text-align:center;padding-bottom:2px;font-weight:bold;font-size:16px;line-height:1.4;background:transparent;}
+#devanagari-writer .dw-char {border:0;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:#202526;min-width:0;min-height:0;line-height:1;}
+#devanagari-writer .dw-char span {font-size:19px;line-height:1.25;}
+#devanagari-writer .dw-char:disabled {opacity:.25;cursor:default;}
+#devanagari-writer .dw-char:not(:disabled):hover {background:#ff8000;}
+#devanagari-writer .dw-level-0 {grid-column:2;grid-row:2;}
+#devanagari-writer .dw-level-1 {grid-column:2;grid-row:1;}
+#devanagari-writer .dw-level-2 {grid-column:3;grid-row:2;border-left:1px solid #dce4e2;}
+#devanagari-writer .dw-level-3 {grid-column:3;grid-row:1;border-left:1px solid #dce4e2;}
+.dark #devanagari-writer {
+color:#d0d0d0;
+}
+.dark #dw-mode-note {
+color:#000000;
+}
+.dark #devanagari-writer textarea {
+background-color:#c0c0c8;
+}
+.dark #devanagari-writer th {
+    background: #1c203d;
+}
+</style>
+</head>
+<body>
+<a class="dw-back" href="index.html">← Demos</a>
+<div id="devanagari-writer">
+
+<h1>Online Hindi und Sanskrit schreiben in Devanagari und ITRANS</h1>
+
+<p>Schreibe den Text in ITRANS oder Devanagari:</p>
+<div class="dw-controls">
+<label>Sprache: <select id="dw-language"><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select></label>
+<label>Eingabe: <select id="dw-method"><option value="itrans">ITRANS / gemischter Text</option><option value="nagari">Devanagari-Tastatur</option></select></label>
+</div><p id="dw-mode-note"></p>
+<div id="mytextarea"></div>
+
+<input type="checkbox" id="displaykeyboard" value="on" checked> Display the keyboard<br>
+<div id="dw-keyboard-wrap">
+<label>Tastaturebene: <select id="dw-layer"><option value="basic">Grundebene + Shift</option><option value="all">Grundebene + Shift + AltGr + (AltGr + Shift)</option></select></label>
+<div class="dw-scroll"><div id="keyboard" class="keyboard"></div></div>
+<p class="dw-small">Deutsche QWERTZ-Beschriftung; zusätzliche Sanskrit-Tasten nach Windows Devanagari–InScript. Klicken fügt je nach gewählter Eingabeart Devanagari oder ITRANS ein, ohne den Modus zu wechseln. Grundebene und Shift sind immer sichtbar; optional kommen beide AltGr-Ebenen hinzu. Im Devanagari-Modus werden physische Tasten entsprechend belegt. Bei ITRANS enthalten angeklickte Konsonanten ihr inhärentes a (क → ka). Ein folgendes Vokalzeichen ersetzt dieses a (ka + ि → ki); Halant entfernt es (ka + ् → k.h → क्).</p></div><br>
+
+<b>Devanagari:</b><br>
+<div id="out" class="outputtext"></div><br>
+
+<b id="dw-iast-title">IAST / Hindi-Lernumschrift:</b><br>
+<input type="checkbox" id="removea" value="on" checked> Remove final "a"<br>
+<div id="outiast" class="outputtext"></div><br>
+
+<b>Combined:</b>  <br>
+<div id="outcombined" class="outputtext"></div><br>
+
+<b>ITRANS:</b><div id="outitrans" class="outputtext"></div><br>
+
+<h3>Optionen:</h3>
+<p>Diese Optionen sind für Sonderfunktionen vorgesehen und können im Normalfall leer gelassen werden.</p>
+<p>Trennzeichen kombinierte Liste: <input id="combinedsep" name="combinedsep" value=" " style="width:5rem;"> und Umbruchzeichen: <input id="combinedbreak" name="combinedbreak" value="<br>" style="width:5rem;"><br>
+<small>Trennzeichen: Zeichen(folge) für die kombinierte Liste um Devanagari und IAST zu trennen, Default ist Leerzeichen, für Tabulator beim Kopieren kann man <b><i>[TAB]</i></b> verwenden oder <code>&lt;br&gt;</code> für einen Zeilenumbruch. Andere HTML-Tags werden als Text ausgegeben.<br>
+Umbruchzeichen: Das Zeichen am Ende einer Zeile, normalerweise ein Zeilenbruch, können auch auch mehrere sein, z.B. mit <code>&lt;br&gt;&lt;br&gt;</code>.
+</small></p>
+
+<br><br>
+<h2>Erklärung</h2>
+<p>Diese Seite bietet die Möglichkeit Hindi- und Sanskrit-Texte mit lateinischen Buchstaben zu schreiben oder auch gleich mit der Hindi Tastatur zu üben.</p>
+<p>Im Textfeld kann man <b>ITRANS</b> oder <b>Devanagari</b> schreiben und es wird automatisch Devanagari, IAST und ITRANS erzeugt. Um für einzelne Zeichen oder Wörter die Übersetzung zu deaktivieren kann ## verwendet werden, z.B. ##nicht##.</p>
+<p class="codebox">devanaagarii → देवनागरी → devanāgarī</p>
+<p>Achtung: Das Ergebnis sollte auf alle Fälle kontrolliert werden, da einige Umsetzungen nicht eindeutig sind, z.B. werden "a" innerhalb eines Wortes teilweise nicht gesprochen, aber hier nicht automatisch entfernt.</p>
+
+<br>
+<h3>Hindi und Sanskrit</h3>
+<p>Im Sanskrit-Modus gilt eine schriftgetreue Umschrift: <code>aham</code> → अहम् → <i>aham</i>; <code>saMskRRitam</code> → संस्कृतम् → <i>saṃskṛtam</i>. Endkonsonanten erhalten Halant ्, Anusvāra ं wird zu ṃ und Visarga ः zu ḥ. Die bisherige vereinfachte Nasalnotation bleibt auf Hindi beschränkt und entspricht nicht strengem IAST.</p>
+<p>Devanagari-Tasten: क + ् + ष = क्ष; Vokalzeichen folgen dem Konsonanten, auch ि. ITRANS unterscheidet Groß- und Kleinschreibung. IAST ist ein Ausgabeformat. Ausgelegt auf klassisches Sanskrit; keine vollständige Unterstützung aller vedischen Rezitationszeichen.</p>
+<h3>Tastatur</h3>
+<p>Die Tastatur kann man bei Bedarf ein- oder ausblenden, wobei sie besonders hilfreich ist, um das Schreiben direkt in Devanagari zu lernen. Einerseits wird angezeigt welche Taste man gedrückt hat und zusätzlich sieht man auch auf welcher Taste sich ein Devanagari-Symbol befindet.</p>
+<p>Als Tastaturlayout kann man Hindi Traditional (INSCRIPT) wählen, um Hindi in allen Applikationen direkt zu schreiben.</p>
+
+<br>
+<h3>Ausgabe</h3>
+<p><b>Devanagari:</b> hier findet man den Eingabetext in Devanagari.</p>
+<br>
+<p><b>IAST:</b> hier findet man den Text in der Umschrift nach IAST <a class="link" href="https://en.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" title="" target=_blank rel="nofollow noreferrer">↗</a>.<br>
+<u>Remove final "a":</u> Diese Option ist nur für Hindi verfügbar. Sie entfernt das letzte kurze „a“ als vereinfachte Lernhilfe; sie ersetzt keine vollständige Ausspracheanalyse. Im Sanskrit-Modus bleibt das „a“ erhalten.</p>
+<br>
+<p><b>ITRANS:</b> hier findet man den Text in der Umschrift nach ITRANS <a class="link" href="https://en.wikipedia.org/wiki/ITRANS" title="" target=_blank rel="nofollow noreferrer">↗</a>.</p>
+<br>
+<p><b>Combined List:</b></p>
+<p>Eine <b>Wörterliste</b> aus Devanagari und IAST nebeneinander wird automatisch erstellt, wenn man <b>mehrere Zeilen</b> hat oder können durch ein <b>Semikolon (;)</b> als Trennzeichen erstellt werden. Sobald ein Semikolon im Text verwendet wird, erscheint auch die kombinierte Wortliste.</p>
+<p class="codebox">naama ; raajaa ; meraa ; safed → नाम nām राजा rājā मेरा merā सफ़ेद safed</p>
+
+<br><br>
+
+<h2>ITRANS – IAST – Nagari</h2>
+  <p>Die Referenz zeigt die schriftgetreue Umschrift, unabhängig von der vereinfachten Hindi-Ausgabe. Konsonanten stehen mit ihrem inhärenten „a“. Vokalzeichen werden zum besseren Vergleich zusätzlich an क gezeigt.</p>
+  <label for="dw-search">Zeichen oder Umschrift suchen</label>
+  <input type="search" id="dw-search" placeholder="z. B. RRi, ṛ, ऋ oder Visarga">
+  <p id="dw-count" class="dw-small" aria-live="polite"></p>
+  <div class="dw-scroll"><table><thead><tr><th>Gruppe</th><th>ITRANS</th><th>IAST</th><th>Nagari</th></tr></thead><tbody id="dw-reference"></tbody></table></div>
+  <p class="dw-small">Grundlage: <a href="https://github.com/indic-transliteration/sanscript.js">Sanscript.js</a>. Zusatztasten: <a href="https://unicode.org/cldr/charts/43/keyboards/layouts/hi.html">Unicode CLDR, Windows Devanagari–InScript</a>.</p>
+
+<br><br>
+
+<h2>Zusatzinfo und Referenzen</h2>
+<a class="link" href="https://www.compart.com/de/unicode/block/U+0300" title="UTF-8 Codes" target=_blank rel="nofollow noreferrer">UTF-8 Codes</a><br>
+<a class="link" href="https://www.learnsanskrit.org/tools/sanscript/" title="Learn Sanskrit Online Converter" target=_blank rel="nofollow noreferrer">Learn Sanskrit Online Converter</a><br>
+<a class="link" href="https://www.lexilogos.com/keyboard/sanskrit_devanagari.htm" title="Multilingual keyboard" target=_blank rel="nofollow noreferrer">Multilingual keyboard</a><br>
+<a class="link" href="https://www.vachmi.com/typesanskrit.html" title="Type Sanskrit" target=_blank rel="nofollow noreferrer">Type Sanskrit</a><br>
+<a class="link" href="https://de.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" title="IAST" target=_blank rel="nofollow noreferrer">IAST</a><br>
+<a class="link" href="https://en.wikipedia.org/wiki/ITRANS" title="ITRANS" target=_blank rel="nofollow noreferrer">ITRANS</a>
+<a class="link" href="https://github.com/indic-transliteration/sanscript.js" title="Sanscript.JS" target=_blank rel="nofollow noreferrer">Sanscript.JS</a><br>
+<a class="link" href="https://github.com/indic-transliteration/common_maps" title="Sanscript.JS Maps" target=_blank rel="nofollow noreferrer">Sanscript.JS Maps</a><br>
+<a class="link" href="https://www.cambridge-sanskrit.org/" title="The Cambridge Introduction To Sanskrit" target=_blank rel="nofollow noreferrer">The Cambridge Introduction To Sanskrit</a><br>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@indic-transliteration/sanscript@1.3.1/sanscript.min.js"></script>
+<script>
+// just because textarea cannot be used in source
+document.getElementById('mytextarea').outerHTML = '<textarea id="inputText" class="inputtext" rows=5 spellcheck="false" autocapitalize="off">' + '<' + '/' + 'textarea' + '>';
+// var out = Sanscript.t('ga##Na##pa##te', 'hk', 'devanagari'); // गNaपte
+// const inputText = document.getElementById('inputText');
+// inputText.focus();
+
+// 	['#','#','x'] is a new row with xrem padding
+const hindiKeyboardLayout = [
+	['`', 'ऍ', 'ऑ', '', '', 'Backquote', '*', ''],
+	['1', '१', 'ऍ', '1', '', 'Digit1', '*', ''],
+	['2', '२', 'ॅ', '2', '', 'Digit2', '*', ''],
+	['3', '३', '्र', '3', '', 'Digit3', '*', ''],
+	['4', '४', '₹', '4', '', 'Digit4', '*', ''],
+	['5', '५', 'ज्ञ', '5', '', 'Digit5', '*', ''],
+	['6', '६', 'त्र', '6', '', 'Digit6', '*', ''],
+	['7', '७', 'क्ष', '7', '', 'Digit7', '*', ''],
+	['8', '८', 'श्र', '8', '', 'Digit8', '*', ''],
+	['9', '९', '(', '9', '', 'Digit9', '*', ''],
+	['0', '०', ')', '0', '', 'Digit0', '*', ''],
+	['ß', '-', 'ः', '', 'H', 'Minus', '?', ''],
+	['\´', 'ृ', 'ऋ', 'RRi', 'RRi', 'Equal', '*', ''],
+	['#','#','5'],
+	['Q', 'ौ', 'औ', 'au', 'au', 'KeyQ', '*', ''],
+	['W', 'ै', 'ऐ', 'ai', 'e', 'KeyW', '*', ''],
+	['E', 'ा', 'आ', 'aa', 'a', 'KeyE', '*', ''],
+	['R', 'ी', 'ई', 'ii', 'i', 'KeyR', '*', ''],
+	['T', 'ू', 'ऊ', 'u', 'uu', 'KeyT', '*', ''],
+	['Z', 'ब', 'भ', 'ba', 'bha', 'KeyY', '*', ''],
+	['U', 'ह', 'ङ', 'ha', 'Na', 'KeyU', '*', ''],
+	['I', 'ग', 'घ', 'ga', 'gha', 'KeyI', '*', ''],
+	['O', 'द', 'ध', 'da', 'dha', 'KeyO', '*', ''],
+	['P', 'ज', 'झ', 'ja', 'jha', 'KeyP', '*', ''],
+	['Ü', 'ड', 'ढ', 'Da', 'Dha', 'BracketLeft', '*', ''],
+	['+', '़', 'ञ', '.n', '~na', 'BracketRight', '*', ''],
+	['#','#','6'],
+	['A', 'ो', 'ओ', 'o', 'o', 'KeyA', '*', '#'],
+	['S', 'े', 'ए', 'e', 'ai', 'KeyS', '*', '#'],
+	['D', '्', 'अ', '.h', 'aa', 'KeyD', '*', '#'],
+	['F', 'ि', 'इ', 'i', 'ii', 'KeyF', '*', '#'],
+	['G', 'ु', 'उ', 'u', 'u', 'KeyG', '*', ''],
+	['H', 'प', 'फ', 'pa', 'pha', 'KeyH', '*', ''],
+	['J', 'र', 'ऱ', 'ra', 'Ra', 'KeyJ', '*', '#'],
+	['K', 'क', 'ख', 'ka', 'kha', 'KeyK', '*', '#'],
+	['L', 'त', 'थ', 'ta', 'tha', 'KeyL', '*', '#'],
+	['Ö', 'च', 'छ', 'ca', 'Cha', 'Semicolon', '*', '#'],
+	["Ä", 'ट', 'ठ', 'Ta', 'Tha', 'Quote', '*'],
+	['#','#','5'],
+	['<', 'ॉ', 'ऑ', 'ae', 'aE', 'IntlBackslash', '*', ''],
+	['Y', '', '', '', '', 'KeyZ', '*', ''],
+	['X', 'ं', ' ँ', '.n', '.N', 'KeyX', '*'],
+	['C', 'म', 'ण', 'ma', 'Na', 'KeyC', '*'],
+	['V', 'न', 'ऩ', 'na', '^na', 'KeyV', '*'],
+	['B', 'व', 'ऴ', 'va', 'zha', 'KeyB', '*'],
+	['N', 'ल', 'ळ', 'la', 'La', 'KeyN', '*'],
+	['M', 'स', 'श', 'sa', 'sha', 'KeyM', '*'],
+	[',', ',', 'ष', ',', 'Sha', 'Comma', '*'],
+	['.', '.', '।', '.', '।', 'Period', '*'],
+	['-', 'य', 'य़', 'ya', 'Ya', 'Slash', '*']
+];
+
+Sanscript.schemes['iast_naga'] = {
+    "vowels": {
+        "अ": "a",
+        "आ": "ā",
+        "इ": "i",
+        "ई": "ī",
+        "उ": "u",
+        "ऊ": "ū",
+        "ऋ": "ṛ",
+        "ॠ": "ṝ",
+        "ऌ": "ḷ",
+        "ॡ": "ḹ",
+        "ऎ": "è",
+        "ए": "e",
+        "ऐ": "ai",
+        "ऒ": "ò",
+        "ओ": "o",
+        "औ": "au"
+    },
+    "yogavaahas": {
+        "ं": "ṃ",
+        "ः": "ḥ",
+        "ँ": "̃",//~
+        "ꣳ": "m̐"
+    },
+    "virama": {
+        "्": ""
+    },
+    "accents": {
+        "॑": "̭",
+        "॒": "॒",
+        "᳡": "̀",
+        "꣡": "́",
+        "꣢": "²",
+        "꣣": "³",
+        "꣤": "⁴",
+        "꣥": "⁵",
+        "꣦": "⁶",
+        "꣧": "⁷",
+        "꣨": "⁸",
+        "꣩": "⁹",
+        "꣪": "꣪",
+        "꣫": "꣫",
+        "꣬": "꣬",
+        "꣭": "꣭",
+        "꣮": "꣮",
+        "꣯": "꣯",
+        "꣰": "꣰",
+        "꣱": "꣱"
+    },
+    "consonants": {
+        "क": "k",
+        "ख": "kh",
+        "ग": "g",
+        "घ": "gh",
+        "ङ": "ṅ",
+        "च": "c",
+        "छ": "ch",
+        "ज": "j",
+        "झ": "jh",
+        "ञ": "ñ",
+        "ट": "ṭ",
+        "ठ": "ṭh",
+        "ड": "ḍ",
+        "ढ़": "ṛh",
+        "ढ": "ḍh",
+        "ण": "ṇ",
+        "त": "t",
+        "थ": "th",
+        "द": "d",
+        "ध": "dh",
+        "न": "n",
+        "प": "p",
+        "फ": "ph",
+        "ब": "b",
+        "भ": "bh",
+        "म": "m",
+        "य": "y",
+        "र": "r",
+        "ल": "l",
+        "व": "v",
+        "श": "ś",
+        "ष": "ṣ",
+        "स": "s",
+        "ह": "h",
+        "ळ": "l̤",
+        "क्ष": "kṣ",
+        "ज्ञ": "jñ"
+    },
+    "symbols": {
+        "०": "0",
+        "१": "1",
+        "२": "2",
+        "३": "3",
+        "४": "4",
+        "५": "5",
+        "६": "6",
+        "७": "7",
+        "८": "8",
+        "९": "9",
+        "ॐ": "oṃ",
+        "ऽ": "'",
+        "।": "|",
+        "॥": "||"
+    },
+    "extra_consonants": {
+        "क़": "q",
+        "ख़": "k͟h",
+        "ग़": "ġ",
+        "ज़": "z",
+        "ड़": "ṛ",
+        "ढ़": "ṛh",
+        "फ़": "f",
+        "य़": "ẏ",
+        "ऱ": "ṟ",
+        "ऴ": "ḻ",
+        "ऩ": "ṉ"
+    },
+    "alternates": {
+        "|": [
+            ".",
+            "/"
+        ],
+        "||": [
+            "..",
+            "//"
+        ],
+        "'": [
+            "`"
+        ],
+        "m̐": [
+            "ṁ",
+            "ṁ"
+        ],
+        "ṃ": [
+            "ṃ"
+        ],
+        "ḥ": [
+            "ḥ"
+        ],
+        "ṭ": [
+            "ṭ",
+            "Ṭ",
+            "Ṭ"
+        ],
+        "ṭh": [
+            "ṭh",
+            "Ṭh",
+            "Ṭh"
+        ],
+        "ḍ": [
+            "ḍ",
+            "Ḍ",
+            "Ḍ"
+        ],
+        "ḍh": [
+            "ḍh",
+            "Ḍh",
+            "Ḍh"
+        ],
+        "ṇ": [
+            "ṇ",
+            "Ṇ",
+            "Ṇ"
+        ],
+        "ṣ": [
+            "ṣ",
+            "Ṣ",
+            "Ṣ"
+        ],
+        "ṅ": [
+            "ṅ",
+            "Ṅ",
+            "Ṅ"
+        ],
+        "ñ": [
+            "ñ",
+            "Ñ",
+            "Ñ"
+        ],
+        "ṛ": [
+            "r̥",
+            "ṛ",
+            "Ṛ",
+            "R̥",
+            "Ṛ"
+        ],
+        "ṛh": [
+            "r̥h",
+            "ṛh",
+            "Ṛh",
+            "R̥h",
+            "Ṛh"
+        ],
+        "ṝ": [
+            "ṝ",
+            "r̥̄",
+            "r̥̄",
+            "ṝ",
+            "ṝ",
+            "Ṝ",
+            "Ṝ",
+            "R̥̄",
+            "R̥̄",
+            "Ṝ",
+            "Ṝ"
+        ],
+        "́": [
+            "¹"
+        ],
+        "a": [
+            "A"
+        ],
+        "ā": [
+            "Ā"
+        ],
+        "i": [
+            "I"
+        ],
+        "ī": [
+            "Ī"
+        ],
+        "u": [
+            "U"
+        ],
+        "ū": [
+            "Ū"
+        ],
+        "ḷ": [
+            "Ḷ"
+        ],
+        "ḹ": [
+            "Ḹ"
+        ],
+        "è": [
+            "È"
+        ],
+        "e": [
+            "E"
+        ],
+        "ai": [
+            "Ai"
+        ],
+        "ò": [
+            "Ò"
+        ],
+        "o": [
+            "O"
+        ],
+        "au": [
+            "Au"
+        ],
+        "k": [
+            "K"
+        ],
+        "kh": [
+            "Kh"
+        ],
+        "g": [
+            "G"
+        ],
+        "gh": [
+            "Gh"
+        ],
+        "c": [
+            "C"
+        ],
+        "ch": [
+            "Ch"
+        ],
+        "j": [
+            "J"
+        ],
+        "jh": [
+            "Jh"
+        ],
+        "t": [
+            "T"
+        ],
+        "th": [
+            "Th"
+        ],
+        "d": [
+            "D"
+        ],
+        "dh": [
+            "Dh"
+        ],
+        "n": [
+            "N"
+        ],
+        "p": [
+            "P"
+        ],
+        "ph": [
+            "Ph"
+        ],
+        "b": [
+            "B"
+        ],
+        "bh": [
+            "Bh"
+        ],
+        "m": [
+            "M"
+        ],
+        "y": [
+            "Y"
+        ],
+       	"r": [
+            "R"
+        ],
+        "l": [
+            "L"
+        ],
+        "v": [
+            "V"
+        ],
+        "ś": [
+            "Ś"
+        ],
+        "s": [
+            "S"
+        ],
+        "h": [
+            "H"
+        ],
+        "l̤": [
+            "L̤"
+        ],
+        "kṣ": [
+            "Kṣ"
+        ],
+        "jñ": [
+            "Jñ"
+        ],
+        "q": [
+            "Q"
+        ],
+        "k͟h": [
+            "K͟h"
+        ],
+        "ġ": [
+            "Ġ"
+        ],
+        "z": [
+            "Z"
+        ],
+        "r̤": [
+            "R̤"
+        ],
+        "r̤h": [
+            "R̤h"
+        ],
+        "f": [
+            "F"
+        ],
+        "ẏ": [
+            "Ẏ"
+        ],
+        "ṟ": [
+            "Ṟ"
+        ],
+        "ḻ": [
+            "Ḻ"
+        ],
+        "ṉ": [
+            "Ṉ"
+        ],
+        "oṃ": [
+            "Oṃ"
+        ]
+    },
+    "accented_vowel_alternates": {
+        "á": [
+            "á"
+        ],
+        "é": [
+            "é"
+        ],
+        "í": [
+            "í"
+        ],
+        "aí": [
+            "aí"
+        ],
+        "ó": [
+            "ó"
+        ],
+        "ú": [
+            "ú"
+        ],
+        "aú": [
+            "aú"
+        ],
+        "à": [
+            "à"
+        ],
+        "è": [
+            "è"
+        ],
+        "ì": [
+            "ì"
+        ],
+        "aì": [
+            "aì"
+        ],
+        "ò": [
+            "ò"
+        ],
+        "ù": [
+            "ù"
+        ],
+        "aù": [
+            "aù"
+        ],
+        "ṛ̀": [
+            "r̥̀",
+            "ṛ̀"
+        ]
+    },
+    "isRomanScheme": true,
+    "vowel_marks": {
+        "ा": "ā",
+        "ि": "i",
+        "ी": "ī",
+        "ु": "u",
+        "ू": "ū",
+        "ृ": "ṛ",
+        "ॄ": "ṝ",
+        "ॢ": "ḷ",
+        "ॣ": "ḹ",
+        "ॆ": "è",
+        "े": "e",
+        "ै": "ai",
+        "ॊ": "ò",
+        "ो": "o",
+        "ौ": "au"
+    }
+}
+Sanscript.schemes['nagari'] = {
+    "vowels": {
+        "अ": "अ",
+        "आ": "आ",
+        "इ": "इ",
+        "ई": "ई",
+        "उ": "उ",
+        "ऊ": "ऊ",
+        "ऋ": "ऋ",
+        "ॠ": "ॠ",
+        "ऌ": "ऌ",
+        "ॡ": "ॡ",
+        "ऎ": "ऎ",
+        "ए": "ए",
+        "ऐ": "ऐ",
+        "ऒ": "ऒ",
+        "ओ": "ओ",
+        "औ": "औ",
+        "ऍ": "ऍ",
+        "ऑ": "ऑ"
+    },
+    "vowel_marks": {
+        "ा": "ा",
+        "ि": "ि",
+        "ी": "ी",
+        "ु": "ु",
+        "ू": "ू",
+        "ृ": "ृ",
+        "ॄ": "ॄ",
+        "ॢ": "ॢ",
+        "ॣ": "ॣ",
+        "ॆ": "ॆ",
+        "े": "े",
+        "ै": "ै",
+        "ॊ": "ॊ",
+        "ो": "ो",
+        "ौ": "ौ",
+        "ॅ": "ॅ",
+        "ॉ": "ॉ"
+    },
+    "yogavaahas": {
+        "ं": "ं",
+        "ः": "ः",
+        "ँ": "ँ",
+        "ᳵ": "ᳵ",
+        "ᳶ": "ᳶ",
+        "ꣳ": "ꣳ"
+    },
+    "virama": {
+        "्": "्"
+    },
+    "consonants": {
+        "क": "क",
+        "ख": "ख",
+        "ग": "ग",
+        "घ": "घ",
+        "ङ": "ङ",
+        "च": "च",
+        "छ": "छ",
+        "ज": "ज",
+        "झ": "झ",
+        "ञ": "ञ",
+        "ट": "ट",
+        "ठ": "ठ",
+        "ड": "ड",
+        "ढ": "ढ",
+        "ण": "ण",
+        "त": "त",
+        "थ": "थ",
+        "द": "द",
+        "ध": "ध",
+        "न": "न",
+        "प": "प",
+        "फ": "फ",
+        "ब": "ब",
+        "भ": "भ",
+        "म": "म",
+        "य": "य",
+        "र": "र",
+        "ल": "ल",
+        "व": "व",
+        "श": "श",
+        "ष": "ष",
+        "स": "स",
+        "ह": "ह",
+        "ळ": "ळ",
+        "क्ष": "क्ष",
+        "ज्ञ": "ज्ञ"
+    },
+    "symbols": {
+        "०": "०",
+        "१": "१",
+        "२": "२",
+        "३": "३",
+        "४": "४",
+        "५": "५",
+        "६": "६",
+        "७": "७",
+        "८": "८",
+        "९": "९",
+        "ॐ": "ॐ",
+        "ऽ": "ऽ",
+        "।": "।",
+        "॥": "॥"
+    },
+    "zwj": {
+        "‍": "‍"
+    },
+    "zwnj": {
+        "‌": "‌"
+    },
+    "skip": {
+        "undefined": ""
+    },
+    "accents": {
+        "॑": "॑",
+        "॒": "॒",
+        "᳡": "᳡",
+        "꣡": "꣡",
+        "꣢": "꣢",
+        "꣣": "꣣",
+        "꣤": "꣤",
+        "꣥": "꣥",
+        "꣦": "꣦",
+        "꣧": "꣧",
+        "꣨": "꣨",
+        "꣩": "꣩",
+        "꣪": "꣪",
+        "꣫": "꣫",
+        "꣬": "꣬",
+        "꣭": "꣭",
+        "꣮": "꣮",
+        "꣯": "꣯",
+        "꣰": "꣰",
+        "꣱": "꣱"
+    },
+    "candra": {
+        "ॅ": "ॅ"
+    },
+    "extra_consonants": {
+        "क़": "क़",
+        "ख़": "ख़",
+        "ग़": "ग़",
+        "ज़": "ज़",
+        "ड़": "ड़",
+        "ढ़": "ढ़",
+        "फ़": "फ़",
+        "य़": "य़",
+        "ऱ": "ऱ",
+        "ऴ": "ऴ",
+        "ऩ": "ऩ"
+    },
+    "alternates": {
+        "क़": [
+            "क़"
+        ],
+        "ख़": [
+            "ख़"
+        ],
+        "फ़": [
+            "फ़"
+        ],
+        "ज़": [
+            "ज़"
+        ],
+        "ऩ": [
+            "ऩ"
+        ],
+        "ड़": [
+            "ड़"
+        ],
+        "ग़": [
+            "ग़"
+        ],
+        "ढ़": [
+            "ढ़"
+        ],
+        "य़": [
+            "य़"
+        ],
+        "ऱ": [
+            "ऱ"
+        ],
+        "ऴ": [
+            "ऴ"
+        ]
+    }
+};
+
+
+Sanscript.schemes['itrans_naga'] = {
+    "vowels": {
+        "अ": "a",
+        "आ": "A",
+        "इ": "i",
+        "ई": "I",
+        "उ": "u",
+        "ऊ": "U",
+        "ऋ": "RRi",
+        "ॠ": "RRI",
+        "ऌ": "LLi",
+        "ॡ": "LLI",
+        "ऎ": "è",
+        "ए": "e",
+        "ऐ": "ai",
+        "ऒ": "ò",
+        "ओ": "o",
+        "औ": "au"
+    },
+    "yogavaahas": {
+        "ं": "M",
+        "ः": "H",
+        "ँ": ".N"
+    },
+    "virama": {
+        "्": ""
+    },
+    "consonants": {
+        "क": "k",
+        "ख": "kh",
+        "ग": "g",
+        "घ": "gh",
+        "ङ": "~N",
+        "च": "ch",
+        "छ": "Ch",
+        "ज": "j",
+        "झ": "jh",
+        "ञ": "~n",
+        "ट": "T",
+        "ठ": "Th",
+        "ड": "D",
+        "ढ": "Dh",
+        "ण": "N",
+        "त": "t",
+        "थ": "th",
+        "द": "d",
+        "ध": "dh",
+        "न": "n",
+        "प": "p",
+        "फ": "ph",
+        "ब": "b",
+        "भ": "bh",
+        "म": "m",
+        "य": "y",
+        "र": "r",
+        "ल": "l",
+        "व": "v",
+        "श": "sh",
+        "ष": "Sh",
+        "स": "s",
+        "ह": "h",
+        "ळ": "L",
+        "क्ष": "kSh",
+        "ज्ञ": "j~n"
+    },
+    "symbols": {
+        "०": "0",
+        "१": "1",
+        "२": "2",
+        "३": "3",
+        "४": "4",
+        "५": "5",
+        "६": "6",
+        "७": "7",
+        "८": "8",
+        "९": "9",
+        "ॐ": "OM",
+        "ऽ": ".a",
+        "।": "|",
+        "॥": "||"
+    },
+    "candra": {
+        "ॅ": ".c"
+    },
+    "zwj": {
+        "‍": "{}"
+    },
+    "skip": {
+        "undefined": "_"
+    },
+    "accents": {
+        "॑": "\\'",
+        "॒": "\\_"
+    },
+    "extra_consonants": {
+        "क़": "q",
+        "ख़": "K",
+        "ग़": "G",
+        "ज़": "z",
+        "ड़": ".D", // .D
+        "ढ़": ".Dh", // .Dh
+        "फ़": "f",
+        "य़": "Y",
+        "ऱ": "R",
+        "ऴ": "zh"
+    },
+    "alternates": {
+        "A": [
+            "aa"
+        ],
+        "I": [
+            "ii",
+            "ee"
+        ],
+        "U": [
+            "uu",
+            "oo"
+        ],
+        "RRi": [
+            "R^i"
+        ],
+        "RRI": [
+            "R^I"
+        ],
+        "LLi": [
+            "L^i"
+        ],
+        "LLI": [
+            "L^I"
+        ],
+        "M": [
+            ".m",
+            ".n"
+        ],
+        "~N": [
+            "N^"
+        ],
+        "ch": [
+            "c"
+        ],
+        "Ch": [
+            "C",
+            "chh"
+        ],
+        "~n": [
+            "JN"
+        ],
+        "v": [
+            "w"
+        ],
+        "Sh": [
+            "S",
+            "shh"
+        ],
+        "kSh": [
+            "kS",
+            "x"
+        ],
+        "j~n": [
+            "GY",
+            "dny"
+        ],
+        "OM": [
+            "AUM"
+        ],
+        "\\_": [
+            "\\`"
+        ],
+        "\\_H": [
+            "\\`H"
+        ],
+        "\\'M": [
+            "\\'.m",
+            "\\'.n"
+        ],
+        "\\_M": [
+            "\\_.m",
+            "\\_.n",
+            "\\`M",
+            "\\`.m",
+            "\\`.n"
+        ],
+        ".a": [
+            "~"
+        ],
+        "|": [
+            "."
+        ],
+        "||": [
+            ".."
+        ],
+        "z": [
+            "J"
+        ]
+    },
+    "isRomanScheme": true,
+    "vowel_marks": {
+        "ा": "A",
+        "ि": "i",
+        "ी": "I",
+        "ु": "u",
+        "ू": "U",
+        "ृ": "RRi",
+        "ॄ": "RRI",
+        "ॢ": "LLi",
+        "ॣ": "LLI",
+        "ॆ": "è",
+        "े": "e",
+        "ै": "ai",
+        "ॊ": "ò",
+        "ो": "o",
+        "ौ": "au"
+    }
+}
+
+;(function () {
+  'use strict';
+  const originalIds = {input:'inputText',nagari:'out',iast:'outiast',itrans:'outitrans',combined:'outcombined',separator:'combinedsep',break:'combinedbreak','remove-a':'removea',show:'displaykeyboard',keyboard:'keyboard'};
+  const $ = id => document.getElementById(originalIds[id] || 'dw-' + id);
+  const input = $('input');
+  let devanagari = '', hindiRemoveA = true, previousMethod = 'itrans';
+  const isSanskrit = () => $('language').value === 'sa';
+  const transliterate = (s, from, to, syncope = false) => Sanscript.t(s, from, to, {syncope});
+  // Explicit .h must retain a final halant in Hindi as well as Sanskrit.
+  function toNagari(source, strict = false) {
+    return source.split('##').map((part, index) => {
+      if (index % 2) return part;
+      const chunks = part.split('.h');
+      return chunks.map((chunk, i) => transliterate(chunk, 'itrans_naga', 'nagari',
+        i === chunks.length - 1 && !strict && !isSanskrit())).join('');
+    }).join('');
+  }
+
+  function hindiRoman(s) {
+    // Preserve the existing page's pronunciation-oriented Hindi conventions.
+    const fix = s.replaceAll('ॅ', '').replaceAll('ड़', 'ṛ').replaceAll('फ़', 'f')
+      .replaceAll('ग़', 'g̣').replaceAll('क़', 'q').replaceAll('ज़', 'z')
+      .replaceAll('ख़', 'ḵh').replaceAll('ढ़', 'ṛh').replaceAll('।', '.')
+      .replace(/ं(?=[,.;\-_।\s]|$)/gu, '̃').replaceAll('ं', 'ṇ');
+    let out = transliterate(fix, 'nagari', 'iast_naga');
+    if ($('remove-a').checked) {
+      out = out.replace(/[\p{L}\p{M}]+/gu, word => word.length >= 3 && word.endsWith('a') ? word.slice(0, -1) : word);
+    }
+    return out;
+  }
+  const separator = s => s.replace(/\[TAB\]/g, '\t').replace(/<br\s*\/?>/gi, '\n');
+  function render() {
+    devanagari = $('method').value === 'itrans' ? toNagari(input.value) : input.value;
+    const roman = isSanskrit() ? transliterate(devanagari, 'devanagari', 'iast') : hindiRoman(devanagari);
+    $('nagari').textContent = devanagari;
+    $('iast').textContent = roman;
+    $('itrans').textContent = transliterate(devanagari, 'nagari', 'itrans');
+    // Work with text, never interpret user input or separator values as HTML.
+    if (/[\r\n;]/.test(devanagari)) {
+      const a = devanagari.split(/\r\n|[\r\n;]/), b = roman.split(/\r\n|[\r\n;]/);
+      $('combined').textContent = a.map((s, i) => s.trim() + separator($('separator').value) + (b[i] || '').trim()).join(separator($('break').value));
+    } else $('combined').textContent = '';
+  }
+  function changeLanguage() {
+    const sa = isSanskrit();
+    $('remove-a').disabled = sa;
+    $('remove-a').checked = sa ? false : hindiRemoveA;
+    $('iast-title').textContent = sa ? 'IAST' : 'IAST / Hindi-Lernumschrift';
+    $('mode-note').textContent = sa
+      ? 'Sanskrit: vollständige Vokale, Halant am Endkonsonanten und schriftgetreues IAST (ṃ / ḥ).'
+      : 'Hindi: vereinfachte Lernumschrift; das letzte kurze „a“ kann entfernt werden.';
+    render();
+  }
+
+  // Additional Windows Devanagari–InScript layers, addressed by physical code.
+  // Thus Equal is the ´ key on German QWERTZ, independent of printed US labels.
+  const extra = {
+    Equal: ['ॄ','ॠ'], KeyF: ['ॢ','ऌ'], KeyR: ['ॣ','ॡ'],
+    Period: ['॥','ऽ'], KeyX: ['', 'ॐ'], KeyE: ['', '॑'], KeyD: ['॒',''],
+    KeyI: ['ग़',''], KeyP: ['ज़',''], BracketLeft: ['ड़','ढ़'],
+    KeyK: ['क़','ख़'], KeyH: ['', 'फ़'], Comma: ['॰','']
+  };
+  const keys = hindiKeyboardLayout.filter(k => k[0] !== '#');
+  const character = (key, layer) => layer < 2 ? key[layer + 1].trim() : (extra[key[5]] || [])[layer - 2] || '';
+  function toKeyboardItrans(text) {
+    if (text === '्') return '.h';
+    let token = transliterate(text, 'nagari', 'itrans_naga');
+    // Keep the inherent a: a click on क inserts ka.
+    if (text.startsWith('्')) token = '.h' + token;
+    // Rare signs without a defined ITRANS spelling use its literal escape syntax.
+    if (/[\u0900-\u097f]/u.test(token)) return '##' + text + '##';
+    return token;
+  }
+  function insert(text) {
+    let start = input.selectionStart;
+    const end = input.selectionEnd;
+    let token = text;
+    if ($('method').value === 'itrans') {
+      token = toKeyboardItrans(text);
+      const prefix = input.value.slice(0, start);
+      const insideLiteral = (prefix.split('##').length - 1) % 2 === 1;
+      const isMatra = /^[\u093e-\u094c\u0962\u0963]$/u.test(text);
+      const removesA = isMatra || text.startsWith('्');
+      if (!insideLiteral && removesA) {
+        // Inspect actual preceding script to distinguish inherent a from aa/ai/au.
+        const previous = toNagari(prefix, true);
+        if (prefix.endsWith('a') && /[क-हळऱऴक़-य़]़?$/u.test(previous)) start -= 1;
+        // A dependent vowel after an explicit halant completes that consonant.
+        else if (isMatra && prefix.endsWith('.h') && previous.endsWith('्')) start -= 2;
+      }
+      // In an existing literal ITRANS span insert the character literally.
+      if (insideLiteral) token = text;
+    }
+    input.setRangeText(token, start, end, 'end');
+    input.focus();
+    render();
+  }
+  function keyboard() {
+    const container = $('keyboard'); container.replaceChildren();
+    const layers = $('layer').value === 'all' ? [0, 1, 2, 3] : [0, 1];
+    const names = ['Grundebene', 'Shift', 'AltGr', 'AltGr + Shift'];
+    let row = document.createElement('div'); row.className = 'dw-keyrow'; container.append(row);
+    hindiKeyboardLayout.forEach(key => {
+      if (key[0] === '#') { row = document.createElement('div'); row.className = 'dw-keyrow'; container.append(row); return; }
+      const keycap = document.createElement('div'); keycap.className = 'dw-keycap' + (layers.length === 4 ? ' dw-all-levels' : '') + (key[7] === '#' ? ' dw-home' : '');
+      const label = document.createElement('small'); label.className = 'dw-keylabel'; label.textContent = key[0]; keycap.append(label);
+      layers.forEach(layer => {
+        const char = character(key, layer), button = document.createElement('button');
+        button.type = 'button'; button.className = 'dw-char dw-level-' + layer; button.disabled = !char;
+        button.dataset.code = key[5]; button.dataset.layer = String(layer);
+        button.setAttribute('aria-label', `${key[0]}, ${names[layer]}: ${char || 'nicht belegt'}`);
+        button.title = `${names[layer]}: ${char || 'nicht belegt'}` + (char ? ` · ITRANS: ${toKeyboardItrans(char)}` : '');
+        const glyph = document.createElement('span'); glyph.textContent = /^[\u093c\u093e-\u094d\u0962\u0963\u0951-\u0954]/u.test(char) ? '◌' + char : char || '';
+        button.append(glyph); button.addEventListener('click', () => insert(char)); keycap.append(button);
+      });
+      row.append(keycap);
+    });
+  }
+  input.addEventListener('keydown', event => {
+    if ($('method').value !== 'nagari' || event.isComposing || event.metaKey) return;
+    const altgr = event.getModifierState('AltGraph') || (event.ctrlKey && event.altKey) || (event.altKey && event.location === 2);
+    if (event.ctrlKey && !altgr || event.altKey && !altgr) return;
+    const key = keys.find(k => k[5] === event.code);
+    if (!key) return;
+    const layer = (altgr ? 2 : 0) + (event.shiftKey ? 1 : 0), char = character(key, layer);
+    if (char) { event.preventDefault(); insert(char); }
+  });
+
+  function referenceRows() {
+    const rows = [], it = Sanscript.schemes.itrans;
+    function add(group, code, nagari, alt = []) {
+      rows.push([group, [code, ...alt].join(' / '), transliterate(nagari, 'devanagari', 'iast'), nagari]);
+    }
+    for (const [n, code] of Object.entries(it.vowels)) {
+      if (['ऎ','ऒ'].includes(n)) continue;
+      add('Vokale', code, n, it.alternates[code] || []);
+    }
+    for (const [n, code] of Object.entries(it.vowel_marks)) {
+      if (['ॆ','ॊ'].includes(n)) continue;
+      add('Vokalzeichen an क', 'k' + code, 'क' + n);
+    }
+    for (const [n, code] of Object.entries(it.consonants)) {
+      if (['ळ','क्ष','ज्ञ'].includes(n)) continue;
+      add('Konsonanten', code + 'a', n, (it.alternates[code] || []).map(c => c + 'a'));
+    }
+    for (const [code, n] of Object.entries({kSha: 'क्ष', 'j~na': 'ज्ञ', tra: 'त्र', shra: 'श्र', shcha: 'श्च', 'j~nAnam': 'ज्ञानम्'})) add('Verbindungen', code, n);
+    add('Anusvāra', 'M', 'ं', ['.m', '.n']);
+    add('Visarga', 'H', 'ः'); add('Candrabindu', '.N', 'ँ');
+    rows.push(['Halant (am क gezeigt)', 'k (Sanskrit) / k.h', 'k', 'क्']);
+    for (const n of ['ॐ','ऽ','।','॥']) add('Sonderzeichen', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
+    for (const n of '०१२३४५६७८९') add('Ziffern', it.symbols[n], n);
+    for (const [n, code] of Object.entries(it.extra_consonants)) add('Erweiterte Konsonanten', code + 'a', n);
+    for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit-Beispiele', code, n);
+    rows.push(['Nasalisierung (Beispiel)', 'hA.N', 'hā̃', 'हाँ']);
+    return rows;
+  }
+  const rows = referenceRows();
+  function reference() {
+    const query = $('search').value.normalize('NFC').toLocaleLowerCase().trim();
+    const filtered = rows.filter(row => row.join(' ').normalize('NFC').toLocaleLowerCase().includes(query));
+    const fragment = document.createDocumentFragment();
+    filtered.forEach(row => {
+      const tr = document.createElement('tr');
+      row.forEach(text => {const td = document.createElement('td'); td.textContent = text; tr.append(td);});
+      fragment.append(tr);
+    });
+    $('reference').replaceChildren(fragment);
+    $('count').textContent = `${filtered.length} von ${rows.length} Einträgen`;
+  }
+  input.addEventListener('input', render);
+  $('language').addEventListener('change', changeLanguage);
+  $('remove-a').addEventListener('change', () => {hindiRemoveA = $('remove-a').checked; render();});
+  $('method').addEventListener('change', () => {
+    if (previousMethod !== $('method').value) {
+      input.value = $('method').value === 'nagari' ? toNagari(input.value) : transliterate(input.value, 'nagari', 'itrans');
+      previousMethod = $('method').value;
+    }
+    render();
+  });
+  $('layer').addEventListener('change', keyboard);
+  $('show').addEventListener('change', () => {$('keyboard-wrap').hidden = !$('show').checked;});
+  $('separator').addEventListener('input', render); $('break').addEventListener('input', render);
+  $('search').addEventListener('input', reference);
+  keyboard(); reference(); changeLanguage();
+})();
+
+</script>
+</div>
+</body>
+</html>
