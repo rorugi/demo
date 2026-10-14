@@ -2,254 +2,250 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Write Hindi/Sanskrit in Devanagari Online</title>
-<meta name="description" content="This online Hindi/Sanskrit Devanagari text editor allows to write you text directly in Devanagari or ITRANS and transcribes the text in Devanagari and ISTA. Additionally you have an online keyboard to learn writing with the Devanagari keyboard.">
-<link rel="canonical" href="https://www.russwurm.com/devanagari-writer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hindi und Sanskrit in Devanagari schreiben</title>
+<meta name="description" content="Hindi- und Sanskrit-Text in ITRANS oder Devanagari eingeben und gleichzeitig Devanagari, IAST und ITRANS erhalten, mit Bildschirmtastatur (InScript) und Referenztabelle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
 <style>
-/* Standalone page: minimal base styles replacing the site-wide stylesheet */
-body {margin:0;background:#ffffff;}
-.dw-back {display:block;max-width:1050px;margin:0 auto;padding:16px 20px 0;font:14px system-ui,sans-serif;color:#546361;text-decoration:none;}
-.dw-back:hover {color:#049514;}
-#devanagari-writer a {color:#007a70;}
-/* Original page styles from russwurm.com/devanagari-writer */
-.inputtext {
-	width:100%;
-	border: 1px solid #80808080;
-	padding: 0.5rem;
+/* Layout: single column like the other demos — header, input with mode controls, slate board showing the result, keyboard, reference table, notes */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --slate-edge:#3a4a47; --chalk:#eef2e9; --chalk-dim:rgba(238,242,233,.62); --guide:rgba(238,242,233,.16);
+  --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.16);
+  --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
+  --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-deva:var(--f-hi);
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
-.outputtext {
-	border: 1px solid #80808040;
-	padding: 0.5rem;	
-}
-.codebox {
-background-color:#c0c0c040;
-padding: 0.5rem;
-margin: 0.5rem 0 1rem 0;
-}
-.keyboard {
-	height:auto;
-}
-.keyboardoff {
- height:0;
- visibility:hidden;
-}
-.keyboardkey {
-	overflow: hidden;
-	border: 1px solid #80808080;
-	margin:6px;
-	width:3rem;
-	height: 3rem;
-	display:inline-block;
-	position: relative;
-	box-shadow: 2px 2px 3px #80808080;
-	border-radius: 6px;
-	padding: 0;
-margin: 0px 0px 1px 1px;
-transition: 0.15s all ease;
-}
-.keyboardkey:hover {
-box-shadow:none;
-margin: 1px 1px 0px 0px;
-transition: 0.15s all ease;
-}
-.keyhigh {
-background-color: #80808040;
-transition: 0.15s all ease;
-}
-.keyboardkey > .key {
-	position: absolute;
-	font-weight:bold;
-	margin-top:16px;
-	padding: 6px;
-}
-.keyboardkey > .key-hindi {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	cursor: pointer;
-	padding: 2px 6px;
-}
-.keyboardkey > .key-hindi:hover {
-	background-color:#ff800080;
-transition: 0.15s all ease;
-}
-.keyboardkey > .key-shift {
-	position: absolute;
-	top: 0;
-	right: 0;
-	cursor: pointer;
-	padding: 2px 6px;
-}
-.keyboardkey > .key-shift:hover {
-	background-color:#ff800080;
-transition: 0.15s all ease;
-}
-.highlighted {
-	background-color:#ff8000;
-	color:#000000;
-transition: 0.15s all ease;
-}
-#devanagari-writer {font-family:system-ui,"Noto Sans Devanagari",sans-serif;line-height:1.65;color:#202526;max-width:1050px;margin:0 auto;padding:20px;--dw-accent:#049514}
-#devanagari-writer * {box-sizing:border-box}
-#devanagari-writer h1 {font-size:2rem;margin:0 0 6px}
-#devanagari-writer h2 {font-size:1.25rem;margin:25px 0 8px}
-#devanagari-writer label {display:inline-block;font-weight:550}
-#devanagari-writer select,#devanagari-writer input:not([type=checkbox]),#devanagari-writer textarea {font:inherit;border:1px solid #b9c5c4;border-radius:6px;padding:8px;background:#fff;color:#202526;max-width:100%}
-#devanagari-writer textarea {display:block;width:100%;font-size:1.2rem;resize:vertical;margin:6px 0 14px}
-#devanagari-writer :focus-visible {outline:3px solid #008f87;outline-offset:2px}
-#devanagari-writer .dw-controls {display:flex;gap:12px 20px;align-items:center;flex-wrap:wrap;margin:16px 0}
-#devanagari-writer .dw-output {white-space:pre-wrap;overflow-wrap:anywhere;min-height:56px;background:#f5f8f7;border:1px solid #dce4e2;border-radius:6px;padding:12px;font-size:1.2rem}
-#devanagari-writer #outiast {font-style:italic}
-#devanagari-writer .dw-small {font-size:.86rem;color:#546361}
-#devanagari-writer #dw-mode-note {border-left:4px solid var(--dw-accent);padding:8px 12px;background:#e2f1e5}
-#devanagari-writer .dw-scroll {overflow-x:auto;padding:4px 0}
-#devanagari-writer .dw-keyrow {display:flex;gap:4px;margin:4px 0;min-width:720px}
-#devanagari-writer .dw-keyrow:nth-child(2) {padding-left:22px}
-#devanagari-writer .dw-keyrow:nth-child(3) {padding-left:32px}
-#devanagari-writer .dw-keyrow:nth-child(4) {padding-left:12px}
-#devanagari-writer .dw-key {width:48px;height:64px;flex:none;background:white;border:1px solid #b9c5c4;border-radius:5px;cursor:pointer;color:#202526;display:flex;flex-direction:column;align-items:center;justify-content:center}
-#devanagari-writer .dw-key small {font:11px system-ui;color:#63716e}
-#devanagari-writer .dw-key span {font-size:23px;line-height:1.5}
-#devanagari-writer .dw-key:disabled {opacity:.3;cursor:default}
-#devanagari-writer .dw-key:not(:disabled):hover {background:#ffeddf;border-color:var(--dw-accent)}
-#devanagari-writer table {border-collapse:collapse;width:100%;min-width:480px;font-size:1rem}
-#devanagari-writer th,#devanagari-writer td {border-bottom:1px solid #dce4e2;text-align:left;padding:9px 12px}
-#devanagari-writer th {background:#eaf3f1}
-#devanagari-writer td:nth-child(3) {font-style:italic}
-#devanagari-writer td:nth-child(4) {font-size:1.35rem}
-#devanagari-writer code {font-size:.95em;background:#edf0ef;padding:2px 4px;border-radius:3px}
-#devanagari-writer details {margin:20px 0}
-#devanagari-writer [hidden] {display:none!important}
-@media(max-width:600px){#devanagari-writer{padding:12px}#devanagari-writer h1{font-size:1.6rem}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}
+.lang-sa{--f-deva:var(--f-sa)}
 
-#devanagari-writer .outputtext {white-space:pre-wrap;overflow-wrap:anywhere;min-height:2rem;}
-#devanagari-writer .dw-keyrow {min-width:710px;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+header{display:grid;gap:4px}
+.back{font-size:14px;color:var(--muted);text-decoration:none;width:max-content}
+.back:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+h2{margin:0;font-size:18px;font-weight:600}
+.deva{font-family:var(--f-deva)}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--accent-soft);border-radius:4px;padding:1px 5px}
 
+/* Controls */
+.controls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.ctl{display:inline-flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{appearance:none;font:inherit;font-size:14px;font-weight:500;border:0;background:var(--panel);color:var(--muted);padding:8px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--fg)}
+.tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer;font-size:14px;color:var(--muted)}
+.tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.tog input:disabled+span{opacity:.5}
+.seg button:focus-visible,.tog input:focus-visible,textarea:focus-visible,input:focus-visible,.dw-char:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{margin:0;font-size:14px;color:var(--muted);border-left:3px solid var(--accent);padding:2px 0 2px 12px}
 
-/* Original keycap arrangement: Latin label at lower left, Shift above base.
-   The optional AltGr column sits to the right: AltGr+Shift above AltGr. */
-#devanagari-writer .dw-keyrow {width:max-content;min-width:0;gap:4px;}
-#devanagari-writer .dw-keycap {display:grid;grid-template-columns:20px 26px;grid-template-rows:24px 30px;border:1px solid #b9c5c4;border-radius:6px;background:white;overflow:hidden;flex:none;box-shadow:2px 2px 3px #80808050;}
-#devanagari-writer .dw-keycap.dw-all-levels {grid-template-columns:20px 26px 26px;}
-#devanagari-writer .dw-keycap.dw-home {background:#d4d4d4;}
-#devanagari-writer .dw-keylabel {grid-column:1;grid-row:1 / 3;align-self:end;text-align:center;padding-bottom:2px;font-weight:bold;font-size:16px;line-height:1.4;background:transparent;}
-#devanagari-writer .dw-char {border:0;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:#202526;min-width:0;min-height:0;line-height:1;}
-#devanagari-writer .dw-char span {font-size:19px;line-height:1.25;}
-#devanagari-writer .dw-char:disabled {opacity:.25;cursor:default;}
-#devanagari-writer .dw-char:not(:disabled):hover {background:#ff8000;}
-#devanagari-writer .dw-level-0 {grid-column:2;grid-row:2;}
-#devanagari-writer .dw-level-1 {grid-column:2;grid-row:1;}
-#devanagari-writer .dw-level-2 {grid-column:3;grid-row:2;border-left:1px solid #dce4e2;}
-#devanagari-writer .dw-level-3 {grid-column:3;grid-row:1;border-left:1px solid #dce4e2;}
-.dark #devanagari-writer {
-color:#d0d0d0;
-}
-.dark #dw-mode-note {
-color:#000000;
-}
-.dark #devanagari-writer textarea {
-background-color:#c0c0c8;
-}
-.dark #devanagari-writer th {
-    background: #1c203d;
-}
+/* Input */
+.input{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.in-itrans textarea{font-family:var(--f-ui)}
+textarea{font-family:var(--f-deva);font-size:20px;line-height:1.6;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;min-height:110px;width:100%;display:block}
+textarea::placeholder{color:var(--muted);opacity:.8;font-family:var(--f-ui);font-size:16px}
+
+/* Board: the result */
+.board{background:var(--slate);border:10px solid var(--slate-edge);border-radius:14px;position:relative;color:var(--chalk);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.35);padding:40px 18px 16px;display:grid;gap:12px}
+.board .tag{position:absolute;left:14px;top:10px;opacity:.7;font-size:13px;letter-spacing:.06em}
+.board .big{font-family:var(--f-deva);font-size:clamp(30px,7vw,46px);line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;min-height:1.6em}
+.board .big:empty::before{content:"देवनागरी";color:var(--guide)}
+.board .roman{font-size:clamp(18px,3.6vw,22px);line-height:1.5;color:var(--accent);font-style:italic;white-space:pre-wrap;overflow-wrap:anywhere;min-height:1.5em}
+.board .roman:empty::before{content:"devanāgarī";color:var(--guide)}
+.roman-wrap{display:grid;gap:0}
+.board .lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--chalk-dim)}
+.facts{border-top:1px solid var(--guide);padding-top:10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px;color:var(--chalk-dim);margin:0}
+.facts dd{margin:0;color:var(--chalk);font-family:var(--f-mono);font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.facts dd:empty::before{content:"–";color:var(--chalk-dim)}
+.board-foot{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+
+/* Combined list and options */
+.row{display:grid;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.row small{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.row div{font-family:var(--f-deva);font-size:20px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.row:has(#outcombined:empty){display:none}
+details{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 14px}
+summary{cursor:pointer;font-weight:500;font-size:15px}
+details[open] summary{margin-bottom:8px}
+details p{margin:0 0 8px;color:var(--muted);font-size:14px;max-width:65ch}
+.opt{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:8px}
+.field{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.opt .field{width:6rem;font-family:var(--f-mono)}
+
+/* Keyboard */
+.kbd{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border-top:1px solid var(--line);padding-top:18px}
+.kbd-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.dw-scroll{overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch}
+.keyboard{display:grid;gap:5px;width:max-content}
+.dw-keyrow{display:flex;gap:5px}
+.dw-keyrow:nth-child(2){padding-left:24px}
+.dw-keyrow:nth-child(3){padding-left:34px}
+.dw-keyrow:nth-child(4){padding-left:12px}
+.dw-keycap{display:grid;grid-template-columns:18px 26px;grid-template-rows:22px 28px;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden;flex:none}
+.dw-keycap.dw-all-levels{grid-template-columns:18px 26px 26px}
+.dw-keycap.dw-home{border-color:var(--accent);background:var(--accent-soft)}
+.dw-keylabel{grid-column:1;grid-row:1 / 3;align-self:end;text-align:center;padding-bottom:3px;font-weight:600;font-size:13px;line-height:1.3;color:var(--muted)}
+.dw-char{appearance:none;border:0;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:var(--fg);min-width:0;min-height:0;line-height:1}
+.dw-char span{font-family:var(--f-deva);font-size:18px;line-height:1.3}
+.dw-char:disabled{opacity:.2;cursor:default}
+.dw-char:not(:disabled):hover{background:var(--accent);color:var(--accent-ink)}
+.dw-level-0{grid-column:2;grid-row:2}
+.dw-level-1{grid-column:2;grid-row:1}
+.dw-level-2{grid-column:3;grid-row:2;border-left:1px solid var(--line)}
+.dw-level-3{grid-column:3;grid-row:1;border-left:1px solid var(--line)}
+.small{margin:0;font-size:14px;color:var(--muted);max-width:65ch}
+
+/* Reference */
+.ref{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border-top:1px solid var(--line);padding-top:18px}
+.ref p{margin:0;color:var(--muted);max-width:65ch}
+.search{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.search .field{flex:1 1 240px;background:var(--panel)}
+.table{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td:nth-child(1){color:var(--muted);font-size:14px}
+td:nth-child(2){font-family:var(--f-mono);font-size:14px}
+td:nth-child(3){font-style:italic;color:var(--accent)}
+td:nth-child(4){font-family:var(--f-deva);font-size:22px;line-height:1.4}
+@media (prefers-color-scheme: light){td:nth-child(3){color:#9a5f0c}}
+
+/* Notes */
+.how{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px}
+.how h3{margin:6px 0 0;font-size:16px;font-weight:600}
+.how p,.how li{margin:0;max-width:65ch;color:var(--muted)}
+.how ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.how a{color:var(--fg);text-decoration-color:var(--accent);text-underline-offset:2px}
+.how a:hover{color:var(--accent)}
+.ex{font-family:var(--f-deva);color:var(--fg)}
+@media (max-width:520px){.board{padding-inline:12px}th,td{padding:6px 8px}td:nth-child(1){font-size:13px}}
 </style>
 </head>
 <body>
-<a class="dw-back" href="index.html">← Demos</a>
-<div id="devanagari-writer">
+<main class="wrap">
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <div class="eyebrow">Umschrift · ITRANS · IAST</div>
+    <h1>Hindi und Sanskrit in Devanagari schreiben <span class="deva">लिखो</span></h1>
+    <p class="lede">Text in ITRANS oder direkt in Devanagari eingeben: Devanagari, IAST und ITRANS entstehen gleichzeitig. Mit Bildschirmtastatur nach InScript und einer durchsuchbaren Zeichentabelle.</p>
+  </header>
 
-<h1>Online Hindi und Sanskrit schreiben in Devanagari und ITRANS</h1>
+  <section class="input" aria-label="Eingabe">
+    <div class="controls">
+      <span class="ctl">Sprache
+        <span class="seg" role="group" aria-label="Sprache" data-for="dw-language">
+          <button type="button" data-value="hi" aria-pressed="true">Hindi</button>
+          <button type="button" data-value="sa" aria-pressed="false">Sanskrit</button>
+        </span>
+      </span>
+      <span class="ctl">Eingabe
+        <span class="seg" role="group" aria-label="Eingabeart" data-for="dw-method">
+          <button type="button" data-value="itrans" aria-pressed="true">ITRANS</button>
+          <button type="button" data-value="nagari" aria-pressed="false">Devanagari-Tastatur</button>
+        </span>
+      </span>
+      <select id="dw-language" hidden><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select>
+      <select id="dw-method" hidden><option value="itrans">ITRANS / gemischter Text</option><option value="nagari">Devanagari-Tastatur</option></select>
+    </div>
+    <p class="note" id="dw-mode-note"></p>
+    <textarea id="inputText" rows="4" spellcheck="false" autocapitalize="off" aria-label="Eingabetext" placeholder="z. B. devanaagarii · namaste · ##Wort## bleibt unverändert"></textarea>
+  </section>
 
-<p>Schreibe den Text in ITRANS oder Devanagari:</p>
-<div class="dw-controls">
-<label>Sprache: <select id="dw-language"><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select></label>
-<label>Eingabe: <select id="dw-method"><option value="itrans">ITRANS / gemischter Text</option><option value="nagari">Devanagari-Tastatur</option></select></label>
-</div><p id="dw-mode-note"></p>
-<div id="mytextarea"></div>
+  <section class="board" aria-label="Ergebnis" aria-live="polite">
+    <span class="tag">Devanagari</span>
+    <div class="big" id="out" lang="hi"></div>
+    <div class="roman-wrap"><span class="lbl" id="dw-iast-title">IAST / Hindi-Lernumschrift</span><div class="roman" id="outiast"></div></div>
+    <dl class="facts">
+      <dt>ITRANS</dt><dd id="outitrans"></dd>
+    </dl>
+  </section>
+  <div class="board-foot">
+    <label class="tog"><input type="checkbox" id="removea" value="on" checked><span>Finales „a“ entfernen (nur Hindi)</span></label>
+  </div>
 
-<input type="checkbox" id="displaykeyboard" value="on" checked> Display the keyboard<br>
-<div id="dw-keyboard-wrap">
-<label>Tastaturebene: <select id="dw-layer"><option value="basic">Grundebene + Shift</option><option value="all">Grundebene + Shift + AltGr + (AltGr + Shift)</option></select></label>
-<div class="dw-scroll"><div id="keyboard" class="keyboard"></div></div>
-<p class="dw-small">Deutsche QWERTZ-Beschriftung; zusätzliche Sanskrit-Tasten nach Windows Devanagari–InScript. Klicken fügt je nach gewählter Eingabeart Devanagari oder ITRANS ein, ohne den Modus zu wechseln. Grundebene und Shift sind immer sichtbar; optional kommen beide AltGr-Ebenen hinzu. Im Devanagari-Modus werden physische Tasten entsprechend belegt. Bei ITRANS enthalten angeklickte Konsonanten ihr inhärentes a (क → ka). Ein folgendes Vokalzeichen ersetzt dieses a (ka + ि → ki); Halant entfernt es (ka + ् → k.h → क्).</p></div><br>
+  <div class="row"><small>Kombinierte Liste</small><div id="outcombined"></div></div>
 
-<b>Devanagari:</b><br>
-<div id="out" class="outputtext"></div><br>
+  <details>
+    <summary>Optionen für die kombinierte Liste</summary>
+    <p>Die Liste entsteht bei mehreren Zeilen oder mit Semikolon als Trenner, z. B. <code>naama ; raajaa ; meraa</code>. Im Normalfall können die Felder bleiben, wie sie sind.</p>
+    <div class="opt">
+      <label class="ctl">Trennzeichen <input class="field" id="combinedsep" name="combinedsep" value=" "></label>
+      <label class="ctl">Zeilenumbruch <input class="field" id="combinedbreak" name="combinedbreak" value="<br>"></label>
+    </div>
+    <p>Trennzeichen steht zwischen Devanagari und IAST, <code>[TAB]</code> ergibt einen Tabulator, <code>&lt;br&gt;</code> einen Zeilenumbruch. Das Umbruchzeichen steht am Ende jeder Zeile, auch mehrfach wie <code>&lt;br&gt;&lt;br&gt;</code>. Andere HTML-Tags werden als Text ausgegeben.</p>
+  </details>
 
-<b id="dw-iast-title">IAST / Hindi-Lernumschrift:</b><br>
-<input type="checkbox" id="removea" value="on" checked> Remove final "a"<br>
-<div id="outiast" class="outputtext"></div><br>
+  <section class="kbd" aria-label="Bildschirmtastatur">
+    <div class="kbd-head">
+      <h2>Tastatur</h2>
+      <div class="controls">
+        <span class="seg" role="group" aria-label="Tastaturebenen" data-for="dw-layer">
+          <button type="button" data-value="basic" aria-pressed="true">Grund + Shift</button>
+          <button type="button" data-value="all" aria-pressed="false">+ AltGr</button>
+        </span>
+        <label class="tog"><input type="checkbox" id="displaykeyboard" value="on" checked><span>Anzeigen</span></label>
+        <select id="dw-layer" hidden><option value="basic">Grundebene + Shift</option><option value="all">Grundebene + Shift + AltGr + (AltGr + Shift)</option></select>
+      </div>
+    </div>
+    <div id="dw-keyboard-wrap">
+      <div class="dw-scroll"><div id="keyboard" class="keyboard"></div></div>
+      <p class="small">Deutsche QWERTZ-Beschriftung, zusätzliche Sanskrit-Tasten nach Windows Devanagari–InScript; die Grundreihe ist hervorgehoben. Ein Klick fügt je nach Eingabeart Devanagari oder ITRANS ein. Im Devanagari-Modus belegt die Seite auch die physischen Tasten. In ITRANS bringen Konsonanten ihr inhärentes a mit (<span class="ex">क</span> → ka); ein Vokalzeichen ersetzt es (ka + <span class="ex">ि</span> → ki), Halant entfernt es (ka + <span class="ex">्</span> → k.h → <span class="ex">क्</span>).</p>
+    </div>
+  </section>
 
-<b>Combined:</b>  <br>
-<div id="outcombined" class="outputtext"></div><br>
+  <section class="ref" aria-label="Referenz">
+    <h2>ITRANS – IAST – Nagari</h2>
+    <p>Schriftgetreue Umschrift, unabhängig von der vereinfachten Hindi-Ausgabe. Konsonanten stehen mit inhärentem „a“, Vokalzeichen zum Vergleich an <span class="ex">क</span>.</p>
+    <div class="search">
+      <input class="field" type="search" id="dw-search" placeholder="Suchen, z. B. RRi, ṛ, ऋ oder Visarga" aria-label="Zeichen oder Umschrift suchen">
+      <span class="small" id="dw-count" aria-live="polite"></span>
+    </div>
+    <div class="table"><table><thead><tr><th>Gruppe</th><th>ITRANS</th><th>IAST</th><th>Nagari</th></tr></thead><tbody id="dw-reference"></tbody></table></div>
+  </section>
 
-<b>ITRANS:</b><div id="outitrans" class="outputtext"></div><br>
-
-<h3>Optionen:</h3>
-<p>Diese Optionen sind für Sonderfunktionen vorgesehen und können im Normalfall leer gelassen werden.</p>
-<p>Trennzeichen kombinierte Liste: <input id="combinedsep" name="combinedsep" value=" " style="width:5rem;"> und Umbruchzeichen: <input id="combinedbreak" name="combinedbreak" value="<br>" style="width:5rem;"><br>
-<small>Trennzeichen: Zeichen(folge) für die kombinierte Liste um Devanagari und IAST zu trennen, Default ist Leerzeichen, für Tabulator beim Kopieren kann man <b><i>[TAB]</i></b> verwenden oder <code>&lt;br&gt;</code> für einen Zeilenumbruch. Andere HTML-Tags werden als Text ausgegeben.<br>
-Umbruchzeichen: Das Zeichen am Ende einer Zeile, normalerweise ein Zeilenbruch, können auch auch mehrere sein, z.B. mit <code>&lt;br&gt;&lt;br&gt;</code>.
-</small></p>
-
-<br><br>
-<h2>Erklärung</h2>
-<p>Diese Seite bietet die Möglichkeit Hindi- und Sanskrit-Texte mit lateinischen Buchstaben zu schreiben oder auch gleich mit der Hindi Tastatur zu üben.</p>
-<p>Im Textfeld kann man <b>ITRANS</b> oder <b>Devanagari</b> schreiben und es wird automatisch Devanagari, IAST und ITRANS erzeugt. Um für einzelne Zeichen oder Wörter die Übersetzung zu deaktivieren kann ## verwendet werden, z.B. ##nicht##.</p>
-<p class="codebox">devanaagarii → देवनागरी → devanāgarī</p>
-<p>Achtung: Das Ergebnis sollte auf alle Fälle kontrolliert werden, da einige Umsetzungen nicht eindeutig sind, z.B. werden "a" innerhalb eines Wortes teilweise nicht gesprochen, aber hier nicht automatisch entfernt.</p>
-
-<br>
-<h3>Hindi und Sanskrit</h3>
-<p>Im Sanskrit-Modus gilt eine schriftgetreue Umschrift: <code>aham</code> → अहम् → <i>aham</i>; <code>saMskRRitam</code> → संस्कृतम् → <i>saṃskṛtam</i>. Endkonsonanten erhalten Halant ्, Anusvāra ं wird zu ṃ und Visarga ः zu ḥ. Die bisherige vereinfachte Nasalnotation bleibt auf Hindi beschränkt und entspricht nicht strengem IAST.</p>
-<p>Devanagari-Tasten: क + ् + ष = क्ष; Vokalzeichen folgen dem Konsonanten, auch ि. ITRANS unterscheidet Groß- und Kleinschreibung. IAST ist ein Ausgabeformat. Ausgelegt auf klassisches Sanskrit; keine vollständige Unterstützung aller vedischen Rezitationszeichen.</p>
-<h3>Tastatur</h3>
-<p>Die Tastatur kann man bei Bedarf ein- oder ausblenden, wobei sie besonders hilfreich ist, um das Schreiben direkt in Devanagari zu lernen. Einerseits wird angezeigt welche Taste man gedrückt hat und zusätzlich sieht man auch auf welcher Taste sich ein Devanagari-Symbol befindet.</p>
-<p>Als Tastaturlayout kann man Hindi Traditional (INSCRIPT) wählen, um Hindi in allen Applikationen direkt zu schreiben.</p>
-
-<br>
-<h3>Ausgabe</h3>
-<p><b>Devanagari:</b> hier findet man den Eingabetext in Devanagari.</p>
-<br>
-<p><b>IAST:</b> hier findet man den Text in der Umschrift nach IAST <a class="link" href="https://en.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" title="" target=_blank rel="nofollow noreferrer">↗</a>.<br>
-<u>Remove final "a":</u> Diese Option ist nur für Hindi verfügbar. Sie entfernt das letzte kurze „a“ als vereinfachte Lernhilfe; sie ersetzt keine vollständige Ausspracheanalyse. Im Sanskrit-Modus bleibt das „a“ erhalten.</p>
-<br>
-<p><b>ITRANS:</b> hier findet man den Text in der Umschrift nach ITRANS <a class="link" href="https://en.wikipedia.org/wiki/ITRANS" title="" target=_blank rel="nofollow noreferrer">↗</a>.</p>
-<br>
-<p><b>Combined List:</b></p>
-<p>Eine <b>Wörterliste</b> aus Devanagari und IAST nebeneinander wird automatisch erstellt, wenn man <b>mehrere Zeilen</b> hat oder können durch ein <b>Semikolon (;)</b> als Trennzeichen erstellt werden. Sobald ein Semikolon im Text verwendet wird, erscheint auch die kombinierte Wortliste.</p>
-<p class="codebox">naama ; raajaa ; meraa ; safed → नाम nām राजा rājā मेरा merā सफ़ेद safed</p>
-
-<br><br>
-
-<h2>ITRANS – IAST – Nagari</h2>
-  <p>Die Referenz zeigt die schriftgetreue Umschrift, unabhängig von der vereinfachten Hindi-Ausgabe. Konsonanten stehen mit ihrem inhärenten „a“. Vokalzeichen werden zum besseren Vergleich zusätzlich an क gezeigt.</p>
-  <label for="dw-search">Zeichen oder Umschrift suchen</label>
-  <input type="search" id="dw-search" placeholder="z. B. RRi, ṛ, ऋ oder Visarga">
-  <p id="dw-count" class="dw-small" aria-live="polite"></p>
-  <div class="dw-scroll"><table><thead><tr><th>Gruppe</th><th>ITRANS</th><th>IAST</th><th>Nagari</th></tr></thead><tbody id="dw-reference"></tbody></table></div>
-  <p class="dw-small">Grundlage: <a href="https://github.com/indic-transliteration/sanscript.js">Sanscript.js</a>. Zusatztasten: <a href="https://unicode.org/cldr/charts/43/keyboards/layouts/hi.html">Unicode CLDR, Windows Devanagari–InScript</a>.</p>
-
-<br><br>
-
-<h2>Zusatzinfo und Referenzen</h2>
-<a class="link" href="https://www.compart.com/de/unicode/block/U+0300" title="UTF-8 Codes" target=_blank rel="nofollow noreferrer">UTF-8 Codes</a><br>
-<a class="link" href="https://www.learnsanskrit.org/tools/sanscript/" title="Learn Sanskrit Online Converter" target=_blank rel="nofollow noreferrer">Learn Sanskrit Online Converter</a><br>
-<a class="link" href="https://www.lexilogos.com/keyboard/sanskrit_devanagari.htm" title="Multilingual keyboard" target=_blank rel="nofollow noreferrer">Multilingual keyboard</a><br>
-<a class="link" href="https://www.vachmi.com/typesanskrit.html" title="Type Sanskrit" target=_blank rel="nofollow noreferrer">Type Sanskrit</a><br>
-<a class="link" href="https://de.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" title="IAST" target=_blank rel="nofollow noreferrer">IAST</a><br>
-<a class="link" href="https://en.wikipedia.org/wiki/ITRANS" title="ITRANS" target=_blank rel="nofollow noreferrer">ITRANS</a>
-<a class="link" href="https://github.com/indic-transliteration/sanscript.js" title="Sanscript.JS" target=_blank rel="nofollow noreferrer">Sanscript.JS</a><br>
-<a class="link" href="https://github.com/indic-transliteration/common_maps" title="Sanscript.JS Maps" target=_blank rel="nofollow noreferrer">Sanscript.JS Maps</a><br>
-<a class="link" href="https://www.cambridge-sanskrit.org/" title="The Cambridge Introduction To Sanskrit" target=_blank rel="nofollow noreferrer">The Cambridge Introduction To Sanskrit</a><br>
-
+  <section class="how">
+    <h2>So funktioniert es</h2>
+    <p>Im Textfeld kann man <b>ITRANS</b> oder <b>Devanagari</b> schreiben; Devanagari, IAST und ITRANS werden automatisch erzeugt. Mit <code>##</code> lässt sich die Umwandlung für einzelne Zeichen oder Wörter abschalten, z. B. <code>##nicht##</code>. Beispiel: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>Das Ergebnis sollte man kontrollieren: Manche Umsetzungen sind nicht eindeutig, z. B. werden „a“ innerhalb eines Wortes teilweise nicht gesprochen, hier aber nicht automatisch entfernt.</p>
+    <h3>Hindi und Sanskrit</h3>
+    <p>Im Sanskrit-Modus gilt eine schriftgetreue Umschrift: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Endkonsonanten erhalten Halant <span class="ex">्</span>, Anusvāra <span class="ex">ं</span> wird zu ṃ und Visarga <span class="ex">ः</span> zu ḥ. Die vereinfachte Nasalnotation bleibt auf Hindi beschränkt und entspricht nicht strengem IAST.</p>
+    <p>„Finales a entfernen“ gibt es nur für Hindi: Es streicht das letzte kurze „a“ als vereinfachte Lernhilfe und ersetzt keine vollständige Ausspracheanalyse.</p>
+    <p>Devanagari-Tasten: <span class="ex">क + ् + ष = क्ष</span>; Vokalzeichen folgen dem Konsonanten, auch <span class="ex">ि</span>. ITRANS unterscheidet Groß- und Kleinschreibung, IAST ist ein reines Ausgabeformat. Ausgelegt auf klassisches Sanskrit, ohne vollständige Unterstützung aller vedischen Rezitationszeichen.</p>
+    <h3>Tastatur</h3>
+    <p>Die Tastatur zeigt, auf welcher Taste ein Devanagari-Zeichen liegt, und hilft so beim Lernen. Wer Hindi in allen Programmen direkt schreiben will, wählt im Betriebssystem das Layout Hindi Traditional (InScript).</p>
+    <h3>Quellen und Links</h3>
+    <ul>
+      <li><a href="https://github.com/indic-transliteration/sanscript.js" target="_blank" rel="noreferrer">Sanscript.js</a> und die <a href="https://github.com/indic-transliteration/common_maps" target="_blank" rel="noreferrer">Sanscript-Zeichentabellen</a></li>
+      <li><a href="https://unicode.org/cldr/charts/43/keyboards/layouts/hi.html" target="_blank" rel="noreferrer">Unicode CLDR: Windows Devanagari–InScript</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" target="_blank" rel="noreferrer">IAST</a> · <a href="https://en.wikipedia.org/wiki/ITRANS" target="_blank" rel="noreferrer">ITRANS</a> · <a href="https://www.compart.com/de/unicode/block/U+0900" target="_blank" rel="noreferrer">Unicode-Block Devanagari</a></li>
+      <li><a href="https://www.learnsanskrit.org/tools/sanscript/" target="_blank" rel="noreferrer">Learn Sanskrit Online Converter</a> · <a href="https://www.lexilogos.com/keyboard/sanskrit_devanagari.htm" target="_blank" rel="noreferrer">Multilingual keyboard</a> · <a href="https://www.vachmi.com/typesanskrit.html" target="_blank" rel="noreferrer">Type Sanskrit</a></li>
+      <li><a href="https://www.cambridge-sanskrit.org/" target="_blank" rel="noreferrer">The Cambridge Introduction to Sanskrit</a></li>
+      <li>Original: <a href="https://www.russwurm.com/devanagari-writer" target="_blank" rel="noreferrer">russwurm.com/devanagari-writer</a></li>
+    </ul>
+  </section>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@indic-transliteration/sanscript@1.3.1/sanscript.min.js"></script>
 <script>
-// just because textarea cannot be used in source
-document.getElementById('mytextarea').outerHTML = '<textarea id="inputText" class="inputtext" rows=5 spellcheck="false" autocapitalize="off">' + '<' + '/' + 'textarea' + '>';
 // var out = Sanscript.t('ga##Na##pa##te', 'hk', 'devanagari'); // गNaपte
 // const inputText = document.getElementById('inputText');
 // inputText.focus();
@@ -1338,8 +1334,32 @@ Sanscript.schemes['itrans_naga'] = {
   $('search').addEventListener('input', reference);
   keyboard(); reference(); changeLanguage();
 })();
-
 </script>
-</div>
+<script>
+// Segmented buttons drive the hidden selects the transliteration script listens to.
+(function () {
+  const sync = seg => {
+    const sel = document.getElementById(seg.dataset.for);
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === sel.value)));
+  };
+  const setLang = () => {
+    const sa = document.getElementById('dw-language').value === 'sa';
+    document.documentElement.classList.toggle('lang-sa', sa);
+    document.getElementById('out').lang = sa ? 'sa' : 'hi';
+    document.getElementById('inputText').lang = sa ? 'sa' : 'hi';
+    document.documentElement.classList.toggle('in-itrans', document.getElementById('dw-method').value === 'itrans');
+  };
+  document.querySelectorAll('.seg[data-for]').forEach(seg => {
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const sel = document.getElementById(seg.dataset.for);
+      if (sel.value !== b.dataset.value) { sel.value = b.dataset.value; sel.dispatchEvent(new Event('change')); }
+      sync(seg); setLang();
+    });
+    sync(seg);
+  });
+  setLang();
+})();
+</script>
 </body>
 </html>
