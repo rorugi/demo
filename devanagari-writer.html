@@ -1449,6 +1449,8 @@ Sanscript.schemes['itrans_naga'] = {
   $('dw-popout').addEventListener('click', e => {
     const s = popoutSize($('dw-layer').value);
     const url = new URL(location.href); url.search = '?keyboard'; url.hash = '';
+    // A fresh URL each time, so a cached or already open old copy of the window is replaced.
+    url.search += '&t=' + Date.now().toString(36);
     if ($('dw-layer').value === 'all') url.search += '&layers=all';
     if ($('dw-language').value === 'sa') url.search += '&lang=sa';
     const w = window.open(url.href, 'dw-keyboard', `popup=yes,width=${s.width},height=${s.height}`);
@@ -1463,6 +1465,17 @@ Sanscript.schemes['itrans_naga'] = {
     document.querySelectorAll('.seg[data-for]').forEach(sync); setLang();
 
     const input = $('inputText'), state = $('dw-copy-state'), hint = state.textContent;
+    // In the pop-out every keystroke belongs to the compose box, wherever the focus was.
+    document.addEventListener('keydown', e => {
+      if (document.activeElement === input || e.ctrlKey || e.metaKey || e.altKey && !e.getModifierState('AltGraph')) return;
+      if (e.key === 'Backspace' || e.key === 'Enter') { input.focus(); return; }
+      if (e.key.length !== 1) return;
+      // Hand the keystroke to the compose box so it is mapped to Devanagari like a key typed there.
+      e.preventDefault(); input.focus();
+      const copy = new KeyboardEvent('keydown', {key: e.key, code: e.code, shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, altKey: e.altKey,
+        modifierAltGraph: e.getModifierState('AltGraph'), bubbles: true, cancelable: true});
+      if (input.dispatchEvent(copy)) { input.setRangeText(e.key, input.selectionStart, input.selectionEnd, 'end'); input.dispatchEvent(new Event('input')); }
+    }, true);
     let timer;
     const say = text => { state.textContent = text; clearTimeout(timer); timer = setTimeout(() => { state.textContent = hint; }, 2200); };
     $('dw-copy').addEventListener('click', async () => {
