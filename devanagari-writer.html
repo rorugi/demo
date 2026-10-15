@@ -138,6 +138,10 @@ td:nth-child(4){font-family:var(--f-deva);font-size:22px;line-height:1.4}
 .how a{color:var(--fg);text-decoration-color:var(--accent);text-underline-offset:2px}
 .how a:hover{color:var(--accent)}
 .ex{font-family:var(--f-deva);color:var(--fg)}
+/* Physical key press shown on the on-screen keyboard */
+.dw-keycap.dw-pressed{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dw-char.dw-pressed{background:var(--accent);color:var(--accent-ink)}
+.dw-char.dw-pressed:disabled{opacity:1}
 /* Pop-out button and compose row */
 .icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);text-decoration:none}
 .icon-btn:hover{color:var(--fg);border-color:var(--accent)}
@@ -1416,6 +1420,30 @@ Sanscript.schemes['itrans_naga'] = {
     sync(seg);
   });
   setLang();
+
+  // Show physical key presses on the on-screen keyboard: the key lights up together with
+  // the character of the active layer (Shift / AltGr), in every input mode.
+  const pressed = new Map();
+  const layerOf = e => {
+    const altgr = e.getModifierState('AltGraph') || (e.ctrlKey && e.altKey);
+    return (altgr ? 2 : 0) + (e.shiftKey ? 1 : 0);
+  };
+  function release(code) {
+    const t = pressed.get(code); if (!t) return;
+    pressed.delete(code);
+    setTimeout(() => document.querySelectorAll(`.dw-pressed[data-code="${code}"], .dw-keycap.dw-pressed[data-code="${code}"]`)
+      .forEach(el => el.classList.remove('dw-pressed')), Math.max(0, 140 - (performance.now() - t)));
+  }
+  document.addEventListener('keydown', e => {
+    const buttons = document.querySelectorAll(`.dw-char[data-code="${e.code}"]`);
+    if (!buttons.length) return;
+    const keycap = buttons[0].parentElement; keycap.dataset.code = e.code;
+    keycap.classList.add('dw-pressed');
+    buttons.forEach(b => b.classList.toggle('dw-pressed', b.dataset.layer === String(layerOf(e))));
+    pressed.set(e.code, performance.now());
+  }, true);
+  document.addEventListener('keyup', e => release(e.code), true);
+  window.addEventListener('blur', () => [...pressed.keys()].forEach(release));
 
   // Window icon: open the keyboard in a small window of its own.
   $('dw-popout').addEventListener('click', e => {
