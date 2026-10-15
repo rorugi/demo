@@ -1,15 +1,16 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hindi und Sanskrit in Devanagari schreiben</title>
-<meta name="description" content="Hindi- und Sanskrit-Text in ITRANS oder Devanagari eingeben und gleichzeitig Devanagari, IAST und ITRANS erhalten, mit Bildschirmtastatur (InScript) und Referenztabelle.">
+<title>Write Hindi and Sanskrit in Devanagari</title>
+<meta name="description" content="Type Hindi and Sanskrit in ITRANS or Devanagari and get Devanagari, IAST and ITRANS at once, with an InScript on-screen keyboard that can pop out into its own window and a reference table.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
 <style>
-/* Layout: single column like the other demos — header, input with mode controls, slate board showing the result, keyboard, reference table, notes */
+/* Layout: single column like the other demos — header, input with mode controls, slate board showing the result, keyboard, reference table, notes.
+   ?keyboard turns the page into a compact pop-out window: compose box, copy button and keyboard only. */
 :root{
   --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
   --slate:#22302e; --slate-edge:#3a4a47; --chalk:#eef2e9; --chalk-dim:rgba(238,242,233,.62); --guide:rgba(238,242,233,.16);
@@ -137,112 +138,152 @@ td:nth-child(4){font-family:var(--f-deva);font-size:22px;line-height:1.4}
 .how a{color:var(--fg);text-decoration-color:var(--accent);text-underline-offset:2px}
 .how a:hover{color:var(--accent)}
 .ex{font-family:var(--f-deva);color:var(--fg)}
+/* Pop-out button and compose row */
+.icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);text-decoration:none}
+.icon-btn:hover{color:var(--fg);border-color:var(--accent)}
+.icon-btn:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.icon-btn svg{width:18px;height:18px}
+.btn{appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:7px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.compose{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.popout-only{display:none!important}
+.popout .popout-only{display:revert!important}
+.popout .compose.popout-only{display:flex!important}
+.popout .main-only,.popout header{display:none!important}
+.popout .wrap{max-width:none;padding:12px 16px;gap:12px}
+.popout .kbd{border-top:0;padding-top:0}
+.popout .kbd-head h2{font-size:15px;color:var(--muted);font-weight:500}
+.popout textarea{min-height:0;font-size:22px;padding:6px 10px}
+.popout .input{gap:8px}
+.popout .input .controls{justify-content:flex-start}
 @media (max-width:520px){.board{padding-inline:12px}th,td{padding:6px 8px}td:nth-child(1){font-size:13px}}
 </style>
 </head>
 <body>
+<script>
+// Pop-out mode (?keyboard): compact keyboard window that sits beside whatever you are writing in.
+if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList.add('popout'); document.title = 'Devanagari keyboard'; }
+</script>
 <main class="wrap">
   <header>
     <a class="back" href="index.html">← Demos</a>
-    <div class="eyebrow">Umschrift · ITRANS · IAST</div>
-    <h1>Hindi und Sanskrit in Devanagari schreiben <span class="deva">लिखो</span></h1>
-    <p class="lede">Text in ITRANS oder direkt in Devanagari eingeben: Devanagari, IAST und ITRANS entstehen gleichzeitig. Mit Bildschirmtastatur nach InScript und einer durchsuchbaren Zeichentabelle.</p>
+    <div class="eyebrow">Transliteration · ITRANS · IAST</div>
+    <h1>Write Hindi and Sanskrit in Devanagari <span class="deva">लिखो</span></h1>
+    <p class="lede">Type in ITRANS or directly in Devanagari and get Devanagari, IAST and ITRANS at the same time. With an InScript on-screen keyboard and a searchable character table.</p>
   </header>
 
-  <section class="input" aria-label="Eingabe">
+  <section class="input" aria-label="Input">
     <div class="controls">
-      <span class="ctl">Sprache
-        <span class="seg" role="group" aria-label="Sprache" data-for="dw-language">
+      <span class="ctl">Language
+        <span class="seg" role="group" aria-label="Language" data-for="dw-language">
           <button type="button" data-value="hi" aria-pressed="true">Hindi</button>
           <button type="button" data-value="sa" aria-pressed="false">Sanskrit</button>
         </span>
       </span>
-      <span class="ctl">Eingabe
-        <span class="seg" role="group" aria-label="Eingabeart" data-for="dw-method">
+      <span class="ctl main-only">Input
+        <span class="seg" role="group" aria-label="Input method" data-for="dw-method">
           <button type="button" data-value="itrans" aria-pressed="true">ITRANS</button>
-          <button type="button" data-value="nagari" aria-pressed="false">Devanagari-Tastatur</button>
+          <button type="button" data-value="nagari" aria-pressed="false">Devanagari keyboard</button>
         </span>
       </span>
       <select id="dw-language" hidden><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select>
-      <select id="dw-method" hidden><option value="itrans">ITRANS / gemischter Text</option><option value="nagari">Devanagari-Tastatur</option></select>
+      <select id="dw-method" hidden><option value="itrans">ITRANS / mixed text</option><option value="nagari">Devanagari keyboard</option></select>
     </div>
-    <p class="note" id="dw-mode-note"></p>
-    <textarea id="inputText" rows="4" spellcheck="false" autocapitalize="off" aria-label="Eingabetext" placeholder="z. B. devanaagarii · namaste · ##Wort## bleibt unverändert"></textarea>
+    <p class="note main-only" id="dw-mode-note"></p>
+    <textarea id="inputText" rows="4" spellcheck="false" autocapitalize="off" aria-label="Input text" placeholder="e.g. devanaagarii · namaste · ##word## stays as it is"></textarea>
+    <div class="compose popout-only">
+      <button class="btn primary" type="button" id="dw-copy">Copy</button>
+      <button class="btn" type="button" id="dw-clear">Clear</button>
+      <span class="small" id="dw-copy-state" aria-live="polite">Click keys or type here, then copy and paste wherever you are writing.</span>
+    </div>
   </section>
 
-  <section class="board" aria-label="Ergebnis" aria-live="polite">
+  <section class="board main-only" aria-label="Result" aria-live="polite">
     <span class="tag">Devanagari</span>
     <div class="big" id="out" lang="hi"></div>
-    <div class="roman-wrap"><span class="lbl" id="dw-iast-title">IAST / Hindi-Lernumschrift</span><div class="roman" id="outiast"></div></div>
+    <div class="roman-wrap"><span class="lbl" id="dw-iast-title">IAST / Hindi learner transliteration</span><div class="roman" id="outiast"></div></div>
     <dl class="facts">
       <dt>ITRANS</dt><dd id="outitrans"></dd>
     </dl>
   </section>
-  <div class="board-foot">
-    <label class="tog"><input type="checkbox" id="removea" value="on" checked><span>Finales „a“ entfernen (nur Hindi)</span></label>
+  <div class="board-foot main-only">
+    <label class="tog"><input type="checkbox" id="removea" value="on" checked><span>Drop final “a” (Hindi only)</span></label>
   </div>
 
-  <div class="row"><small>Kombinierte Liste</small><div id="outcombined"></div></div>
+  <div class="row main-only"><small>Combined list</small><div id="outcombined"></div></div>
 
-  <details>
-    <summary>Optionen für die kombinierte Liste</summary>
-    <p>Die Liste entsteht bei mehreren Zeilen oder mit Semikolon als Trenner, z. B. <code>naama ; raajaa ; meraa</code>. Im Normalfall können die Felder bleiben, wie sie sind.</p>
+  <details class="main-only">
+    <summary>Options for the combined list</summary>
+    <p>The list appears when the text has several lines or uses a semicolon as separator, e.g. <code>naama ; raajaa ; meraa</code>. Normally the fields can stay as they are.</p>
     <div class="opt">
-      <label class="ctl">Trennzeichen <input class="field" id="combinedsep" name="combinedsep" value=" "></label>
-      <label class="ctl">Zeilenumbruch <input class="field" id="combinedbreak" name="combinedbreak" value="<br>"></label>
+      <label class="ctl">Separator <input class="field" id="combinedsep" name="combinedsep" value=" "></label>
+      <label class="ctl">Line break <input class="field" id="combinedbreak" name="combinedbreak" value="<br>"></label>
     </div>
-    <p>Trennzeichen steht zwischen Devanagari und IAST, <code>[TAB]</code> ergibt einen Tabulator, <code>&lt;br&gt;</code> einen Zeilenumbruch. Das Umbruchzeichen steht am Ende jeder Zeile, auch mehrfach wie <code>&lt;br&gt;&lt;br&gt;</code>. Andere HTML-Tags werden als Text ausgegeben.</p>
+    <p>The separator goes between Devanagari and IAST: <code>[TAB]</code> gives a tab, <code>&lt;br&gt;</code> a line break. The line break goes at the end of each line, also several, e.g. <code>&lt;br&gt;&lt;br&gt;</code>. Other HTML tags are output as text.</p>
   </details>
 
-  <section class="kbd" aria-label="Bildschirmtastatur">
+  <section class="kbd" aria-label="On-screen keyboard">
     <div class="kbd-head">
-      <h2>Tastatur</h2>
+      <h2><span class="main-only">Keyboard</span><span class="popout-only">Devanagari keyboard</span></h2>
       <div class="controls">
-        <span class="seg" role="group" aria-label="Tastaturebenen" data-for="dw-layer">
-          <button type="button" data-value="basic" aria-pressed="true">Grund + Shift</button>
+        <span class="seg" role="group" aria-label="Keyboard layers" data-for="dw-layer">
+          <button type="button" data-value="basic" aria-pressed="true">Base + Shift</button>
           <button type="button" data-value="all" aria-pressed="false">+ AltGr</button>
         </span>
-        <label class="tog"><input type="checkbox" id="displaykeyboard" value="on" checked><span>Anzeigen</span></label>
-        <select id="dw-layer" hidden><option value="basic">Grundebene + Shift</option><option value="all">Grundebene + Shift + AltGr + (AltGr + Shift)</option></select>
+        <select id="dw-layer" hidden><option value="basic">Base + Shift</option><option value="all">Base + Shift + AltGr + (AltGr + Shift)</option></select>
+        <label class="tog main-only"><input type="checkbox" id="displaykeyboard" value="on" checked><span>Show</span></label>
+        <a class="icon-btn main-only" id="dw-popout" href="?keyboard" target="dw-keyboard" title="Open the keyboard in its own window" aria-label="Open the keyboard in its own window">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="5.5" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5h7.5V10M17.5 2.5 9 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
       </div>
     </div>
     <div id="dw-keyboard-wrap">
       <div class="dw-scroll"><div id="keyboard" class="keyboard"></div></div>
-      <p class="small">Deutsche QWERTZ-Beschriftung, zusätzliche Sanskrit-Tasten nach Windows Devanagari–InScript; die Grundreihe ist hervorgehoben. Ein Klick fügt je nach Eingabeart Devanagari oder ITRANS ein. Im Devanagari-Modus belegt die Seite auch die physischen Tasten. In ITRANS bringen Konsonanten ihr inhärentes a mit (<span class="ex">क</span> → ka); ein Vokalzeichen ersetzt es (ka + <span class="ex">ि</span> → ki), Halant entfernt es (ka + <span class="ex">्</span> → k.h → <span class="ex">क्</span>).</p>
+      <p class="small main-only">German QWERTZ key labels, extra Sanskrit keys after Windows Devanagari–InScript; the home row is highlighted. A click inserts Devanagari or ITRANS depending on the input method. In Devanagari mode the page also remaps your physical keys. In ITRANS, consonants come with their inherent a (<span class="ex">क</span> → ka); a vowel sign replaces it (ka + <span class="ex">ि</span> → ki), halant removes it (ka + <span class="ex">्</span> → k.h → <span class="ex">क्</span>). The window icon opens the keyboard in a small window of its own that you can keep beside any other program.</p>
     </div>
   </section>
 
-  <section class="ref" aria-label="Referenz">
+  <section class="ref main-only" aria-label="Reference">
     <h2>ITRANS – IAST – Nagari</h2>
-    <p>Schriftgetreue Umschrift, unabhängig von der vereinfachten Hindi-Ausgabe. Konsonanten stehen mit inhärentem „a“, Vokalzeichen zum Vergleich an <span class="ex">क</span>.</p>
+    <p>Strict transliteration, independent of the simplified Hindi output. Consonants are shown with their inherent “a”, vowel signs on <span class="ex">क</span> for comparison.</p>
     <div class="search">
-      <input class="field" type="search" id="dw-search" placeholder="Suchen, z. B. RRi, ṛ, ऋ oder Visarga" aria-label="Zeichen oder Umschrift suchen">
+      <input class="field" type="search" id="dw-search" placeholder="Search, e.g. RRi, ṛ, ऋ or visarga" aria-label="Search characters or transliteration">
       <span class="small" id="dw-count" aria-live="polite"></span>
     </div>
-    <div class="table"><table><thead><tr><th>Gruppe</th><th>ITRANS</th><th>IAST</th><th>Nagari</th></tr></thead><tbody id="dw-reference"></tbody></table></div>
+    <div class="table"><table><thead><tr><th>Group</th><th>ITRANS</th><th>IAST</th><th>Nagari</th></tr></thead><tbody id="dw-reference"></tbody></table></div>
   </section>
 
-  <section class="how">
-    <h2>So funktioniert es</h2>
-    <p>Im Textfeld kann man <b>ITRANS</b> oder <b>Devanagari</b> schreiben; Devanagari, IAST und ITRANS werden automatisch erzeugt. Mit <code>##</code> lässt sich die Umwandlung für einzelne Zeichen oder Wörter abschalten, z. B. <code>##nicht##</code>. Beispiel: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
-    <p>Das Ergebnis sollte man kontrollieren: Manche Umsetzungen sind nicht eindeutig, z. B. werden „a“ innerhalb eines Wortes teilweise nicht gesprochen, hier aber nicht automatisch entfernt.</p>
-    <h3>Hindi und Sanskrit</h3>
-    <p>Im Sanskrit-Modus gilt eine schriftgetreue Umschrift: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Endkonsonanten erhalten Halant <span class="ex">्</span>, Anusvāra <span class="ex">ं</span> wird zu ṃ und Visarga <span class="ex">ः</span> zu ḥ. Die vereinfachte Nasalnotation bleibt auf Hindi beschränkt und entspricht nicht strengem IAST.</p>
-    <p>„Finales a entfernen“ gibt es nur für Hindi: Es streicht das letzte kurze „a“ als vereinfachte Lernhilfe und ersetzt keine vollständige Ausspracheanalyse.</p>
-    <p>Devanagari-Tasten: <span class="ex">क + ् + ष = क्ष</span>; Vokalzeichen folgen dem Konsonanten, auch <span class="ex">ि</span>. ITRANS unterscheidet Groß- und Kleinschreibung, IAST ist ein reines Ausgabeformat. Ausgelegt auf klassisches Sanskrit, ohne vollständige Unterstützung aller vedischen Rezitationszeichen.</p>
-    <h3>Tastatur</h3>
-    <p>Die Tastatur zeigt, auf welcher Taste ein Devanagari-Zeichen liegt, und hilft so beim Lernen. Wer Hindi in allen Programmen direkt schreiben will, wählt im Betriebssystem das Layout Hindi Traditional (InScript).</p>
-    <h3>Quellen und Links</h3>
+  <section class="how main-only">
+    <h2>How it works</h2>
+    <p>In the text field you can write <b>ITRANS</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
+    <h3>Hindi and Sanskrit</h3>
+    <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
+    <p>“Drop final a” exists for Hindi only: it removes the last short “a” as a simple learning aid and is no substitute for a full pronunciation analysis.</p>
+    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST is an output format only. Designed for classical Sanskrit, without full support for all Vedic accent marks.</p>
+    <h3>Keyboard</h3>
+    <p>The keyboard shows which key carries each Devanagari character, which helps when learning to type. Open it in its own window with the window icon to keep it beside your word processor or browser: type or click into its small text box, then copy and paste. To type Hindi directly in every program, add the Hindi Traditional (InScript) layout in your operating system; the pop-out window then serves as a key map.</p>
+    <h3>Sources and links</h3>
     <ul>
-      <li><a href="https://github.com/indic-transliteration/sanscript.js" target="_blank" rel="noreferrer">Sanscript.js</a> und die <a href="https://github.com/indic-transliteration/common_maps" target="_blank" rel="noreferrer">Sanscript-Zeichentabellen</a></li>
+      <li><a href="https://github.com/indic-transliteration/sanscript.js" target="_blank" rel="noreferrer">Sanscript.js</a> and the <a href="https://github.com/indic-transliteration/common_maps" target="_blank" rel="noreferrer">Sanscript character maps</a></li>
       <li><a href="https://unicode.org/cldr/charts/43/keyboards/layouts/hi.html" target="_blank" rel="noreferrer">Unicode CLDR: Windows Devanagari–InScript</a></li>
-      <li><a href="https://en.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" target="_blank" rel="noreferrer">IAST</a> · <a href="https://en.wikipedia.org/wiki/ITRANS" target="_blank" rel="noreferrer">ITRANS</a> · <a href="https://www.compart.com/de/unicode/block/U+0900" target="_blank" rel="noreferrer">Unicode-Block Devanagari</a></li>
-      <li><a href="https://www.learnsanskrit.org/tools/sanscript/" target="_blank" rel="noreferrer">Learn Sanskrit Online Converter</a> · <a href="https://www.lexilogos.com/keyboard/sanskrit_devanagari.htm" target="_blank" rel="noreferrer">Multilingual keyboard</a> · <a href="https://www.vachmi.com/typesanskrit.html" target="_blank" rel="noreferrer">Type Sanskrit</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/International_Alphabet_of_Sanskrit_Transliteration" target="_blank" rel="noreferrer">IAST</a> · <a href="https://en.wikipedia.org/wiki/ITRANS" target="_blank" rel="noreferrer">ITRANS</a> · <a href="https://www.compart.com/en/unicode/block/U+0900" target="_blank" rel="noreferrer">Unicode block Devanagari</a></li>
+      <li><a href="https://www.learnsanskrit.org/tools/sanscript/" target="_blank" rel="noreferrer">Learn Sanskrit online converter</a> · <a href="https://www.lexilogos.com/keyboard/sanskrit_devanagari.htm" target="_blank" rel="noreferrer">Multilingual keyboard</a> · <a href="https://www.vachmi.com/typesanskrit.html" target="_blank" rel="noreferrer">Type Sanskrit</a></li>
       <li><a href="https://www.cambridge-sanskrit.org/" target="_blank" rel="noreferrer">The Cambridge Introduction to Sanskrit</a></li>
       <li>Original: <a href="https://www.russwurm.com/devanagari-writer" target="_blank" rel="noreferrer">russwurm.com/devanagari-writer</a></li>
     </ul>
   </section>
 </main>
+
+<script>
+// In the pop-out window the text box is a Devanagari composer: clicks and physical keys insert Devanagari.
+if (document.documentElement.classList.contains('popout')) {
+  document.getElementById('dw-method').value = 'nagari';
+  document.getElementById('inputText').rows = 2;
+  document.getElementById('inputText').placeholder = 'Click keys or type …';
+}
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@indic-transliteration/sanscript@1.3.1/sanscript.min.js"></script>
 <script>
@@ -1196,10 +1237,10 @@ Sanscript.schemes['itrans_naga'] = {
     const sa = isSanskrit();
     $('remove-a').disabled = sa;
     $('remove-a').checked = sa ? false : hindiRemoveA;
-    $('iast-title').textContent = sa ? 'IAST' : 'IAST / Hindi-Lernumschrift';
+    $('iast-title').textContent = sa ? 'IAST' : 'IAST / Hindi learner transliteration';
     $('mode-note').textContent = sa
-      ? 'Sanskrit: vollständige Vokale, Halant am Endkonsonanten und schriftgetreues IAST (ṃ / ḥ).'
-      : 'Hindi: vereinfachte Lernumschrift; das letzte kurze „a“ kann entfernt werden.';
+      ? 'Sanskrit: full vowels, halant on final consonants and strict IAST (ṃ / ḥ).'
+      : 'Hindi: simplified learner transliteration; the final short “a” can be dropped.';
     render();
   }
 
@@ -1249,7 +1290,7 @@ Sanscript.schemes['itrans_naga'] = {
   function keyboard() {
     const container = $('keyboard'); container.replaceChildren();
     const layers = $('layer').value === 'all' ? [0, 1, 2, 3] : [0, 1];
-    const names = ['Grundebene', 'Shift', 'AltGr', 'AltGr + Shift'];
+    const names = ['Base', 'Shift', 'AltGr', 'AltGr + Shift'];
     let row = document.createElement('div'); row.className = 'dw-keyrow'; container.append(row);
     hindiKeyboardLayout.forEach(key => {
       if (key[0] === '#') { row = document.createElement('div'); row.className = 'dw-keyrow'; container.append(row); return; }
@@ -1259,8 +1300,8 @@ Sanscript.schemes['itrans_naga'] = {
         const char = character(key, layer), button = document.createElement('button');
         button.type = 'button'; button.className = 'dw-char dw-level-' + layer; button.disabled = !char;
         button.dataset.code = key[5]; button.dataset.layer = String(layer);
-        button.setAttribute('aria-label', `${key[0]}, ${names[layer]}: ${char || 'nicht belegt'}`);
-        button.title = `${names[layer]}: ${char || 'nicht belegt'}` + (char ? ` · ITRANS: ${toKeyboardItrans(char)}` : '');
+        button.setAttribute('aria-label', `${key[0]}, ${names[layer]}: ${char || 'not assigned'}`);
+        button.title = `${names[layer]}: ${char || 'not assigned'}` + (char ? ` · ITRANS: ${toKeyboardItrans(char)}` : '');
         const glyph = document.createElement('span'); glyph.textContent = /^[\u093c\u093e-\u094d\u0962\u0963\u0951-\u0954]/u.test(char) ? '◌' + char : char || '';
         button.append(glyph); button.addEventListener('click', () => insert(char)); keycap.append(button);
       });
@@ -1284,25 +1325,25 @@ Sanscript.schemes['itrans_naga'] = {
     }
     for (const [n, code] of Object.entries(it.vowels)) {
       if (['ऎ','ऒ'].includes(n)) continue;
-      add('Vokale', code, n, it.alternates[code] || []);
+      add('Vowels', code, n, it.alternates[code] || []);
     }
     for (const [n, code] of Object.entries(it.vowel_marks)) {
       if (['ॆ','ॊ'].includes(n)) continue;
-      add('Vokalzeichen an क', 'k' + code, 'क' + n);
+      add('Vowel signs on क', 'k' + code, 'क' + n);
     }
     for (const [n, code] of Object.entries(it.consonants)) {
       if (['ळ','क्ष','ज्ञ'].includes(n)) continue;
-      add('Konsonanten', code + 'a', n, (it.alternates[code] || []).map(c => c + 'a'));
+      add('Consonants', code + 'a', n, (it.alternates[code] || []).map(c => c + 'a'));
     }
-    for (const [code, n] of Object.entries({kSha: 'क्ष', 'j~na': 'ज्ञ', tra: 'त्र', shra: 'श्र', shcha: 'श्च', 'j~nAnam': 'ज्ञानम्'})) add('Verbindungen', code, n);
+    for (const [code, n] of Object.entries({kSha: 'क्ष', 'j~na': 'ज्ञ', tra: 'त्र', shra: 'श्र', shcha: 'श्च', 'j~nAnam': 'ज्ञानम्'})) add('Conjuncts', code, n);
     add('Anusvāra', 'M', 'ं', ['.m', '.n']);
     add('Visarga', 'H', 'ः'); add('Candrabindu', '.N', 'ँ');
-    rows.push(['Halant (am क gezeigt)', 'k (Sanskrit) / k.h', 'k', 'क्']);
-    for (const n of ['ॐ','ऽ','।','॥']) add('Sonderzeichen', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
-    for (const n of '०१२३४५६७८९') add('Ziffern', it.symbols[n], n);
-    for (const [n, code] of Object.entries(it.extra_consonants)) add('Erweiterte Konsonanten', code + 'a', n);
-    for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit-Beispiele', code, n);
-    rows.push(['Nasalisierung (Beispiel)', 'hA.N', 'hā̃', 'हाँ']);
+    rows.push(['Halant (shown on क)', 'k (Sanskrit) / k.h', 'k', 'क्']);
+    for (const n of ['ॐ','ऽ','।','॥']) add('Special signs', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
+    for (const n of '०१२३४५६७८९') add('Digits', it.symbols[n], n);
+    for (const [n, code] of Object.entries(it.extra_consonants)) add('Extended consonants', code + 'a', n);
+    for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit examples', code, n);
+    rows.push(['Nasalisation (example)', 'hA.N', 'hā̃', 'हाँ']);
     return rows;
   }
   const rows = referenceRows();
@@ -1316,7 +1357,7 @@ Sanscript.schemes['itrans_naga'] = {
       fragment.append(tr);
     });
     $('reference').replaceChildren(fragment);
-    $('count').textContent = `${filtered.length} von ${rows.length} Einträgen`;
+    $('count').textContent = `${filtered.length} of ${rows.length} entries`;
   }
   input.addEventListener('input', render);
   $('language').addEventListener('change', changeLanguage);
@@ -1338,27 +1379,77 @@ Sanscript.schemes['itrans_naga'] = {
 <script>
 // Segmented buttons drive the hidden selects the transliteration script listens to.
 (function () {
+  const root = document.documentElement, popout = root.classList.contains('popout');
+  const $ = id => document.getElementById(id);
   const sync = seg => {
-    const sel = document.getElementById(seg.dataset.for);
+    const sel = $(seg.dataset.for);
     seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === sel.value)));
   };
   const setLang = () => {
-    const sa = document.getElementById('dw-language').value === 'sa';
-    document.documentElement.classList.toggle('lang-sa', sa);
-    document.getElementById('out').lang = sa ? 'sa' : 'hi';
-    document.getElementById('inputText').lang = sa ? 'sa' : 'hi';
-    document.documentElement.classList.toggle('in-itrans', document.getElementById('dw-method').value === 'itrans');
+    const sa = $('dw-language').value === 'sa';
+    root.classList.toggle('lang-sa', sa);
+    $('out').lang = sa ? 'sa' : 'hi';
+    $('inputText').lang = sa ? 'sa' : 'hi';
+    root.classList.toggle('in-itrans', $('dw-method').value === 'itrans');
   };
+
+  // Size of the pop-out window: fits the keyboard and the compose box.
+  const popoutSize = layer => ({width: layer === 'all' ? 1060 : 720, height: 540});
+  function fitWindow() {
+    if (!popout) return;
+    requestAnimationFrame(() => {
+      const kb = $('keyboard'), main = document.querySelector('main');
+      const w = Math.ceil(kb.scrollWidth + 40), h = Math.ceil(main.scrollHeight + 8);
+      const dw = window.outerWidth - window.innerWidth, dh = window.outerHeight - window.innerHeight;
+      try { window.resizeTo(w + dw, h + dh); } catch (e) { /* only allowed for script-opened windows */ }
+    });
+  }
+
   document.querySelectorAll('.seg[data-for]').forEach(seg => {
     seg.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
-      const sel = document.getElementById(seg.dataset.for);
+      const sel = $(seg.dataset.for);
       if (sel.value !== b.dataset.value) { sel.value = b.dataset.value; sel.dispatchEvent(new Event('change')); }
       sync(seg); setLang();
+      if (seg.dataset.for === 'dw-layer') fitWindow();
     });
     sync(seg);
   });
   setLang();
+
+  // Window icon: open the keyboard in a small window of its own.
+  $('dw-popout').addEventListener('click', e => {
+    const s = popoutSize($('dw-layer').value);
+    const url = new URL(location.href); url.search = '?keyboard'; url.hash = '';
+    if ($('dw-layer').value === 'all') url.search += '&layers=all';
+    if ($('dw-language').value === 'sa') url.search += '&lang=sa';
+    const w = window.open(url.href, 'dw-keyboard', `popup=yes,width=${s.width},height=${s.height}`);
+    if (w) { e.preventDefault(); w.focus(); }
+  });
+
+  if (popout) {
+    const params = new URLSearchParams(location.search);
+    const pick = (id, value) => { const sel = $(id); if (sel.value !== value) { sel.value = value; sel.dispatchEvent(new Event('change')); } };
+    if (params.get('layers') === 'all') pick('dw-layer', 'all');
+    if (params.get('lang') === 'sa') pick('dw-language', 'sa');
+    document.querySelectorAll('.seg[data-for]').forEach(sync); setLang();
+
+    const input = $('inputText'), state = $('dw-copy-state'), hint = state.textContent;
+    let timer;
+    const say = text => { state.textContent = text; clearTimeout(timer); timer = setTimeout(() => { state.textContent = hint; }, 2200); };
+    $('dw-copy').addEventListener('click', async () => {
+      const text = input.value;
+      if (!text) { say('Nothing to copy yet.'); input.focus(); return; }
+      try { await navigator.clipboard.writeText(text); }
+      catch (err) { input.select(); document.execCommand('copy'); }
+      say('Copied – paste it with Ctrl+V / ⌘V.');
+      input.focus();
+    });
+    $('dw-clear').addEventListener('click', () => { input.value = ''; input.dispatchEvent(new Event('input')); input.focus(); });
+    window.addEventListener('load', fitWindow);
+    if (document.fonts) document.fonts.ready.then(fitWindow);
+    input.focus();
+  }
 })();
 </script>
 </body>
