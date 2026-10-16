@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="A field guide to Colombian Spanish: pronunciation, forms of address, diminutives, eleven dialect regions and a searchable slang glossary.">
+<meta name="description" content="A field guide to Colombian Spanish: pronunciation, forms of address, diminutives, fourteen dialect regions and a searchable slang glossary.">
 <title>Hablar Colombiano</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,17 +12,17 @@
 /* Layout: a field guide — narrow reading column, wide bands for regions and the glossary, IPA set in mono like a phonetics notebook */
 :root{
   --bg:#f6f4ee; --surface:#ffffff; --ink:#1f2420; --muted:#5d655f; --line:#dcdcd2;
-  --emerald:#0f6b4f; --emerald-soft:#e2efe8; --gold:#b9860d; --gold-soft:#f7ecd0; --coffee:#5a3a26; --warn:#a33a2a; --warn-soft:#f6e1dc;
+  --emerald:#0f6b4f; --emerald-soft:#e2efe8; --gold:#b9860d; --gold-soft:#f7ecd0; --coffee:#5a3a26; --warn:#a33a2a; --warn-soft:#f6e1dc; --sea:#2a6a8e; --sea-soft:#dde9f0;
   --display:"Young Serif", Georgia, "Times New Roman", serif;
   --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#141815; --surface:#1c211e; --ink:#e9ece6; --muted:#a2aba4; --line:#2f3732;
-  --emerald:#5cc59c; --emerald-soft:#1d3329; --gold:#e3b54a; --gold-soft:#352c16; --coffee:#d9b08f; --warn:#ef8f7c; --warn-soft:#3a221d; color-scheme:dark}}
+  --emerald:#5cc59c; --emerald-soft:#1d3329; --gold:#e3b54a; --gold-soft:#352c16; --coffee:#d9b08f; --warn:#ef8f7c; --warn-soft:#3a221d; --sea:#7fb8d8; --sea-soft:#1b2c36; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#141815; --surface:#1c211e; --ink:#e9ece6; --muted:#a2aba4; --line:#2f3732;
-  --emerald:#5cc59c; --emerald-soft:#1d3329; --gold:#e3b54a; --gold-soft:#352c16; --coffee:#d9b08f; --warn:#ef8f7c; --warn-soft:#3a221d; color-scheme:dark}
+  --emerald:#5cc59c; --emerald-soft:#1d3329; --gold:#e3b54a; --gold-soft:#352c16; --coffee:#d9b08f; --warn:#ef8f7c; --warn-soft:#3a221d; --sea:#7fb8d8; --sea-soft:#1b2c36; color-scheme:dark}
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -99,7 +99,8 @@ section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:60px}
 .region{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:10px;align-content:start;min-width:0}
 .region header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .region .zone{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
-.zone.coast{background:var(--emerald-soft);color:var(--emerald)}
+.zone.coast{background:var(--sea-soft);color:var(--sea)}
+.zone.amazon{background:var(--emerald-soft);color:var(--emerald)}
 .zone.high{background:var(--gold-soft);color:var(--gold)}
 .zone.plain{background:var(--warn-soft);color:var(--coffee)}
 .region .area{font-size:.85rem;color:var(--muted)}
@@ -138,23 +139,21 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
 .hero-text{display:grid;gap:20px;min-width:0}
 .map-fig{margin:0;display:grid;gap:10px;min-width:0}
 .map{width:100%;max-width:440px;height:auto;justify-self:center;overflow:visible}
-.map .land{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;stroke-linejoin:round}
 .map .sea{fill:var(--muted);font:italic 13px var(--body);opacity:.7}
-.map .amz{fill:var(--muted);font:italic 14px var(--body);opacity:.8}
-.map .area{opacity:.28;transition:opacity .2s}
-.map .area.coast{fill:var(--emerald)} .map .area.high{fill:var(--gold)} .map .area.plain{fill:var(--coffee)}
-.map .area.on{opacity:.6}
-.map .pin circle{stroke:var(--surface);stroke-width:2}
-.map .pin.coast circle{fill:var(--emerald)} .map .pin.high circle{fill:var(--gold)} .map .pin.plain circle{fill:var(--coffee)}
-.map .pin text{fill:var(--ink);font:600 15px var(--body);paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round}
+.map .area path{stroke:var(--bg);stroke-width:1.6;stroke-linejoin:round;opacity:.5;transition:opacity .2s}
+.map .area.coast path{fill:var(--sea)} .map .area.high path{fill:var(--gold)} .map .area.plain path{fill:var(--coffee)} .map .area.amazon path{fill:var(--emerald)}
+.map .area[data-r="rolo"] path{opacity:.85}
+.map .area:hover path,.map .area:focus-visible path,.map .area.on path{opacity:.9}
+.map .area:focus-visible{outline:none}
+.map .outline{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-linejoin:round;pointer-events:none}
+.map .pin circle{stroke:var(--bg);stroke-width:2;fill:var(--ink)}
+.map .pin text{fill:var(--ink);font:600 15px var(--body);paint-order:stroke;stroke:var(--bg);stroke-width:3.5px;stroke-linejoin:round}
 .map .pin text.city{font:400 11.5px var(--body);fill:var(--muted)}
-.map .pin:hover text:not(.city),.map .pin:focus-visible text:not(.city){fill:var(--emerald);text-decoration:underline}
-.map .pin:focus-visible{outline:none}
-.map .pin:focus-visible circle{stroke:var(--ink);stroke-width:2.5}
+.map .pin:hover text:not(.city){text-decoration:underline}
 .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:.8rem;color:var(--muted)}
 .legend span{display:flex;align-items:center;gap:6px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
-.legend .coast{background:var(--emerald)} .legend .high{background:var(--gold)} .legend .plain{background:var(--coffee)}
+.legend .coast{background:var(--sea)} .legend .high{background:var(--gold)} .legend .plain{background:var(--coffee)} .legend .amazon{background:var(--emerald)}
 .map-fig figcaption{text-align:center;font-size:.8rem;color:var(--muted)}
 .region{scroll-margin-top:70px;transition:border-color .3s,box-shadow .3s}
 .region:target{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
@@ -180,38 +179,41 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
     </div>
    </div>
     <figure class="map-fig">
-      <svg class="map" viewBox="0 0 530.4 615.4" role="img" aria-labelledby="mapT"><title id="mapT">Schematic map of Colombia’s dialect regions</title>
-<defs><clipPath id="co"><path d="M353.6,42.5 L370.6,52.7 L363.8,62.9 L343.4,71.4 L329.8,88.4 L309.4,112.2 L306.0,149.6 L312.8,156.4 L329.8,180.2 L326.4,214.2 L374.0,227.8 L404.6,229.5 L428.4,258.4 L482.8,255.0 L496.4,261.8 L482.8,295.8 L482.8,323.0 L499.8,350.2 L482.8,370.6 L503.2,391.0 L513.4,425.0 L479.4,401.2 L421.6,431.8 L428.4,506.6 L411.4,608.6 L384.2,595.0 L326.4,547.4 L285.6,510.0 L231.2,469.2 L156.4,438.6 L136.0,425.0 L108.8,411.4 L119.0,377.4 L149.6,343.4 L166.6,333.2 L156.4,278.8 L153.0,241.4 L139.4,221.0 L156.4,170.0 L176.8,173.4 L173.4,193.8 L190.4,149.6 L207.4,146.2 L221.0,112.2 L244.8,91.8 L265.2,85.0 L295.8,81.6 L319.6,68.0 Z"/></clipPath></defs>
+      <svg class="map" viewBox="0 0 557.6 632.4" role="img" aria-labelledby="mapT"><title id="mapT">Schematic map of Colombia’s Spanish dialect regions</title>
 <text class="sea" x="115.6" y="71.4">Caribbean Sea</text>
 <text class="sea" x="20.4" y="312.8">Pacific</text><text class="sea" x="20.4" y="329.8">Ocean</text>
-<path class="land" d="M353.6,42.5 L370.6,52.7 L363.8,62.9 L343.4,71.4 L329.8,88.4 L309.4,112.2 L306.0,149.6 L312.8,156.4 L329.8,180.2 L326.4,214.2 L374.0,227.8 L404.6,229.5 L428.4,258.4 L482.8,255.0 L496.4,261.8 L482.8,295.8 L482.8,323.0 L499.8,350.2 L482.8,370.6 L503.2,391.0 L513.4,425.0 L479.4,401.2 L421.6,431.8 L428.4,506.6 L411.4,608.6 L384.2,595.0 L326.4,547.4 L285.6,510.0 L231.2,469.2 L156.4,438.6 L136.0,425.0 L108.8,411.4 L119.0,377.4 L149.6,343.4 L166.6,333.2 L156.4,278.8 L153.0,241.4 L139.4,221.0 L156.4,170.0 L176.8,173.4 L173.4,193.8 L190.4,149.6 L207.4,146.2 L221.0,112.2 L244.8,91.8 L265.2,85.0 L295.8,81.6 L319.6,68.0 Z"/>
-<g clip-path="url(#co)">
-<ellipse class="area coast" data-r="costeno" cx="244.8" cy="132.6" rx="68.0" ry="47.6"/>
-<ellipse class="area coast" data-r="chocoano" cx="166.6" cy="309.4" rx="27.2" ry="108.8"/>
-<ellipse class="area high" data-r="paisa" cx="221.0" cy="268.6" rx="34.0" ry="44.2"/>
-<ellipse class="area high" data-r="valluno" cx="193.8" cy="336.6" rx="20.4" ry="34.0"/>
-<ellipse class="area high" data-r="cundiboyacense" cx="289.0" cy="282.2" rx="23.8" ry="27.2"/>
-<ellipse class="area high" data-r="santandereano" cx="302.6" cy="214.2" rx="27.2" ry="34.0"/>
-<ellipse class="area high" data-r="opita" cx="231.2" cy="353.6" rx="20.4" ry="44.2"/>
-<ellipse class="area high" data-r="pastuso" cx="159.8" cy="421.6" rx="27.2" ry="20.4"/>
-<ellipse class="area plain" data-r="llanero" cx="401.2" cy="309.4" rx="81.6" ry="47.6"/>
-</g>
-<text class="amz" x="319.6" y="486.2">Amazonía</text>
-<path class="land" d="M9.5,36.7 l3,-8 l3,9 z"/>
-<a href="#r-costeno" class="pin coast" data-r="costeno"><circle cx="244.8" cy="93.2" r="5"/><text x="253.8" y="91.2" text-anchor="start">Costeño</text><text class="city" x="253.8" y="105.2" text-anchor="start">Barranquilla</text></a>
-<a href="#r-isleno" class="pin coast" data-r="isleno"><circle cx="10.2" cy="39.1" r="5"/><text x="19.2" y="37.1" text-anchor="start">Isleño</text><text class="city" x="19.2" y="51.1" text-anchor="start">San Andrés</text></a>
-<a href="#r-chocoano" class="pin coast" data-r="chocoano"><circle cx="181.9" cy="272.3" r="5"/><text x="172.9" y="270.3" text-anchor="end">Chocoano</text><text class="city" x="172.9" y="284.3" text-anchor="end">Quibdó</text></a>
-<a href="#r-paisa" class="pin high" data-r="paisa"><circle cx="218.6" cy="253.3" r="5"/><text x="227.6" y="251.3" text-anchor="start">Paisa</text><text class="city" x="227.6" y="265.3" text-anchor="start">Medellín</text></a>
-<a href="#r-valluno" class="pin high" data-r="valluno"><circle cx="186.0" cy="348.5" r="5"/><text x="177.0" y="346.5" text-anchor="end">Valluno</text><text class="city" x="177.0" y="360.5" text-anchor="end">Cali</text></a>
-<a href="#r-rolo" class="pin high" data-r="rolo"><circle cx="269.6" cy="305.7" r="5"/><text x="260.6" y="303.7" text-anchor="end">Rolo</text><text class="city" x="260.6" y="317.7" text-anchor="end">Bogotá</text></a>
-<a href="#r-cundiboyacense" class="pin high" data-r="cundiboyacense"><circle cx="293.8" cy="277.8" r="5"/><text x="302.8" y="275.8" text-anchor="start">Cundiboyacense</text><text class="city" x="302.8" y="289.8" text-anchor="start">Tunja</text></a>
-<a href="#r-santandereano" class="pin high" data-r="santandereano"><circle cx="301.9" cy="223.7" r="5"/><text x="310.9" y="221.7" text-anchor="start">Santandereano</text><text class="city" x="310.9" y="235.7" text-anchor="start">Bucaramanga</text></a>
-<a href="#r-opita" class="pin high" data-r="opita"><circle cx="228.5" cy="366.2" r="5"/><text x="237.5" y="364.2" text-anchor="start">Opita</text><text class="city" x="237.5" y="378.2" text-anchor="start">Neiva</text></a>
-<a href="#r-pastuso" class="pin high" data-r="pastuso"><circle cx="160.5" cy="424.7" r="5"/><text x="151.5" y="422.7" text-anchor="end">Pastuso</text><text class="city" x="151.5" y="436.7" text-anchor="end">Pasto</text></a>
-<a href="#r-llanero" class="pin plain" data-r="llanero"><circle cx="284.6" cy="325.0" r="5"/><text x="293.6" y="323.0" text-anchor="start">Llanero</text><text class="city" x="293.6" y="337.0" text-anchor="start">Villavicencio</text></a>
+<a href="#r-costeno" class="area coast" data-r="costeno" aria-label="Costeño"><path d="M212.4,193.0 L208.0,194.2 L193.1,224.2 L182.9,220.8 L153.9,177.4 L156.4,170.0 L176.8,173.4 L173.4,193.8 L190.4,149.6 L207.4,146.2 L221.0,112.2 L244.8,91.8 L265.2,85.0 L295.8,81.6 L319.6,68.0 L353.6,42.5 L370.6,52.7 L363.8,62.9 L343.4,71.4 L329.8,88.4 L309.4,112.2 L306.0,149.6 L308.6,152.2 L268.3,175.3 L266.2,184.1 L265.7,184.4 L249.8,207.4 L245.9,207.4Z"/></a>
+<a href="#r-chocoano" class="area coast" data-r="chocoano" aria-label="Pacífico"><path d="M168.3,355.4 L157.2,359.5 L157.2,399.1 L147.8,402.4 L140.5,415.9 L132.3,423.2 L108.8,411.4 L119.0,377.4 L149.6,343.4 L166.6,333.2 L156.4,278.8 L153.0,241.4 L139.4,221.0 L153.9,177.4 L182.9,220.8 L193.1,224.2 L196.5,229.3 L190.9,268.6 L189.4,270.3 L194.1,292.2 L192.1,300.9 L173.4,319.6 L175.1,324.7Z"/></a>
+<a href="#r-paisa" class="area high" data-r="paisa" aria-label="Paisa"><path d="M190.9,268.6 L196.5,229.3 L193.1,224.2 L208.0,194.2 L212.4,193.0 L245.9,207.4 L249.8,207.4 L257.0,238.6 L260.9,241.7 L264.6,250.2 L238.6,282.8 L241.0,292.5 L239.7,298.7 L237.8,299.4 L214.2,323.0 L192.1,300.9 L194.1,292.2 L189.4,270.3Z"/></a>
+<a href="#r-valluno" class="area high" data-r="valluno" aria-label="Valluno"><path d="M168.5,355.5 L168.3,355.4 L175.1,324.7 L173.4,319.6 L192.1,300.9 L214.2,323.0 L214.2,343.9 L213.9,344.1 L213.0,345.6 L206.0,376.5 L183.5,370.5Z"/></a>
+<a href="#r-caucano" class="area high" data-r="caucano" aria-label="Caucano"><path d="M166.0,401.3 L157.2,399.1 L157.2,359.5 L168.3,355.4 L168.5,355.5 L183.5,370.5 L206.0,376.5 L206.2,377.0 L203.5,383.8 L209.3,424.4 L184.1,416.8 L175.3,411.0 L170.3,403.8Z"/></a>
+<a href="#r-pastuso" class="area high" data-r="pastuso" aria-label="Pastuso"><path d="M147.8,402.4 L157.2,399.1 L166.0,401.3 L170.3,403.8 L175.3,411.0 L184.1,416.8 L209.3,424.4 L211.2,426.2 L220.7,451.3 L214.8,462.5 L156.4,438.6 L136.0,425.0 L132.3,423.2 L140.5,415.9Z"/></a>
+<a href="#r-opita" class="area high" data-r="opita" aria-label="Opita"><path d="M312.0,393.2 L326.3,419.9 L324.8,422.0 L283.7,448.5 L277.1,444.8 L255.1,441.2 L220.7,451.3 L211.2,426.2 L209.3,424.4 L203.5,383.8 L206.2,377.0 L206.0,376.5 L213.0,345.6 L213.9,344.1 L214.2,343.9 L214.2,323.0 L237.8,299.4 L239.7,298.7 L252.6,314.9 L253.8,322.7 L265.7,336.1 L276.4,361.7 L273.3,371.9 L277.1,375.7Z"/></a>
+<a href="#r-cundiboyacense" class="area high" data-r="cundiboyacense" aria-label="Cundiboyacense"><path d="M238.6,282.8 L264.6,250.2 L277.0,261.3 L294.4,259.8 L299.2,255.0 L299.2,235.6 L329.7,223.4 L333.2,224.5 L333.2,250.1 L339.6,262.1 L309.4,282.2 L304.9,304.9 L297.9,303.9 L265.7,336.1 L253.8,322.7 L252.6,314.9 L239.7,298.7 L241.0,292.5ZM279.1,306.8 L279.0,305.8 L278.7,304.9 L278.4,304.1 L278.0,303.2 L277.5,302.4 L277.0,301.7 L276.4,301.0 L275.7,300.3 L274.9,299.8 L274.1,299.3 L273.3,298.9 L272.4,298.6 L271.5,298.4 L270.6,298.2 L269.6,298.2 L268.7,298.2 L267.8,298.4 L266.9,298.6 L266.0,298.9 L265.1,299.3 L264.3,299.8 L263.6,300.3 L262.9,301.0 L262.3,301.7 L261.7,302.4 L261.2,303.2 L260.8,304.1 L260.5,304.9 L260.3,305.8 L260.1,306.8 L260.1,307.7 L260.1,308.6 L260.3,309.6 L260.5,310.5 L260.8,311.3 L261.2,312.2 L261.7,313.0 L262.3,313.7 L262.9,314.4 L263.6,315.1 L264.3,315.6 L265.1,316.1 L266.0,316.5 L266.9,316.8 L267.8,317.0 L268.7,317.2 L269.6,317.2 L270.6,317.2 L271.5,317.0 L272.4,316.8 L273.3,316.5 L274.1,316.1 L274.9,315.6 L275.7,315.1 L276.4,314.4 L277.0,313.7 L277.5,313.0 L278.0,312.2 L278.4,311.3 L278.7,310.5 L279.0,309.6 L279.1,308.6 L279.1,307.7Z"/></a>
+<a href="#r-santandereano" class="area high" data-r="santandereano" aria-label="Santandereano"><path d="M299.2,255.0 L294.4,259.8 L277.0,261.3 L264.6,250.2 L260.9,241.7 L257.0,238.6 L249.8,207.4 L265.7,184.4 L266.2,184.1 L268.3,175.3 L308.6,152.2 L312.8,156.4 L329.8,180.2 L326.4,214.2 L341.2,218.4 L333.2,224.5 L329.7,223.4 L299.2,235.6Z"/></a>
+<a href="#r-llanero" class="area plain" data-r="llanero" aria-label="Llanero"><path d="M354.8,417.1 L326.3,419.9 L312.0,393.2 L277.1,375.7 L273.3,371.9 L276.4,361.7 L265.7,336.1 L297.9,303.9 L304.9,304.9 L309.4,282.2 L339.6,262.1 L333.2,250.1 L333.2,224.5 L341.2,218.4 L374.0,227.8 L404.6,229.5 L428.4,258.4 L482.8,255.0 L496.4,261.8 L482.8,295.8 L482.8,317.0 L439.6,349.4 L431.7,349.8 L427.6,361.4 L386.2,392.5 L377.8,393.7 L369.0,407.1Z"/></a>
+<a href="#r-vaupes" class="area amazon" data-r="vaupes" aria-label="Vaupés–Guainía"><path d="M396.4,470.0 L369.6,466.5 L354.8,417.1 L369.0,407.1 L377.8,393.7 L386.2,392.5 L427.6,361.4 L431.7,349.8 L439.6,349.4 L482.8,317.0 L482.8,323.0 L499.8,350.2 L482.8,370.6 L503.2,391.0 L513.4,425.0 L479.4,401.2 L421.6,431.8 L428.4,506.6 L427.4,512.4Z"/></a>
+<a href="#r-amazonico" class="area amazon" data-r="amazonico" aria-label="Amazónico"><path d="M220.7,451.3 L255.1,441.2 L277.1,444.8 L283.7,448.5 L324.8,422.0 L326.3,419.9 L354.8,417.1 L369.6,466.5 L396.4,470.0 L427.4,512.4 L411.4,608.6 L384.2,595.0 L326.4,547.4 L285.6,510.0 L231.2,469.2 L214.8,462.5Z"/></a>
+<a href="#r-rolo" class="area high" data-r="rolo" aria-label="Rolo"><path d="M279.1,308.6 L279.0,309.6 L278.7,310.5 L278.4,311.3 L278.0,312.2 L277.5,313.0 L277.0,313.7 L276.4,314.4 L275.7,315.1 L274.9,315.6 L274.1,316.1 L273.3,316.5 L272.4,316.8 L271.5,317.0 L270.6,317.2 L269.6,317.2 L268.7,317.2 L267.8,317.0 L266.9,316.8 L266.0,316.5 L265.1,316.1 L264.3,315.6 L263.6,315.1 L262.9,314.4 L262.3,313.7 L261.7,313.0 L261.2,312.2 L260.8,311.3 L260.5,310.5 L260.3,309.6 L260.1,308.6 L260.1,307.7 L260.1,306.8 L260.3,305.8 L260.5,304.9 L260.8,304.1 L261.2,303.2 L261.7,302.4 L262.3,301.7 L262.9,301.0 L263.6,300.3 L264.3,299.8 L265.1,299.3 L266.0,298.9 L266.9,298.6 L267.8,298.4 L268.7,298.2 L269.6,298.2 L270.6,298.2 L271.5,298.4 L272.4,298.6 L273.3,298.9 L274.1,299.3 L274.9,299.8 L275.7,300.3 L276.4,301.0 L277.0,301.7 L277.5,302.4 L278.0,303.2 L278.4,304.1 L278.7,304.9 L279.0,305.8 L279.1,306.8 L279.1,307.7Z"/></a>
+<path class="outline" d="M353.6,42.5 L370.6,52.7 L363.8,62.9 L343.4,71.4 L329.8,88.4 L309.4,112.2 L306.0,149.6 L312.8,156.4 L329.8,180.2 L326.4,214.2 L374.0,227.8 L404.6,229.5 L428.4,258.4 L482.8,255.0 L496.4,261.8 L482.8,295.8 L482.8,323.0 L499.8,350.2 L482.8,370.6 L503.2,391.0 L513.4,425.0 L479.4,401.2 L421.6,431.8 L428.4,506.6 L411.4,608.6 L384.2,595.0 L326.4,547.4 L285.6,510.0 L231.2,469.2 L156.4,438.6 L136.0,425.0 L108.8,411.4 L119.0,377.4 L149.6,343.4 L166.6,333.2 L156.4,278.8 L153.0,241.4 L139.4,221.0 L156.4,170.0 L176.8,173.4 L173.4,193.8 L190.4,149.6 L207.4,146.2 L221.0,112.2 L244.8,91.8 L265.2,85.0 L295.8,81.6 L319.6,68.0Z"/>
+<a href="#r-isleno" class="area coast" data-r="isleno" aria-label="Isleño"><path d="M5.5,42.7 l4,-12 l4,12 z"/></a>
+<a href="#r-costeno" class="pin coast" data-r="costeno" tabindex="-1"><circle cx="244.8" cy="93.2" r="4.5"/><text x="253.8" y="91.2" text-anchor="start">Costeño</text><text class="city" x="253.8" y="105.2" text-anchor="start">Barranquilla</text></a>
+<a href="#r-isleno" class="pin coast" data-r="isleno" tabindex="-1"><circle cx="10.2" cy="39.1" r="4.5"/><text x="19.2" y="37.1" text-anchor="start">Isleño</text><text class="city" x="19.2" y="51.1" text-anchor="start">San Andrés</text></a>
+<a href="#r-chocoano" class="pin coast" data-r="chocoano" tabindex="-1"><circle cx="181.9" cy="272.3" r="4.5"/><text x="172.9" y="270.3" text-anchor="end">Pacífico</text><text class="city" x="172.9" y="284.3" text-anchor="end">Quibdó</text></a>
+<a href="#r-paisa" class="pin high" data-r="paisa" tabindex="-1"><circle cx="218.6" cy="253.3" r="4.5"/><text x="227.6" y="251.3" text-anchor="start">Paisa</text><text class="city" x="227.6" y="265.3" text-anchor="start">Medellín</text></a>
+<a href="#r-valluno" class="pin high" data-r="valluno" tabindex="-1"><circle cx="186.0" cy="348.5" r="4.5"/><text x="177.0" y="346.5" text-anchor="end">Valluno</text><text class="city" x="177.0" y="360.5" text-anchor="end">Cali</text></a>
+<a href="#r-caucano" class="pin high" data-r="caucano" tabindex="-1"><circle cx="183.6" cy="382.8" r="4.5"/><text x="174.6" y="380.8" text-anchor="end">Caucano</text><text class="city" x="174.6" y="394.8" text-anchor="end">Popayán</text></a>
+<a href="#r-pastuso" class="pin high" data-r="pastuso" tabindex="-1"><circle cx="160.5" cy="424.7" r="4.5"/><text x="151.5" y="422.7" text-anchor="end">Pastuso</text><text class="city" x="151.5" y="436.7" text-anchor="end">Pasto</text></a>
+<a href="#r-opita" class="pin high" data-r="opita" tabindex="-1"><circle cx="228.5" cy="366.2" r="4.5"/><text x="237.5" y="364.2" text-anchor="start">Opita</text><text class="city" x="237.5" y="378.2" text-anchor="start">Neiva</text></a>
+<a href="#r-rolo" class="pin high" data-r="rolo" tabindex="-1"><circle cx="269.6" cy="307.7" r="4.5"/><text x="260.6" y="305.7" text-anchor="end">Rolo</text><text class="city" x="260.6" y="319.7" text-anchor="end">Bogotá</text></a>
+<a href="#r-cundiboyacense" class="pin high" data-r="cundiboyacense" tabindex="-1"><circle cx="293.8" cy="277.8" r="4.5"/><text x="302.8" y="275.8" text-anchor="start">Cundiboyacense</text><text class="city" x="302.8" y="289.8" text-anchor="start">Tunja</text></a>
+<a href="#r-santandereano" class="pin high" data-r="santandereano" tabindex="-1"><circle cx="301.9" cy="223.7" r="4.5"/><text x="310.9" y="221.7" text-anchor="start">Santandereano</text><text class="city" x="310.9" y="235.7" text-anchor="start">Bucaramanga</text></a>
+<a href="#r-llanero" class="pin plain" data-r="llanero" tabindex="-1"><circle cx="284.6" cy="325.0" r="4.5"/><text x="293.6" y="323.0" text-anchor="start">Llanero</text><text class="city" x="293.6" y="337.0" text-anchor="start">Villavicencio</text></a>
+<a href="#r-vaupes" class="pin amazon" data-r="vaupes" tabindex="-1"><circle cx="400.2" cy="423.3" r="4.5"/><text x="409.2" y="421.3" text-anchor="start">Vaupés–Guainía</text><text class="city" x="409.2" y="435.3" text-anchor="start">Mitú</text></a>
+<a href="#r-amazonico" class="pin amazon" data-r="amazonico" tabindex="-1"><circle cx="410.0" cy="608.6" r="4.5"/><text x="401.0" y="592.6" text-anchor="end">Amazónico</text><text class="city" x="401.0" y="605.6" text-anchor="end">Leticia</text></a>
 </svg>
-      <div class="legend"><span><i class="coast"></i>Coastal</span><span><i class="high"></i>Andean</span><span><i class="plain"></i>Plains</span></div>
-      <figcaption>Schematic map. Tap a region to jump to its details.</figcaption>
+      <div class="legend"><span><i class="coast"></i>Coastal</span><span><i class="high"></i>Andean</span><span><i class="plain"></i>Plains</span><span><i class="amazon"></i>Amazon</span></div>
+      <figcaption>Schematic map with approximate borders. Tap a region to jump to its details.</figcaption>
     </figure>
   </header>
 
@@ -335,12 +337,12 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
 
   <section id="regions">
     <div class="eyebrow">Dialect regions</div>
-    <h2>Eleven ways to sound Colombian</h2>
-    <p class="regions-intro col">Linguists disagree on how to divide the map. Lipski counts four phonological zones, Canfield five, Flórez seven. The eleven areas below are the most common popular list.</p>
+    <h2>Fourteen ways to sound Colombian</h2>
+    <p class="regions-intro col">Linguists disagree on how to divide the map. Lipski counts four phonological zones, Canfield five, Flórez seven. The eleven areas most often listed cover the coasts, the Andes and the Llanos. This guide adds three more so the whole country is covered: Cauca’s highlands, the Amazon, and Vaupés–Guainía, where Spanish is mostly a second language. Those three are much less documented.</p>
     <div class="regions">
       <article class="region" id="r-costeno" data-r="costeno">
         <header><h3>Costeño</h3><span class="zone coast">Caribbean coast</span></header>
-        <div class="area">Caribbean region: Barranquilla, Cartagena, Santa Marta, Montería</div>
+        <div class="area">Caribbean region: Barranquilla, Cartagena, Santa Marta, Montería, Valledupar, La Guajira, Urabá</div>
         <ul>
           <li>Close to general Caribbean and Andalusian Spanish</li>
           <li>Final s becomes [h]; final n becomes [ŋ]</li>
@@ -359,8 +361,8 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
         <div class="tags"><span class="tag">verso [ˈbeɹso]</span><span class="tag">amor → amol</span></div>
       </article>
       <article class="region" id="r-chocoano" data-r="chocoano">
-        <header><h3>Chocoano</h3><span class="zone coast">Pacific coast</span></header>
-        <div class="area">Chocó and the whole Pacific coast; Afro-Colombians in Cauca and Valle</div>
+        <header><h3>Chocoano · Pacífico</h3><span class="zone coast">Pacific coast</span></header>
+        <div class="area">Chocó and the whole Pacific coast: Buenaventura, Guapi, Timbiquí, Tumaco; Afro-Colombians inland in Cauca and Valle</div>
         <ul>
           <li>African influence on intonation and rhythm</li>
           <li>Final s aspirated or dropped; final n as [ŋ]</li>
@@ -420,7 +422,7 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
       </article>
       <article class="region" id="r-opita" data-r="opita">
         <header><h3>Opita</h3><span class="zone high">Andean</span></header>
-        <div class="area">Tolima and Huila, upper Magdalena valley</div>
+        <div class="area">Tolima and Huila, upper Magdalena valley; also much of Caquetá, settled from Huila</div>
         <ul>
           <li>Slow tempo and distinctive intonation, linked to indigenous languages</li>
           <li>Usted for everything; rural <em class="es">vusted</em></li>
@@ -430,7 +432,7 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
       </article>
       <article class="region" id="r-pastuso" data-r="pastuso">
         <header><h3>Pastuso</h3><span class="zone high">Andean south</span></header>
-        <div class="area">Nariño, around Pasto</div>
+        <div class="area">Andean Nariño around Pasto, and upper Putumayo (Sibundoy, Mocoa)</div>
         <ul>
           <li>Velar [x] for j, unlike the rest of Colombia</li>
           <li>Apical [s̺]; ll stays distinct from y</li>
@@ -438,9 +440,40 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
         </ul>
         <div class="tags"><span class="tag">[x]</span><span class="tag">[ʎ]</span></div>
       </article>
+      <article class="region" id="r-caucano" data-r="caucano">
+        <header><h3>Caucano</h3><span class="zone high">Andean</span></header>
+        <div class="area">Andean Cauca: Popayán and the central valley and highlands</div>
+        <ul>
+          <li>Close to Valluno, with voseo in informal speech</li>
+          <li>Shades into Pastuso toward the border with Nariño</li>
+          <li>Shares the region with Nasa Yuwe (Páez), Namtrik (Misak) and Inga speakers; the Cauca coast speaks Pacific Spanish</li>
+        </ul>
+        <div class="tags"><span class="tag">vos</span></div>
+      </article>
+      <article class="region" id="r-amazonico" data-r="amazonico">
+        <header><h3>Amazónico</h3><span class="zone amazon">Amazon</span></header>
+        <div class="area">Amazonas (Leticia), lower Putumayo and lower Caquetá</div>
+        <ul>
+          <li>Closer to the Spanish of the Peruvian Amazon (Iquitos) than to inland Colombia</li>
+          <li>Borrowings from Indigenous languages and Portuguese; “portuñol” at the triple border with Brazil and Peru</li>
+          <li>Indigenous languages include Ticuna, Huitoto, Yagua, Cocama and Bora</li>
+          <li>Many settlers from the interior, so Andean accents are common in Leticia</li>
+        </ul>
+        <div class="tags"><span class="tag">portuñol</span></div>
+      </article>
+      <article class="region" id="r-vaupes" data-r="vaupes">
+        <header><h3>Vaupés–Guainía</h3><span class="zone amazon">Amazon</span></header>
+        <div class="area">Vaupés (Mitú) and Guainía (Puerto Inírida)</div>
+        <ul>
+          <li>For many people Spanish is a second language, learned after Tukano, Cubeo, Curripaco or others, and it carries their rhythm and sounds</li>
+          <li>In Vaupés, people traditionally marry outside their language group, so speaking three or four languages is normal; Tukano is the lingua franca</li>
+          <li>Settlers in the towns mostly bring Llanero and inland Andean accents</li>
+        </ul>
+        <div class="tags"><span class="tag">Spanish as L2</span><span class="tag">Tukano</span></div>
+      </article>
       <article class="region" id="r-llanero" data-r="llanero">
         <header><h3>Llanero</h3><span class="zone plain">Eastern plains</span></header>
-        <div class="area">The Llanos east of the Cordillera Oriental</div>
+        <div class="area">The Llanos east of the Cordillera Oriental: Meta, Casanare, Arauca, Vichada, Guaviare</div>
         <ul>
           <li>Huge, sparsely populated area settled from the interior</li>
           <li>Final s aspirated, and even s before vowels</li>
