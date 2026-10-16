@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A field guide to Colombian Spanish: pronunciation, forms of address, diminutives, eleven dialect regions and a searchable slang glossary.">
+<title>Hablar Colombiano</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a field guide — narrow reading column, wide bands for regions and the glossary, IPA set in mono like a phonetics notebook */
+:root{
+  --bg:#f6f4ee; --surface:#ffffff; --ink:#1f2420; --muted:#5d655f; --line:#dcdcd2;
+  --emerald:#0f6b4f; --emerald-soft:#e2efe8; --gold:#b9860d; --gold-soft:#f7ecd0; --coffee:#5a3a26; --warn:#a33a2a; --warn-soft:#f6e1dc;
+  --display:"Young Serif", Georgia, "Times New Roman", serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141815; --surface:#1c211e; --ink:#e9ece6; --muted:#a2aba4; --line:#2f3732;
+  --emerald:#5cc59c; --emerald-soft:#1d3329; --gold:#e3b54a; --gold-soft:#352c16; --coffee:#d9b08f; --warn:#ef8f7c; --warn-soft:#3a221d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141815; --surface:#1c211e; --ink:#e9ece6; --muted:#a2aba4; --line:#2f3732;
+  --emerald:#5cc59c; --emerald-soft:#1d3329; --gold:#e3b54a; --gold-soft:#352c16; --coffee:#d9b08f; --warn:#ef8f7c; --warn-soft:#3a221d; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1040px;margin:0 auto}
+.col{max-width:68ch}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.6rem,4vw,2.2rem)}
+h3{font-size:1.2rem}
+p{margin:0}
+a{color:var(--emerald)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.eyebrow{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald)}
+.ipa{font-family:var(--mono);font-size:.9em;color:var(--coffee);white-space:nowrap}
+em.es{font-style:italic;color:var(--ink);font-weight:500}
+
+/* Hero */
+header.hero{padding-block:56px 40px;display:grid;gap:20px;border-bottom:1px solid var(--line)}
+.hero h1{font-size:clamp(2.6rem,9vw,5rem);letter-spacing:-.01em}
+.hero h1 span{color:var(--emerald)}
+.hero .lede{font-size:1.15rem;color:var(--muted);max-width:60ch}
+.greet{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;font-family:var(--display);font-size:1.4rem}
+.greet .ipa{font-size:.95rem}
+.facts{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:8px;font-size:.92rem}
+.facts div{display:grid}
+.facts b{font-family:var(--display);font-weight:400;font-size:1.5rem;font-variant-numeric:tabular-nums}
+.facts span{color:var(--muted)}
+
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  display:flex;gap:4px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.toc a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:999px}
+nav.toc a:hover{background:var(--emerald-soft);color:var(--emerald)}
+
+section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:60px}
+.intro{display:grid;gap:14px;color:var(--ink)}
+.intro p+p{margin-top:0}
+
+/* Pronunciation */
+.sounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sound{background:var(--surface);padding:20px;display:grid;gap:8px;align-content:start;min-width:0}
+.sound .sym{font-family:var(--mono);font-size:1.35rem;color:var(--emerald)}
+.sound p{font-size:.95rem;color:var(--muted)}
+.sound .ex{font-size:.92rem;color:var(--ink)}
+.sound .where{font-size:.8rem;color:var(--gold);font-weight:600}
+
+/* Pronouns */
+.pronouns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px}
+.pron{border-top:3px solid var(--emerald);padding-top:14px;display:grid;gap:6px;align-content:start}
+.pron.vos{border-color:var(--gold)}
+.pron.sum{border-color:var(--coffee)}
+.pron.old{border-color:var(--line)}
+.pron .word{font-family:var(--display);font-size:1.7rem}
+.pron .gloss{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.pron p{font-size:.95rem}
+
+/* Diminutives */
+.dims{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.dim{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.3fr);gap:6px 16px;align-items:baseline;padding:14px 18px;border-top:1px solid var(--line)}
+.dim:first-child{border-top:0}
+.dim .from{font-family:var(--display);font-size:1.1rem;color:var(--muted)}
+.dim .arrow{color:var(--gold)}
+.dim .to{font-family:var(--display);font-size:1.15rem}
+.dim .note{grid-column:1/-1;font-size:.88rem;color:var(--muted)}
+@media (max-width:520px){.dim{grid-template-columns:auto auto 1fr}}
+
+.callout{background:var(--gold-soft);border-radius:10px;padding:20px 22px;display:grid;gap:8px}
+.callout .big{font-family:var(--display);font-size:1.8rem}
+
+/* Regions */
+.regions-intro{color:var(--muted);font-size:.95rem}
+.regions{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}
+.region{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:10px;align-content:start;min-width:0}
+.region header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.region .zone{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.zone.coast{background:var(--emerald-soft);color:var(--emerald)}
+.zone.high{background:var(--gold-soft);color:var(--gold)}
+.zone.plain{background:var(--warn-soft);color:var(--coffee)}
+.region .area{font-size:.85rem;color:var(--muted)}
+.region ul{margin:0;padding-left:18px;font-size:.93rem;display:grid;gap:4px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-family:var(--mono);font-size:.72rem;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted)}
+
+/* Glossary */
+.gloss-tools{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 50px);z-index:4;background:var(--bg);padding-block:10px}
+.search{width:100%;font:inherit;font-size:1rem;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chip{flex:none;font:inherit;font-size:.85rem;font-weight:500;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--emerald);border-color:var(--emerald);color:var(--bg)}
+.toolrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.toggle{display:flex;align-items:center;gap:8px;cursor:pointer}
+.toggle input{accent-color:var(--warn);width:16px;height:16px}
+.count{font-variant-numeric:tabular-nums}
+.words{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.word-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:6px;align-content:start;min-width:0}
+.word-card .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.word-card .w{font-family:var(--display);font-size:1.35rem;line-height:1.2}
+.word-card .cat{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);flex:none}
+.word-card .lit{font-size:.82rem;color:var(--muted);font-style:italic}
+.word-card .def{font-size:.95rem}
+.word-card .use{font-size:.88rem;color:var(--muted);border-left:2px solid var(--emerald-soft);padding-left:10px}
+.word-card .use i{color:var(--ink)}
+.word-card .flag{font-size:.72rem;font-weight:600;color:var(--warn);text-transform:uppercase;letter-spacing:.08em}
+.word-card.crude{border-color:var(--warn-soft)}
+.empty{color:var(--muted);padding:24px 0}
+
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">A field guide to español colombiano</div>
+    <h1>Hablar <span>colombiano</span></h1>
+    <div class="greet"><span>¿Quiubo, parce?</span><span class="ipa">[ˈkju.βo ˈpaɾ.se]</span></div>
+    <p class="lede">Colombian Spanish is less one dialect than a family of them. The Caribbean coast sounds close to Cuba and Andalusia, while the Andean highlands keep some of the most conservative pronunciation in the Americas. Here are the sounds, the grammar quirks, the regions, and the words.</p>
+    <div class="facts">
+      <div><b>46.3M</b><span>native speakers (2015)</span></div>
+      <div><b>1871</b><span>Academia Colombiana founded</span></div>
+      <div><b>11</b><span>commonly listed dialect areas</span></div>
+      <div><b>es-CO</b><span>language tag</span></div>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#overview">Overview</a>
+    <a href="#sounds">Pronunciation</a>
+    <a href="#you">Saying “you”</a>
+    <a href="#small">Diminutives</a>
+    <a href="#regions">Regions</a>
+    <a href="#words">Vocabulary</a>
+  </nav>
+
+  <section id="overview">
+    <div class="eyebrow">Overview</div>
+    <h2>A national label for a diverse group of dialects</h2>
+    <div class="intro col">
+      <p>“Colombian Spanish” is more a geographic grouping than a linguistic one. The northern coast shares the innovations of Caribbean Spanish, such as softened or dropped final <em class="es">s</em>. The highland varieties have historically changed much less.</p>
+      <p>The educated speech of Bogotá is widely admired across Latin America as clear and conservative. Two institutions anchor scholarship: the <strong>Academia Colombiana de la Lengua</strong>, founded in 1871 as the oldest Spanish-language academy after Spain’s own, and the <strong>Instituto Caro y Cuervo</strong> in Bogotá, which studies the language and literature of Colombia and Spanish America.</p>
+      <p>Some scholars even argue that <em class="es">El desierto prodigioso y prodigio del desierto</em>, written in the 1600s in the New Kingdom of Granada by Pedro de Solís y Valenzuela, was the first modern novel of Spanish America.</p>
+    </div>
+  </section>
+
+  <section id="sounds">
+    <div class="eyebrow">Pronunciation</div>
+    <h2>Seven sounds that give it away</h2>
+    <div class="sounds">
+      <div class="sound">
+        <div class="sym">/x/ → [h]</div>
+        <p>The Spanish “j” is a soft breathy h, not a scrape in the throat.</p>
+        <div class="ex"><em class="es">jamás</em> <span class="ipa">[haˈmas]</span></div>
+        <div class="where">Everywhere except Nariño, which keeps velar [x]</div>
+      </div>
+      <div class="sound">
+        <div class="sym">ll = y (yeísmo)</div>
+        <p>Most speakers merge “ll” and “y”. Older Bogotanos, Santander and the area around Pasto can still keep [ʎ]. In southern Antioquia and Norte de Santander, “ll” sounds like [ʒ], the “s” in English “measure”.</p>
+        <div class="ex"><em class="es">pollo</em> <span class="ipa">[ˈpo.ʝo]</span></div>
+        <div class="where">Exceptions: Santander, Pasto, older Bogotá</div>
+      </div>
+      <div class="sound">
+        <div class="sym">z = s (seseo)</div>
+        <p>No Spain-style “th”. <em class="es">cocer</em> and <em class="es">coser</em> sound identical. Yet many Andean speakers, especially in Medellín, use a tongue-tip [s̺] like northern Spain, a trait found nowhere else in the Americas.</p>
+        <div class="ex"><em class="es">abrazar</em> = <em class="es">abrasar</em></div>
+        <div class="where">Apical [s̺]: Antioquia, Pasto</div>
+      </div>
+      <div class="sound">
+        <div class="sym">b d g after consonants</div>
+        <p>After a consonant, these stay hard stops, where most other dialects soften them.</p>
+        <div class="ex"><em class="es">pardo</em> <span class="ipa">[ˈpaɾdo]</span>, not <span class="ipa">[ˈpaɾðo]</span></div>
+        <div class="where">Not in Nariño or most of the coast</div>
+      </div>
+      <div class="sound">
+        <div class="sym">b d g between vowels</div>
+        <p>Between vowels they go soft, and can disappear entirely.</p>
+        <div class="ex"><em class="es">Bogotá</em> <span class="ipa">[bo.oˈta]</span></div>
+        <div class="where">General</div>
+      </div>
+      <div class="sound">
+        <div class="sym">pʰ tʰ kʰ</div>
+        <p>Voiceless stops can carry a puff of air, almost like English p, t, k. Some Boyacá speakers also turn f and s into breathy sounds.</p>
+        <div class="ex"><em class="es">nosotros</em> → <em class="es">nojotros</em></div>
+        <div class="where">Parts of Cundinamarca and Boyacá</div>
+      </div>
+      <div class="sound">
+        <div class="sym">-s → [h], -n → [ŋ]</div>
+        <p>On the coasts, a syllable-final s becomes a breath and a final n moves to the back of the mouth.</p>
+        <div class="ex"><em class="es">costa</em> <span class="ipa">[ˈkoh.ta]</span>, <em class="es">rosales</em> <span class="ipa">[roˈsa.leh]</span></div>
+        <div class="where">Caribbean, Pacific, Llanos</div>
+      </div>
+    </div>
+    <p class="col" style="color:var(--muted);font-size:.95rem">Vowels are the standard Spanish five. Words with vowels side by side, like <em class="es">teatro</em>, tend to glide into one syllable. In formal speech, coastal speakers do this more than inland ones; in casual speech there is no difference.</p>
+  </section>
+
+  <section id="you">
+    <div class="eyebrow">Grammar · forms of address</div>
+    <h2>Four ways to say “you”</h2>
+    <div class="pronouns">
+      <div class="pron">
+        <div class="gloss">Ustedeo</div>
+        <div class="word">usted</div>
+        <p>Formal almost everywhere else, but in Bogotá, Boyacá, Santander and Tolima it is used between friends, spouses and family. Depending on tone, a sudden <em class="es">usted</em> between a couple can also signal a scolding.</p>
+      </div>
+      <div class="pron vos">
+        <div class="gloss">Voseo</div>
+        <div class="word">vos</div>
+        <p>The informal “you” in the Paisa region and Valle del Cauca, especially Cali, with its own verb forms: <em class="es">vos tenés, vos sabés</em>. It is non-standard, discouraged in schools, and declining. Bogotá used it until the 1800s.</p>
+      </div>
+      <div class="pron sum">
+        <div class="gloss">Su merced</div>
+        <div class="word">sumercé</div>
+        <p>Literally “your grace”. A warm, respectful address on the Cundiboyacense plateau. In Bogotá it is only marginal.</p>
+      </div>
+      <div class="pron old">
+        <div class="gloss">Archaic</div>
+        <div class="word">vosotros</div>
+        <p>As in the rest of the Americas, Spain’s plural “you all” and its <em class="es">-áis/-éis</em> endings survive only in church language. Everyone says <em class="es">ustedes</em>.</p>
+      </div>
+    </div>
+    <p class="col" style="color:var(--muted);font-size:.95rem"><em class="es">Tú</em> is still common, for example between a man and a woman of similar age in Cundinamarca, and it is gaining ground among young people in the Opita region. Coastal speakers also say subject pronouns out loud more often: about 34% of the time in Barranquilla, versus 22–26% in the highlands.</p>
+  </section>
+
+  <section id="small">
+    <div class="eyebrow">Grammar · diminutives</div>
+    <h2>Making everything a little smaller</h2>
+    <p class="col">Colombians attach diminutive endings almost anywhere. After a stem ending in <em class="es">t</em>, the ending becomes <em class="es">-ico/-ica</em> instead of <em class="es">-ito/-ita</em>, as in Cuba, Venezuela and Costa Rica.</p>
+    <div class="dims">
+      <div class="dim"><span class="from">gato</span><span class="arrow">→</span><span class="to">gatico</span><span class="note">Noun with a t-stem: “kitty”.</span></div>
+      <div class="dim"><span class="from">corriendo</span><span class="arrow">→</span><span class="to">corriendito</span><span class="note">Even a gerund: “running” becomes “scurrying”.</span></div>
+      <div class="dim"><span class="from">ahora</span><span class="arrow">→</span><span class="to">ahorita</span><span class="note">Adverb. Careful: it often means “in a bit”, not “right now”.</span></div>
+      <div class="dim"><span class="from">junto a</span><span class="arrow">→</span><span class="to">juntico a</span><span class="note">A preposition: “right next to”.</span></div>
+      <div class="dim"><span class="from">el chocolate caliente</span><span class="arrow">→</span><span class="to">el chocolatico calientico</span><span class="note">Redundant: noun and adjective both shrink. A cozy little cup of hot chocolate.</span></div>
+      <div class="dim"><span class="from">ahora mismo</span><span class="arrow">→</span><span class="to">ahoritica mismo</span><span class="note">Emphatic: two endings stacked. “Váyase ahoritica mismo” means get out this very second.</span></div>
+      <div class="dim"><span class="from">bueno</span><span class="arrow">→</span><span class="to">buenecitico</span><span class="note">“El carro está buenecitico”: the car is in tip-top shape.</span></div>
+    </div>
+    <p class="col" style="color:var(--muted);font-size:.95rem">Family talk turns roles around: spouses call each other <em class="es">mijo</em> and <em class="es">mija</em> (“my son”, “my daughter”), and parents call their children <em class="es">papito</em> and <em class="es">mamita</em>.</p>
+    <div class="callout col">
+      <div class="eyebrow" style="color:var(--gold)">The national greeting</div>
+      <div class="big">¿Quiubo?</div>
+      <p>A contraction of <em class="es">¿Qué hubo?</em>, literally “what was there?”, using the past tense of <em class="es">haber</em>. It works like “what’s up?”. It started in the Paisa region, spread across the country, and is now heard abroad as the stereotypical Colombian hello. Also written <em class="es">kiubo</em> or <em class="es">qui’iubo</em>. In Cali it becomes <em class="es">¿Q’hubo vé, bien o qué?</em></p>
+    </div>
+  </section>
+
+  <section id="regions">
+    <div class="eyebrow">Dialect regions</div>
+    <h2>Eleven ways to sound Colombian</h2>
+    <p class="regions-intro col">Linguists disagree on how to divide the map. Lipski counts four phonological zones, Canfield five, Flórez seven. The eleven areas below are the most common popular list.</p>
+    <div class="regions">
+      <article class="region">
+        <header><h3>Costeño</h3><span class="zone coast">Caribbean coast</span></header>
+        <div class="area">Caribbean region: Barranquilla, Cartagena, Santa Marta, Montería</div>
+        <ul>
+          <li>Close to general Caribbean and Andalusian Spanish</li>
+          <li>Final s becomes [h]; final n becomes [ŋ]</li>
+          <li>Sub-accents: Samario (most articulated), Barranquillero, fast Cartagenero, crisp Sinú Valley (Montería)</li>
+        </ul>
+        <div class="tags"><span class="tag">costa [ˈkohta]</span><span class="tag">-n [ŋ]</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Isleño</h3><span class="zone coast">Islands</span></header>
+        <div class="area">San Andrés, Providencia, Santa Catalina</div>
+        <ul>
+          <li>Caribbean Spanish mixed with English influence</li>
+          <li>Final r can be an English-like [ɹ], a trill, a tap or an l</li>
+          <li>Close to Nicaragua’s Caribbean coast; strong Afro-Caribbean influence</li>
+        </ul>
+        <div class="tags"><span class="tag">verso [ˈbeɹso]</span><span class="tag">amor → amol</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Chocoano</h3><span class="zone coast">Pacific coast</span></header>
+        <div class="area">Chocó and the whole Pacific coast; Afro-Colombians in Cauca and Valle</div>
+        <ul>
+          <li>African influence on intonation and rhythm</li>
+          <li>Final s aspirated or dropped; final n as [ŋ]</li>
+          <li>d becomes r in some words; final l and r merge</li>
+        </ul>
+        <div class="tags"><span class="tag">-s → ∅</span><span class="tag">l = r</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Rolo · Cachaco</h3><span class="zone high">Andean</span></header>
+        <div class="area">Bogotá</div>
+        <ul>
+          <li>Basis of standard Colombian Spanish</li>
+          <li>Strong ustedeo, even among intimates</li>
+          <li>Keeps final s and the d in -ado; older speakers keep ll ≠ y</li>
+        </ul>
+        <div class="tags"><span class="tag">usted</span><span class="tag">-ado [aðo]</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Cundiboyacense</h3><span class="zone high">Andean</span></header>
+        <div class="area">Cundinamarca and Boyacá, the high plateau</div>
+        <ul>
+          <li><em class="es">Sumercé</em> as a respectful “you”; usted for informal talk</li>
+          <li>s sometimes aspirated between vowels, but kept at word end</li>
+          <li>Aspirated p, t, k in some areas</li>
+        </ul>
+        <div class="tags"><span class="tag">sumercé</span><span class="tag">nojotros</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Paisa</h3><span class="zone high">Andean</span></header>
+        <div class="area">Antioquia, Caldas, Risaralda, Quindío; north Tolima and Valle</div>
+        <ul>
+          <li>Coffee country, centered on Medellín</li>
+          <li>Apical [s̺], halfway between s and sh, as in northern Spain</li>
+          <li>Voseo, reinforced by writers like Tomás Carrasquilla and Fernando Vallejo</li>
+          <li>Home of the slang called <em class="es">parlache</em></li>
+        </ul>
+        <div class="tags"><span class="tag">[s̺]</span><span class="tag">vos</span><span class="tag">pues</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Valluno</h3><span class="zone high">Andean</span></header>
+        <div class="area">Cauca River valley; capital Cali</div>
+        <ul>
+          <li>Strong voseo</li>
+          <li>Tag question <em class="es">¿sí o no?</em> after statements</li>
+          <li>Local words: <em class="es">chuspa</em> (plastic bag), <em class="es">chanclas</em> (flip-flops), <em class="es">pachanguero</em> (all-night partier)</li>
+        </ul>
+        <div class="tags"><span class="tag">vos</span><span class="tag">¿sí o no?</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Santandereano</h3><span class="zone high">Andean</span></header>
+        <div class="area">Santander and Norte de Santander</div>
+        <ul>
+          <li>Ustedeo in both formal and casual speech</li>
+          <li>Traditional speakers keep ll distinct from y</li>
+        </ul>
+        <div class="tags"><span class="tag">usted</span><span class="tag">[ʎ]</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Opita</h3><span class="zone high">Andean</span></header>
+        <div class="area">Tolima and Huila, upper Magdalena valley</div>
+        <ul>
+          <li>Slow tempo and distinctive intonation, linked to indigenous languages</li>
+          <li>Usted for everything; rural <em class="es">vusted</em></li>
+          <li>Voseo is rare; tú spreading among the young</li>
+        </ul>
+        <div class="tags"><span class="tag">vusted</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Pastuso</h3><span class="zone high">Andean south</span></header>
+        <div class="area">Nariño, around Pasto</div>
+        <ul>
+          <li>Velar [x] for j, unlike the rest of Colombia</li>
+          <li>Apical [s̺]; ll stays distinct from y</li>
+          <li>r can be a buzzing sibilant; b, d, g are tensed, not softened</li>
+        </ul>
+        <div class="tags"><span class="tag">[x]</span><span class="tag">[ʎ]</span></div>
+      </article>
+      <article class="region">
+        <header><h3>Llanero</h3><span class="zone plain">Eastern plains</span></header>
+        <div class="area">The Llanos east of the Cordillera Oriental</div>
+        <ul>
+          <li>Huge, sparsely populated area settled from the interior</li>
+          <li>Final s aspirated, and even s before vowels</li>
+        </ul>
+        <div class="tags"><span class="tag">-s [h]</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="words">
+    <div class="eyebrow">Vocabulary</div>
+    <h2>Words you’ll actually hear</h2>
+    <p class="col">Slang travels through telenovelas, comedy and films like Víctor Gaviria’s <em class="es">Rodrigo D: No Futuro</em>. Much of it started in Medellín’s street slang and is now understood nationwide. Crude and offensive terms are hidden unless you switch them on.</p>
+    <div class="gloss-tools">
+      <input id="q" class="search" type="search" placeholder="Search Spanish or English…" aria-label="Search vocabulary" autocomplete="off">
+      <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+      <div class="toolrow">
+        <label class="toggle"><input type="checkbox" id="crude"> Show crude &amp; offensive terms</label>
+        <span class="count" id="count"></span>
+      </div>
+    </div>
+    <div class="words" id="list"></div>
+  </section>
+
+  <footer>
+    Based on the Wikipedia article <a href="https://en.wikipedia.org/wiki/Colombian_Spanish" target="_blank" rel="noopener">Colombian Spanish</a> (CC BY-SA), which draws on Lipski (1994), Canfield (1981) and Flórez (1964). Slang meanings vary by region, age and tone of voice.
+  </footer>
+</div>
+
+<script>
+const W = [
+  // [word, literal, meaning, category, example, crude]
+  ["¿Quiubo?","from ¿qué hubo?","What’s up? The classic Colombian hello.","greetings","¿Quiubo, parce, todo bien?"],
+  ["porfa","short for por favor","Please.","greetings","Dame un cafecito, porfa."],
+  ["ave María pues","“well, Hail Mary”","An exclamation of surprise, typical of the Paisa region.","greetings"],
+  ["fresco","“fresh”","Relax, don’t worry, be cool.","greetings","Fresco, yo lo arreglo."],
+  ["parce / parcero","from parcela, a plot of land","Buddy, mate. Once prison slang for a cellmate, possibly also shaped by Brazilian parceiro. Now heard in every city, especially Medellín.","people","¡Qué más, parce!"],
+  ["llave","“key”","Friend. Considered low-register.","people"],
+  ["mostro","—","Friend. Considered low-register.","people"],
+  ["chino","from a Muisca (Chibcha) word for child","A kid, a child.","people","Los chinos están en el colegio."],
+  ["sardino / sardina","“sardine”","A young person, a teenager.","people"],
+  ["vieja","“old woman”","A woman, a female friend, or mom.","people"],
+  ["viejo / viejito","“old man”","Dude, a male friend, or dad.","people"],
+  ["mono / mona","“monkey”","A blond or fair-skinned, light-eyed person. Not an insult.","people"],
+  ["mijo / mija","from mi hijo, mi hija","Affectionate address, even between spouses.","people"],
+  ["sapo","“toad”","A snitch, informant or tattletale.","people","No sea sapo."],
+  ["ratero","from rata, rat","A thief.","people"],
+  ["tombo","—","A police officer.","people"],
+  ["bacano / bacana","linked to Bacchus","Cool, great; also a kind, friendly person.","qualities","Ese man es muy bacano."],
+  ["chévere","—","Cool, great, admirable.","qualities","¡Qué chévere tu casa!"],
+  ["brutal","—","Amazing. Used for things, not people.","qualities","¡Esa película fue brutal!"],
+  ["charro","—","Funny, amusing.","qualities","Esa película fue muy charra."],
+  ["berraco","“boar”","Depends on context: something difficult, a hugely capable person, or being furious.","qualities","Ella es una berraca para las matemáticas."],
+  ["teso","—","An expert who is very good at something; also difficult or tricky.","qualities"],
+  ["cojo","“lame, wobbly”","Weak, flimsy, or not making sense.","qualities","Esa excusa está coja."],
+  ["caliente","“hot”","Dangerous, as in a risky neighborhood.","qualities","Esa zona está caliente."],
+  ["mañé","—","Tacky, trashy, lacking class.","qualities"],
+  ["trillado","from trillar, to thresh","Overused, worn out.","qualities","Ya está trillado eso."],
+  ["plata","“silver”","Money.","money","No tengo plata."],
+  ["barra","“gold bar”","One thousand pesos.","money","Eso vale cinco barras."],
+  ["lucas","from Roman numeral L","One thousand pesos, like barra. Low-register.","money"],
+  ["paquete","“package”","One million pesos. Also used as an insult.","money"],
+  ["camello","“camel”","A job, or hard work.","everyday","¡Eso fue un camello!"],
+  ["tinto","“dyed, red”","A small cup of black coffee. Not red wine.","everyday","¿Le provoca un tinto?"],
+  ["onces","“elevenses”","The afternoon snack, often coffee or hot chocolate with bread.","everyday"],
+  ["pola","from Policarpa Salavarrieta","Beer. Named after La Pola, a beer Bavaria launched in 1910 for the independence centenary, honoring the heroine.","everyday","¿Nos tomamos una pola?"],
+  ["vaina","“sheath, pod”","A thing, stuff, or a complicated situation.","everyday","¿Qué es esa vaina?"],
+  ["chuspa","—","A plastic bag (Valle del Cauca).","everyday"],
+  ["filo","“sharp edge”","Hunger.","everyday","Tengo un filo..."],
+  ["charlar","—","To chat, gossip or joke around.","everyday"],
+  ["cantaleta","—","A scolding, nagging.","everyday","Mi mamá me echó la cantaleta."],
+  ["catorce","“fourteen”","A favor.","everyday","Hágame un catorce."],
+  ["aporrearse","—","To fall and hurt yourself by accident.","everyday"],
+  ["locha","—","Laziness.","everyday","Qué locha ir a trabajar."],
+  ["video","—","A lie, an overreaction, or a problem.","everyday","No se haga el video."],
+  ["chicanear","—","To show off, boast.","everyday"],
+  ["abrirse","“to open up”","To leave, take off.","everyday","Me abro, nos vemos."],
+  ["perder el año","“to lose the year”","To fail a school year; jokingly, to die.","everyday"],
+  ["sisas","—","Yes. Low-register.","everyday"],
+  ["dar papaya","“to give papaya”","To make yourself an easy target, to invite trouble.","warnings","No dé papaya con el celular."],
+  ["¡pilas!","“batteries”","Watch out! Stay alert!","warnings","¡Pilas con el carro!"],
+  ["parar bolas","“to stop balls”","To pay attention.","warnings","Párele bolas a la profe."],
+  ["farra","—","A party.","party","Nos vamos de farra."],
+  ["rumbear","—","To go out dancing or clubbing; also to make out.","party"],
+  ["guayabo","—","A hangover. Enguayabado means hungover.","party","Estoy enguayabado. Dame un cafecito, porfa."],
+  ["pachanguero","—","Someone who parties all night (Valle).","party"],
+  ["tragado","“swallowed”","Having a crush, smitten.","party","Está tragadísimo de ella."],
+  ["levantar","“to lift”","To pick someone up romantically; also to beat someone up.","party"],
+  ["ligar","“to tie”","To bribe or give money (Antioquia); to flirt with someone (Valle).","party"],
+  ["sereno","“night dew”","A mild illness blamed on a cold draft.","health","Me entró el sereno."],
+  ["soroche","—","Fainting; also altitude sickness.","health","Me dio soroche."],
+  ["plomo","“lead”","Bullets.","street"],
+  ["chimba","—","Cool, awesome, especially Paisa. Vulgar in origin and still crude in polite company.","qualities","¡Qué chimba, parce!",1],
+  ["marica","slur in origin","Used constantly among friends like “dude”. Depending on tone it is a homophobic insult; maricón is harsher.","people",null,1],
+  ["mariconadas","—","Fooling around, nonsense.","everyday","Deje las mariconadas.",1],
+  ["gonorriento","—","The worst kind of person. Very crude.","people",null,1],
+  ["jeta","—","Mouth, vulgar.","everyday",null,1],
+  ["mamado","from mamar","Fed up, exhausted. The verb itself is sexual slang.","everyday","Estoy mamado de esto.",1],
+  ["morado","“purple, bruised”","Offensive term for a Black person.","people",null,1],
+  ["comerse a alguien","“to eat someone”","To hook up with someone.","party",null,1],
+  ["tirar","“to throw”","To have sex.","party",null,1],
+  ["trillar","“to thresh”","To make out.","party",null,1],
+  ["golfa","—","Derogatory term for a promiscuous woman.","people",null,1],
+  ["grilla","“cricket”","A sex worker (Antioquia); a low-class person (Valle). Derogatory.","people",null,1],
+  ["quicas","—","Breasts. Crude, low-register.","everyday",null,1],
+  ["chocha","—","Crude word for vagina (Valle). Not to be confused with chucha, an opossum.","everyday",null,1]
+];
+const CATS = {all:"All",greetings:"Greetings & phrases",people:"People",qualities:"Describing",money:"Money",everyday:"Everyday",warnings:"Warnings",party:"Going out",health:"Health",street:"Street"};
+let cat="all", q="", showCrude=false;
+try{ showCrude = localStorage.getItem("crude")==="1"; }catch(e){}
+const chips=document.getElementById("chips"), list=document.getElementById("list"), count=document.getElementById("count"), crudeBox=document.getElementById("crude");
+crudeBox.checked=showCrude;
+Object.entries(CATS).forEach(([k,v])=>{
+  const b=document.createElement("button");b.className="chip";b.textContent=v;b.type="button";
+  b.setAttribute("aria-pressed",k===cat);b.onclick=()=>{cat=k;[...chips.children].forEach(c=>c.setAttribute("aria-pressed",c===b));render();};
+  chips.appendChild(b);
+});
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function render(){
+  const nq=norm(q.trim());
+  const items=W.filter(([w,l,d,c,e,cr])=>(showCrude||!cr)&&(cat==="all"||c===cat)&&(!nq||norm([w,l,d,e||""].join(" ")).includes(nq)))
+    .sort((a,b)=>norm(a[0].replace(/[¿¡]/g,"")).localeCompare(norm(b[0].replace(/[¿¡]/g,""))));
+  count.textContent=items.length+(items.length===1?" word":" words");
+  list.innerHTML=items.length?items.map(([w,l,d,c,e,cr])=>`
+    <article class="word-card${cr?" crude":""}">
+      <div class="top"><span class="w">${esc(w)}</span><span class="cat">${CATS[c]}</span></div>
+      ${l&&l!=="—"?`<div class="lit">${esc(l)}</div>`:""}
+      <div class="def">${esc(d)}</div>
+      ${e?`<div class="use"><i>${esc(e)}</i></div>`:""}
+      ${cr?`<div class="flag">Crude or offensive</div>`:""}
+    </article>`).join(""):`<p class="empty">No words match. Try another spelling or category.</p>`;
+}
+document.getElementById("q").addEventListener("input",e=>{q=e.target.value;render();});
+crudeBox.addEventListener("change",e=>{showCrude=e.target.checked;try{localStorage.setItem("crude",showCrude?"1":"0");}catch(err){}render();});
+render();
+</script>
+</body>
+</html>
