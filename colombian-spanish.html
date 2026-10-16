@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="A field guide to Colombian Spanish: pronunciation, forms of address, diminutives, fourteen dialect regions and a searchable slang glossary.">
+<meta name="description" content="A field guide to Colombian Spanish: pronunciation, forms of address, diminutives, fourteen dialect regions and a searchable glossary of 200+ words with examples.">
 <title>Hablar Colombiano</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -126,7 +126,10 @@ section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:60px}
 .word-card .lit{font-size:.82rem;color:var(--muted);font-style:italic}
 .word-card .def{font-size:.95rem}
 .word-card .use{font-size:.88rem;color:var(--muted);border-left:2px solid var(--emerald-soft);padding-left:10px}
-.word-card .use i{color:var(--ink)}
+.word-card .use i{color:var(--ink);display:block}
+.word-card .use .tr{display:block;font-size:.85rem}
+.word-card .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.word-card .reg{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sea);background:var(--sea-soft);border-radius:999px;padding:1px 8px}
 .word-card .flag{font-size:.72rem;font-weight:600;color:var(--warn);text-transform:uppercase;letter-spacing:.08em}
 .word-card.crude{border-color:var(--warn-soft)}
 .empty{color:var(--muted);padding:24px 0}
@@ -608,7 +611,7 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
   <section id="words">
     <div class="eyebrow">Vocabulary</div>
     <h2>Words you’ll actually hear</h2>
-    <p class="col">Slang travels through telenovelas, comedy and films like Víctor Gaviria’s <em class="es">Rodrigo D: No Futuro</em>. Much of it started in Medellín’s street slang and is now understood nationwide. Crude and offensive terms are hidden unless you switch them on.</p>
+    <p class="col">Slang travels through telenovelas, comedy and films like Víctor Gaviria’s <em class="es">Rodrigo D: No Futuro</em>. Much of it started in Medellín’s street slang and is now understood nationwide. Every word comes with an example sentence and its translation. Crude and offensive terms are hidden unless you switch them on.</p>
     <div class="gloss-tools">
       <input id="q" class="search" type="search" placeholder="Search Spanish or English…" aria-label="Search vocabulary" autocomplete="off">
       <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
@@ -621,89 +624,246 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
   </section>
 
   <footer>
-    Based on the Wikipedia article <a href="https://en.wikipedia.org/wiki/Colombian_Spanish" target="_blank" rel="noopener">Colombian Spanish</a> (CC BY-SA), which draws on Lipski (1994), Canfield (1981) and Flórez (1964). Slang meanings vary by region, age and tone of voice.
+    Based on the Wikipedia article <a href="https://en.wikipedia.org/wiki/Colombian_Spanish" target="_blank" rel="noopener">Colombian Spanish</a> (CC BY-SA), which draws on Lipski (1994), Canfield (1981) and Flórez (1964). Extra vocabulary from <a href="https://espagnol.yabla.com/lesson-Colombian-Slang-100-Words-and-Phrases-to-Sound-like-a-True-Colombian-1675" target="_blank" rel="noopener">Yabla</a>, <a href="https://quillbot.com/es/blog/vocabulario/palabras-de-colombia/" target="_blank" rel="noopener">QuillBot</a>, <a href="https://www.elheraldo.co/sociedad/oye-cuadro-la-jerga-quillera-esta-desapareciendo-811453" target="_blank" rel="noopener">El Heraldo</a> and the <a href="https://learnenglishteens.britishcouncil.org/archive/magazine/life-around-world/how-speak-colombian-coastal-slang" target="_blank" rel="noopener">British Council</a>. Example sentences are written for this guide. Slang meanings vary by region, age and tone of voice.
   </footer>
 </div>
 
 <script>
 const W = [
-  // [word, literal, meaning, category, example, crude]
-  ["¿Quiubo?","from ¿qué hubo?","What’s up? The classic Colombian hello.","greetings","¿Quiubo, parce, todo bien?"],
-  ["porfa","short for por favor","Please.","greetings","Dame un cafecito, porfa."],
-  ["ave María pues","“well, Hail Mary”","An exclamation of surprise, typical of the Paisa region.","greetings"],
-  ["fresco","“fresh”","Relax, don’t worry, be cool.","greetings","Fresco, yo lo arreglo."],
-  ["parce / parcero","from parcela, a plot of land","Buddy, mate. Once prison slang for a cellmate, possibly also shaped by Brazilian parceiro. Now heard in every city, especially Medellín.","people","¡Qué más, parce!"],
-  ["llave","“key”","Friend. Considered low-register.","people"],
-  ["mostro","—","Friend. Considered low-register.","people"],
-  ["chino","from a Muisca (Chibcha) word for child","A kid, a child.","people","Los chinos están en el colegio."],
-  ["sardino / sardina","“sardine”","A young person, a teenager.","people"],
-  ["vieja","“old woman”","A woman, a female friend, or mom.","people"],
-  ["viejo / viejito","“old man”","Dude, a male friend, or dad.","people"],
-  ["mono / mona","“monkey”","A blond or fair-skinned, light-eyed person. Not an insult.","people"],
-  ["mijo / mija","from mi hijo, mi hija","Affectionate address, even between spouses.","people"],
-  ["sapo","“toad”","A snitch, informant or tattletale.","people","No sea sapo."],
-  ["ratero","from rata, rat","A thief.","people"],
-  ["tombo","—","A police officer.","people"],
-  ["bacano / bacana","linked to Bacchus","Cool, great; also a kind, friendly person.","qualities","Ese man es muy bacano."],
-  ["chévere","—","Cool, great, admirable.","qualities","¡Qué chévere tu casa!"],
-  ["brutal","—","Amazing. Used for things, not people.","qualities","¡Esa película fue brutal!"],
-  ["charro","—","Funny, amusing.","qualities","Esa película fue muy charra."],
-  ["berraco","“boar”","Depends on context: something difficult, a hugely capable person, or being furious.","qualities","Ella es una berraca para las matemáticas."],
-  ["teso","—","An expert who is very good at something; also difficult or tricky.","qualities"],
-  ["cojo","“lame, wobbly”","Weak, flimsy, or not making sense.","qualities","Esa excusa está coja."],
-  ["caliente","“hot”","Dangerous, as in a risky neighborhood.","qualities","Esa zona está caliente."],
-  ["mañé","—","Tacky, trashy, lacking class.","qualities"],
-  ["trillado","from trillar, to thresh","Overused, worn out.","qualities","Ya está trillado eso."],
-  ["plata","“silver”","Money.","money","No tengo plata."],
-  ["barra","“gold bar”","One thousand pesos.","money","Eso vale cinco barras."],
-  ["lucas","from Roman numeral L","One thousand pesos, like barra. Low-register.","money"],
-  ["paquete","“package”","One million pesos. Also used as an insult.","money"],
-  ["camello","“camel”","A job, or hard work.","everyday","¡Eso fue un camello!"],
-  ["tinto","“dyed, red”","A small cup of black coffee. Not red wine.","everyday","¿Le provoca un tinto?"],
-  ["onces","“elevenses”","The afternoon snack, often coffee or hot chocolate with bread.","everyday"],
-  ["pola","from Policarpa Salavarrieta","Beer. Named after La Pola, a beer Bavaria launched in 1910 for the independence centenary, honoring the heroine.","everyday","¿Nos tomamos una pola?"],
-  ["vaina","“sheath, pod”","A thing, stuff, or a complicated situation.","everyday","¿Qué es esa vaina?"],
-  ["chuspa","—","A plastic bag (Valle del Cauca).","everyday"],
-  ["filo","“sharp edge”","Hunger.","everyday","Tengo un filo..."],
-  ["charlar","—","To chat, gossip or joke around.","everyday"],
-  ["cantaleta","—","A scolding, nagging.","everyday","Mi mamá me echó la cantaleta."],
-  ["catorce","“fourteen”","A favor.","everyday","Hágame un catorce."],
-  ["aporrearse","—","To fall and hurt yourself by accident.","everyday"],
-  ["locha","—","Laziness.","everyday","Qué locha ir a trabajar."],
-  ["video","—","A lie, an overreaction, or a problem.","everyday","No se haga el video."],
-  ["chicanear","—","To show off, boast.","everyday"],
-  ["abrirse","“to open up”","To leave, take off.","everyday","Me abro, nos vemos."],
-  ["perder el año","“to lose the year”","To fail a school year; jokingly, to die.","everyday"],
-  ["sisas","—","Yes. Low-register.","everyday"],
-  ["dar papaya","“to give papaya”","To make yourself an easy target, to invite trouble.","warnings","No dé papaya con el celular."],
-  ["¡pilas!","“batteries”","Watch out! Stay alert!","warnings","¡Pilas con el carro!"],
-  ["parar bolas","“to stop balls”","To pay attention.","warnings","Párele bolas a la profe."],
-  ["farra","—","A party.","party","Nos vamos de farra."],
-  ["rumbear","—","To go out dancing or clubbing; also to make out.","party"],
-  ["guayabo","—","A hangover. Enguayabado means hungover.","party","Estoy enguayabado. Dame un cafecito, porfa."],
-  ["pachanguero","—","Someone who parties all night (Valle).","party"],
-  ["tragado","“swallowed”","Having a crush, smitten.","party","Está tragadísimo de ella."],
-  ["levantar","“to lift”","To pick someone up romantically; also to beat someone up.","party"],
-  ["ligar","“to tie”","To bribe or give money (Antioquia); to flirt with someone (Valle).","party"],
-  ["sereno","“night dew”","A mild illness blamed on a cold draft.","health","Me entró el sereno."],
-  ["soroche","—","Fainting; also altitude sickness.","health","Me dio soroche."],
-  ["plomo","“lead”","Bullets.","street"],
-  ["chimba","—","Cool, awesome, especially Paisa. Vulgar in origin and still crude in polite company.","qualities","¡Qué chimba, parce!",1],
-  ["marica","slur in origin","Used constantly among friends like “dude”. Depending on tone it is a homophobic insult; maricón is harsher.","people",null,1],
-  ["mariconadas","—","Fooling around, nonsense.","everyday","Deje las mariconadas.",1],
-  ["gonorriento","—","The worst kind of person. Very crude.","people",null,1],
-  ["jeta","—","Mouth, vulgar.","everyday",null,1],
-  ["mamado","from mamar","Fed up, exhausted. The verb itself is sexual slang.","everyday","Estoy mamado de esto.",1],
-  ["morado","“purple, bruised”","Offensive term for a Black person.","people",null,1],
-  ["comerse a alguien","“to eat someone”","To hook up with someone.","party",null,1],
-  ["tirar","“to throw”","To have sex.","party",null,1],
-  ["trillar","“to thresh”","To make out.","party",null,1],
-  ["golfa","—","Derogatory term for a promiscuous woman.","people",null,1],
-  ["grilla","“cricket”","A sex worker (Antioquia); a low-class person (Valle). Derogatory.","people",null,1],
-  ["quicas","—","Breasts. Crude, low-register.","everyday",null,1],
-  ["chocha","—","Crude word for vagina (Valle). Not to be confused with chucha, an opossum.","everyday",null,1]
+  // w: word, l: literal/origin, d: meaning, c: category, r: region, e: example, t: translation, x: crude
+  // Greetings & phrases
+  {w:"¿Quiubo?",l:"from ¿qué hubo?",d:"What’s up? The classic Colombian hello.",c:"greetings",e:"¿Quiubo, parce, todo bien?",t:"Hey man, all good?"},
+  {w:"¿Bien o qué?",d:"How’s it going? Often said right after a greeting.",c:"greetings",e:"¡Quiubo, vé! ¿Bien o qué?",t:"Hey! Doing well or what?",r:"Valle"},
+  {w:"¿Qué más?",l:"“what else?”",d:"How are you? A casual greeting, not a real question about more things.",c:"greetings",e:"¡Hola, Juli! ¿Qué más, cómo vas?",t:"Hi Juli! How are you doing?"},
+  {w:"porfa",l:"short for por favor",d:"Please.",c:"greetings",e:"Me pasa la sal, porfa.",t:"Pass me the salt, please."},
+  {w:"¡Listo!",l:"“ready”",d:"OK, sure, done. Used constantly to agree.",c:"greetings",e:"—Nos vemos a las ocho. —¡Listo!",t:"“See you at eight.” “Sounds good!”"},
+  {w:"de una",l:"“at once”",d:"Absolutely, let’s do it right now.",c:"greetings",e:"—¿Vamos por unas polas? —¡De una!",t:"“Shall we go for some beers?” “Totally!”"},
+  {w:"¡Hágale, pues!",d:"Go for it! Also “OK, fine” to accept a plan.",c:"greetings",e:"¿Quiere bailar? ¡Hágale, pues!",t:"You want to dance? Go for it, then!",r:"Paisa"},
+  {w:"ave María pues",l:"“well, Hail Mary”",d:"An exclamation of surprise.",c:"greetings",e:"¡Ave María pues, qué aguacero tan berraco!",t:"Good grief, what a massive downpour!",r:"Paisa"},
+  {w:"fresco",l:"“fresh”",d:"Relax, don’t worry, be cool.",c:"greetings",e:"Fresco, yo lo arreglo mañana.",t:"Don’t worry, I’ll fix it tomorrow."},
+  {w:"relájate como la carne",l:"“relax like the meat”",d:"Chill out. A joking costeño way to calm someone down.",c:"greetings",e:"Tranquilo, relájate como la carne, que ya llegamos.",t:"Easy, chill out, we’re almost there.",r:"Costa"},
+  {w:"¡Ya dijo!",l:"“now he said it”",d:"Yeah, right! Sarcastic disbelief.",c:"greetings",e:"—Mañana madrugo a correr. —¡Ya dijo!",t:"“I’m getting up early to run tomorrow.” “Yeah, right!”"},
+  {w:"¡Ni de vainas!",d:"No way! Not a chance.",c:"greetings",e:"¿Prestarle el carro a él? ¡Ni de vainas!",t:"Lend him the car? No way!"},
+  {w:"¡Déjate de vainas!",d:"Cut it out! Stop messing around.",c:"greetings",e:"Déjate de vainas y ayúdame con esto.",t:"Quit messing around and help me with this."},
+  {w:"¡Qué vaina!",d:"What a shame! What a pain!",c:"greetings",e:"Se canceló el vuelo. ¡Qué vaina!",t:"The flight got cancelled. What a pain!"},
+  {w:"¡Qué embarrada!",d:"What a pity! What a mess.",c:"greetings",e:"¿Te robaron el celular? ¡Qué embarrada!",t:"Your phone got stolen? That sucks!"},
+  {w:"¡Qué oso!",l:"“what a bear!”",d:"How embarrassing!",c:"greetings",e:"Le dije “mamá” a la profesora. ¡Qué oso!",t:"I called the teacher “mom”. So embarrassing!"},
+  {w:"¡Qué boleta!",d:"How embarrassing! Also about something tacky.",c:"greetings",e:"Llegó al matrimonio en chanclas. ¡Qué boleta!",t:"He showed up to the wedding in flip-flops. How embarrassing!"},
+  {w:"¡Guácala!",d:"Gross! Yuck!",c:"greetings",e:"¡Guácala, esa leche está picha!",t:"Yuck, that milk has gone bad!"},
+  {w:"¡Qué ceba!",d:"Gross! Disgusting.",c:"greetings",e:"Había un pelo en la sopa. ¡Qué ceba!",t:"There was a hair in the soup. Gross!"},
+  {w:"miércoles",l:"“Wednesday”",d:"A polite stand-in for a swear word, like “shoot!”.",c:"greetings",e:"¡Miércoles, se me quedaron las llaves!",t:"Shoot, I left my keys behind!"},
+  {w:"ñerda",d:"Wow! Damn! A softened exclamation of surprise.",c:"greetings",e:"¡Ñerda, qué calor tan hijuemadre hace hoy!",t:"Damn, it’s insanely hot today!",r:"Costa"},
+  {w:"¡Nojoda!",d:"An all-purpose exclamation of surprise, annoyance or emphasis. Mildly vulgar.",c:"greetings",e:"¡Nojoda, compadre, ganó el Junior!",t:"Holy cow, man, Junior won!",r:"Costa",x:1},
+  {w:"añoñi",d:"Obviously! Well, duh.",c:"greetings",e:"—¿Vas para el carnaval? —¡Añoñi!",t:"“Are you going to the carnival?” “Obviously!”",r:"Costa"},
+  {w:"¿sí o no?",l:"“yes or no?”",d:"A tag question asking you to agree, like “right?”.",c:"greetings",e:"Este sancocho está buenísimo, ¿sí o no?",t:"This stew is delicious, right?",r:"Valle"},
+  {w:"pues",l:"“well, then”",d:"A filler word added to the end of almost anything.",c:"greetings",e:"Bueno pues, nos vemos mañana pues.",t:"OK then, see you tomorrow.",r:"Paisa"},
+
+  // People
+  {w:"parce / parcero",l:"from parcela, a plot of land",d:"Buddy, mate. Once prison slang for a cellmate, possibly also shaped by Brazilian parceiro. Now heard in every city.",c:"people",e:"¡Qué más, parce! Hace rato no lo veía.",t:"What’s up, man! Haven’t seen you in ages.",r:"Paisa"},
+  {w:"parche",d:"Your group of friends; also a plan or an outing.",c:"people",e:"Hoy sale el parche a comer pizza.",t:"The crew is going out for pizza tonight."},
+  {w:"llave",l:"“key”",d:"Close friend. Considered low-register.",c:"people",e:"Él es mi llave desde el colegio.",t:"He’s been my best buddy since school."},
+  {w:"cuadro",l:"“square, picture”",d:"Friend, buddy.",c:"people",e:"¡Oye, cuadro! ¿Pa’ dónde vas?",t:"Hey buddy! Where are you headed?",r:"Costa"},
+  {w:"ñero",l:"from compañero",d:"Friend. In Bogotá it can also mean a rough street person.",c:"people",e:"Ese ñero siempre me guarda puesto en el bus.",t:"That buddy of mine always saves me a seat on the bus."},
+  {w:"mostro",d:"Friend. Considered low-register.",c:"people",e:"¿Qué hubo, mostro? ¿Vamos al partido?",t:"What’s up, man? Shall we go to the game?"},
+  {w:"man",l:"from English",d:"A guy.",c:"people",e:"Ese man es el novio de mi prima.",t:"That guy is my cousin’s boyfriend."},
+  {w:"chino / china",l:"from a Muisca (Chibcha) word for child",d:"A kid; in Bogotá also a young person or friend.",c:"people",e:"Los chinos están jugando en el parque.",t:"The kids are playing in the park.",r:"Bogotá"},
+  {w:"pelado / pelada",l:"“peeled, bald”",d:"A kid or young person.",c:"people",e:"Ese pelado juega fútbol muy bien.",t:"That kid plays soccer really well."},
+  {w:"guámbito / guámbita",d:"A little kid.",c:"people",e:"Los guámbitos no dejan dormir a nadie.",t:"The little ones won’t let anyone sleep."},
+  {w:"sardino / sardina",l:"“sardine”",d:"A young person, a teenager.",c:"people",e:"Está saliendo con una sardina de quince.",t:"He’s going out with a fifteen-year-old."},
+  {w:"cucho / cucha",d:"An older person; my dad or mom.",c:"people",e:"Mi cucha me espera para almorzar.",t:"My mom is waiting for me for lunch."},
+  {w:"vieja",l:"“old woman”",d:"A woman, a female friend, or mom.",c:"people",e:"Esa vieja es la más teso de la clase.",t:"That girl is the smartest one in class."},
+  {w:"viejo / viejito",l:"“old man”",d:"Dude, a male friend, or dad.",c:"people",e:"Mi viejito cumple setenta mañana.",t:"My dad turns seventy tomorrow."},
+  {w:"mijo / mija",l:"from mi hijo, mi hija",d:"Affectionate address, even between spouses.",c:"people",e:"Mija, ¿quiere un tintico?",t:"Honey, would you like a little coffee?"},
+  {w:"chato / chata",l:"“flat-nosed”",d:"Dear, darling. Affectionate.",c:"people",e:"Chata, ¿ya almorzaste?",t:"Darling, have you had lunch yet?",r:"Bogotá"},
+  {w:"amorchis",l:"from amor",d:"Sweetie. A cute way to say “love”.",c:"people",e:"Amorchis, te extrañé todo el día.",t:"Sweetie, I missed you all day."},
+  {w:"mono / mona",l:"“monkey”",d:"A blond or fair-skinned, light-eyed person. Not an insult.",c:"people",e:"El mono de la esquina es alemán.",t:"The blond guy on the corner is German."},
+  {w:"pinta",d:"A handsome man; also someone’s look or outfit.",c:"people",e:"Tu primo es todo un pinta.",t:"Your cousin is a real looker."},
+  {w:"churro",d:"A good-looking guy.",c:"people",e:"El nuevo vecino es un churro.",t:"The new neighbor is gorgeous."},
+  {w:"bizcocho",l:"“sponge cake”",d:"An attractive woman.",c:"people",e:"Mi hermano dice que la profe es un bizcocho.",t:"My brother says the teacher is a hottie."},
+  {w:"gomelo / gomela",d:"A rich, spoiled, snobbish young person.",c:"people",e:"Ese club está lleno de gomelos.",t:"That club is full of rich kids."},
+  {w:"pupy",d:"Posh, snobby.",c:"people",e:"No le gusta el bus; es muy pupy.",t:"She doesn’t like the bus; she’s very posh.",r:"Costa"},
+  {w:"caché",d:"Upper-class, classy person or thing.",c:"people",e:"Se casó en un hotel muy caché.",t:"She got married in a very classy hotel."},
+  {w:"zanahoria",l:"“carrot”",d:"A goody-two-shoes who doesn’t drink or go out.",c:"people",e:"No lo invites a la rumba, es muy zanahoria.",t:"Don’t invite him to the party, he’s a total square."},
+  {w:"lámpara",l:"“lamp”",d:"A show-off who wants attention.",c:"people",e:"Llegó en Ferrari al colegio, ¡qué lámpara!",t:"He came to school in a Ferrari, what a show-off!"},
+  {w:"lobo / loba",l:"“wolf”",d:"Tacky, someone with bad taste in clothes.",c:"people",e:"Esa camisa de leopardo está muy loba.",t:"That leopard shirt is really tacky."},
+  {w:"guache",d:"A rude, ill-mannered person.",c:"people",e:"No sea guache y salude.",t:"Don’t be rude, say hello."},
+  {w:"gallinazo",l:"“vulture”",d:"A guy who flirts with every woman.",c:"people",e:"Ese gallinazo le echa los perros a todas.",t:"That player hits on every woman."},
+  {w:"sapo",l:"“toad”",d:"A snitch, tattletale, or nosy person.",c:"people",e:"No le cuente nada, que es muy sapo.",t:"Don’t tell him anything, he’s a snitch."},
+  {w:"caco",d:"A thief.",c:"people",e:"Unos cacos se metieron a la tienda.",t:"Some thieves broke into the shop."},
+  {w:"ratero",l:"from rata, rat",d:"A thief, a pickpocket.",c:"people",e:"Cuidado con los rateros en el centro.",t:"Watch out for pickpockets downtown."},
+  {w:"tombo",d:"A police officer.",c:"people",e:"Llegaron los tombos y se acabó la fiesta.",t:"The cops showed up and the party was over."},
+  {w:"culebra",l:"“snake”",d:"A debt, or the person you owe money to.",c:"people",e:"Tengo una culebra con el banco.",t:"I owe the bank money."},
+  {w:"cachaco / rolo",d:"Someone from Bogotá. Cachaco can also mean elegant and well-mannered.",c:"people",e:"Se nota que es rolo por la forma de hablar.",t:"You can tell he’s from Bogotá by the way he talks.",r:"Bogotá"},
+  {w:"paisa",d:"Someone from Antioquia and the coffee region.",c:"people",e:"Los paisas son famosos por emprendedores.",t:"Paisas are known for being entrepreneurial.",r:"Paisa"},
+  {w:"corroncho",d:"Someone from the Caribbean coast. Can be affectionate or a put-down for “uncouth”.",c:"people",e:"Me dicen corroncho porque hablo duro.",t:"They call me a coast boy because I talk loud.",r:"Costa"},
+
+  // Describing
+  {w:"bacano / bacana",l:"linked to Bacchus",d:"Cool, great; also a kind, friendly person.",c:"qualities",e:"Ese man es muy bacano, siempre ayuda.",t:"That guy is really cool, he always helps."},
+  {w:"chévere",d:"Cool, great, nice.",c:"qualities",e:"¡Qué chévere tu casa!",t:"Your house is so nice!"},
+  {w:"brutal",d:"Amazing. Used for things, not people.",c:"qualities",e:"¡Esa película fue brutal!",t:"That movie was awesome!"},
+  {w:"ser una nota",l:"“to be a note”",d:"To be awesome or great fun.",c:"qualities",e:"Tu abuela es una nota, me hizo reír toda la tarde.",t:"Your grandma is a riot, she made me laugh all afternoon."},
+  {w:"charro",d:"Funny, amusing.",c:"qualities",e:"Esa película fue muy charra.",t:"That movie was really funny."},
+  {w:"berraco",l:"“boar”",d:"Depends on context: something difficult, a hugely capable person, or being furious.",c:"qualities",e:"Ella es una berraca para las matemáticas.",t:"She’s a whiz at math."},
+  {w:"berraquera",d:"Grit and determination; also something amazing.",c:"qualities",e:"Sacó adelante el negocio a pura berraquera.",t:"She built up the business through sheer grit."},
+  {w:"teso",d:"An expert who is very good at something; also difficult or tricky.",c:"qualities",e:"Mi hermano es teso para la guitarra.",t:"My brother is great at guitar."},
+  {w:"tenaz",d:"Tough, hard, intense.",c:"qualities",e:"El trancón estuvo tenaz hoy.",t:"Traffic was brutal today."},
+  {w:"maluco",d:"Unpleasant, bad; feeling sick.",c:"qualities",e:"Me siento maluco, creo que me dio gripa.",t:"I feel lousy, I think I’m getting the flu."},
+  {w:"jarto",d:"Boring or annoying; also fed up.",c:"qualities",e:"Qué jarto hacer fila en el banco.",t:"Standing in line at the bank is such a drag."},
+  {w:"cansón",d:"Annoying, tiresome.",c:"qualities",e:"Ese perro es muy cansón, ladra toda la noche.",t:"That dog is so annoying, it barks all night."},
+  {w:"inmamable",d:"Unbearable.",c:"qualities",e:"El calor en el bus estaba inmamable.",t:"The heat on the bus was unbearable."},
+  {w:"pava",d:"Boring.",c:"qualities",e:"Esa fiesta estuvo pava, nos fuimos temprano.",t:"That party was boring, we left early.",r:"Costa"},
+  {w:"paila / pailas",l:"“big pan”",d:"Too bad; you’re in trouble.",c:"qualities",e:"Perdiste el bus. ¡Pailas!",t:"You missed the bus. Tough luck!"},
+  {w:"chimbo",d:"Fake, cheap, poor quality.",c:"qualities",e:"Ese reloj es chimbo, se dañó en una semana.",t:"That watch is junk, it broke in a week."},
+  {w:"chiviado",d:"Counterfeit.",c:"qualities",e:"Compró unos tenis chiviados en San Victorino.",t:"He bought knock-off sneakers in San Victorino."},
+  {w:"chanda",d:"Bad quality.",c:"qualities",e:"Ese hotel es muy chanda.",t:"That hotel is really crummy."},
+  {w:"chichipato",d:"Stingy; also cheap and low quality.",c:"qualities",e:"No seas chichipato y da propina.",t:"Don’t be a cheapskate, leave a tip."},
+  {w:"líchigo",d:"Stingy.",c:"qualities",e:"Mi tío es tan líchigo que no presta ni un lápiz.",t:"My uncle is so stingy he won’t even lend a pencil."},
+  {w:"caribe",d:"Expensive.",c:"qualities",e:"Ese restaurante está muy caribe.",t:"That restaurant is really pricey.",r:"Costa"},
+  {w:"picho",d:"Rotten, gone bad.",c:"qualities",e:"Bota ese tomate, está picho.",t:"Throw that tomato out, it’s rotten."},
+  {w:"cojo",l:"“lame, wobbly”",d:"Weak, flimsy, or not making sense.",c:"qualities",e:"Esa excusa está coja.",t:"That excuse is weak."},
+  {w:"caliente",l:"“hot”",d:"Dangerous, as in a risky neighborhood.",c:"qualities",e:"De noche esa zona está caliente.",t:"That area is dangerous at night."},
+  {w:"mañé",d:"Tacky, trashy, lacking class; on the coast also unreliable.",c:"qualities",e:"Esa decoración está muy mañé.",t:"That decoration is really tacky."},
+  {w:"trillado",l:"from trillar, to thresh",d:"Overused, worn out.",c:"qualities",e:"Ese chiste ya está trillado.",t:"That joke is played out."},
+  {w:"cipote",d:"Huge.",c:"qualities",e:"¡Qué cipote de pescado te comiste!",t:"What a huge fish you ate!",r:"Costa"},
+  {w:"papayita",d:"Something easy, a piece of cake.",c:"qualities",e:"Ese examen fue papayita.",t:"That exam was a piece of cake.",r:"Costa"},
+
+  // Feelings
+  {w:"amañado",d:"Comfortable, feeling at home somewhere.",c:"feelings",e:"Estoy muy amañado en Medellín.",t:"I really feel at home in Medellín."},
+  {w:"achantado",d:"Down, sad, or embarrassed.",c:"feelings",e:"Está achantado porque perdió el examen.",t:"He’s down because he failed the exam."},
+  {w:"desparchado",d:"Bored, with nothing to do or nobody to hang out with.",c:"feelings",e:"Estoy desparchado, ¿hacemos algo?",t:"I’m bored with nothing to do, shall we do something?"},
+  {w:"mamera",d:"A drag, something you can’t be bothered with.",c:"feelings",e:"¡Qué mamera madrugar un sábado!",t:"What a pain to get up early on a Saturday!"},
+  {w:"jartera",d:"Boredom, a drag; also drunkenness.",c:"feelings",e:"¡Qué jartera esa reunión!",t:"That meeting was so boring!"},
+  {w:"locha",d:"Laziness.",c:"feelings",e:"Qué locha ir a trabajar hoy.",t:"I can’t be bothered to go to work today."},
+  {w:"rayado",d:"Annoyed with someone, upset.",c:"feelings",e:"Está rayado conmigo porque no lo llamé.",t:"He’s mad at me because I didn’t call."},
+  {w:"emberracarse",d:"To get really angry.",c:"feelings",e:"Mi papá se emberracó cuando vio la cuenta.",t:"My dad got furious when he saw the bill."},
+  {w:"sacar la piedra",l:"“to take out the stone”",d:"To make someone angry.",c:"feelings",e:"No me saque la piedra, que hoy estoy cansado.",t:"Don’t push my buttons, I’m tired today."},
+  {w:"tragado",l:"“swallowed”",d:"Head over heels, smitten.",c:"feelings",e:"Está tragadísimo de la vecina.",t:"He’s totally crazy about the neighbor."},
+  {w:"encarretado",d:"Hooked on someone or something, really into it.",c:"feelings",e:"Estoy encarretado con esa serie.",t:"I’m totally hooked on that series."},
+  {w:"entusado",d:"Heartbroken after a breakup.",c:"feelings",e:"Anda entusado desde que lo dejó la novia.",t:"He’s been heartbroken since his girlfriend left him."},
+  {w:"achantarse",d:"To get embarrassed or discouraged.",c:"feelings",e:"No te achantes, ¡pregúntale!",t:"Don’t chicken out, ask her!"},
+
+  // Money
+  {w:"plata",l:"“silver”",d:"Money.",c:"money",e:"No tengo plata para el bus.",t:"I don’t have money for the bus."},
+  {w:"luca / lucas",l:"from Roman numeral L",d:"A thousand pesos.",c:"money",e:"El almuerzo vale quince lucas.",t:"Lunch costs fifteen thousand pesos."},
+  {w:"barra",l:"“gold bar”",d:"A thousand pesos.",c:"money",e:"Eso vale cinco barras.",t:"That costs five thousand pesos."},
+  {w:"palo",l:"“stick”",d:"A million pesos.",c:"money",e:"Se gastó dos palos en el celular.",t:"He spent two million pesos on the phone."},
+  {w:"paquete",l:"“package”",d:"A million pesos. Also used as an insult.",c:"money",e:"Ese carro le costó treinta paquetes.",t:"That car cost him thirty million."},
+  {w:"chivos",l:"“goats”",d:"Coins, cash.",c:"money",e:"Préstame unos chivos pa’l bus.",t:"Lend me some change for the bus.",r:"Costa"},
+  {w:"hacer vaca",l:"“to make a cow”",d:"To pool money with friends.",c:"money",e:"Hagamos vaca para el regalo de la profe.",t:"Let’s chip in for the teacher’s gift."},
+  {w:"ñapa",d:"A little extra thrown in for free when you buy something.",c:"money",e:"El frutero me dio un mango de ñapa.",t:"The fruit seller threw in a mango for free."},
+  {w:"naranjas",l:"“oranges”",d:"Nothing at all.",c:"money",e:"—¿Cuánto te pagaron? —Naranjas.",t:"“How much did they pay you?” “Zilch.”",r:"Costa"},
+
+  // Everyday
+  {w:"camello",l:"“camel”",d:"A job, or hard work.",c:"everyday",e:"Conseguí camello en una panadería.",t:"I got a job at a bakery."},
+  {w:"camellar",d:"To work, especially hard.",c:"everyday",e:"Toca camellar todo el fin de semana.",t:"I have to work all weekend."},
+  {w:"vaina",l:"“sheath, pod”",d:"A thing, stuff, or a complicated situation.",c:"everyday",e:"Pásame esa vaina que está en la mesa.",t:"Pass me that thing on the table."},
+  {w:"chécheres",d:"Junk, odds and ends.",c:"everyday",e:"El garaje está lleno de chécheres.",t:"The garage is full of junk."},
+  {w:"chuspa",d:"A plastic bag.",c:"everyday",e:"¿Me regala una chuspa para las frutas?",t:"Could I have a bag for the fruit?",r:"Valle"},
+  {w:"pieza",l:"“piece”",d:"Bedroom.",c:"everyday",e:"Se encerró en la pieza a estudiar.",t:"She shut herself in her room to study."},
+  {w:"cumbamba",d:"Chin.",c:"everyday",e:"Se cayó y se rajó la cumbamba.",t:"He fell and split his chin."},
+  {w:"motoso",d:"A nap.",c:"everyday",e:"Después de almuerzo me echo un motoso.",t:"After lunch I take a little nap."},
+  {w:"arruncharse",d:"To curl up, snuggle.",c:"everyday",e:"Hace frío, arrunchémonos a ver una película.",t:"It’s cold, let’s snuggle up and watch a movie."},
+  {w:"paro",d:"A strike or protest that blocks roads.",c:"everyday",e:"No hay buses por el paro.",t:"There are no buses because of the strike."},
+  {w:"cuadrar",d:"To arrange or schedule; cuadrarse means to start dating.",c:"everyday",e:"Cuadremos para el viernes. Y ellos ya se cuadraron.",t:"Let’s set it for Friday. And those two are dating now."},
+  {w:"mamar gallo",l:"“to suck rooster”",d:"To joke around, tease, or waste time.",c:"everyday",e:"Deja de mamar gallo y ponte serio.",t:"Stop kidding around and be serious."},
+  {w:"tirar caja",l:"“to throw box”",d:"To laugh out loud.",c:"everyday",e:"Tiramos caja con los chistes de Juan.",t:"We cracked up at Juan’s jokes."},
+  {w:"hacer el oso",l:"“to do the bear”",d:"To embarrass yourself.",c:"everyday",e:"Hice el oso cantando en el karaoke.",t:"I made a fool of myself singing karaoke."},
+  {w:"embarrarla",l:"“to cover it in mud”",d:"To mess up.",c:"everyday",e:"La embarré: le conté la sorpresa.",t:"I blew it: I told her about the surprise."},
+  {w:"descache",d:"A blunder, a slip.",c:"everyday",e:"Fue un descache llamarla por el nombre de la ex.",t:"Calling her by his ex’s name was a big slip."},
+  {w:"rajarse",l:"“to crack”",d:"To fail, especially an exam.",c:"everyday",e:"Me rajé en física.",t:"I flunked physics."},
+  {w:"perder el año",l:"“to lose the year”",d:"To fail a school year; jokingly, to die.",c:"everyday",e:"Si no estudia, va a perder el año.",t:"If he doesn’t study, he’ll have to repeat the year."},
+  {w:"sapear",d:"To snitch on someone.",c:"everyday",e:"Mi hermana me sapeó con mi mamá.",t:"My sister ratted me out to my mom."},
+  {w:"charlar",d:"To chat, gossip or joke.",c:"everyday",e:"Nos quedamos charlando hasta tarde.",t:"We stayed up chatting until late."},
+  {w:"cantaleta",d:"A scolding, nagging.",c:"everyday",e:"Mi mamá me echó la cantaleta por llegar tarde.",t:"My mom nagged me for coming home late."},
+  {w:"catorce",l:"“fourteen”",d:"A favor.",c:"everyday",e:"Hágame un catorce y me recoge en el aeropuerto.",t:"Do me a favor and pick me up at the airport."},
+  {w:"aporrearse",d:"To fall and hurt yourself by accident.",c:"everyday",e:"Me aporreé la rodilla bajando las escaleras.",t:"I banged my knee going down the stairs."},
+  {w:"video",d:"A lie, an overreaction, or a problem.",c:"everyday",e:"No se haga el video, que no fue para tanto.",t:"Don’t make a drama out of it, it wasn’t that bad."},
+  {w:"camión",l:"“truck”",d:"A lie.",c:"everyday",e:"Eso que te contó es puro camión.",t:"What he told you is a pack of lies.",r:"Costa"},
+  {w:"chicanear",d:"To show off, boast.",c:"everyday",e:"Vive chicaneando con su moto nueva.",t:"He’s always showing off his new motorbike."},
+  {w:"abrirse",l:"“to open up”",d:"To leave, take off.",c:"everyday",e:"Me abro, nos vemos mañana.",t:"I’m off, see you tomorrow."},
+  {w:"chincharrón",d:"A problem, a mess.",c:"everyday",e:"Se metió en un chincharrón con el jefe.",t:"He got into a mess with the boss.",r:"Costa"},
+  {w:"sisas",d:"Yes. Low-register.",c:"everyday",e:"—¿Vas a ir? —Sisas.",t:"“Are you going?” “Yep.”"},
+  {w:"mecha",d:"Clothes.",c:"everyday",e:"Me puse la mecha nueva pa’l baile.",t:"I put on my new outfit for the dance.",r:"Costa"},
+
+  // Food & drink
+  {w:"tinto",l:"“dyed, red”",d:"A small cup of black coffee. Not red wine.",c:"food",e:"¿Le provoca un tinto?",t:"Would you like a coffee?"},
+  {w:"pintado",l:"“painted”",d:"A small coffee with a little milk.",c:"food",e:"Para mí un pintado, por favor.",t:"A coffee with a splash of milk for me, please."},
+  {w:"onces",l:"“elevenses”",d:"The afternoon snack, often coffee or hot chocolate with bread.",c:"food",e:"A las cinco tomamos onces con almojábanas.",t:"At five we have our afternoon snack with cheese rolls.",r:"Bogotá"},
+  {w:"mecato",d:"Snacks, junk food.",c:"food",e:"Compré mecato para la película.",t:"I bought snacks for the movie."},
+  {w:"corrientazo",d:"A cheap set lunch: soup, main, juice.",c:"food",e:"Almorcemos un corrientazo cerca de la oficina.",t:"Let’s grab a cheap set lunch near the office."},
+  {w:"ejecutivo",l:"“executive”",d:"The set lunch, usually a bit pricier than a corrientazo.",c:"food",e:"El ejecutivo de hoy es pechuga a la plancha.",t:"Today’s set lunch is grilled chicken breast."},
+  {w:"changua",d:"A milk-and-egg breakfast soup from the highlands.",c:"food",e:"Mi abuela hace changua los domingos.",t:"My grandma makes milk-and-egg soup on Sundays.",r:"Bogotá"},
+  {w:"chuzo",l:"“skewer”",d:"A small food stall or joint; also a skewer.",c:"food",e:"Comimos en un chuzo de la esquina.",t:"We ate at a little joint on the corner."},
+  {w:"cuncho",d:"The last bit left at the bottom of a cup or pot.",c:"food",e:"Solo quedó el cuncho del café.",t:"Only the dregs of the coffee are left."},
+  {w:"pola",l:"from Policarpa Salavarrieta",d:"Beer. Named after La Pola, a beer Bavaria launched in 1910 for the independence centenary.",c:"food",e:"¿Nos tomamos una pola después del trabajo?",t:"Shall we have a beer after work?"},
+  {w:"guaro",d:"Aguardiente, the anise liquor.",c:"food",e:"Sacaron la botella de guaro en la novena.",t:"They brought out the aguardiente at the Christmas novena."},
+  {w:"medio cubo",d:"A shot of rum.",c:"food",e:"Sírvame un medio cubo, compadre.",t:"Pour me a shot, buddy.",r:"Costa"},
+  {w:"filo",l:"“sharp edge”",d:"Hunger.",c:"food",e:"Tengo un filo, vamos a comer.",t:"I’m starving, let’s go eat."},
+
+  // Going out
+  {w:"rumba",d:"A party, a night out.",c:"party",e:"La rumba de anoche estuvo buenísima.",t:"Last night’s party was amazing."},
+  {w:"rumbear",d:"To go out dancing; rumbearse means to make out.",c:"party",e:"Este viernes nos vamos a rumbear a Andrés.",t:"This Friday we’re going out dancing at Andrés."},
+  {w:"farra",d:"A party.",c:"party",e:"Nos vamos de farra para celebrar.",t:"We’re going out partying to celebrate."},
+  {w:"azotar baldosa",l:"“to whip the tile”",d:"To dance hard.",c:"party",e:"Mi tía azotó baldosa toda la noche.",t:"My aunt tore up the dance floor all night."},
+  {w:"guachafita",d:"Chaos, a noisy party.",c:"party",e:"Los vecinos tenían una guachafita hasta las tres.",t:"The neighbors had a rowdy party until three."},
+  {w:"recocha",d:"Messing around, rowdy fun.",c:"party",e:"En el paseo hubo mucha recocha.",t:"There was a lot of goofing around on the trip."},
+  {w:"tómbola",d:"A street party or fair.",c:"party",e:"Esta noche hay tómbola en el barrio.",t:"There’s a street party in the neighborhood tonight.",r:"Costa"},
+  {w:"pachanguero",d:"Someone who parties all night.",c:"party",e:"Mi primo es el más pachanguero de la familia.",t:"My cousin is the biggest party animal in the family.",r:"Valle"},
+  {w:"prendido",l:"“switched on”",d:"Tipsy.",c:"party",e:"Con dos polas ya está prendido.",t:"Two beers and he’s already tipsy."},
+  {w:"jincho / chapeto",d:"Drunk. Chapeto is the costeño word.",c:"party",e:"Salió jincho de la fiesta.",t:"He left the party wasted."},
+  {w:"perra",l:"“bitch”",d:"Drunkenness, a bender.",c:"party",e:"¡Qué perra la de anoche!",t:"What a bender last night!",x:1},
+  {w:"guayabo",d:"A hangover. Enguayabado means hungover.",c:"party",e:"Estoy enguayabado. Dame un cafecito, porfa.",t:"I’m hungover. Give me a coffee, please."},
+  {w:"echar los perros",l:"“to throw the dogs”",d:"To flirt with someone, hit on them.",c:"party",e:"Le está echando los perros a mi amiga.",t:"He’s hitting on my friend."},
+  {w:"gallinacear",d:"To flirt with everyone.",c:"party",e:"Deja de gallinacear y saca a bailar a alguien.",t:"Stop flirting with everyone and ask someone to dance."},
+  {w:"levantar",l:"“to lift”",d:"To pick someone up romantically; also to beat someone up.",c:"party",e:"Anoche levantó en la discoteca.",t:"He picked someone up at the club last night."},
+  {w:"ligar",l:"“to tie”",d:"To bribe or give money (Antioquia); to flirt (Valle).",c:"party",e:"Le ligó al portero para entrar.",t:"He slipped the doorman some cash to get in."},
+  {w:"poner los cachos",l:"“to put horns on”",d:"To cheat on a partner.",c:"party",e:"Le pusieron los cachos y se enteró por Instagram.",t:"She got cheated on and found out on Instagram."},
+  {w:"martillar",l:"“to hammer”",d:"To meet up with your partner just to kiss and cuddle.",c:"party",e:"Se fueron al parque a martillar.",t:"They went to the park to make out.",r:"Costa"},
+
+  // Getting around
+  {w:"trancón",d:"A traffic jam.",c:"transport",e:"Hay un trancón tenaz en la Séptima.",t:"There’s a terrible traffic jam on Seventh Avenue."},
+  {w:"buseta",d:"A small bus.",c:"transport",e:"Me toca coger la buseta hasta el centro.",t:"I have to take the minibus downtown."},
+  {w:"colectivo",d:"A shared taxi or minibus on a fixed route.",c:"transport",e:"Cogimos un colectivo hasta el pueblo.",t:"We took a shared taxi to the village."},
+  {w:"chiva",d:"A colorful open-sided bus; today often a party bus.",c:"transport",e:"Alquilamos una chiva rumbera para el cumpleaños.",t:"We rented a party bus for the birthday."},
+  {w:"mula",l:"“mule”",d:"A big truck, an 18-wheeler.",c:"transport",e:"Una mula se varó en la vía.",t:"A truck broke down on the road."},
+  {w:"nave",l:"“ship”",d:"A car, especially a nice one.",c:"transport",e:"¡Qué nave tan bacana te compraste!",t:"What a cool car you bought!"},
+  {w:"carcacha",d:"An old wreck of a car or machine.",c:"transport",e:"Esa carcacha no sube la loma.",t:"That old wreck won’t make it up the hill."},
+  {w:"a pata",l:"“by paw”",d:"On foot.",c:"transport",e:"Nos tocó irnos a pata.",t:"We had to walk."},
+  {w:"pico y placa",l:"“peak and plate”",d:"Driving restriction by license plate number on certain days.",c:"transport",e:"Hoy no saco el carro, tengo pico y placa.",t:"I’m not taking the car today, my plate is restricted."},
+
+  // Warnings
+  {w:"dar papaya",l:"“to give papaya”",d:"To make yourself an easy target, invite trouble.",c:"warnings",e:"No dé papaya sacando el celular en la calle.",t:"Don’t make yourself a target by taking your phone out on the street."},
+  {w:"¡pilas!",l:"“batteries”",d:"Watch out! Stay alert!",c:"warnings",e:"¡Pilas con el escalón!",t:"Watch the step!"},
+  {w:"parar bolas",l:"“to stop balls”",d:"To pay attention.",c:"warnings",e:"Párele bolas a la profe.",t:"Pay attention to the teacher."},
+
+  // Health
+  {w:"sereno",l:"“night dew”",d:"A mild illness blamed on a cold draft or night air.",c:"health",e:"No salgas mojado, que te da el sereno.",t:"Don’t go out with wet hair, you’ll catch a chill."},
+  {w:"soroche",d:"Fainting; also altitude sickness.",c:"health",e:"Me dio soroche subiendo a Monserrate.",t:"I got altitude sickness climbing Monserrate."},
+  {w:"churrias",d:"Diarrhea.",c:"health",e:"Algo me cayó mal y tengo churrias.",t:"Something didn’t agree with me and I’ve got the runs."},
+  {w:"pecueca",d:"Smelly feet.",c:"health",e:"Quítate los zapatos afuera, que tienes pecueca.",t:"Take your shoes off outside, your feet stink."},
+  {w:"chucha",d:"Armpit odor. In the Valle, also an opossum.",c:"health",e:"Después del partido quedó con una chucha terrible.",t:"After the game he had terrible BO."},
+
+  // Street
+  {w:"plomo",l:"“lead”",d:"Bullets; to shoot.",c:"street",e:"En la película hubo plomo de principio a fin.",t:"There was shooting from start to finish in the movie."},
+
+  // Crude & offensive (hidden by default)
+  {w:"chimba",d:"Awesome, especially in Medellín. Also luck, or something cheap. Vulgar in origin.",c:"qualities",e:"¡Qué chimba de concierto, parce!",t:"What an awesome concert, man!",x:1},
+  {w:"marica",l:"slur in origin",d:"Used constantly among friends like “dude”. Depending on tone it is a homophobic insult; maricón is harsher.",c:"people",e:"¡Marica, no me vas a creer lo que pasó!",t:"Dude, you won’t believe what happened!",x:1},
+  {w:"mariconadas",d:"Fooling around, nonsense.",c:"everyday",e:"Deje las mariconadas y póngase serio.",t:"Quit the nonsense and get serious.",x:1},
+  {w:"gonorriento",d:"The worst kind of person. Very crude.",c:"people",e:"Ese tipo es un gonorriento, robó a su propio amigo.",t:"That guy is scum, he robbed his own friend.",x:1},
+  {w:"jeta",d:"Mouth, vulgar.",c:"everyday",e:"¡Cierre la jeta!",t:"Shut your trap!",x:1},
+  {w:"mamado",d:"Fed up or exhausted. The verb mamar is also sexual slang.",c:"feelings",e:"Estoy mamado de este trabajo.",t:"I’m sick and tired of this job.",x:1},
+  {w:"me vale huevo",l:"“it’s worth an egg to me”",d:"I don’t give a damn.",c:"greetings",e:"Lo que digan me vale huevo.",t:"I don’t give a damn what they say.",x:1},
+  {w:"morado",l:"“purple, bruised”",d:"Offensive term for a Black person.",c:"people",e:"Considered offensive; avoid it.",t:"",x:1},
+  {w:"comerse a alguien",l:"“to eat someone”",d:"To hook up with someone.",c:"party",e:"Dicen que se comió a la vecina.",t:"They say he hooked up with the neighbor.",x:1},
+  {w:"tirar",l:"“to throw”",d:"To have sex.",c:"party",e:"Common in crude talk; avoid it in polite company.",t:"",x:1},
+  {w:"trillar",l:"“to thresh”",d:"To make out.",c:"party",e:"Los encontraron trillando en el carro.",t:"They were caught making out in the car.",x:1},
+  {w:"golfa",d:"Derogatory term for a promiscuous woman.",c:"people",e:"An insult; avoid it.",t:"",x:1},
+  {w:"grilla",l:"“cricket”",d:"A sex worker (Antioquia); a low-class person (Valle). Derogatory.",c:"people",e:"An insult; avoid it.",t:"",x:1},
+  {w:"quicas",d:"Breasts. Crude, low-register.",c:"everyday",e:"Crude; avoid it in polite company.",t:"",x:1},
+  {w:"chocha",d:"Crude word for vagina (Valle). Not to be confused with chucha.",c:"everyday",e:"Crude; avoid it.",t:"",x:1}
 ];
-const CATS = {all:"All",greetings:"Greetings & phrases",people:"People",qualities:"Describing",money:"Money",everyday:"Everyday",warnings:"Warnings",party:"Going out",health:"Health",street:"Street"};
+const CATS = {all:"All",greetings:"Greetings & phrases",people:"People",qualities:"Describing",feelings:"Feelings",money:"Money",everyday:"Everyday",food:"Food & drink",party:"Going out",transport:"Getting around",warnings:"Warnings",health:"Health",street:"Street"};
 let cat="all", q="", showCrude=false;
 try{ showCrude = localStorage.getItem("crude")==="1"; }catch(e){}
 const chips=document.getElementById("chips"), list=document.getElementById("list"), count=document.getElementById("count"), crudeBox=document.getElementById("crude");
@@ -717,16 +877,16 @@ const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function render(){
   const nq=norm(q.trim());
-  const items=W.filter(([w,l,d,c,e,cr])=>(showCrude||!cr)&&(cat==="all"||c===cat)&&(!nq||norm([w,l,d,e||""].join(" ")).includes(nq)))
-    .sort((a,b)=>norm(a[0].replace(/[¿¡]/g,"")).localeCompare(norm(b[0].replace(/[¿¡]/g,""))));
+  const items=W.filter(o=>(showCrude||!o.x)&&(cat==="all"||o.c===cat)&&(!nq||norm([o.w,o.l||"",o.d,o.e||"",o.t||"",o.r||""].join(" ")).includes(nq)))
+    .sort((a,b)=>norm(a.w.replace(/[¿¡]/g,"")).localeCompare(norm(b.w.replace(/[¿¡]/g,""))));
   count.textContent=items.length+(items.length===1?" word":" words");
-  list.innerHTML=items.length?items.map(([w,l,d,c,e,cr])=>`
-    <article class="word-card${cr?" crude":""}">
-      <div class="top"><span class="w">${esc(w)}</span><span class="cat">${CATS[c]}</span></div>
-      ${l&&l!=="—"?`<div class="lit">${esc(l)}</div>`:""}
-      <div class="def">${esc(d)}</div>
-      ${e?`<div class="use"><i>${esc(e)}</i></div>`:""}
-      ${cr?`<div class="flag">Crude or offensive</div>`:""}
+  list.innerHTML=items.length?items.map(o=>`
+    <article class="word-card${o.x?" crude":""}">
+      <div class="top"><span class="w">${esc(o.w)}</span><span class="cat">${CATS[o.c]}</span></div>
+      ${o.l?`<div class="lit">${esc(o.l)}</div>`:""}
+      <div class="def">${esc(o.d)}</div>
+      ${o.e?`<div class="use"><i>${esc(o.e)}</i>${o.t?`<span class="tr">${esc(o.t)}</span>`:""}</div>`:""}
+      ${o.r||o.x?`<div class="meta">${o.r?`<span class="reg">${esc(o.r)}</span>`:""}${o.x?`<span class="flag">Crude or offensive</span>`:""}</div>`:""}
     </article>`).join(""):`<p class="empty">No words match. Try another spelling or category.</p>`;
 }
 document.getElementById("q").addEventListener("input",e=>{q=e.target.value;render();});
