@@ -6,8 +6,9 @@
 <title>Sanskrit Reader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&family=Tiro+Devanagari+Hindi&family=Noto+Serif+Devanagari:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500&family=Martel:wght@400;600&family=Kalam&display=swap">
 <style>
+@font-face{font-family:"Sanskrit 2020";src:url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
 /* Layout: header, text picker + Devanagari input, large reading pane with IAST popups, sticky pace timer at the bottom */
 :root{
   --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
@@ -15,6 +16,7 @@
   --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.18);
   --read:rgba(93,103,98,.55);
   --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-read:var(--f-sa);
   --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -27,7 +29,8 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
-.wrap{max-width:780px;margin:0 auto;padding:20px 16px 140px;display:grid;gap:20px}
+.wrap{max-width:780px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:20px}
+body.timing .wrap{padding-bottom:calc(var(--timer-h,130px) + 55vh)}
 header{display:grid;gap:4px}
 .back{font-size:14px;color:var(--muted);text-decoration:none}
 .back:hover{color:var(--accent)}
@@ -35,16 +38,20 @@ h1{margin:0;font-size:clamp(28px,6vw,38px);font-weight:600;line-height:1.15}
 header p{margin:0;color:var(--muted);max-width:62ch}
 
 .controls{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-label{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.opts{display:flex;flex-wrap:wrap;align-items:end;gap:10px 20px}
+.opts .row{flex:1 1 220px}
+.check{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg);cursor:pointer;min-height:40px;user-select:none}
+.check input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.row > label{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;width:100%}
 select{padding:10px 12px;font-size:16px;cursor:pointer}
-textarea{padding:10px 12px;font-family:var(--f-sa);font-size:20px;line-height:1.7;min-height:7.5em;resize:vertical}
+textarea{padding:10px 12px;font-family:var(--f-read);font-size:20px;line-height:1.7;min-height:7.5em;resize:vertical}
 select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .row{display:grid;gap:6px}
 .hint{font-size:13px;color:var(--muted);margin:0}
 
 .reader{background:var(--slate);color:var(--chalk);border-radius:16px;padding:24px 20px;min-height:200px;
-  font-family:var(--f-sa);font-size:clamp(26px,5.4vw,36px);line-height:2.05;overflow-wrap:anywhere}
+  font-family:var(--f-read);font-size:clamp(26px,5.4vw,36px);line-height:2.05;overflow-wrap:anywhere}
 .reader .src{font-family:var(--f-ui);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--chalk-dim);line-height:1.4;margin-bottom:12px}
 .reader .line{display:block}
 .reader .empty{font-family:var(--f-ui);font-size:16px;color:var(--chalk-dim)}
@@ -58,9 +65,11 @@ select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px sol
   border-radius:10px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.22);max-width:min(88vw,420px);opacity:0;transform:translateY(4px);
   transition:opacity .12s,transform .12s}
 .pop.show{opacity:1;transform:none}
+.pop .iast .long{color:var(--accent);font-weight:600}
 .pop .iast{font-family:var(--f-sa);font-size:22px;line-height:1.35;overflow-wrap:anywhere}
 .pop .meta{font-size:12px;color:var(--muted);margin-top:2px}
 
+body:not(.timing) .timer{display:none}
 .timer{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--line);
   padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
 .timer-in{max-width:780px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
@@ -94,6 +103,22 @@ button:disabled{opacity:.45;cursor:default}
       <label for="input">Sanskrit text (Devanagari)</label>
       <textarea id="input" lang="sa" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Type or paste Devanagari here…"></textarea>
       <p class="hint">Edit freely; the reading view below updates as you type.</p>
+    </div>
+    <div class="opts">
+      <div class="row">
+        <label for="font">Font</label>
+        <select id="font">
+          <option value='"Tiro Devanagari Sanskrit"'>Tiro Devanagari Sanskrit</option>
+          <option value='"Tiro Devanagari Hindi"'>Tiro Devanagari Hindi</option>
+          <option value='"Sanskrit 2020"'>Sanskrit 2020</option>
+          <option value='"Noto Serif Devanagari"'>Noto Serif Devanagari</option>
+          <option value='"Noto Sans Devanagari"'>Noto Sans Devanagari</option>
+          <option value='"Martel"'>Martel</option>
+          <option value='"Kalam"'>Kalam (handwritten)</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="optLong"> Long vowels in orange (IAST)</label>
+      <label class="check"><input type="checkbox" id="optTimer"> Reading timer</label>
     </div>
   </section>
 
@@ -182,26 +207,30 @@ const OTHER = {"ं":"ṃ","ः":"ḥ","ँ":"m̐","ऽ":"'","ॐ":"oṃ","।":
 const VIRAMA="्", NUK="़";
 const DIG="०१२३४५६७८९";
 
-function toIAST(s){
+const LONG=new Set(["ā","ī","ū","ṝ","ḹ","e","ai","o","au"]);
+// Returns [[text, isLongVowel], …] so the popup can colour long vowels.
+function toIASTParts(s){
   s = s.normalize("NFD"); // splits precomposed nukta letters (क़ → क + ़)
-  let out="";
+  const out=[]; const add=(t,l=false)=>out.push([String(t),l]);
   for(let i=0;i<s.length;i++){
     const c=s[i];
     if(CON[c]){
       let base=CON[c];
       if(s[i+1]===NUK){ base=NUKTA[c]||base; i++; }
       const n=s[i+1];
-      if(n===VIRAMA){ out+=base; i++; }
-      else if(MAT[n]){ out+=base+MAT[n]; i++; }
-      else out+=base+"a";
-    } else if(VOW[c]) out+=VOW[c];
-    else if(OTHER[c]!==undefined) out+=OTHER[c];
-    else if(DIG.includes(c)) out+=DIG.indexOf(c);
-    else if(c===NUK||c==="‌"||c==="‍") {}
-    else out+=c;
+      if(n===VIRAMA){ add(base); i++; }
+      else if(MAT[n]){ add(base); add(MAT[n],LONG.has(MAT[n])); i++; }
+      else { add(base); add("a"); }
+    } else if(VOW[c]) add(VOW[c],LONG.has(VOW[c]));
+    else if(c==="ॐ"){ add("o",true); add("ṃ"); }
+    else if(OTHER[c]!==undefined) add(OTHER[c]);
+    else if(DIG.includes(c)) add(DIG.indexOf(c));
+    else if(c===NUK||c==="\u200C"||c==="\u200D") {}
+    else add(c);
   }
   return out;
 }
+function toIAST(s){ return toIASTParts(s).map(p=>p[0]).join(""); }
 
 // Syllables = vowel nuclei: independent vowels, plus every consonant that carries a vowel (not followed by virama).
 function syllables(s){
@@ -256,7 +285,7 @@ function render(){
       const sp=document.createElement("span"); sp.className="w"; sp.textContent=w;
       const syl=syllables(w); totalSyl+=syl;
       sp.dataset.i=words.length;
-      words.push({el:sp, text:w, iast:toIAST(w), syl, cum:totalSyl});
+      words.push({el:sp, text:w, iast:toIAST(w), parts:toIASTParts(w), syl, cum:totalSyl});
       ld.appendChild(sp); last=m.index+w.length;
     }
     if(last<line.length) ld.appendChild(punct(line.slice(last)));
@@ -277,7 +306,12 @@ function showPop(i){
   const w=words[i]; if(!w) return;
   if(popWord!==null && words[popWord]) words[popWord].el.classList.remove("on");
   popWord=i; w.el.classList.add("on");
-  $("popIast").textContent=w.iast.replace(/-$/,"–");
+  const box=$("popIast"); box.textContent="";
+  for(const [t,l] of w.parts){
+    const txt=t==="-"?"–":t;
+    if(l && optLong.checked){ const b=document.createElement("span"); b.className="long"; b.textContent=txt; box.appendChild(b); }
+    else box.appendChild(document.createTextNode(txt));
+  }
   $("popMeta").textContent=`${w.syl} syllable${w.syl===1?"":"s"}`;
   pop.classList.add("show");
   const r=w.el.getBoundingClientRect(), pr=pop.getBoundingClientRect();
@@ -304,7 +338,7 @@ reader.addEventListener("click",e=>{
   const t=e.target.closest(".w"); if(!t) return;
   const i=+t.dataset.i;
   showPop(i);
-  if(running) markProgress(i);
+  if(running && optTimer.checked) markProgress(i);
 });
 document.addEventListener("pointerdown",e=>{ if(!e.target.closest(".w")) hidePop(); });
 addEventListener("scroll",()=>{ if(popWord!==null) showPop(popWord); },{passive:true});
@@ -373,6 +407,26 @@ input.addEventListener("input",()=>{
   if(pick.value!=="custom") pick.value="custom";
   render();
 });
+// ---------- Options (remembered per browser) ----------
+const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer");
+function store(k,v){ try{ localStorage.setItem("sr."+k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem("sr."+k); }catch(e){ return null; } }
+function applyFont(){ document.documentElement.style.setProperty("--f-read",`${fontSel.value},"Noto Serif Devanagari",serif`); }
+function applyTimer(){
+  document.body.classList.toggle("timing",optTimer.checked);
+  if(!optTimer.checked) resetTimer();
+  const ft=document.querySelector(".timer");
+  requestAnimationFrame(()=>document.documentElement.style.setProperty("--timer-h",ft.offsetHeight+"px"));
+}
+const f0=load("font"); if(f0 && [...fontSel.options].some(o=>o.value===f0)) fontSel.value=f0;
+optLong.checked=load("long")==="1";
+optTimer.checked=false; // timer is off by default on every visit
+fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value); if(popWord!==null) showPop(popWord); });
+optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
+optTimer.addEventListener("change",applyTimer);
+addEventListener("resize",()=>{ if(optTimer.checked) applyTimer(); });
+applyFont(); applyTimer();
+
 pick.value="0"; input.value=TEXTS[0].text; render();
 </script>
 </body>
