@@ -40,6 +40,18 @@ header p{margin:0;color:var(--muted);max-width:62ch}
 .controls{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
 .opts{display:flex;flex-wrap:wrap;align-items:end;gap:10px 20px}
 .opts .row{flex:1 1 220px}
+.info-btn{width:26px;height:26px;min-height:0;padding:0;border-radius:50%;font-size:14px;font-weight:600;font-family:Georgia,serif;font-style:italic;
+  display:inline-grid;place-items:center;border:1.5px solid var(--muted);color:var(--muted);background:transparent;margin-left:-12px}
+.info-btn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+.info{flex-basis:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px}
+.info[hidden]{display:none}
+.info h3{margin:0 0 6px;font-size:15px}
+.info p{margin:6px 0}
+.info ul{margin:6px 0;padding-left:20px}
+.info li{margin:3px 0}
+.info .o{color:var(--accent);font-weight:600}
+.info .u{text-decoration:underline dotted;text-underline-offset:3px}
+.info .ex{font-family:var(--f-sa);font-size:16px}
 .check{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg);cursor:pointer;min-height:40px;user-select:none}
 .check input{width:18px;height:18px;accent-color:var(--accent);margin:0}
 .row > label{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
@@ -66,6 +78,8 @@ select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px sol
   transition:opacity .12s,transform .12s}
 .pop.show{opacity:1;transform:none}
 .pop .iast .long{color:var(--accent);font-weight:600}
+.pop .iast .long.pos{text-decoration:underline dotted;text-underline-offset:4px}
+.pop .meta{white-space:pre}
 .pop .iast{font-family:var(--f-sa);font-size:22px;line-height:1.35;overflow-wrap:anywhere}
 .pop .meta{font-size:12px;color:var(--muted);margin-top:2px}
 
@@ -117,8 +131,25 @@ button:disabled{opacity:.45;cursor:default}
           <option value='"Kalam"'>Kalam (handwritten)</option>
         </select>
       </div>
-      <label class="check"><input type="checkbox" id="optLong"> Long vowels in orange (IAST)</label>
+      <label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label>
+      <button class="info-btn" id="infoBtn" type="button" aria-expanded="false" aria-controls="info" title="How syllable weight works">i</button>
       <label class="check"><input type="checkbox" id="optTimer"> Reading timer</label>
+      <div class="info" id="info" hidden>
+        <h3>Syllable weight (guru and laghu)</h3>
+        <p>Sanskrit metre counts every syllable as either <b>light</b> (laghu, ⏑, one mātrā) or <b>heavy</b> (guru, –, two mātrās). The orange marks the vowel of each heavy syllable.</p>
+        <ul>
+          <li><b>Short vowels:</b> a, i, u, ṛ, ḷ. <b>Long vowels:</b> ā, ī, ū, ṝ, ḹ, and e, ai, o, au, which are always long.</li>
+          <li><b>Heavy by nature:</b> any syllable with a long vowel, e.g. <span class="ex">n<span class="o">ā</span>yaṃ</span>.</li>
+          <li><b>Heavy by position:</b> a short vowel followed by
+            <ul>
+              <li>anusvāra ṃ or visarga ḥ: <span class="ex">n<span class="o">ā</span>y<span class="o u">a</span>ṃ</span>, <span class="ex">bh<span class="o">ū</span>y<span class="o u">a</span>ḥ</span></li>
+              <li>two or more consonants (a conjunct, including kṣ and jñ): <span class="ex">dh<span class="o u">a</span>rm<span class="o u">a</span>kṣ<span class="o">e</span>tr<span class="o">e</span></span></li>
+            </ul>
+            This also holds across a word boundary within a verse quarter: in <span class="ex">ātmaiv<span class="o u">a</span> <b>hy</b>ātmano</span> (Gītā 6.5) the final a of ātmaiva is heavy because h and y follow. The count restarts at every daṇḍa and line break. Positional heavies are shown with a dotted underline.</li>
+          <li><b>Everything else is light:</b> a short vowel followed by at most one consonant, or by a vowel.</li>
+        </ul>
+        <p>Weight belongs to the syllable, not the vowel: a short vowel before a conjunct is still pronounced short, but the syllable takes two mātrās in metre. Aspirates (kh, gh, th, bh …) are single consonants, and candrabindu (m̐) does not make a syllable heavy. Metres often treat the last syllable of a verse quarter as heavy regardless (anceps); that is not marked here. The popup also shows the word's weight pattern, e.g. – – ⏑.</p>
+      </div>
     </div>
   </section>
 
@@ -208,27 +239,42 @@ const VIRAMA="्", NUK="़";
 const DIG="०१२३४५६७८९";
 
 const LONG=new Set(["ā","ī","ū","ṝ","ḹ","e","ai","o","au"]);
-// Returns [[text, isLongVowel], …] so the popup can colour long vowels.
+// Returns [{t, k, long}] — k: "C" consonant, "V" vowel, "M" anusvāra/visarga, "X" other.
 function toIASTParts(s){
   s = s.normalize("NFD"); // splits precomposed nukta letters (क़ → क + ़)
-  const out=[]; const add=(t,l=false)=>out.push([String(t),l]);
+  const out=[]; const add=(t,k="X",long=false)=>out.push({t:String(t),k,long});
   for(let i=0;i<s.length;i++){
     const c=s[i];
     if(CON[c]){
       let base=CON[c];
       if(s[i+1]===NUK){ base=NUKTA[c]||base; i++; }
       const n=s[i+1];
-      if(n===VIRAMA){ add(base); i++; }
-      else if(MAT[n]){ add(base); add(MAT[n],LONG.has(MAT[n])); i++; }
-      else { add(base); add("a"); }
-    } else if(VOW[c]) add(VOW[c],LONG.has(VOW[c]));
-    else if(c==="ॐ"){ add("o",true); add("ṃ"); }
+      if(n===VIRAMA){ add(base,"C"); i++; }
+      else if(MAT[n]){ add(base,"C"); add(MAT[n],"V",LONG.has(MAT[n])); i++; }
+      else { add(base,"C"); add("a","V"); }
+    } else if(VOW[c]) add(VOW[c],"V",LONG.has(VOW[c]));
+    else if(c==="ॐ"){ add("o","V",true); add("ṃ","M"); }
+    else if(c==="ं"||c==="ः") add(OTHER[c],"M");
     else if(OTHER[c]!==undefined) add(OTHER[c]);
     else if(DIG.includes(c)) add(DIG.indexOf(c));
     else if(c===NUK||c==="\u200C"||c==="\u200D") {}
     else add(c);
   }
   return out;
+}
+// Syllable weight over a run of words (one verse quarter, i.e. up to a daṇḍa or line end).
+// A vowel is heavy (guru) when it is long by nature, or followed by ṃ/ḥ, or by two or more consonants
+// — also across a word boundary. Otherwise it is light (laghu).
+function weigh(run){
+  const seq=run.flatMap(w=>w.parts).filter(p=>p.k!=="X");
+  seq.forEach((p,i)=>{
+    if(p.k!=="V") return;
+    p.heavy=false; p.pos=false;
+    if(p.long){ p.heavy=true; return; }
+    const n1=seq[i+1], n2=seq[i+2];
+    if(n1 && n1.k==="M"){ p.heavy=true; p.pos=true; }
+    else if(n1 && n1.k==="C" && n2 && n2.k==="C"){ p.heavy=true; p.pos=true; }
+  });
 }
 function toIAST(s){ return toIASTParts(s).map(p=>p[0]).join(""); }
 
@@ -277,17 +323,19 @@ function render(){
   if(!text){ const e=document.createElement("div"); e.className="empty"; e.textContent="Type or paste Devanagari above to start reading."; reader.appendChild(e); resetTimer(); return; }
   for(const line of text.split(/\n/)){
     const ld=document.createElement("span"); ld.className="line";
-    let last=0, m; WORD_RE.lastIndex=0;
+    let last=0, m, run=[]; WORD_RE.lastIndex=0;
     while((m=WORD_RE.exec(line))){
       const w=m[0];
       if(!/[ऄ-हॐक़-ॡॲ-ॿ]/.test(w)){ continue; } // no letters: leave as punctuation
-      if(m.index>last) ld.appendChild(punct(line.slice(last,m.index)));
+      if(m.index>last){ const gap=line.slice(last,m.index); if(/[।॥|]/.test(gap)){ weigh(run); run=[]; } ld.appendChild(punct(gap)); }
       const sp=document.createElement("span"); sp.className="w"; sp.textContent=w;
       const syl=syllables(w); totalSyl+=syl;
       sp.dataset.i=words.length;
-      words.push({el:sp, text:w, iast:toIAST(w), parts:toIASTParts(w), syl, cum:totalSyl});
+      const wd={el:sp, text:w, iast:toIAST(w), parts:toIASTParts(w), syl, cum:totalSyl};
+      words.push(wd); run.push(wd);
       ld.appendChild(sp); last=m.index+w.length;
     }
+    weigh(run);
     if(last<line.length) ld.appendChild(punct(line.slice(last)));
     if(!ld.childNodes.length) ld.innerHTML="&nbsp;";
     reader.appendChild(ld);
@@ -307,12 +355,13 @@ function showPop(i){
   if(popWord!==null && words[popWord]) words[popWord].el.classList.remove("on");
   popWord=i; w.el.classList.add("on");
   const box=$("popIast"); box.textContent="";
-  for(const [t,l] of w.parts){
-    const txt=t==="-"?"–":t;
-    if(l && optLong.checked){ const b=document.createElement("span"); b.className="long"; b.textContent=txt; box.appendChild(b); }
+  for(const p of w.parts){
+    const txt=p.t==="-"?"–":p.t;
+    if(p.k==="V" && p.heavy && optLong.checked){ const b=document.createElement("span"); b.className=p.pos?"long pos":"long"; b.textContent=txt; box.appendChild(b); }
     else box.appendChild(document.createTextNode(txt));
   }
-  $("popMeta").textContent=`${w.syl} syllable${w.syl===1?"":"s"}`;
+  const meter=w.parts.filter(p=>p.k==="V").map(p=>p.heavy?"–":"⏑").join(" ");
+  $("popMeta").textContent=`${w.syl} syllable${w.syl===1?"":"s"}`+(optLong.checked&&meter?`  ·  ${meter}`:"");
   pop.classList.add("show");
   const r=w.el.getBoundingClientRect(), pr=pop.getBoundingClientRect();
   let left=r.left+r.width/2-pr.width/2;
@@ -424,6 +473,7 @@ optTimer.checked=false; // timer is off by default on every visit
 fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value); if(popWord!==null) showPop(popWord); });
 optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
 optTimer.addEventListener("change",applyTimer);
+$("infoBtn").addEventListener("click",e=>{ const box=$("info"); box.hidden=!box.hidden; e.currentTarget.setAttribute("aria-expanded",String(!box.hidden)); });
 addEventListener("resize",()=>{ if(optTimer.checked) applyTimer(); });
 applyFont(); applyTimer();
 
