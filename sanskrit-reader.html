@@ -67,7 +67,7 @@ select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px sol
 .reader .src{font-family:var(--f-ui);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--chalk-dim);line-height:1.4;margin-bottom:12px}
 .reader .line{display:block}
 .reader .empty{font-family:var(--f-ui);font-size:16px;color:var(--chalk-dim)}
-.w{border-radius:6px;padding:0 2px;cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent}
+.w{border-radius:8px;padding:.12em .3em;margin:0 -.24em;-webkit-box-decoration-break:clone;box-decoration-break:clone;cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent}
 .w:hover,.w.on{background:var(--accent-soft);color:#fff}
 /* Dark mode: the page and the slate are both dark, so give the active word a lighter chip with an amber edge */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .w:hover,:root:not([data-theme="light"]) .w.on{
