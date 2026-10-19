@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sanskrit Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap">
+<style>
+/* Layout: header, text picker + Devanagari input, large reading pane with IAST popups, sticky pace timer at the bottom */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --chalk:#eef2e9; --chalk-dim:rgba(238,242,233,.62);
+  --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.18);
+  --read:rgba(93,103,98,.55);
+  --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --read:rgba(151,161,156,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --read:rgba(151,161,156,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:780px;margin:0 auto;padding:20px 16px 140px;display:grid;gap:20px}
+header{display:grid;gap:4px}
+.back{font-size:14px;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--accent)}
+h1{margin:0;font-size:clamp(28px,6vw,38px);font-weight:600;line-height:1.15}
+header p{margin:0;color:var(--muted);max-width:62ch}
+
+.controls{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+label{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;width:100%}
+select{padding:10px 12px;font-size:16px;cursor:pointer}
+textarea{padding:10px 12px;font-family:var(--f-sa);font-size:20px;line-height:1.7;min-height:7.5em;resize:vertical}
+select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:grid;gap:6px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+
+.reader{background:var(--slate);color:var(--chalk);border-radius:16px;padding:24px 20px;min-height:200px;
+  font-family:var(--f-sa);font-size:clamp(26px,5.4vw,36px);line-height:2.05;overflow-wrap:anywhere}
+.reader .src{font-family:var(--f-ui);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--chalk-dim);line-height:1.4;margin-bottom:12px}
+.reader .line{display:block}
+.reader .empty{font-family:var(--f-ui);font-size:16px;color:var(--chalk-dim)}
+.w{border-radius:6px;padding:0 2px;cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent}
+.w:hover,.w.on{background:var(--accent-soft);color:#fff}
+.w.read{color:var(--chalk-dim)}
+.w.here{box-shadow:inset 0 -3px 0 var(--accent)}
+.p{color:var(--chalk-dim);white-space:nowrap}
+
+.pop{position:fixed;z-index:20;pointer-events:none;background:var(--panel);color:var(--fg);border:1px solid var(--line);
+  border-radius:10px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.22);max-width:min(88vw,420px);opacity:0;transform:translateY(4px);
+  transition:opacity .12s,transform .12s}
+.pop.show{opacity:1;transform:none}
+.pop .iast{font-family:var(--f-sa);font-size:22px;line-height:1.35;overflow-wrap:anywhere}
+.pop .meta{font-size:12px;color:var(--muted);margin-top:2px}
+
+.timer{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--line);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.timer-in{max-width:780px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.stat{display:grid;line-height:1.15}
+.stat b{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.big b{font-size:28px;color:var(--accent)}
+.btns{display:flex;gap:8px;margin-left:auto}
+button{font:inherit;font-size:15px;font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);
+  padding:8px 14px;cursor:pointer;min-height:40px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.45;cursor:default}
+.timer .hint{flex-basis:100%;font-size:12px}
+@media (max-width:520px){.btns{margin-left:0;width:100%}.btns button{flex:1}.stat b{font-size:19px}.stat.big b{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <h1>Sanskrit Reader</h1>
+    <p>Read Sanskrit in Devanagari. Hover over or tap a word to see its IAST transliteration, and time yourself to see your reading pace in syllables per minute.</p>
+  </header>
+
+  <section class="controls" aria-label="Text">
+    <div class="row">
+      <label for="pick">Sample text</label>
+      <select id="pick"></select>
+    </div>
+    <div class="row">
+      <label for="input">Sanskrit text (Devanagari)</label>
+      <textarea id="input" lang="sa" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Type or paste Devanagari here…"></textarea>
+      <p class="hint">Edit freely; the reading view below updates as you type.</p>
+    </div>
+  </section>
+
+  <section class="reader" id="reader" lang="sa" aria-live="polite"></section>
+</div>
+
+<div class="pop" id="pop" role="tooltip"><div class="iast" id="popIast"></div><div class="meta" id="popMeta"></div></div>
+
+<footer class="timer" aria-label="Reading timer">
+  <div class="timer-in">
+    <div class="stat"><b id="tTime">0:00</b><span>time</span></div>
+    <div class="stat"><b id="tSyl">0 / 0</b><span>syllables read</span></div>
+    <div class="stat big"><b id="tRate">–</b><span>syllables / min</span></div>
+    <div class="btns">
+      <button class="primary" id="bStart">Start</button>
+      <button id="bDone" disabled>Done</button>
+      <button id="bReset">Reset</button>
+    </div>
+    <p class="hint" id="tHint">Press Start and read. Tap the word you've reached to update your pace live, or press Done at the end.</p>
+  </div>
+</footer>
+
+<script>
+// ---------- Sample texts ----------
+const TEXTS = [
+  {group:"Bhagavad Gītā", name:"1.1 · The field of dharma", text:
+`धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः ।
+मामकाः पाण्डवाश्चैव किमकुर्वत सञ्जय ॥ १.१ ॥`},
+  {group:"Bhagavad Gītā", name:"2.20–23 · The imperishable self", text:
+`न जायते म्रियते वा कदाचिन्
+नायं भूत्वा भविता वा न भूयः ।
+अजो नित्यः शाश्वतोऽयं पुराणो
+न हन्यते हन्यमाने शरीरे ॥ २.२० ॥
+वासांसि जीर्णानि यथा विहाय
+नवानि गृह्णाति नरोऽपराणि ।
+तथा शरीराणि विहाय जीर्णा-
+न्यन्यानि संयाति नवानि देही ॥ २.२२ ॥
+नैनं छिन्दन्ति शस्त्राणि नैनं दहति पावकः ।
+न चैनं क्लेदयन्त्यापो न शोषयति मारुतः ॥ २.२३ ॥`},
+  {group:"Bhagavad Gītā", name:"2.47–48 · Action without attachment", text:
+`कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।
+मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥ २.४७ ॥
+योगस्थः कुरु कर्माणि सङ्गं त्यक्त्वा धनञ्जय ।
+सिद्ध्यसिद्ध्योः समो भूत्वा समत्वं योग उच्यते ॥ २.४८ ॥`},
+  {group:"Bhagavad Gītā", name:"4.7–8 · Whenever dharma declines", text:
+`यदा यदा हि धर्मस्य ग्लानिर्भवति भारत ।
+अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम् ॥ ४.७ ॥
+परित्राणाय साधूनां विनाशाय च दुष्कृताम् ।
+धर्मसंस्थापनार्थाय सम्भवामि युगे युगे ॥ ४.८ ॥`},
+  {group:"Bhagavad Gītā", name:"6.5 & 18.66 · Lift yourself; take refuge", text:
+`उद्धरेदात्मनात्मानं नात्मानमवसादयेत् ।
+आत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः ॥ ६.५ ॥
+सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज ।
+अहं त्वा सर्वपापेभ्यो मोक्षयिष्यामि मा शुचः ॥ १८.६६ ॥`},
+  {group:"Yoga Sūtra", name:"1.1–4 · Definition of yoga", text:
+`अथ योगानुशासनम् ॥ १.१ ॥
+योगश्चित्तवृत्तिनिरोधः ॥ १.२ ॥
+तदा द्रष्टुः स्वरूपेऽवस्थानम् ॥ १.३ ॥
+वृत्तिसारूप्यमितरत्र ॥ १.४ ॥`},
+  {group:"Yoga Sūtra", name:"1.12–14 · Practice and dispassion", text:
+`अभ्यासवैराग्याभ्यां तन्निरोधः ॥ १.१२ ॥
+तत्र स्थितौ यत्नोऽभ्यासः ॥ १.१३ ॥
+स तु दीर्घकालनैरन्तर्यसत्कारासेवितो दृढभूमिः ॥ १.१४ ॥`},
+  {group:"Yoga Sūtra", name:"1.27–28, 1.33 · Om and a clear mind", text:
+`तस्य वाचकः प्रणवः ॥ १.२७ ॥
+तज्जपस्तदर्थभावनम् ॥ १.२८ ॥
+मैत्रीकरुणामुदितोपेक्षाणां सुखदुःखपुण्यापुण्यविषयाणां भावनातश्चित्तप्रसादनम् ॥ १.३३ ॥`},
+  {group:"Yoga Sūtra", name:"2.1, 2.29 · Kriyā yoga and the eight limbs", text:
+`तपःस्वाध्यायेश्वरप्रणिधानानि क्रियायोगः ॥ २.१ ॥
+यमनियमासनप्राणायामप्रत्याहारधारणाध्यानसमाधयोऽष्टावङ्गानि ॥ २.२९ ॥`},
+  {group:"Yoga Sūtra", name:"2.46–48 · Posture", text:
+`स्थिरसुखमासनम् ॥ २.४६ ॥
+प्रयत्नशैथिल्यानन्तसमापत्तिभ्याम् ॥ २.४७ ॥
+ततो द्वन्द्वानभिघातः ॥ २.४८ ॥`},
+];
+
+// ---------- Devanagari → IAST ----------
+const VOW = {"अ":"a","आ":"ā","इ":"i","ई":"ī","उ":"u","ऊ":"ū","ऋ":"ṛ","ॠ":"ṝ","ऌ":"ḷ","ॡ":"ḹ","ए":"e","ऐ":"ai","ओ":"o","औ":"au","ऍ":"ê","ऑ":"ô"};
+const MAT = {"ा":"ā","ि":"i","ी":"ī","ु":"u","ू":"ū","ृ":"ṛ","ॄ":"ṝ","ॢ":"ḷ","ॣ":"ḹ","े":"e","ै":"ai","ो":"o","ौ":"au","ॅ":"ê","ॉ":"ô"};
+const CON = {"क":"k","ख":"kh","ग":"g","घ":"gh","ङ":"ṅ","च":"c","छ":"ch","ज":"j","झ":"jh","ञ":"ñ",
+  "ट":"ṭ","ठ":"ṭh","ड":"ḍ","ढ":"ḍh","ण":"ṇ","त":"t","थ":"th","द":"d","ध":"dh","न":"n",
+  "प":"p","फ":"ph","ब":"b","भ":"bh","म":"m","य":"y","र":"r","ल":"l","ळ":"ḷ","व":"v",
+  "श":"ś","ष":"ṣ","स":"s","ह":"h"};
+const NUKTA = {"क":"q","ख":"k͟h","ग":"ġ","ज":"z","ड":"ṛ","ढ":"ṛh","फ":"f","य":"ẏ"};
+const OTHER = {"ं":"ṃ","ः":"ḥ","ँ":"m̐","ऽ":"'","ॐ":"oṃ","।":"|","॥":"||"};
+const VIRAMA="्", NUK="़";
+const DIG="०१२३४५६७८९";
+
+function toIAST(s){
+  s = s.normalize("NFD"); // splits precomposed nukta letters (क़ → क + ़)
+  let out="";
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(CON[c]){
+      let base=CON[c];
+      if(s[i+1]===NUK){ base=NUKTA[c]||base; i++; }
+      const n=s[i+1];
+      if(n===VIRAMA){ out+=base; i++; }
+      else if(MAT[n]){ out+=base+MAT[n]; i++; }
+      else out+=base+"a";
+    } else if(VOW[c]) out+=VOW[c];
+    else if(OTHER[c]!==undefined) out+=OTHER[c];
+    else if(DIG.includes(c)) out+=DIG.indexOf(c);
+    else if(c===NUK||c==="‌"||c==="‍") {}
+    else out+=c;
+  }
+  return out;
+}
+
+// Syllables = vowel nuclei: independent vowels, plus every consonant that carries a vowel (not followed by virama).
+function syllables(s){
+  s=s.normalize("NFD"); let n=0;
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(VOW[c]||c==="ॐ") n++;
+    else if(CON[c]){
+      let j=i+1; if(s[j]===NUK) j++;
+      if(s[j]!==VIRAMA) n++;
+    }
+  }
+  return n;
+}
+
+// ---------- Rendering ----------
+const $=id=>document.getElementById(id);
+const pick=$("pick"), input=$("input"), reader=$("reader"), pop=$("pop");
+let words=[];        // {el, syl, cum}
+let totalSyl=0;
+
+(function fillPicker(){
+  const groups={};
+  TEXTS.forEach((t,i)=>{(groups[t.group] ||= []).push([t,i]);});
+  for(const g in groups){
+    const og=document.createElement("optgroup"); og.label=g;
+    groups[g].forEach(([t,i])=>{const o=document.createElement("option"); o.value=i; o.textContent=`${g} ${t.name}`; og.appendChild(o);});
+    pick.appendChild(og);
+  }
+  const custom=document.createElement("option"); custom.value="custom"; custom.textContent="Your own text"; pick.appendChild(custom);
+})();
+
+const WORD_RE=/[ऀ-ॣॱ-ॿ‌‍\-]+/g; // letters & signs, excluding dandas (0964/0965) and digits (0966–096F)
+
+function render(){
+  hidePop();
+  reader.innerHTML=""; words=[]; totalSyl=0;
+  const sel=pick.value;
+  if(sel!=="custom"){
+    const t=TEXTS[+sel]; const src=document.createElement("div"); src.className="src"; src.textContent=`${t.group} ${t.name.split(" · ")[0]}`;
+    reader.appendChild(src);
+  }
+  const text=input.value.trim();
+  if(!text){ const e=document.createElement("div"); e.className="empty"; e.textContent="Type or paste Devanagari above to start reading."; reader.appendChild(e); resetTimer(); return; }
+  for(const line of text.split(/\n/)){
+    const ld=document.createElement("span"); ld.className="line";
+    let last=0, m; WORD_RE.lastIndex=0;
+    while((m=WORD_RE.exec(line))){
+      const w=m[0];
+      if(!/[ऄ-हॐक़-ॡॲ-ॿ]/.test(w)){ continue; } // no letters: leave as punctuation
+      if(m.index>last) ld.appendChild(punct(line.slice(last,m.index)));
+      const sp=document.createElement("span"); sp.className="w"; sp.textContent=w;
+      const syl=syllables(w); totalSyl+=syl;
+      sp.dataset.i=words.length;
+      words.push({el:sp, text:w, iast:toIAST(w), syl, cum:totalSyl});
+      ld.appendChild(sp); last=m.index+w.length;
+    }
+    if(last<line.length) ld.appendChild(punct(line.slice(last)));
+    if(!ld.childNodes.length) ld.innerHTML="&nbsp;";
+    reader.appendChild(ld);
+  }
+  resetTimer();
+}
+function punct(s){ // keep "॥ २.२० ॥" together; leading space stays breakable
+  const f=document.createDocumentFragment(), m=s.match(/^(\s*)(.*)$/s);
+  if(m[1]) f.appendChild(document.createTextNode(m[1]));
+  if(m[2]){ const p=document.createElement("span"); p.className="p"; p.textContent=m[2]; f.appendChild(p); }
+  return f; }
+
+// ---------- Popup ----------
+let popWord=null;
+function showPop(i){
+  const w=words[i]; if(!w) return;
+  if(popWord!==null && words[popWord]) words[popWord].el.classList.remove("on");
+  popWord=i; w.el.classList.add("on");
+  $("popIast").textContent=w.iast.replace(/-$/,"–");
+  $("popMeta").textContent=`${w.syl} syllable${w.syl===1?"":"s"}`;
+  pop.classList.add("show");
+  const r=w.el.getBoundingClientRect(), pr=pop.getBoundingClientRect();
+  let left=r.left+r.width/2-pr.width/2;
+  left=Math.max(8,Math.min(left,innerWidth-pr.width-8));
+  let top=r.top-pr.height-8;
+  if(top<8) top=r.bottom+8;
+  pop.style.left=left+"px"; pop.style.top=top+"px";
+}
+function hidePop(){
+  pop.classList.remove("show");
+  if(popWord!==null && words[popWord]) words[popWord].el.classList.remove("on");
+  popWord=null;
+}
+reader.addEventListener("pointerover",e=>{
+  if(e.pointerType!=="mouse") return;
+  const t=e.target.closest(".w"); if(t) showPop(+t.dataset.i);
+});
+reader.addEventListener("pointerout",e=>{
+  if(e.pointerType!=="mouse") return;
+  const t=e.target.closest(".w"); if(t && !t.contains(e.relatedTarget)) hidePop();
+});
+reader.addEventListener("click",e=>{
+  const t=e.target.closest(".w"); if(!t) return;
+  const i=+t.dataset.i;
+  showPop(i);
+  if(running) markProgress(i);
+});
+document.addEventListener("pointerdown",e=>{ if(!e.target.closest(".w")) hidePop(); });
+addEventListener("scroll",()=>{ if(popWord!==null) showPop(popWord); },{passive:true});
+addEventListener("resize",()=>{ if(popWord!==null) showPop(popWord); });
+
+// ---------- Timer ----------
+let running=false, startAt=0, elapsed=0, tick=null, progress=-1, finished=false;
+const bStart=$("bStart"), bDone=$("bDone"), bReset=$("bReset");
+
+function now(){ return running ? elapsed+(performance.now()-startAt) : elapsed; }
+function fmt(ms){ const s=Math.floor(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
+function readSyl(){ return progress>=0 ? words[progress].cum : 0; }
+function update(){
+  const ms=now();
+  $("tTime").textContent=fmt(ms);
+  $("tSyl").textContent=`${readSyl()} / ${totalSyl}`;
+  const min=ms/60000;
+  $("tRate").textContent = (readSyl()>0 && min>0.02) ? Math.round(readSyl()/min) : "–";
+}
+function markProgress(i){
+  progress=Math.max(progress,i);
+  words.forEach((w,k)=>{ w.el.classList.toggle("read",k<=progress); w.el.classList.toggle("here",k===progress); });
+  update();
+}
+function start(){
+  if(!words.length) return;
+  if(finished) resetTimer();
+  running=true; startAt=performance.now();
+  tick=setInterval(update,250);
+  bStart.textContent="Pause"; bDone.disabled=false;
+  $("tHint").textContent="Reading… tap the word you've reached to update your pace, or press Done at the end.";
+  update();
+}
+function pause(){
+  elapsed=now(); running=false; clearInterval(tick);
+  bStart.textContent="Resume"; update();
+  $("tHint").textContent="Paused.";
+}
+function done(){
+  if(running){ elapsed=now(); running=false; clearInterval(tick); }
+  markProgress(words.length-1);
+  finished=true; bStart.textContent="Again"; bDone.disabled=true;
+  const min=elapsed/60000;
+  $("tHint").textContent = min>0 ? `Finished: ${totalSyl} syllables in ${fmt(elapsed)} → ${Math.round(totalSyl/min)} syllables per minute.` : "Finished.";
+  update();
+}
+function resetTimer(){
+  running=false; clearInterval(tick); elapsed=0; progress=-1; finished=false;
+  words.forEach(w=>w.el.classList.remove("read","here"));
+  bStart.textContent="Start"; bDone.disabled=true; bStart.disabled=!words.length;
+  $("tHint").textContent="Press Start and read. Tap the word you've reached to update your pace live, or press Done at the end.";
+  update();
+}
+bStart.addEventListener("click",()=>{ running?pause():start(); });
+bDone.addEventListener("click",done);
+bReset.addEventListener("click",resetTimer);
+
+// ---------- Wiring ----------
+pick.addEventListener("change",()=>{
+  if(pick.value!=="custom") input.value=TEXTS[+pick.value].text;
+  else input.value="";
+  render();
+  if(pick.value==="custom") input.focus();
+});
+input.addEventListener("input",()=>{
+  if(pick.value!=="custom") pick.value="custom";
+  render();
+});
+pick.value="0"; input.value=TEXTS[0].text; render();
+</script>
+</body>
+</html>
