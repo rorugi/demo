@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Write Hindi and Sanskrit in Devanagari</title>
-<meta name="description" content="Type Hindi and Sanskrit in ITRANS or Devanagari and get Devanagari, IAST and ITRANS at once, with an InScript on-screen keyboard that can pop out into its own window and a reference table.">
+<meta name="description" content="Type Hindi and Sanskrit in ITRANS, IAST or Devanagari and get Devanagari, IAST and ITRANS at once, with an InScript on-screen keyboard that can pop out into its own window and a reference table.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
@@ -76,6 +76,13 @@ textarea::placeholder{color:var(--muted);opacity:.8;font-family:var(--f-ui);font
 .facts{border-top:1px solid var(--guide);padding-top:10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px;color:var(--chalk-dim);margin:0}
 .facts dd{margin:0;color:var(--chalk);font-family:var(--f-mono);font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
 .facts dd:empty::before{content:"–";color:var(--chalk-dim)}
+.board .tag,.board .lbl,.facts dt{display:inline-flex;align-items:center;gap:6px}
+.facts dt{align-self:start}
+.copy{appearance:none;display:inline-grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid var(--guide);border-radius:7px;background:transparent;color:var(--chalk-dim);cursor:pointer;flex:none}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+.copy:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.copy svg{width:15px;height:15px}
+.copy.done{color:var(--accent);border-color:var(--accent)}
 .board-foot{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
 
 /* Combined list and options */
@@ -174,7 +181,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
     <a class="back" href="index.html">← Demos</a>
     <div class="eyebrow">Transliteration · ITRANS · IAST</div>
     <h1>Write Hindi and Sanskrit in Devanagari <span class="deva">लिखो</span></h1>
-    <p class="lede">Type in ITRANS or directly in Devanagari and get Devanagari, IAST and ITRANS at the same time. With an InScript on-screen keyboard and a searchable character table.</p>
+    <p class="lede">Type in ITRANS, IAST or directly in Devanagari and get Devanagari, IAST and ITRANS at the same time. With an InScript on-screen keyboard and a searchable character table.</p>
   </header>
 
   <section class="input" aria-label="Input">
@@ -187,15 +194,15 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
       </span>
       <span class="ctl main-only">Input
         <span class="seg" role="group" aria-label="Input method" data-for="dw-method">
-          <button type="button" data-value="itrans" aria-pressed="true">ITRANS</button>
+          <button type="button" data-value="itrans" aria-pressed="true">ITRANS / IAST</button>
           <button type="button" data-value="nagari" aria-pressed="false">Devanagari keyboard</button>
         </span>
       </span>
       <select id="dw-language" hidden><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select>
-      <select id="dw-method" hidden><option value="itrans">ITRANS / mixed text</option><option value="nagari">Devanagari keyboard</option></select>
+      <select id="dw-method" hidden><option value="itrans">ITRANS / IAST / mixed text</option><option value="nagari">Devanagari keyboard</option></select>
     </div>
     <p class="note main-only" id="dw-mode-note"></p>
-    <textarea id="inputText" rows="4" spellcheck="false" autocapitalize="off" aria-label="Input text" placeholder="e.g. devanaagarii · namaste · ##word## stays as it is"></textarea>
+    <textarea id="inputText" rows="4" spellcheck="false" autocapitalize="off" aria-label="Input text" placeholder="e.g. devanaagarii · devanāgarī · namaste · ##word## stays as it is"></textarea>
     <div class="compose popout-only">
       <button class="btn primary" type="button" id="dw-copy">Copy</button>
       <button class="btn" type="button" id="dw-clear">Clear</button>
@@ -204,11 +211,11 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
   </section>
 
   <section class="board main-only" aria-label="Result" aria-live="polite">
-    <span class="tag">Devanagari</span>
+    <span class="tag">Devanagari <button type="button" class="copy" data-copy="out" aria-label="Copy Devanagari" title="Copy Devanagari"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 6.5V4.5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></span>
     <div class="big" id="out" lang="hi"></div>
-    <div class="roman-wrap"><span class="lbl" id="dw-iast-title">IAST / Hindi learner transliteration</span><div class="roman" id="outiast"></div></div>
+    <div class="roman-wrap"><span class="lbl"><span id="dw-iast-title">IAST / Hindi learner transliteration</span> <button type="button" class="copy" data-copy="outiast" aria-label="Copy IAST" title="Copy IAST"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 6.5V4.5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></span><div class="roman" id="outiast"></div></div>
     <dl class="facts">
-      <dt>ITRANS</dt><dd id="outitrans"></dd>
+      <dt>ITRANS <button type="button" class="copy" data-copy="outitrans" aria-label="Copy ITRANS" title="Copy ITRANS"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 6.5V4.5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></dt><dd id="outitrans"></dd>
     </dl>
   </section>
   <div class="board-foot main-only">
@@ -260,12 +267,12 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
     <h3>Hindi and Sanskrit</h3>
     <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
     <p>“Drop final a” exists for Hindi only: it removes the last short “a” as a simple learning aid and is no substitute for a full pronunciation analysis.</p>
-    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST is an output format only. Designed for classical Sanskrit, without full support for all Vedic accent marks.</p>
+    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST input is not (capitals are read as small letters). In IAST <code>c</code> is <span class="ex">च</span> and <code>ch</code> is <span class="ex">छ</span>; a halant must be visible in the spelling, so <code>pūrṇa</code> gives <span class="ex">पूर्ण</span> but <code>pūraṇa</code> gives <span class="ex">पूरण</span>. Text in which a vowel sign is written with an extra a (<code>paū</code> for <i>pū</i>, <code>maā</code> for <i>mā</i>) is repaired, and there <code>ch</code> is read as <span class="ex">च</span>. Designed for classical Sanskrit, without full support for all Vedic accent marks.</p>
     <h3>Keyboard</h3>
     <p>The keyboard shows which key carries each Devanagari character, which helps when learning to type. Open it in its own window with the window icon to keep it beside your word processor or browser: type or click into its small text box, then copy and paste. To type Hindi directly in every program, add the Hindi Traditional (InScript) layout in your operating system; the pop-out window then serves as a key map.</p>
     <h3>Sources and links</h3>
@@ -1203,12 +1210,39 @@ Sanscript.schemes['itrans_naga'] = {
   const isSanskrit = () => $('language').value === 'sa';
   const transliterate = (s, from, to, syncope = false) => Sanscript.t(s, from, to, {syncope});
   // Explicit .h must retain a final halant in Hindi as well as Sanskrit.
+  function itransToNagari(part, strict) {
+    const chunks = part.split('.h');
+    return chunks.map((chunk, i) => transliterate(chunk, 'itrans_naga', 'nagari',
+      i === chunks.length - 1 && !strict && !isSanskrit())).join('');
+  }
+  // IAST input: a word that contains an IAST-only letter (ā ṛ ṣ ś ṃ ḥ …) is read as IAST,
+  // every other word as ITRANS, so both can be mixed in one text.
+  const IAST_ONLY = /[āīūṛṝḷḹṅñṭḍṇśṣṃṁḥĀĪŪṚṜḶḸṄÑṬḌṆŚṢṂṀḤ]|r̥|l̥|m̐/u;
+  const CONS = 'kh|gh|ch|jh|ṭh|ḍh|th|dh|ph|bh|[kgṅcjñṭḍṇtdnpbmyrlvśṣsh]';
+  // Some converters write a vowel sign as inherent a + vowel (pū → paū, mā → maā). Valid IAST
+  // never has a directly before ā, ī or ū, so that a is dropped again.
+  const VOWEL_ARTEFACT = new RegExp('(' + CONS + ')a(?=[āīū])', 'giu');
+  // Text written that way usually also spells च as "ch" (udachyate), so then ch → c and chh → ch.
+  function iastToNagari(word, loose) {
+    let clean = word.normalize('NFC').toLowerCase().replace(VOWEL_ARTEFACT, '$1');
+    if (loose) clean = clean.replace(/c(c?)h(h?)/g, (m, cc, hh) => cc ? 'cch' : hh ? 'ch' : 'c');
+    return transliterate(clean, 'iast', 'devanagari', !isSanskrit());
+  }
+  const isIast = word => IAST_ONLY.test(word.normalize('NFC'));
   function toNagari(source, strict = false) {
     return source.split('##').map((part, index) => {
       if (index % 2) return part;
-      const chunks = part.split('.h');
-      return chunks.map((chunk, i) => transliterate(chunk, 'itrans_naga', 'nagari',
-        i === chunks.length - 1 && !strict && !isSanskrit())).join('');
+      if (!isIast(part)) return itransToNagari(part, strict);
+      const loose = new RegExp(VOWEL_ARTEFACT.source, 'iu').test(part.normalize('NFC'));
+      // Split into words, keep runs of ITRANS words together so .h and spacing behave as before.
+      let out = '', run = '';
+      for (const token of part.split(/(\s+)/)) {
+        if (token && !/^\s+$/.test(token) && isIast(token)) {
+          if (run) { out += itransToNagari(run, strict); run = ''; }
+          out += iastToNagari(token, loose);
+        } else run += token;
+      }
+      return out + (run ? itransToNagari(run, strict) : '');
     }).join('');
   }
 
@@ -1491,6 +1525,23 @@ Sanscript.schemes['itrans_naga'] = {
     if (document.fonts) document.fonts.ready.then(fitWindow);
     input.focus();
   }
+
+  // Copy icons on the three results.
+  document.querySelectorAll('.copy[data-copy]').forEach(btn => {
+    let t;
+    btn.addEventListener('click', async () => {
+      const text = $(btn.dataset.copy).textContent;
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); }
+      catch (err) {
+        const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.append(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove();
+      }
+      const label = btn.getAttribute('aria-label');
+      btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); btn.title = 'Copied';
+      clearTimeout(t); t = setTimeout(() => { btn.classList.remove('done'); btn.setAttribute('aria-label', label); btn.title = label; }, 1400);
+    });
+  });
 })();
 </script>
 </body>
