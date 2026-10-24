@@ -132,6 +132,8 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .fitglyph.on{opacity:1}
 /* Sanskrit 2020 (SIL OFL, Omkarananda Ashram): installed copy first, else the file next to this page */
 @font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
+/* Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-NoDerivs 3.0, file kept unmodified): installed copy first, else the file next to this page */
+@font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
 .ghost-text{font-family:var(--f-deva)}
 
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
@@ -285,7 +287,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <li>The <b>step length</b> is the distance between the points along the centre line where the nib is set down, in drawing units (the board is 1200 units wide) and converted to screen pixels. Long steps make the single nib positions visible.</li>
       <li>The nib is a short edge at a fixed angle. Between two points the quadrilateral that this edge sweeps over is filled, on a <code>&lt;canvas&gt;</code>.</li>
       <li>The grid follows the four zones of the script: at the top vowel signs such as i and e, in the middle two rows for the letter, at the bottom u, ū and ṛ. The head line lies on the border between the first and second row.</li>
-      <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) comes with the page as a file and loads without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
+      <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) and Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) come with the page as files and load without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
       <li>Where the stroke runs across the edge it gets wide; where it runs along the edge it gets narrow, but never thinner than the nib thickness. For this the quadrilaterals are also outlined with that thickness. There is no mask.</li>
     </ul>
     <p class="note">The stroke order follows the common school variant, with the head line last.</p>
@@ -469,7 +471,8 @@ const FONTS=[
   {n:"Kalam",note:"handwriting"},
   {n:"Yatra One"},
   {n:"Rozha One"},
-  {n:"Sanskrit 2020",bundled:true,note:"OFL, Omkarananda Ashram"},
+  {n:"Sanskrit 2020",bundled:true,file:"fonts/Sanskrit2020.otf",note:"OFL, Omkarananda Ashram"},
+  {n:"Siddhanta Calcutta",bundled:true,file:"fonts/siddhanta-calcutta.ttf",note:"CC BY-NC-ND, Mihail Bayaryn"},
   {n:"",label:"System font"},
   {n:"__file",label:"Load a font file …"},
 ];
@@ -499,7 +502,7 @@ const cssLoads={};
 function loadFontCss(n){
   if(!n) return Promise.resolve();
   if(cssLoads[n]) return cssLoads[n];
-  if(n==="Tiro Devanagari Hindi"||n==="Hind"||n==="Sanskrit 2020") return cssLoads[n]=Promise.resolve();   // already declared in the page
+  if(n==="Tiro Devanagari Hindi"||n==="Hind"||FONTS.some(f=>f.n===n&&f.bundled)) return cssLoads[n]=Promise.resolve();   // already declared in the page
   return cssLoads[n]=new Promise(res=>{
     const l=document.createElement("link"); l.rel="stylesheet"; l.dataset.font=n;
     l.href="https://fonts.googleapis.com/css2?family="+n.replace(/ /g,"+")+"&display=swap";
@@ -532,7 +535,7 @@ function applyFont(n,user){
   loading.then(list=>{
     if(fontName!==n) return;
     if(local){ if(!hasLocalFont(n)) $("fontMsg").textContent="not installed: fallback font. Choose the file under “Load a font file …”."; }
-    else if(def&&def.bundled && (!list || !list.length) && !hasLocalFont(n)) $("fontMsg").textContent="File fonts/Sanskrit2020.otf not found: fallback font. You can choose it under “Load a font file …”.";
+    else if(def&&def.bundled && (!list || !list.length) && !hasLocalFont(n)) $("fontMsg").textContent=`File ${def.file} not found: fallback font. You can choose it under “Load a font file …”.`;
     else if(n && n!==FILE_FAMILY && !(def&&def.bundled) && (!list || !list.length)) $("fontMsg").textContent="not loaded, fallback font";
     fontFit=measureFont(n);
     if(ghostEl){ const old=ghostEl; ghostEl=drawGhost(letter(cur)); old.replaceWith(ghostEl); }
