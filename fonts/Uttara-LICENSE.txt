@@ -1,0 +1,9 @@
+Uttara (uttara.ttf), version 1.2
+
+Copyright (c) Mihail Bayaryn, 2005.
+Latin and Cyrillic glyphs were added from the DejaVu fonts and modified according to the GPL.
+
+License: GNU General Public License
+https://www.gnu.org/licenses/gpl.html
+
+The font file in this folder is distributed unmodified.

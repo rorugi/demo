@@ -134,6 +134,8 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 @font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
 /* Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-NoDerivs 3.0, file kept unmodified): installed copy first, else the file next to this page */
 @font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
+/* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
+@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
 .ghost-text{font-family:var(--f-deva)}
 
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
@@ -287,7 +289,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <li>The <b>step length</b> is the distance between the points along the centre line where the nib is set down, in drawing units (the board is 1200 units wide) and converted to screen pixels. Long steps make the single nib positions visible.</li>
       <li>The nib is a short edge at a fixed angle. Between two points the quadrilateral that this edge sweeps over is filled, on a <code>&lt;canvas&gt;</code>.</li>
       <li>The grid follows the four zones of the script: at the top vowel signs such as i and e, in the middle two rows for the letter, at the bottom u, ū and ṛ. The head line lies on the border between the first and second row.</li>
-      <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) and Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) come with the page as files and load without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
+      <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License, northern Calcutta style) come with the page as files and load without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
       <li>Where the stroke runs across the edge it gets wide; where it runs along the edge it gets narrow, but never thinner than the nib thickness. For this the quadrilaterals are also outlined with that thickness. There is no mask.</li>
     </ul>
     <p class="note">The stroke order follows the common school variant, with the head line last.</p>
@@ -473,6 +475,7 @@ const FONTS=[
   {n:"Rozha One"},
   {n:"Sanskrit 2020",bundled:true,file:"fonts/Sanskrit2020.otf",note:"OFL, Omkarananda Ashram"},
   {n:"Siddhanta Calcutta",bundled:true,file:"fonts/siddhanta-calcutta.ttf",note:"CC BY-NC-ND, Mihail Bayaryn"},
+  {n:"Uttara",bundled:true,file:"fonts/uttara.ttf",note:"GPL, Mihail Bayaryn"},
   {n:"",label:"System font"},
   {n:"__file",label:"Load a font file …"},
 ];
