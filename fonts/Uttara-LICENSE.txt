@@ -6,4 +6,8 @@ Latin and Cyrillic glyphs were added from the DejaVu fonts and modified accordin
 License: GNU General Public License
 https://www.gnu.org/licenses/gpl.html
 
-The font file in this folder is distributed unmodified.
+uttara.ttf is distributed unmodified.
+
+uttara.woff2 is the same font converted to the WOFF2 web font format
+(compression only, no glyphs or tables changed), distributed under the
+same GNU General Public License. The original uttara.ttf is the source.

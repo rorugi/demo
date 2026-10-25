@@ -135,7 +135,7 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 /* Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-NoDerivs 3.0, file kept unmodified): installed copy first, else the file next to this page */
 @font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
 /* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
-@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
+@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
 .ghost-text{font-family:var(--f-deva)}
 
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
@@ -475,7 +475,7 @@ const FONTS=[
   {n:"Rozha One"},
   {n:"Sanskrit 2020",bundled:true,file:"fonts/Sanskrit2020.otf",note:"OFL, Omkarananda Ashram"},
   {n:"Siddhanta Calcutta",bundled:true,file:"fonts/siddhanta-calcutta.ttf",note:"CC BY-NC-ND, Mihail Bayaryn"},
-  {n:"Uttara",bundled:true,file:"fonts/uttara.ttf",note:"GPL, Mihail Bayaryn"},
+  {n:"Uttara",bundled:true,file:"fonts/uttara.woff2",note:"GPL, Mihail Bayaryn"},
   {n:"",label:"System font"},
   {n:"__file",label:"Load a font file …"},
 ];
