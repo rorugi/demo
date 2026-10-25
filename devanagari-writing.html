@@ -247,6 +247,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <option value="canvas">Canvas: nib prints step by step</option>
       <option value="line">SVG 1: a line that draws itself</option>
       <option value="mask">SVG 2: nib shape revealed by a mask</option>
+      <option value="font">SVG 3: the real letter of the font revealed</option>
     </select></label>
     <label class="tog fontsel" for="penmode"><span>Nib</span><select id="penmode">
       <option value="fixed">fixed (calligraphy)</option>
@@ -285,7 +286,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <li>Each stroke is a centre line stored as an SVG path. <code>getPointAtLength()</code> splits it into small steps.</li>
       <li><b>Edit points</b>: shows the points of the strokes of the current letter. Filled points lie on the line, hollow ones are the control handles of the curves. Drag to move a point; the bin removes the selected point. The point type sets which handles a point has: corner (no handles, drawn as a square), one handle (on one side only), two symmetric handles (in line and of equal length, so the stroke runs through smoothly) and two independent handles. “Smooth point” lays the handles of the selected point along the line from the previous to the next point, so the line passes through without a kink; “Smooth stroke” does this for every point of the stroke that lies between two curves, while corners and straight parts stay. The points themselves stay where they are. Changes are saved in this browser and also appear in the splines export; “Discard changes” restores the original strokes. Edited letters carry a small dot in the picker. If a built-in stroke is changed later, the old edit of that stroke no longer applies.</li>
       <li><b>Nib</b>: <i>fixed</i> is the broad nib with angle, width and thickness. <i>Fitted to the font</i> measures at each point of the centre line how wide the font is to the left and right, and sets the nib across the stroke to exactly that width. This gives the thick and thin of the font; angle and width then do not matter. Where strokes cross, outliers are limited, and at the end the real letter shape fades in.</li>
-      <li><b>Display</b>: <i>Canvas</i> sets the nib down point by point on a <code>&lt;canvas&gt;</code>. <i>SVG 1</i> only draws the centre line with <code>stroke-dashoffset</code>, at one width, without thick and thin. <i>SVG 2</i> builds the whole nib shape as SVG and reveals it with a mask; for this the stroke is split into short pieces, so loops do not show too early. The SVG animations run in the browser itself (Web Animations API).</li>
+      <li><b>Display</b>: <i>Canvas</i> sets the nib down point by point on a <code>&lt;canvas&gt;</code>. <i>SVG 1</i> only draws the centre line with <code>stroke-dashoffset</code>, at one width, without thick and thin. <i>SVG 2</i> builds the whole nib shape as SVG and reveals it with a mask; for this the stroke is split into short pieces, so loops do not show too early. <i>SVG 3</i> uses the same masks, but behind them lies the real letter of the chosen font: it appears along the strokes as if written, and when the last stroke is done the complete letter is shown. The SVG animations run in the browser itself (Web Animations API).</li>
       <li>The <b>step length</b> is the distance between the points along the centre line where the nib is set down, in drawing units (the board is 1200 units wide) and converted to screen pixels. Long steps make the single nib positions visible.</li>
       <li>The nib is a short edge at a fixed angle. Between two points the quadrilateral that this edge sweeps over is filled, on a <code>&lt;canvas&gt;</code>.</li>
       <li>The grid follows the four zones of the script: at the top vowel signs such as i and e, in the middle two rows for the letter, at the bottom u, ū and ṛ. The head line lies on the border between the first and second row.</li>
@@ -324,7 +325,7 @@ let cur = 0, strokes = [], done = 0, running = null, speed = 1, angle = -45, nib
 let penMode = "fixed", fitG = null, raster = null, editG = null, editing = false, edSel = null, edDrag = null;
 try{ if(localStorage.getItem("deva-nib-pen")==="fit") penMode="fit"; }catch(e){}
 let mode = "canvas", inkG = null, svgAnims = [], maskUid = 0;
-try{ const m=localStorage.getItem("deva-nib-mode"); if(m==="line"||m==="mask") mode=m; }catch(e){}
+try{ const m=localStorage.getItem("deva-nib-mode"); if(m==="line"||m==="mask"||m==="font") mode=m; }catch(e){}
 // The visible part of the board. Normally the full 1200-unit board; zoomed and panned while editing.
 let view = {x:0, y:-235, w:1200};
 const viewH = () => view.w*1290/1200;
@@ -523,6 +524,15 @@ function measureFont(n){
   const F=630*200/(bot-top);                 // head line top 80 → stem foot 710 in the stroke coordinates
   return {size:F, base:80+F*(300-top)/200};
 }
+// The real letter in the chosen font, filled with one colour (display "SVG 3"). Wrapped in a group, so a mask
+// set on it uses the drawing coordinates and not the flipped coordinates of the outline path.
+function glyphNode(d,color){
+  const g=el("g",{});
+  if(fontName==="Tiro Devanagari Hindi"){ el("path",{d:d.glyph,transform:"matrix(1 0 0 -1 0 700)",fill:color},g); return g; }
+  const fit=fontFit||{size:1000,base:700};
+  const t=el("text",{x:d.adv/2,y:fit.base,"text-anchor":"middle","font-size":fit.size,fill:color},g);
+  t.style.fontFamily=fontStack(fontName); t.textContent=d.ch; return g;
+}
 function drawGhost(d){
   if(fontName==="Tiro Devanagari Hindi") return el("path",{d:d.glyph,transform:"matrix(1 0 0 -1 0 700)",class:"ghost"},svg);
   const fit=fontFit||{size:1000,base:700};
@@ -542,6 +552,7 @@ function applyFont(n,user){
     else if(n && n!==FILE_FAMILY && !(def&&def.bundled) && (!list || !list.length)) $("fontMsg").textContent="not loaded, fallback font";
     fontFit=measureFont(n);
     if(ghostEl){ const old=ghostEl; ghostEl=drawGhost(letter(cur)); old.replaceWith(ghostEl); }
+    if(mode==="font" && !svgAnims.length) render();
   });
   if(user && n!=="Tiro Devanagari Hindi" && !$("tGhost").checked){ $("tGhost").checked=true; board.classList.add("show-ghost"); }
 }
@@ -751,6 +762,7 @@ function paint(){
    mask: the full broad-nib shape is built as SVG and uncovered by a mask whose wide centre line is revealed
          with stroke-dashoffset. The stroke is cut into short pieces, each with its own shape and mask,
          so loops and sharp turns (क, द्धि) are not uncovered ahead of time.
+   font: like mask, but what is uncovered is the real letter of the chosen font (glyphNode).
    The browser runs these animations itself (Web Animations API); a frame loop is the fallback. */
 const SVGNS="http://www.w3.org/2000/svg";
 const lineWidth=()=>Math.round((nibW+nibT)/2);
@@ -782,8 +794,29 @@ function svgRender(){
   if(!inkG) return;
   const keep=svgAnims.length?inkG.querySelector("[data-active]"):null;
   [...inkG.children].forEach(c=>{ if(c!==keep) c.remove(); });
+  if(mode==="font"){ if(done>0) inkG.insertBefore(fontDone(), keep); showFitGlyph(); return; }
   strokes.forEach((st,i)=>{ if(i<done) inkG.insertBefore(mode==="line"?lineShape(st,"var(--chalk)"):nibShape(st,"var(--chalk)"), keep); });
   showFitGlyph();
+}
+// "SVG 3": how far on each side of the centre line the font letter is uncovered. Measured on the template
+// letter (as for the fitted nib): the usual half width of the stroke, not its widest point, so crossing
+// strokes, the stem and the head line are not uncovered early. Some room for fonts with heavier strokes.
+function fontReach(st){
+  if(st.fontR) return st.fontR;
+  let r=nibW/2;
+  if(raster){ const f=fitOf(st);
+    const w=f.A.map((a,k)=>Math.hypot(a[0]-f.B[k][0],a[1]-f.B[k][1])/2).sort((x,y)=>x-y); r=w[Math.floor(w.length*.8)]||r; }
+  return st.fontR=Math.min(95, r+22);
+}
+// The finished strokes: the font letter, seen through one mask made of their wide centre lines.
+// When every stroke is done, the whole letter is shown, so slanted ends and joins are complete too.
+function fontDone(){
+  const d=letter(cur), g=el("g",{});
+  if(done>=strokes.length){ g.appendChild(glyphNode(d,"var(--chalk)")); return g; }
+  const id="mk"+(++maskUid), m=el("mask",{id,maskUnits:"userSpaceOnUse",x:vbX-50,y:VB_Y-50,width:VB_W+100,height:VB_H+100},el("defs",{},g));
+  strokes.forEach((st,i)=>{ if(i<done) el("path",{d:st.path,fill:"none",stroke:"#fff","stroke-width":2*fontReach(st),"stroke-linecap":"round","stroke-linejoin":"round"},m); });
+  const gl=glyphNode(d,"var(--chalk)"); gl.setAttribute("mask",`url(#${id})`); g.appendChild(gl);
+  return g;
 }
 function cancelSvgAnims(){ const a=svgAnims; svgAnims=[]; a.forEach(x=>{ try{ x.cancel(); }catch(e){} }); }
 // Animate stroke-dashoffset from 1 to 0 (paths use pathLength="1"). Web Animations API, or a frame loop as fallback.
@@ -807,12 +840,12 @@ function startActiveSVG(i,dur){
   } else {
     // The nib reaches up to R beyond the centre line, also along it. Each piece's mask therefore runs R further
     // on both sides (and the whole line is extended by R at start and end), so the angled nib is never cut off.
-    const reachMax = penMode==="fit" ? fitOf(st).max+4 : nibW/2+nibT;
+    const reachMax = mode==="font" ? fontReach(st) : penMode==="fit" ? fitOf(st).max+4 : nibW/2+nibT;
     const P=st.pts, n=P.length-1, ds=st.len/n, R=reachMax, defs=el("defs",{},g), W=2*reachMax+8;
     const unit=(p,q)=>{ const dx=q[0]-p[0], dy=q[1]-p[1], l=Math.hypot(dx,dy)||1; return [dx/l,dy/l]; };
-    const u0=unit(P[0],P[1]), un=unit(P[n-1],P[n]);
-    const ext=[[P[0][0]-u0[0]*R,P[0][1]-u0[1]*R],...P,[P[n][0]+un[0]*R,P[n][1]+un[1]*R]];
-    const sOf=e=> e===0 ? -R : e===n+2 ? st.len+R : (e-1)*ds;
+    const u0=unit(P[0],P[1]), un=unit(P[n-1],P[n]), E=mode==="font"?14:R;   // the font letter needs no room for an angled nib at the ends
+    const ext=[[P[0][0]-u0[0]*E,P[0][1]-u0[1]*E],...P,[P[n][0]+un[0]*E,P[n][1]+un[1]*E]];
+    const sOf=e=> e===0 ? -E : e===n+2 ? st.len+E : (e-1)*ds;
     const T=s=>invEase(Math.min(1,Math.max(0,s/st.len)))*dur;
     const size=Math.max(3,Math.round(110/stepLen)), margin=Math.ceil(R/ds)+1;
     for(let a=0;a<n;a+=size){
@@ -822,7 +855,7 @@ function startActiveSVG(i,dur){
       const seg=ext.slice(e0,e1+1).map(([x,y],k)=>(k?"L":"M")+Math.round(x*10)/10+" "+Math.round(y*10)/10).join("");
       const mp=el("path",{d:seg,fill:"none",stroke:"#fff","stroke-width":W,"stroke-linecap":"butt","stroke-linejoin":"round",pathLength:"1","stroke-dasharray":"1 2"},m);
       mp.style.strokeDashoffset=1;
-      const shape=nibShape(st,acc,a+1,b); shape.setAttribute("mask",`url(#${id})`); g.appendChild(shape);
+      const shape=mode==="font" ? glyphNode(letter(cur),acc) : nibShape(st,acc,a+1,b); shape.setAttribute("mask",`url(#${id})`); g.appendChild(shape);
       const t0=T(sOf(e0)), t1=T(sOf(e1));
       anims.push(dashAnim(mp,t0,t1-t0,"linear",x=>x));
     }
@@ -1014,7 +1047,7 @@ function edApply(i){
   const raw=edRaw(i), st=strokes[i];
   if(edSegs[i].dot){ const f=dotStroke(raw); Object.assign(st,f); }
   else { st.path=raw; st.hp.setAttribute("d",raw); st.len=st.hp.getTotalLength(); st.pts=samplePath(st.hp,st.len); }
-  st.fit=null;
+  st.fit=null; st.fontR=0;
 }
 function edSave(){
   const d=letter(cur); EDITS[editKey(d)]={base:DATA[cur].strokes.slice(), strokes:strokes.map((s,i)=>edRaw(i)), types:edTypes}; saveEdits(); showSplines(); edMsg("Saved (in this browser only).");
