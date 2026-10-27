@@ -28,6 +28,13 @@
   --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
   --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}
 .lang-sa{--f-deva:var(--f-sa)}
+/* Bundled fonts (same files as devanagari-writing.html): installed copy first, else the file next to this page */
+/* Sanskrit 2020 (SIL OFL, Omkarananda Ashram) */
+@font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
+/* Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-NoDerivs 3.0, file kept unmodified) */
+@font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
+/* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style) */
+@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -55,6 +62,11 @@ code{font-family:var(--f-mono);font-size:.9em;background:var(--accent-soft);bord
 .tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
 .tog input:disabled+span{opacity:.5}
 .seg button:focus-visible,.tog input:focus-visible,textarea:focus-visible,input:focus-visible,.dw-char:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fontsel{flex-wrap:wrap;max-width:100%;min-width:0}
+.fontsel select{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0;max-width:100%;flex:1 1 160px}
+.fontsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fontmsg{font-size:12px;color:var(--muted)}
+.fontmsg:empty{display:none}
 .note{margin:0;font-size:14px;color:var(--muted);border-left:3px solid var(--accent);padding:2px 0 2px 12px}
 
 /* Input */
@@ -198,6 +210,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
           <button type="button" data-value="nagari" aria-pressed="false">Devanagari keyboard</button>
         </span>
       </span>
+      <label class="ctl fontsel" for="dw-font">Font <select id="dw-font"></select><span class="fontmsg" id="dw-font-msg" aria-live="polite"></span></label>
       <select id="dw-language" hidden><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select>
       <select id="dw-method" hidden><option value="itrans">ITRANS / IAST / mixed text</option><option value="nagari">Devanagari keyboard</option></select>
     </div>
@@ -273,6 +286,8 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
     <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
     <p>“Drop final a” exists for Hindi only: it removes the last short “a” as a simple learning aid and is no substitute for a full pronunciation analysis.</p>
     <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST input is not (capitals are read as small letters). In IAST <code>c</code> is <span class="ex">च</span> and <code>ch</code> is <span class="ex">छ</span>; a halant must be visible in the spelling, so <code>pūrṇa</code> gives <span class="ex">पूर्ण</span> but <code>pūraṇa</code> gives <span class="ex">पूरण</span>. Text in which a vowel sign is written with an extra a (<code>paū</code> for <i>pū</i>, <code>maā</code> for <i>mā</i>) is repaired, and there <code>ch</code> is read as <span class="ex">च</span>. Designed for classical Sanskrit, without full support for all Vedic accent marks.</p>
+    <h3>Fonts</h3>
+    <p>The font menu sets the Devanagari face for the text box, the results, the keyboard and the table. <i>Auto</i> uses Tiro Devanagari Hindi, or Tiro Devanagari Sanskrit in Sanskrit mode. The web fonts load from Google Fonts when chosen. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License), Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License) come with the page as files. Under “Load a font file …” you can use your own font; it is kept only in this browser. The choice is remembered and carried into the pop-out keyboard.</p>
     <h3>Keyboard</h3>
     <p>The keyboard shows which key carries each Devanagari character, which helps when learning to type. Open it in its own window with the window icon to keep it beside your word processor or browser: type or click into its small text box, then copy and paste. To type Hindi directly in every program, add the Hindi Traditional (InScript) layout in your operating system; the pop-out window then serves as a key map.</p>
     <h3>Sources and links</h3>
@@ -1541,6 +1556,125 @@ Sanscript.schemes['itrans_naga'] = {
       btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); btn.title = 'Copied';
       clearTimeout(t); t = setTimeout(() => { btn.classList.remove('done'); btn.setAttribute('aria-label', label); btn.title = label; }, 1400);
     });
+  });
+})();
+</script>
+<script>
+// Font menu: the Devanagari face for the text box, results, keyboard and table.
+// The font list is the one from devanagari-writing.html; "Auto" keeps Tiro Hindi / Tiro Sanskrit following the language.
+(function () {
+  const root = document.documentElement, $ = id => document.getElementById(id);
+  const sel = $('dw-font'), msg = $('dw-font-msg');
+  const KEY = 'dw-font', FILE_FAMILY = 'Own font';
+  const FONTS = [
+    {n: 'auto', label: 'Auto · Tiro (follows language)'},
+    {n: 'Tiro Devanagari Hindi', note: 'Hindi'},
+    {n: 'Tiro Devanagari Sanskrit', note: 'Sanskrit'},
+    {n: 'Noto Serif Devanagari'},
+    {n: 'Noto Sans Devanagari'},
+    {n: 'Martel'},
+    {n: 'Hind'},
+    {n: 'Gotu'},
+    {n: 'Kalam', note: 'handwriting'},
+    {n: 'Yatra One'},
+    {n: 'Rozha One'},
+    {n: 'Sanskrit 2020', bundled: true, file: 'fonts/Sanskrit2020.otf', note: 'OFL, Omkarananda Ashram'},
+    {n: 'Siddhanta Calcutta', bundled: true, file: 'fonts/siddhanta-calcutta.ttf', note: 'CC BY-NC-ND, Mihail Bayaryn'},
+    {n: 'Uttara', bundled: true, file: 'fonts/uttara.woff2', note: 'GPL, Mihail Bayaryn'},
+    {n: '', label: 'System font'},
+    {n: '__file', label: 'Load a font file …'},
+  ];
+  const PRELOADED = ['Tiro Devanagari Hindi', 'Tiro Devanagari Sanskrit', 'Hind'];   // in the page's Google Fonts link
+  const stack = n => (n ? `"${n}",` : '') + '"Noto Serif Devanagari","Kohinoor Devanagari","Devanagari Sangam MN","Mangal",serif';
+
+  // Is a locally installed font present? Compare text widths against two generic fallbacks.
+  function hasLocalFont(n) {
+    const c = document.createElement('canvas').getContext('2d'), s = 'कखगघ क्ष ज्ञ द्धि';
+    const w = f => { c.font = `80px ${f}`; return c.measureText(s).width; };
+    return w(`"${n}",monospace`) !== w('monospace') || w(`"${n}",sans-serif`) !== w('sans-serif');
+  }
+  const cssLoads = {};
+  function loadFontCss(n) {
+    if (!n || PRELOADED.includes(n) || FONTS.some(f => f.n === n && f.bundled)) return Promise.resolve();
+    return cssLoads[n] || (cssLoads[n] = new Promise(res => {
+      const l = document.createElement('link'); l.rel = 'stylesheet';
+      l.href = 'https://fonts.googleapis.com/css2?family=' + n.replace(/ /g, '+') + '&display=swap';
+      l.onload = res; l.onerror = res; setTimeout(res, 4000);
+      document.head.appendChild(l);
+    }));
+  }
+
+  // A font file picked by the user: registered with FontFace and kept in IndexedDB.
+  // Same store as devanagari-writing.html, so a file loaded on either page is offered on both.
+  const fontDB = () => new Promise((res, rej) => { try { const r = indexedDB.open('deva-nib', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } });
+  async function storeFontFile(name, buf) { try { const db = await fontDB(); db.transaction('f', 'readwrite').objectStore('f').put({name, buf}, 'font'); } catch (e) {} }
+  async function readFontFile() { try { const db = await fontDB(); return await new Promise(res => { const q = db.transaction('f').objectStore('f').get('font'); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (e) { return null; } }
+  async function registerFontFile(name, buf) {
+    const ff = new FontFace(FILE_FAMILY, buf); await ff.load(); document.fonts.add(ff);
+    let o = sel.querySelector(`option[value="${FILE_FAMILY}"]`);
+    if (!o) { o = document.createElement('option'); o.value = FILE_FAMILY; sel.insertBefore(o, sel.querySelector('option[value="__file"]')); }
+    o.textContent = name.replace(/\.(otf|ttf|woff2?)$/i, '') + ' (file)';
+  }
+
+  let fontName = 'auto';
+  function applyFont(n, save) {
+    fontName = n;
+    if (save) { try { localStorage.setItem(KEY, n); } catch (e) {} }
+    msg.textContent = '';
+    if (n === 'auto') { root.style.removeProperty('--f-deva'); return; }
+    root.style.setProperty('--f-deva', stack(n));
+    const def = FONTS.find(f => f.n === n);
+    if (!n || n === FILE_FAMILY) return;
+    loadFontCss(n)
+      .then(() => document.fonts && document.fonts.load ? document.fonts.load(`40px "${n}"`, 'क') : null)
+      .catch(() => [])
+      .then(list => {
+        if (fontName !== n || list === null) return;
+        if (def && def.bundled && !list.length && !hasLocalFont(n)) msg.textContent = `${def.file} not found: fallback font`;
+        else if (!list.length && !hasLocalFont(n)) msg.textContent = 'not loaded: fallback font';
+      });
+  }
+
+  sel.innerHTML = FONTS.map(f => `<option value="${f.n}">${f.label || f.n}${f.note ? ' (' + f.note + ')' : ''}</option>`).join('');
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved !== null && saved !== '__file' && FONTS.some(f => f.n === saved)) fontName = saved;
+  sel.value = fontName;
+  applyFont(fontName, false);
+  let prev = fontName;
+
+  const fileIn = document.createElement('input');
+  fileIn.type = 'file'; fileIn.accept = '.otf,.ttf,.woff,.woff2,font/otf,font/ttf,font/woff,font/woff2'; fileIn.hidden = true;
+  document.body.appendChild(fileIn);
+  fileIn.onchange = async () => {
+    const f = fileIn.files && fileIn.files[0]; fileIn.value = '';
+    if (!f) { sel.value = prev; return; }
+    try { const buf = await f.arrayBuffer(); await registerFontFile(f.name, buf); storeFontFile(f.name, buf); sel.value = prev = FILE_FAMILY; applyFont(FILE_FAMILY, true); }
+    catch (e) { sel.value = prev; msg.textContent = 'This file is not a readable font.'; }
+  };
+  // The file dialog can be cancelled without a change event: put the menu back when the window regains focus.
+  window.addEventListener('focus', () => { if (sel.value === '__file') setTimeout(() => { if (sel.value === '__file') sel.value = prev; }, 300); });
+  sel.addEventListener('change', () => {
+    if (sel.value === '__file') { fileIn.click(); return; }
+    prev = sel.value; applyFont(sel.value, true);
+  });
+
+  // Bring back a font file from the last visit.
+  readFontFile().then(async rec => {
+    if (!rec) return;
+    try { await registerFontFile(rec.name, rec.buf); if (saved === FILE_FAMILY) { sel.value = prev = FILE_FAMILY; applyFont(FILE_FAMILY, false); } } catch (e) {}
+  });
+
+  // Main page and pop-out keyboard share the choice: a change in one window follows in the other.
+  window.addEventListener('storage', e => {
+    if (e.key !== KEY || e.newValue === null || e.newValue === fontName) return;
+    const v = e.newValue;
+    if (v === FILE_FAMILY && !sel.querySelector(`option[value="${FILE_FAMILY}"]`)) {
+      readFontFile().then(async rec => { if (!rec) return; try { await registerFontFile(rec.name, rec.buf); sel.value = prev = v; applyFont(v, false); } catch (err) {} });
+      return;
+    }
+    if (!FONTS.some(f => f.n === v) && v !== FILE_FAMILY) return;
+    sel.value = prev = v; applyFont(v, false);
   });
 })();
 </script>
