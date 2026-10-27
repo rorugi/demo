@@ -101,6 +101,9 @@ h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
 .speed{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted);font-size:14px}
 .speed input{width:110px;accent-color:var(--accent)}
 .speed output{font-variant-numeric:tabular-nums;min-width:4ch;color:var(--fg)}
+/* style and language, right under the board and as wide as it; options in brackets have no own strokes for this letter */
+.vbar{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;width:100%;max-width:400px;margin-inline:auto;font-size:14px;color:var(--muted)}
+.vbar .tog{flex:1 1 150px}
 .toggles{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted)}
 .tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer}
 .tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
@@ -204,6 +207,11 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
   <button class="btn icon maxbtn" id="maxBtn" type="button" aria-pressed="false" title="Maximize the drawing area" aria-label="Maximize the drawing area"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ex" d="M14 4 H20 V10 M20 4 L13.5 10.5 M10 20 H4 V14 M4 20 L10.5 13.5"/><path class="co" d="M19 10 H14 V5 M14 10 L20.5 3.5 M5 14 H10 V19 M10 14 L3.5 20.5"/></svg></button>
   </div>
 
+  <div class="vbar" role="group" aria-label="Style and language of the letter">
+    <label class="tog fontsel" for="vstyle"><span>Style</span><select id="vstyle"></select></label>
+    <label class="tog fontsel" for="vlang"><span>Language</span><select id="vlang"></select></label>
+  </div>
+
   <div class="controls">
     <button class="btn primary" id="play"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg><span>Play</span></button>
     <button class="btn" id="step"><svg viewBox="0 0 10 10"><path d="M1 1l5 4-5 4zM7 1h2v8H7z"/></svg>Next stroke</button>
@@ -256,8 +264,6 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <option value="fit">fitted to the font</option>
     </select></label>
     <label class="tog fontsel" for="font"><span>Font</span><select id="font"></select><span class="fontmsg" id="fontMsg"></span></label>
-    <label class="tog fontsel" for="vstyle"><span>Style</span><select id="vstyle"></select></label>
-    <label class="tog fontsel" for="vlang"><span>Language</span><select id="vlang"></select></label>
   </div>
 
   <section>
@@ -295,7 +301,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <li>The nib is a short edge at a fixed angle. Between two points the quadrilateral that this edge sweeps over is filled, on a <code>&lt;canvas&gt;</code>.</li>
       <li>The grid follows the four zones of the script: at the top vowel signs such as i and e, in the middle two rows for the letter, at the bottom u, ū and ṛ. The head line lies on the border between the first and second row.</li>
       <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License, northern Calcutta style) come with the page as files and load without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
-      <li>Every font has a <b>style</b> (pen tradition: Bombay, Calcutta, Nepali) and a <b>language</b> (Hindi, Marathi, Sanskrit, Nepali); the two menus next to the font show them as “Auto” and can override them. Some letters have their own strokes for a style or language: the digits १ ५ ८ ९ have Sanskrit forms, drawn on Tiro Devanagari Sanskrit, and अ has its Calcutta form, drawn on Uttara (GNU GPL; its outline is scaled to the grid of the strokes). A letter without such a variant uses its normal strokes. Edits and the splines export belong to the variant in use; its JSON names it with “style” and/or “lang”.</li>
+      <li>Every font has a <b>style</b> (pen tradition: Bombay, Calcutta, Nepali) and a <b>language</b> (Hindi, Marathi, Sanskrit, Nepali); the two menus right under the board show them as “Auto” and can override them; a choice in brackets, like “(Nepali)”, has no own strokes for this letter yet. Some letters have their own strokes for a style or language: the digits १ ५ ८ ९ have Sanskrit forms, drawn on Tiro Devanagari Sanskrit, and अ has its Calcutta form, drawn on Uttara (GNU GPL; its outline is scaled to the grid of the strokes). A letter without such a variant uses its normal strokes. Edits and the splines export belong to the variant in use; its JSON names it with “style” and/or “lang”.</li>
       <li>Where the stroke runs across the edge it gets wide; where it runs along the edge it gets narrow, but never thinner than the nib thickness. For this the quadrilaterals are also outlined with that thickness. There is no mask.</li>
     </ul>
     <p class="note">The stroke order follows the common school variant, with the head line last.</p>
@@ -573,11 +579,19 @@ function applyFont(n,user){
 let styleSel="auto", langSel="auto";
 try{ const s=localStorage.getItem("deva-nib-style"), l=localStorage.getItem("deva-nib-lang"); if(STYLES.includes(s)) styleSel=s; if(LANGS.includes(l)) langSel=l; }catch(e){}
 const cap=s=>s[0].toUpperCase()+s.slice(1);
+// The menus list every style and language; those the current letter has no own strokes for are shown in brackets,
+// e.g. "(Nepali)": choosing them keeps the normal strokes. Bombay and Hindi are the default strokes.
+function fillVariantMenus(fs,fl){
+  if(!fs){ const def=FONTS.find(f=>f.n===fontName); fs=(def&&def.style)||"bombay"; fl=(def&&def.lang)||"hindi"; }
+  const v=DATA[cur].variants||[], has={style:new Set(["bombay",...v.map(x=>x.style).filter(Boolean)]), lang:new Set(["hindi",...v.map(x=>x.lang).filter(Boolean)])};
+  const name=(axis,s)=>has[axis].has(s)?cap(s):`(${cap(s)})`;
+  $("vstyle").innerHTML=`<option value="auto">Auto · ${name("style",fs)}</option>`+STYLES.map(s=>`<option value="${s}">${name("style",s)}</option>`).join("");
+  $("vlang").innerHTML=`<option value="auto">Auto · ${name("lang",fl)}</option>`+LANGS.map(s=>`<option value="${s}">${name("lang",s)}</option>`).join("");
+  $("vstyle").value=styleSel; $("vlang").value=langSel;
+}
 function updateVariant(){
   const def=FONTS.find(f=>f.n===fontName), fs=(def&&def.style)||"bombay", fl=(def&&def.lang)||"hindi";
-  $("vstyle").innerHTML=`<option value="auto">Auto (${cap(fs)})</option>`+STYLES.map(s=>`<option value="${s}">${cap(s)}</option>`).join("");
-  $("vlang").innerHTML=`<option value="auto">Auto (${cap(fl)})</option>`+LANGS.map(s=>`<option value="${s}">${cap(s)}</option>`).join("");
-  $("vstyle").value=styleSel; $("vlang").value=langSel;
+  fillVariantMenus(fs,fl);
   const st=styleSel==="auto"?fs:styleSel, lg=langSel==="auto"?fl:langSel;
   if(st===curStyle && lg===curLang) return;
   const was=letter(cur); curStyle=st; curLang=lg; markEdited();
@@ -1243,7 +1257,7 @@ function select(i,auto){
   stop(); cur=i;
   document.querySelectorAll(".pick").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.i===i));
   try{ localStorage.setItem("deva-nib-cur", DATA[i].ch); }catch(e){}
-  build();
+  build(); fillVariantMenus();
   if(editing){ done=strokes.length; edLoad(); edSel=null; resetView(); paint(); return; }
   if(auto) play();
 }
