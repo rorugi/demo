@@ -301,7 +301,7 @@ h2{margin:0 0 6px;font-size:18px;font-weight:600}
       <li>The nib is a short edge at a fixed angle. Between two points the quadrilateral that this edge sweeps over is filled, on a <code>&lt;canvas&gt;</code>.</li>
       <li>The grid follows the four zones of the script: at the top vowel signs such as i and e, in the middle two rows for the letter, at the bottom u, ū and ṛ. The head line lies on the border between the first and second row.</li>
       <li>The font choice changes the letters in the picker and the outline for comparison. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License) Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License, northern Calcutta style) come with the page as files and load without installing. You can pick your own font files under “Load a font file …”; they are kept only in this browser. The strokes are the same for every font (drawn on Tiro Devanagari Hindi); the chosen font only shows behind them, and the comparison shows how much its shapes differ.</li>
-      <li>Every font has a <b>style</b> (pen tradition: Bombay, Calcutta, Nepali) and a <b>language</b> (Hindi, Marathi, Sanskrit, Nepali); the two menus right under the board show them as “Auto” and can override them; a choice in brackets, like “(Nepali)”, has no own strokes for this letter yet. Some letters have their own strokes for a style or language: the digits १ ५ ८ ९ have Sanskrit forms, drawn on Tiro Devanagari Sanskrit, and अ has its Calcutta form, drawn on Uttara (GNU GPL; its outline is scaled to the grid of the strokes). A letter without such a variant uses its normal strokes. Edits and the splines export belong to the variant in use; its JSON names it with “style” and/or “lang”.</li>
+      <li>Every font has a <b>style</b> (pen tradition: Bombay, Calcutta, Nepali) and a <b>language</b> (Hindi, Marathi, Sanskrit, Nepali); the two menus right under the board show them as “Auto” and can override them (choosing another font sets both back to “Auto”); a choice in brackets, like “(Nepali)”, has no own strokes for this letter yet. Some letters have their own strokes for a style or language: the digits १ ५ ८ ९ have Sanskrit forms, drawn on Tiro Devanagari Sanskrit, and अ has its Calcutta form, drawn on Uttara (GNU GPL; its outline is scaled to the grid of the strokes). A letter without such a variant uses its normal strokes. Edits and the splines export belong to the variant in use; its JSON names it with “style” and/or “lang”.</li>
       <li>Where the stroke runs across the edge it gets wide; where it runs along the edge it gets narrow, but never thinner than the nib thickness. For this the quadrilaterals are also outlined with that thickness. There is no mask.</li>
     </ul>
     <p class="note">The stroke order follows the common school variant, with the head line last.</p>
@@ -559,6 +559,8 @@ function drawGhost(d){
 }
 function applyFont(n,user){
   fontName=n; try{ localStorage.setItem("deva-nib-font",n); }catch(e){}
+  // a font chosen by hand brings its own style and language (the ones most of its letters follow): back to "Auto"
+  if(user){ styleSel="auto"; langSel="auto"; try{ localStorage.removeItem("deva-nib-style"); localStorage.removeItem("deva-nib-lang"); }catch(e){} }
   updateVariant();
   document.documentElement.style.setProperty("--f-deva",fontStack(n));
   document.documentElement.classList.toggle("tpl-font", n==="Tiro Devanagari Hindi");
