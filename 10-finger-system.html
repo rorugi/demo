@@ -163,14 +163,14 @@ aside h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(
 .next .plus{font-weight:700}
 .caps{display:none;margin-left:auto;background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:3px 9px;font-weight:600;font-size:13px}
 .caps.on{display:inline-block}
-.textbox{position:relative;font-family:var(--mono);font-size:clamp(21px,2.5vw,29px);line-height:1.85;height:calc(3 * 1.85em);overflow:hidden;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;padding:0 2px;border-radius:10px;cursor:text;outline:none}
+.textbox{position:relative;font-family:var(--mono);font-size:clamp(21px,2.5vw,29px);line-height:1.85;height:calc(3 * 1.85em);overflow:hidden;white-space:break-spaces;word-break:normal;overflow-wrap:break-word;padding:0 2px;border-radius:10px;cursor:text;outline:none}
 .textbox.dev{font-family:var(--dev);line-height:2.05;height:calc(3 * 2.05em);font-size:clamp(23px,2.7vw,31px)}
 .textbox .c{border-radius:5px;transition:background .08s}
 .textbox .c.done{color:var(--muted)}
 .textbox .c.done.err{color:var(--bad);background:var(--bad-soft)}
 .textbox .c.cur{background:color-mix(in srgb,var(--fc,#FF9800) 42%,transparent);box-shadow:inset 0 -3px 0 var(--fd,#E65100)}
 .textbox .c.cur.miss{background:var(--bad-soft);box-shadow:inset 0 -3px 0 var(--bad);animation:shake .22s}
-.textbox .c.sp{display:inline-block;position:relative;min-width:.55em;text-align:center}
+.textbox .c.sp{position:relative;padding:0 .12em}
 .textbox .c.sp.cur::before{content:"␣";position:absolute;left:0;right:0;bottom:.05em;text-align:center;font-family:var(--ui);font-size:.75em;line-height:1;color:var(--fd,#E65100)}
 .textbox .c.sp.done.err::before{content:"␣";position:absolute;left:0;right:0;bottom:.05em;text-align:center;font-family:var(--ui);font-size:.75em;line-height:1;color:var(--bad)}
 .startHint{font-size:13px;color:var(--muted);margin-top:4px;min-height:20px}
@@ -203,6 +203,24 @@ aside h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(
 .freebar select{padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);font-weight:400;color:var(--ink)}
 .freebar textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:10px;resize:vertical}
 .customwrap{flex-basis:100%;display:none}
+.testinfo{flex-basis:100%;font-size:14px;color:var(--muted);margin:2px 0 0}
+.histcard h2{font-size:17px;margin:0 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.histcard h2 .linkbtn{margin-left:auto;font-size:13px;color:var(--bad)}
+.histchart{width:100%;height:auto;max-height:190px;display:block;margin-bottom:10px}
+.histchart .gl{stroke:var(--line);stroke-width:1}
+.histchart .ln{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.histchart .pt{fill:var(--panel);stroke:var(--accent);stroke-width:2}
+.histchart text{font-family:var(--ui);font-size:11px;fill:var(--muted)}
+.histtable{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.histtable th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:5px 8px}
+.histtable td{border-bottom:1px solid var(--line);padding:6px 8px}
+.histtable td.num,.histtable th.num{text-align:right}
+.histtable tr.best td{font-weight:700}
+.histempty{font-size:14px;color:var(--muted)}
+.cmp{font-size:14px;color:var(--muted)}
+.cmp b{color:var(--ink)}
+footer .linkbtn{font-size:13px}
+footer .savemsg{display:inline-block;margin-left:8px}
 .customwrap.show{display:block}
 .note{font-size:13px;color:var(--muted)}
 
@@ -333,7 +351,7 @@ footer{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
     </div>
     <div class="saveblock">
       <h3>Fortschritt</h3>
-      <p>Speichere deinen Fortschritt als Datei, um ihn zu sichern oder auf einem anderen Gerät bzw. in einem anderen Browser weiterzumachen.</p>
+      <p>Speichere deinen Fortschritt (Lektionen, schwache Tasten und Tempotests) als Datei, um ihn zu sichern oder auf einem anderen Gerät bzw. in einem anderen Browser weiterzumachen.</p>
       <div class="saverow">
         <button class="sbtn primary act-save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Fortschritt speichern</button>
         <button class="sbtn act-load"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Fortschritt laden</button>
@@ -346,6 +364,7 @@ footer{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
   <nav class="tabs" role="tablist">
     <button role="tab" id="tabCourse" aria-selected="true">Kurs</button>
     <button role="tab" id="tabFree" aria-selected="false">Freies Üben</button>
+    <button role="tab" id="tabTest" aria-selected="false">Tempotest</button>
   </nav>
 
   <div class="app" id="app">
@@ -399,12 +418,30 @@ footer{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
         </div>
       </section>
 
+      <section class="card" id="testCard" hidden>
+        <div class="freebar">
+          <div class="sel">Prüftext
+            <select id="testText"></select>
+          </div>
+          <div class="sel">Dauer
+            <select id="testDur">
+              <option value="1">1 Minute</option>
+              <option value="3" selected>3 Minuten</option>
+              <option value="5">5 Minuten</option>
+              <option value="10">10 Minuten</option>
+            </select>
+          </div>
+          <button class="btn primary" id="testGo">Neu starten</button>
+          <p class="testinfo">Immer derselbe Text, feste Zeit: So kannst du deine Ergebnisse vergleichen. Fehler bleiben stehen wie in einer Prüfung – mit ⟵ darfst du korrigieren, das kostet aber Zeit. Die Zeit läuft ab der ersten Taste.</p>
+        </div>
+      </section>
+
       <section class="card typing" id="typingCard">
         <div class="next" id="next" aria-live="polite"></div>
         <div class="textbox" id="textbox" tabindex="0" aria-label="Übungstext"></div>
         <div class="startHint" id="startHint"></div>
         <div class="statsrow">
-          <div class="stat"><span>Zeit</span><b id="sTime">0:00</b></div>
+          <div class="stat"><span id="sTimeLbl">Zeit</span><b id="sTime">0:00</b></div>
           <div class="stat"><span>Anschläge / Min.</span><b id="sCpm">0</b></div>
           <div class="stat"><span>Genauigkeit</span><b id="sAcc">100 %</b></div>
           <div class="stat"><span>Fehler</span><b id="sErr">0</b></div>
@@ -418,6 +455,11 @@ footer{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
         <div class="hands" id="hands"></div>
         <div class="handcap" id="handcap"></div>
         <div class="kbfoot" id="kbfoot"></div>
+      </section>
+
+      <section class="card histcard" id="histCard" hidden>
+        <h2><span id="histTitle">Bisherige Tempotests</span><button class="linkbtn" id="histClear">Verlauf löschen</button></h2>
+        <div id="histBody"></div>
       </section>
     </div>
   </div>
@@ -461,7 +503,7 @@ footer{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
       </div>
     </div>
   </details>
-  <footer>Dein Fortschritt wird automatisch in diesem Browser gespeichert. Mit „Speichern“ sicherst du ihn als Datei.</footer>
+  <footer>Dein Fortschritt wird automatisch in diesem Browser gespeichert. Als Datei sichern oder auf ein anderes Gerät mitnehmen: <button class="linkbtn act-save">Speichern</button> · <button class="linkbtn act-load">Laden</button><span class="savemsg" aria-live="polite"></span></footer>
 </div>
 
 <script>
@@ -777,6 +819,33 @@ SENTENCES.sa = [
   'माता पुत्रं पश्यति।',
   'सूर्यः प्रातः उदेति।'
 ];
+const TEST_TEXTS = {
+de: [
+  { t: 'Unterwegs', x: 'Jeden Morgen um 7.15 Uhr fährt der Zug von Graz nach Wien. Die meisten Fahrgäste lesen Zeitung, hören Musik oder schauen aus dem Fenster. Frau Berger nutzt die Zeit, um ihre E-Mails zu beantworten. Sie arbeitet seit zwölf Jahren in einem kleinen Verlag und kümmert sich um Bücher für Kinder. Heute muss sie zwei Manuskripte prüfen, ein Angebot schreiben und am Nachmittag mit einer Grafikerin über ein neues Titelbild sprechen. Als der Zug kurz vor dem Ziel plötzlich hält, bleibt sie gelassen: Für solche Fälle hat sie immer ein Buch dabei. Nach fünf Minuten geht die Fahrt weiter. Draußen ist es kühl, aber die Sonne scheint, und auf dem Weg ins Büro kauft sie sich noch einen Kaffee.' },
+  { t: 'Im Garten', x: 'Im Frühling verwandelt sich unser Garten jedes Jahr in eine kleine Baustelle. Zuerst werden die Beete umgegraben, dann säen wir Karotten, Radieschen und Salat. Mein Vater schwört auf Tomaten aus eigener Zucht; er zieht sie schon im März auf der Fensterbank vor. Im Mai, wenn keine Frostnächte mehr zu erwarten sind, kommen die jungen Pflanzen ins Freie. Wer einen Garten hat, lernt Geduld: Manche Samen keimen nach drei Tagen, andere brauchen fast drei Wochen. Im Sommer gießen wir abends, damit das Wasser nicht sofort verdunstet. Die Ernte ist der schönste Lohn. Im letzten Jahr hatten wir 14 Kilo Tomaten, mehr als genug für Salat, Suppe und Soße. Was übrig blieb, haben wir an die Nachbarn verschenkt, die sich mit einem Glas Marmelade bedankt haben.' },
+  { t: 'Blind schreiben', x: 'Viele Menschen tippen täglich mehrere Stunden am Computer, doch nur wenige haben das Zehnfingersystem jemals richtig gelernt. Dabei lohnt sich die Mühe: Wer blind schreibt, kann sich ganz auf den Inhalt konzentrieren und muss nicht ständig zwischen Tastatur und Bildschirm hin und her schauen. Wichtig ist eine gute Haltung. Die Füße stehen flach am Boden, die Schultern bleiben locker, und die Handgelenke schweben leicht über der Tastatur. Am Anfang fühlt sich alles langsam und ungewohnt an. Nach zwei bis drei Wochen mit täglich zehn Minuten Übung merkt man jedoch deutliche Fortschritte. Zuerst kommt die Genauigkeit, das Tempo folgt von selbst. Und irgendwann fragt man sich, wie man jemals anders schreiben konnte.' }
+],
+en: [
+  { t: 'On the way', x: 'Every morning at 7:15 the train leaves the city center for the coast. Most passengers read the news, listen to music or simply look out of the window. Maria uses the forty-minute ride to answer her emails. She has worked for a small publishing house for twelve years and looks after books for children. Today she has to check two manuscripts, write an offer and, in the afternoon, talk to a designer about a new cover. When the train suddenly stops between two stations, she stays calm: she always carries a book for moments like this. After five minutes the journey continues, and at 7:55 she gets off. Outside it is cool, but the sun is shining, and on her way to the office she buys herself a coffee.' },
+  { t: 'In the garden', x: 'In spring our garden turns into a small building site every year. First we dig the beds, then we sow carrots, radishes and lettuce. My father swears by tomatoes grown from his own seeds; he starts them on the windowsill in March. In May, when there is no more danger of frost, the young plants move outside. Anyone who has a garden learns patience: some seeds sprout after three days, others need almost three weeks. In summer we water in the evening so that the water does not evaporate at once. The harvest is the best reward. Last year we picked 14 kilos of tomatoes, more than enough for salad, soup and sauce. We gave the rest to our neighbors, who thanked us with a jar of jam.' },
+  { t: 'Touch typing', x: "Many people type for several hours a day, yet only a few have ever properly learned to touch type. It is worth the effort: if you do not need to look at the keyboard, you can focus fully on what you want to say. Good posture matters. Keep your feet flat on the floor, relax your shoulders and let your wrists float slightly above the keys. At first everything feels slow and strange. After two or three weeks of ten minutes' practice a day, however, most learners notice clear progress. Accuracy comes first; speed follows on its own. And one day you will wonder how you ever typed any other way." }
+],
+es: [
+  { t: 'De camino', x: 'Cada mañana, a las 7:15, el tren sale del centro de la ciudad hacia la costa. La mayoría de los pasajeros lee el periódico, escucha música o simplemente mira por la ventana. María aprovecha los cuarenta minutos del viaje para contestar sus correos. Trabaja desde hace doce años en una pequeña editorial y se ocupa de libros para niños. Hoy tiene que revisar dos manuscritos, escribir una oferta y, por la tarde, hablar con una diseñadora sobre una nueva portada. Cuando el tren se detiene de repente entre dos estaciones, ella no pierde la calma: siempre lleva un libro para momentos así. Después de cinco minutos el viaje continúa y a las 7:55 baja del tren. Fuera hace fresco, pero brilla el sol, y de camino a la oficina se compra un café.' },
+  { t: 'En el jardín', x: 'En primavera nuestro jardín se convierte cada año en una pequeña obra. Primero cavamos los bancales y después sembramos zanahorias, rábanos y lechuga. Mi padre confía en los tomates de semillas propias; los planta en marzo junto a la ventana. En mayo, cuando ya no hay peligro de heladas, las plantas jóvenes salen al aire libre. Quien tiene un jardín aprende a ser paciente: algunas semillas germinan a los tres días y otras necesitan casi tres semanas. En verano regamos por la tarde para que el agua no se evapore enseguida. La cosecha es la mejor recompensa. El año pasado recogimos 14 kilos de tomates, más que suficiente para ensalada, sopa y salsa. Lo que sobró se lo regalamos a los vecinos, que nos dieron las gracias con un tarro de mermelada.' },
+  { t: 'Escribir a ciegas', x: 'Muchas personas escriben varias horas al día en el ordenador, pero pocas han aprendido de verdad a escribir con diez dedos. Sin embargo, vale la pena: quien no necesita mirar el teclado puede concentrarse por completo en lo que quiere decir. ¿Por dónde empezar? Lo más importante es una buena postura. Los pies descansan en el suelo, los hombros están relajados y las muñecas flotan un poco sobre las teclas. Al principio todo parece lento y extraño. Después de dos o tres semanas practicando diez minutos al día, la mayoría nota un progreso claro. Primero viene la precisión; la velocidad llega sola. ¡Y un día te preguntarás cómo pudiste escribir de otra manera!' }
+],
+hi: [
+  { t: 'सफ़र', x: 'हर सुबह सात बजे शहर से समुद्र की ओर एक रेलगाड़ी चलती है। ज़्यादातर यात्री अख़बार पढ़ते हैं, संगीत सुनते हैं या खिड़की से बाहर देखते हैं। मीरा इस सफ़र के चालीस मिनट में अपने ईमेल का जवाब देती है। वह बारह साल से एक छोटे प्रकाशन में काम करती है और बच्चों की किताबें देखती है। आज उसे दो पांडुलिपियाँ पढ़नी हैं और दोपहर में एक नए आवरण के बारे में बात करनी है। जब गाड़ी अचानक रुक जाती है, तो वह घबराती नहीं, क्योंकि उसके पास हमेशा एक किताब रहती है। पाँच मिनट बाद गाड़ी फिर चल पड़ती है। बाहर हल्की ठंड है, पर धूप खिली हुई है।' },
+  { t: 'बगीचा', x: 'हर साल वसंत में हमारा बगीचा हरा भरा हो जाता है। पहले हम क्यारियाँ खोदते हैं, फिर गाजर, मूली और पालक बोते हैं। मेरे पिताजी को अपने बीजों से उगाए टमाटर सबसे अच्छे लगते हैं। गर्मियों में हम शाम को पानी देते हैं, ताकि पानी जल्दी न सूखे। बगीचा हमें धैर्य सिखाता है, क्योंकि कुछ बीज तीन दिन में और कुछ तीन हफ़्ते में उगते हैं। पिछले साल हमें इतने टमाटर मिले कि हमने आधे पड़ोसियों में बाँट दिए। बदले में उन्होंने हमें घर का बना अचार दिया।' },
+  { t: 'बिना देखे लिखना', x: 'आजकल बहुत से लोग रोज़ कई घंटे कंप्यूटर पर लिखते हैं, पर कम ही लोगों ने दसों उँगलियों से लिखना सही ढंग से सीखा है। यह मेहनत बेकार नहीं जाती। जो व्यक्ति बिना देखे लिख सकता है, वह अपनी बात पर पूरा ध्यान दे सकता है। सही बैठना बहुत ज़रूरी है। पैर ज़मीन पर रहें, कंधे ढीले रहें और कलाइयाँ हल्के से कुंजियों के ऊपर रहें। शुरू में सब कुछ धीमा और अजीब लगता है, पर दो तीन हफ़्ते रोज़ दस मिनट अभ्यास करने से साफ़ फ़र्क दिखता है। पहले शुद्धता आती है, गति अपने आप आ जाती है।' }
+],
+sa: [
+  { t: 'विद्यालयः', x: 'प्रातःकाले बालकाः विद्यालयं गच्छन्ति। मार्गे ते मित्रैः सह वदन्ति हसन्ति च। विद्यालये शिक्षकः संस्कृतं पाठयति। छात्राः ध्यानेन शृण्वन्ति लिखन्ति च। मध्याह्ने सर्वे भोजनं कुर्वन्ति। अनन्तरं ते क्रीडाक्षेत्रे क्रीडन्ति। सायंकाले बालकाः गृहं प्रत्यागच्छन्ति। गृहे माता तेभ्यः फलानि ददाति। पिता पुस्तकं पठति। रात्रौ सर्वे चन्द्रं तारकाः च पश्यन्ति। ततः ते सुखेन स्वपन्ति।' },
+  { t: 'वनम्', x: 'वने अनेके वृक्षाः सन्ति। वृक्षेषु खगाः वसन्ति। प्रातः खगाः मधुरं कूजन्ति। नदी वनस्य समीपे प्रवहति। नद्याः जलं शीतलं निर्मलं च अस्ति। मृगाः जलं पिबन्ति। सिंहः अपि तत्र आगच्छति। वानराः वृक्षात् वृक्षं कूर्दन्ति। वर्षाकाले मेघाः गर्जन्ति, मयूराः नृत्यन्ति च। प्रकृतिः अस्माकं माता अस्ति। वयं वृक्षान् रक्षामः।' },
+  { t: 'सुभाषितानि', x: 'सत्यं वद। धर्मं चर। स्वाध्यायात् मा प्रमदः। विद्या ददाति विनयम्। विनयात् याति पात्रताम्। उद्यमेन हि सिध्यन्ति कार्याणि न मनोरथैः। सर्वे भवन्तु सुखिनः। सर्वे सन्तु निरामयाः। अहिंसा परमो धर्मः। वसुधैव कुटुम्बकम्। परोपकाराय सतां विभूतयः। सत्यमेव जयते।' }
+]
+};
 const NAMES = {
   de: ['Anna', 'Ben', 'Lisa', 'Paul', 'Lena', 'Felix', 'Sara', 'Jonas', 'Wien', 'Graz', 'Linz', 'Berlin', 'Salzburg', 'Hamburg', 'Klara', 'Emil'],
   es: ['Ana', 'Carlos', 'Lucía', 'Pablo', 'Elena', 'Diego', 'Sofía', 'Javier', 'Madrid', 'Sevilla', 'Valencia', 'Granada', 'Bogotá', 'Lima', 'México', 'Marta'],
@@ -1381,16 +1450,18 @@ const nextEl = document.getElementById('next');
 const resultEl = document.getElementById('result');
 const sTime = document.getElementById('sTime'), sCpm = document.getElementById('sCpm'), sAcc = document.getElementById('sAcc'), sErr = document.getElementById('sErr'), pBar = document.getElementById('pBar');
 const segmenter = (window.Intl && Intl.Segmenter) ? new Intl.Segmenter('hi', { granularity: 'grapheme' }) : null;
-const T = { text: [], clusters: [], cpCluster: [], els: [], pos: 0, err: [], started: false, t0: 0, ok: 0, bad: 0, done: true, onFinish: null, miss: {}, hit: {}, ticker: 0, shiftLatch: false };
+const T = { text: [], clusters: [], cpCluster: [], els: [], pos: 0, err: [], started: false, t0: 0, ok: 0, bad: 0, done: true, onFinish: null, miss: {}, hit: {}, ticker: 0, shiftLatch: false, limit: 0 };
+// Im Tempotest bleiben Fehler stehen (wie in einer Prüfung)
+const stopMode = () => settings.stop && view.mode !== 'test';
 
-function loadText(str, onFinish) {
+function loadText(str, onFinish, limit) {
   str = str.normalize('NFC').replace(/\s+/g, ' ').trim();
   T.text = Array.from(str);
   T.clusters = []; T.cpCluster = []; T.els = [];
   const segs = segmenter ? Array.from(segmenter.segment(str), s => s.segment) : str.match(/\P{M}\p{M}*/gu) || [];
   let i = 0;
   segs.forEach((seg, ci) => { const n = Array.from(seg).length; T.clusters.push([i, i + n, seg]); for (let k = 0; k < n; k++) T.cpCluster[i + k] = ci; i += n; });
-  T.pendingDead = null;
+  T.pendingDead = null; T.limit = limit || 0;
   T.pos = 0; T.err = []; T.started = false; T.ok = 0; T.bad = 0; T.done = false; T.onFinish = onFinish; T.miss = {}; T.hit = {};
   clearInterval(T.ticker);
   textbox.classList.toggle('dev', LAYOUTS[settings.layout].dev);
@@ -1415,7 +1486,7 @@ function paintCluster(ci) {
   let cls = 'c' + (seg === ' ' ? ' sp' : '');
   let err = false; for (let i = s; i < e; i++) if (T.err[i]) err = true;
   if (e <= T.pos) cls += ' done' + (err ? ' err' : '');
-  else if (s <= T.pos && T.pos < e && !T.done) { cls += ' cur' + (T.err[T.pos] && settings.stop ? ' miss' : ''); }
+  else if (s <= T.pos && T.pos < e && !T.done) { cls += ' cur' + (T.err[T.pos] && stopMode() ? ' miss' : ''); }
   el.className = cls;
 }
 function scrollToCurrent() {
@@ -1475,7 +1546,8 @@ const escapeHTML = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/
 function fmtTime(ms) { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function currentMetrics() {
   const now = T.done ? T.tEnd : performance.now();
-  const ms = T.started ? now - T.t0 : 0;
+  let ms = T.started ? now - T.t0 : 0;
+  if (T.limit) ms = Math.min(ms, T.limit);
   const mins = Math.max(ms / 60000, 1 / 600);
   const cpm = T.started ? Math.round(T.ok / mins) : 0;
   const acc = (T.ok + T.bad) ? (T.ok / (T.ok + T.bad)) * 100 : 100;
@@ -1483,11 +1555,13 @@ function currentMetrics() {
 }
 function updateStats() {
   const m = currentMetrics();
-  sTime.textContent = fmtTime(m.ms);
+  if (T.limit && T.started && !T.done && m.ms >= T.limit) { finish(); return; }
+  document.getElementById('sTimeLbl').textContent = T.limit ? 'Restzeit' : 'Zeit';
+  sTime.textContent = T.limit ? fmtTime(Math.max(0, T.limit - m.ms) + 999) : fmtTime(m.ms);
   sCpm.textContent = m.cpm;
   sAcc.textContent = (Math.floor(m.acc * 10) / 10).toLocaleString('de-DE') + ' %';
   sErr.textContent = m.errors;
-  pBar.style.width = (T.text.length ? (T.pos / T.text.length) * 100 : 0) + '%';
+  pBar.style.width = (T.limit ? (m.ms / T.limit) * 100 : (T.text.length ? (T.pos / T.text.length) * 100 : 0)) + '%';
 }
 
 let audioCtx = null;
@@ -1540,18 +1614,18 @@ function handleInput(ch, code) {
     T.err[T.pos] = true;
     if (code) flashKey(code, 'wrong');
     beep();
-    if (!settings.stop) T.pos++;
+    if (!stopMode()) T.pos++;
   }
   const newCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
   for (let c = Math.min(oldCi, newCi); c <= Math.max(oldCi, newCi); c++) paintCluster(c);
   if (T.pos >= T.text.length) { finish(); return; }
   if (newCi !== oldCi) scrollToCurrent();
-  if (settings.stop && ch !== exp) { const el = T.els[newCi]; if (el) { el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); } }
+  if (stopMode() && ch !== exp) { const el = T.els[newCi]; if (el) { el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); } }
   updateNext();
   updateStats();
 }
 function handleBackspace() {
-  if (T.done || settings.stop || T.pos === 0) return;
+  if (T.done || stopMode() || T.pos === 0) return;
   const oldCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
   T.pos--;
   const newCi = T.cpCluster[T.pos];
@@ -1560,7 +1634,8 @@ function handleBackspace() {
   scrollToCurrent(); updateNext(); updateStats();
 }
 function finish() {
-  T.done = true; T.tEnd = performance.now();
+  if (T.done) return;
+  T.done = true; T.tEnd = T.limit ? Math.min(performance.now(), T.t0 + T.limit) : performance.now();
   clearInterval(T.ticker);
   T.els.forEach((_, c) => paintCluster(c));
   updateStats(); updateNext();
@@ -1569,6 +1644,8 @@ function finish() {
   for (const [c, n] of Object.entries(T.miss)) { ks[c] = ks[c] || { n: 0, e: 0 }; ks[c].e += n; }
   store.set('zfs.keys', keyStats);
   const m = currentMetrics();
+  m.chars = T.pos;
+  m.left = 0; for (let i = 0; i < T.pos; i++) if (T.err[i]) m.left++;
   m.weak = Object.entries(T.miss).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
   if (T.onFinish) T.onFinish(m);
 }
@@ -1748,7 +1825,7 @@ function startStep() {
   loadText(step.gen(), m => showCourseResult(m));
 }
 function restartStep() {
-  if (view.mode === 'course') startStep(); else startFree(true);
+  if (view.mode === 'course') startStep(); else if (view.mode === 'test') startTest(); else startFree(true);
 }
 function showCourseResult(m) {
   const lid = settings.layout;
@@ -1794,6 +1871,7 @@ resultEl.addEventListener('click', e => {
   else if (a === 'lesson') openLesson(view.lesson + 1, 0);
   else if (a === 'free') setMode('free');
   else if (a === 'again') startFree(false);
+  else if (a === 'test') startTest();
 });
 
 /* =========================================================
@@ -1867,21 +1945,126 @@ freeLen.addEventListener('change', () => startFree(false));
 document.getElementById('freeGo').addEventListener('click', e => { e.currentTarget.blur(); startFree(false); });
 
 /* =========================================================
+   Tempotest
+   ========================================================= */
+const tests = Object.assign({ de: [], en: [], es: [], hi: [], sa: [] }, store.get('zfs.tests', {}));
+const saveTests = () => store.set('zfs.tests', tests);
+const testText = document.getElementById('testText'), testDur = document.getElementById('testDur');
+function fillTestSelect() {
+  const lid = settings.layout, list = TEST_TEXTS[LAYOUTS[lid].lang];
+  const prev = store.get('zfs.testsel', { t: 0, d: '3' });
+  testText.innerHTML = list.map((x, i) => `<option value="${i}">Text ${i + 1} – ${escapeHTML(x.t)}</option>`).join('');
+  testText.value = String(Math.min(prev.t, list.length - 1));
+  testDur.value = prev.d;
+}
+function buildTestText(lid, idx) {
+  // gewählter Text zuerst, dann die anderen in fester Reihenfolge – lang genug für jede Dauer
+  const list = TEST_TEXTS[LAYOUTS[lid].lang];
+  const parts = []; let len = 0, i = idx;
+  while (len < 6000) { const x = list[i % list.length].x; parts.push(x); len += x.length + 1; i++; }
+  return parts.join(' ');
+}
+function testResult(m) {
+  const mins = Math.max(m.ms / 60000, 1 / 600);
+  const grossApm = Math.round(m.chars / mins);
+  const grossWpm = m.chars / 5 / mins;
+  const netWpm = Math.max(0, grossWpm - m.left / mins);
+  return { grossApm, grossWpm: Math.round(grossWpm), netWpm: Math.round(netWpm), netApm: Math.round(netWpm * 5), errPct: m.chars ? m.left / m.chars * 100 : 0, mins };
+}
+function startTest() {
+  const lid = settings.layout;
+  const idx = +testText.value || 0, dur = +testDur.value || 3;
+  store.set('zfs.testsel', { t: idx, d: String(dur) });
+  setDim(null);
+  loadText(buildTestText(lid, idx), m => showTestResult(m, idx, dur), dur * 60000);
+  renderHistory();
+}
+function showTestResult(m, idx, dur) {
+  const lid = settings.layout;
+  const r = testResult(m);
+  const full = m.ms >= dur * 60000 - 50;
+  const same = tests[lid].filter(x => x.t === idx && x.m === dur);
+  const best = same.reduce((b, x) => Math.max(b, x.n), 0);
+  const last = same.length ? same[same.length - 1] : null;
+  if (full && m.chars > 0) {
+    tests[lid].push({ d: new Date().toISOString(), t: idx, m: dur, g: r.grossApm, n: r.netWpm, na: r.netApm, e: Math.round(r.errPct * 10) / 10, c: m.chars });
+    if (tests[lid].length > 200) tests[lid].shift();
+    saveTests();
+  }
+  let cmp = '';
+  if (!full) cmp = 'Der Test wurde vorzeitig beendet und wird nicht im Verlauf gespeichert.';
+  else if (!same.length) cmp = 'Dein erstes Ergebnis mit diesem Text und dieser Dauer – ab jetzt kannst du vergleichen.';
+  else {
+    const d = r.netWpm - last.n;
+    cmp = `Letztes Mal: <b>${last.n} WPM</b> (${d > 0 ? '+' : ''}${d}) · Bestwert bisher: <b>${best} WPM</b>${r.netWpm > best ? ' – neuer Bestwert!' : ''}`;
+  }
+  const fmt = v => (Math.round(v * 10) / 10).toLocaleString('de-DE');
+  resultEl.innerHTML = `<h3>${full ? 'Zeit abgelaufen' : 'Test beendet'}</h3>
+    <div class="nums"><div><b>${r.netWpm}</b>Netto-WPM</div><div><b>${r.netApm}</b>Netto-Anschläge/Min.</div><div><b>${r.grossApm}</b>Brutto-Anschläge/Min.</div><div><b>${m.left}</b>Fehler (${fmt(r.errPct)} %)</div></div>
+    <p class="cmp">${cmp}</p>
+    <p style="font-size:13px">Netto = Brutto-Wörter pro Minute minus Fehler pro Minute (1 Wort = 5 Zeichen). Korrigierte Fehler zählen nicht, kosten aber Zeit.</p>
+    <div class="btnrow"><button class="btn primary" data-primary data-act="test">Nochmal<kbd>Enter</kbd></button></div>`;
+  resultEl.classList.add('show');
+  renderHistory();
+}
+function renderHistory() {
+  const lid = settings.layout;
+  const list = tests[lid];
+  const lang = LAYOUTS[lid].lang;
+  document.getElementById('histTitle').textContent = `Bisherige Tempotests · ${LAYOUTS[lid].name}`;
+  document.getElementById('histClear').hidden = !list.length;
+  const body = document.getElementById('histBody');
+  if (!list.length) { body.innerHTML = '<p class="histempty">Noch keine Tests. Wähle einen Text und eine Dauer und tippe einfach los.</p>'; return; }
+  const pts = list.slice(-20);
+  const W = 640, H = 150, pad = 28;
+  const max = Math.max(10, ...pts.map(x => x.n)) * 1.15;
+  const x = i => pad + (pts.length === 1 ? (W - 2 * pad) / 2 : i * (W - 2 * pad) / (pts.length - 1));
+  const y = v => H - 20 - v / max * (H - 36);
+  const step = max > 80 ? 20 : max > 40 ? 10 : 5;
+  let grid = '';
+  for (let v = 0; v <= max; v += step) grid += `<line class="gl" x1="${pad}" x2="${W - 8}" y1="${y(v)}" y2="${y(v)}"/><text x="2" y="${y(v) + 4}">${v}</text>`;
+  const line = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.n).toFixed(1)}`).join(' ');
+  const dots = pts.map((p, i) => `<circle class="pt" cx="${x(i).toFixed(1)}" cy="${y(p.n).toFixed(1)}" r="4"><title>${p.n} WPM · Text ${p.t + 1} · ${p.m} Min.</title></circle>`).join('');
+  const chart = `<svg class="histchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Netto-WPM der letzten Tests">${grid}<text x="${pad}" y="${H - 4}">Netto-WPM der letzten ${pts.length} Tests</text>${pts.length > 1 ? `<polyline class="ln" points="${line}"/>` : ''}${dots}</svg>`;
+  const bestKey = {};
+  list.forEach(p => { const k = p.t + '-' + p.m; if (!bestKey[k] || p.n > bestKey[k].n) bestKey[k] = p; });
+  const rows = list.slice(-12).reverse().map(p => {
+    const dt = new Date(p.d);
+    const name = (TEST_TEXTS[lang][p.t] || {}).t || '';
+    return `<tr class="${bestKey[p.t + '-' + p.m] === p ? 'best' : ''}"><td>${dt.toLocaleDateString('de-AT')} ${dt.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })}</td><td>Text ${p.t + 1} – ${escapeHTML(name)}</td><td class="num">${p.m} Min.</td><td class="num">${p.n}</td><td class="num">${p.g}</td><td class="num">${(p.e || 0).toLocaleString('de-DE')} %</td></tr>`;
+  }).join('');
+  body.innerHTML = chart + `<div style="overflow-x:auto"><table class="histtable"><thead><tr><th>Datum</th><th>Text</th><th class="num">Dauer</th><th class="num">Netto-WPM</th><th class="num">Brutto-Anschl./Min.</th><th class="num">Fehler</th></tr></thead><tbody>${rows}</tbody></table></div><p class="histempty" style="margin-top:8px">Fett: Bestwert je Text und Dauer. Vergleichbar sind nur Tests mit gleichem Text und gleicher Dauer.</p>`;
+}
+document.getElementById('histClear').addEventListener('click', e => {
+  e.currentTarget.blur();
+  if (!confirm(`Alle Tempotests für ${LAYOUTS[settings.layout].name} löschen?`)) return;
+  tests[settings.layout] = []; saveTests(); renderHistory();
+});
+testText.addEventListener('change', () => { testText.blur(); startTest(); });
+testDur.addEventListener('change', () => { testDur.blur(); startTest(); });
+document.getElementById('testGo').addEventListener('click', e => { e.currentTarget.blur(); startTest(); });
+
+/* =========================================================
    Modus, Layout, Einstellungen
    ========================================================= */
-const tabCourse = document.getElementById('tabCourse'), tabFree = document.getElementById('tabFree');
+const tabCourse = document.getElementById('tabCourse'), tabFree = document.getElementById('tabFree'), tabTest = document.getElementById('tabTest');
 function setMode(mode) {
   view.mode = mode;
   tabCourse.setAttribute('aria-selected', mode === 'course');
   tabFree.setAttribute('aria-selected', mode === 'free');
-  document.getElementById('app').classList.toggle('free', mode === 'free');
+  tabTest.setAttribute('aria-selected', mode === 'test');
+  document.getElementById('app').classList.toggle('free', mode !== 'course');
   document.getElementById('lessonCard').hidden = mode !== 'course';
   document.getElementById('freeCard').hidden = mode !== 'free';
+  document.getElementById('testCard').hidden = mode !== 'test';
+  document.getElementById('histCard').hidden = mode !== 'test';
   if (mode === 'course') openLesson(view.lesson, view.step);
+  else if (mode === 'test') { fillTestSelect(); startTest(); }
   else { customWrap.classList.toggle('show', freeSrc.value === 'custom'); startFree(false); }
 }
 tabCourse.addEventListener('click', () => setMode('course'));
 tabFree.addEventListener('click', () => setMode('free'));
+tabTest.addEventListener('click', () => setMode('test'));
 
 function firstOpenLesson(lid) {
   const saved = store.get('zfs.pos.' + lid, null);
@@ -1944,7 +2127,7 @@ function countDone() {
 function exportProgress() {
   const pos = {};
   for (const lid of Object.keys(COURSE)) pos[lid] = store.get('zfs.pos.' + lid, null);
-  const data = { app: '10-finger-system', version: 1, saved: new Date().toISOString(), settings, progress, keyStats, pos };
+  const data = { app: '10-finger-system', version: 1, saved: new Date().toISOString(), settings, progress, keyStats, pos, tests };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   const d = new Date();
@@ -1967,6 +2150,8 @@ function applyLoaded(data) {
     progress[lid] = (pr && typeof pr === 'object') ? pr : {};
     const ks = data.keyStats && data.keyStats[lid];
     keyStats[lid] = (ks && typeof ks === 'object') ? ks : {};
+    const tl = data.tests && data.tests[lid];
+    tests[lid] = Array.isArray(tl) ? tl : [];
     const pos = data.pos && data.pos[lid];
     if (Number.isInteger(pos) && COURSE[lid][pos]) store.set('zfs.pos.' + lid, pos);
   }
@@ -1974,7 +2159,7 @@ function applyLoaded(data) {
     for (const k of Object.keys(settings)) if (k in data.settings && typeof data.settings[k] === typeof settings[k]) settings[k] = data.settings[k];
     if (!LAYOUTS[settings.layout]) settings.layout = 'de';
   }
-  saveProgress(); store.set('zfs.keys', keyStats); saveSettings();
+  saveProgress(); store.set('zfs.keys', keyStats); saveTests(); saveSettings();
   syncSettingsUI();
   setLayout(settings.layout);
   const when = data.saved ? new Date(data.saved).toLocaleDateString('de-AT') : '';
@@ -2003,8 +2188,8 @@ document.addEventListener('click', e => {
     loadFile.click();
   } else if (b.classList.contains('act-reset')) {
     if (!confirm('Gesamten Fortschritt in allen Layouts löschen? Tipp: Speichere ihn vorher als Datei.')) return;
-    for (const lid of Object.keys(COURSE)) { progress[lid] = {}; keyStats[lid] = {}; store.set('zfs.pos.' + lid, null); }
-    saveProgress(); store.set('zfs.keys', keyStats);
+    for (const lid of Object.keys(COURSE)) { progress[lid] = {}; keyStats[lid] = {}; tests[lid] = []; store.set('zfs.pos.' + lid, null); }
+    saveProgress(); store.set('zfs.keys', keyStats); saveTests();
     setLayout(settings.layout);
     saveMsg('Fortschritt zurückgesetzt.');
   }
