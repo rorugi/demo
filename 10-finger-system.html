@@ -1,0 +1,1865 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>10-Finger-System lernen</title>
+<meta name="description" content="Lerne das 10-Finger-System Schritt für Schritt: farbige Finger auf der Bildschirmtastatur, ein Kurs für Anfänger und freies Üben – mit deutschem, englischem und InScript-Layout.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ee; --panel:#ffffff; --panel-2:#faf8f4; --ink:#1e2330; --muted:#6a6f7b; --line:#e3ded3;
+  --accent:#EF6C00; --accent-soft:#FFF3E0; --ok:#1d8f50; --ok-soft:#dcf3e5; --bad:#cf3b3b; --bad-soft:#fde2e0;
+  --key-bg:#fbfaf7; --key-line:#d6d0c2; --key-ink:#2a2f3a; --palm:#ece3d6; --palm-line:#d7cbb9;
+  --S:82%; --L:74%; --Lb:48%; --Lt:52%; --Lf:66%; --Lfo:50%;
+  --shadow:0 1px 0 rgba(0,0,0,.04),0 8px 28px rgba(40,35,25,.07);
+  --ui:"Atkinson Hyperlegible Next","Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"Atkinson Hyperlegible Mono","JetBrains Mono",ui-monospace,Consolas,monospace;
+  --dev:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#13151a; --panel:#1b1e25; --panel-2:#20242c; --ink:#e9e7e2; --muted:#9aa0ab; --line:#2d313b;
+    --accent:#FFA726; --accent-soft:#3b2a1a; --ok:#4cc382; --ok-soft:#1d3428; --bad:#ff6b6b; --bad-soft:#3e2224;
+    --key-bg:#252932; --key-line:#3a3f4b; --key-ink:#e9e7e2; --palm:#3b352f; --palm-line:#544b42;
+    --S:55%; --L:36%; --Lb:55%; --Lt:62%; --Lf:48%; --Lfo:62%;
+    --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13151a; --panel:#1b1e25; --panel-2:#20242c; --ink:#e9e7e2; --muted:#9aa0ab; --line:#2d313b;
+  --accent:#FFA726; --accent-soft:#3b2a1a; --ok:#4cc382; --ok-soft:#1d3428; --bad:#ff6b6b; --bad-soft:#3e2224;
+  --key-bg:#252932; --key-line:#3a3f4b; --key-ink:#e9e7e2; --palm:#3b352f; --palm-line:#544b42;
+  --S:55%; --L:36%; --Lb:55%; --Lt:62%; --Lf:48%; --Lfo:62%;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.wrap{max-width:1220px;margin:0 auto;padding:18px 16px 40px}
+
+/* ---------- Header ---------- */
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.back{display:block;width:max-content;font-size:14px;color:var(--muted);text-decoration:none;margin-bottom:6px}
+.back:hover{color:var(--accent)}
+.logo{display:grid;grid-template-columns:repeat(5,9px);gap:3px}
+.logo i{display:block;width:9px;height:24px;border-radius:5px;background:var(--fc)}
+.logo i:nth-child(1){height:16px;margin-top:8px}.logo i:nth-child(2){height:21px;margin-top:3px}.logo i:nth-child(4){height:20px;margin-top:4px}.logo i:nth-child(5){height:12px;margin-top:14px;transform:rotate(30deg)}
+h1{font-size:25px;line-height:1.1;margin:0;letter-spacing:-.01em}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:7px 13px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted);line-height:1.2;text-align:center}
+.seg button small{display:block;font-weight:400;font-size:11px;opacity:.85}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#10131a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#10131a}}
+.iconbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:8px 12px;font-weight:600;font-size:14px}
+.iconbtn svg{width:18px;height:18px}
+
+.tabs{display:flex;gap:6px;margin:0 0 14px}
+.tabs button{border:1px solid transparent;background:none;border-radius:10px;padding:7px 14px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ---------- Settings ---------- */
+.settings{display:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.settings.open{display:block}
+.settings h2{font-size:16px;margin:0 0 10px}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px 22px}
+.setgrid label{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.35}
+.setgrid label input[type=checkbox]{margin-top:2px;width:17px;height:17px;accent-color:var(--accent);flex:none}
+.setgrid .sel{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.setgrid select{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2)}
+.setgrid small{color:var(--muted);display:block}
+.saveblock{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.saveblock h3{font-size:15px;margin:0 0 4px}
+.saveblock p{margin:0 0 8px;font-size:14px;color:var(--muted)}
+.saverow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:9px;padding:6px 11px;font-size:13px;font-weight:600}
+.sbtn svg{width:15px;height:15px}
+.sbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.sbtn.danger{color:var(--bad)}
+.savemsg{font-size:13px;color:var(--ok);min-height:18px}
+.savemsg.err{color:var(--bad)}
+aside .saverow{margin:12px 6px 4px;padding-top:10px;border-top:1px solid var(--line)}
+
+/* ---------- App layout ---------- */
+.app{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}
+.app.free{grid-template-columns:minmax(0,1fr)}
+.app.free aside{display:none}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--shadow);position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+aside h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:4px 6px 8px}
+.overall{margin:0 6px 10px;font-size:13px;color:var(--muted)}
+.bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:5px}
+.bar > i{display:block;height:100%;width:0;background:var(--ok);border-radius:4px;transition:width .3s}
+.lessons{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.lessons button{width:100%;display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:7px 8px;border-radius:10px}
+.lessons button:hover{background:var(--panel-2)}
+.lessons button.cur{background:var(--accent-soft)}
+.lessons .num{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--panel-2);border:1px solid var(--line);color:var(--muted)}
+.lessons .done .num{background:var(--ok);border-color:var(--ok);color:#fff}
+.lessons .part .num{border-color:var(--ok);color:var(--ok)}
+.lessons .lt{flex:1;min-width:0}
+.lessons .lt b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lessons .lt span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lessons .dev .lt span{font-family:var(--dev);font-size:13px}
+.stars{flex:none;font-size:12px;letter-spacing:-1px;color:#e0a100}
+.stars .off{color:var(--line)}
+
+@media (max-width:920px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  aside{position:static;max-height:none}
+  .lessons{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px}
+  .lessons li{flex:none;width:190px}
+  .lessons button{border:1px solid var(--line)}
+}
+
+/* ---------- Stage ---------- */
+.stage{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
+.lhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.lhead h2{margin:0;font-size:21px;letter-spacing:-.01em}
+.lhead .kicker{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.steps button{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:4px 11px 4px 5px;font-size:13px;font-weight:600;color:var(--muted)}
+.steps button i{font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--ink);font-size:11px}
+.steps button.cur{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.steps button.cur i{background:var(--accent);color:#fff}
+.steps button.ok i{background:var(--ok);color:#fff}
+.intro{margin-top:12px;display:grid;gap:10px}
+.intro p{margin:0}
+.newkeys{display:flex;flex-wrap:wrap;gap:8px}
+.nk{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:6px 12px 6px 6px}
+.nk .kc{min-width:38px;height:38px;padding:0 6px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:20px;background:var(--fc);color:var(--fi);border:1px solid var(--fd);border-bottom-width:3px}
+.nk.th .kc{background:var(--key-bg);border-color:var(--key-line)}
+.nk .kc.dev{font-family:var(--dev);font-weight:600}
+.nk div{font-size:13px;line-height:1.3}
+.nk div b{display:block;font-size:14px}
+.tip{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:15px}
+.tip svg{flex:none;width:20px;height:20px;margin-top:1px;color:var(--accent)}
+.rules{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.rules li{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4}
+.rules li b{display:block;font-size:15px;margin-bottom:2px}
+.linkbtn{border:0;background:none;color:var(--accent);padding:0;font-weight:600;font-size:14px}
+
+/* ---------- Typing ---------- */
+.typing{position:relative;padding-bottom:12px}
+.next{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted);min-height:34px;margin-bottom:8px}
+.next .kc{min-width:32px;height:32px;padding:0 7px;border-radius:8px;display:inline-grid;place-items:center;font-weight:700;font-size:17px;color:var(--fi);background:var(--fc);border:1px solid var(--fd);border-bottom-width:3px}
+.next .kc.th{background:var(--key-bg);border-color:var(--key-line);min-width:80px;font-size:13px}
+.next .kc.dev{font-family:var(--dev);font-weight:600}
+.next b{color:var(--ink)}
+.next .plus{font-weight:700}
+.caps{display:none;margin-left:auto;background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:3px 9px;font-weight:600;font-size:13px}
+.caps.on{display:inline-block}
+.textbox{position:relative;font-family:var(--mono);font-size:clamp(21px,2.5vw,29px);line-height:1.85;height:calc(3 * 1.85em);overflow:hidden;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;padding:0 2px;border-radius:10px;cursor:text;outline:none}
+.textbox.dev{font-family:var(--dev);line-height:2.05;height:calc(3 * 2.05em);font-size:clamp(23px,2.7vw,31px)}
+.textbox .c{border-radius:5px;transition:background .08s}
+.textbox .c.done{color:var(--muted)}
+.textbox .c.done.err{color:var(--bad);background:var(--bad-soft)}
+.textbox .c.cur{background:color-mix(in srgb,var(--fc,#FF9800) 42%,transparent);box-shadow:inset 0 -3px 0 var(--fd,#E65100)}
+.textbox .c.cur.miss{background:var(--bad-soft);box-shadow:inset 0 -3px 0 var(--bad);animation:shake .22s}
+.textbox .c.sp.done.err::before{content:"·";position:absolute;margin-left:.15em}
+.startHint{font-size:13px;color:var(--muted);margin-top:4px;min-height:20px}
+.statsrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:7px 11px}
+.stat span{display:block;font-size:12px;color:var(--muted)}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.progress{margin-top:10px}
+.result{position:absolute;inset:0;background:var(--panel);border-radius:12px;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:10px}
+.result.show{display:flex}
+.result h3{margin:0;font-size:22px}
+.result .bigstars{font-size:34px;letter-spacing:4px;color:#e0a100;line-height:1}
+.result .bigstars .off{color:var(--line)}
+.result .nums{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.result .nums div{font-size:13px;color:var(--muted)}
+.result .nums b{display:block;font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums}
+.result p{margin:0;max-width:560px;color:var(--muted);font-size:15px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{border:1px solid var(--line);background:var(--panel-2);border-radius:11px;padding:9px 16px;font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#10131a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{color:#10131a}}
+.btn kbd{font-family:var(--ui);font-size:11px;opacity:.8;margin-left:6px;border:1px solid currentColor;border-radius:4px;padding:0 4px}
+.weak{font-size:14px;color:var(--muted)}
+.weak .w{display:inline-block;min-width:26px;padding:0 6px;margin:0 2px;border-radius:6px;background:var(--bad-soft);color:var(--bad);font-weight:700;font-family:var(--mono)}
+
+/* ---------- Free practice ---------- */
+.freebar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}
+.freebar .sel{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+.freebar select{padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);font-weight:400;color:var(--ink)}
+.freebar textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:10px;resize:vertical}
+.customwrap{flex-basis:100%;display:none}
+.customwrap.show{display:block}
+.note{font-size:13px;color:var(--muted)}
+
+/* ---------- Keyboard ---------- */
+.kbcard{padding:14px 12px 10px}
+.kbwrap{width:100%}
+.kb{--u:52px;width:calc(var(--u) * 15);margin:0 auto;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.kb .row{display:flex}
+.k{width:calc(var(--w,1) * var(--u));height:calc(var(--u) * .94);padding:2px;flex:none}
+.k .cap{position:relative;display:block;height:100%;border-radius:calc(var(--u) * .15);background:var(--key-bg);border:1px solid var(--key-line);border-bottom-width:3px;color:var(--key-ink);transition:transform .07s,background .12s,opacity .2s,box-shadow .12s;cursor:pointer;overflow:hidden}
+.k.fc .cap{background:var(--fc);border-color:var(--fd);color:var(--fi)}
+.kb.nocolor .k.fc .cap{background:var(--key-bg);border-color:var(--key-line)}
+.k .lbl{position:absolute;line-height:1;pointer-events:none;white-space:nowrap}
+.k .lc{left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:calc(var(--u) * .36);font-weight:600}
+.k .lb{left:16%;bottom:15%;font-size:calc(var(--u) * .3);font-weight:600}
+.k .ls{left:16%;top:13%;font-size:calc(var(--u) * .25)}
+.k .la{right:12%;bottom:13%;font-size:calc(var(--u) * .21);opacity:.6}
+.k .lh{right:11%;top:11%;font-size:calc(var(--u) * .19);opacity:.55;font-family:var(--ui);font-weight:600}
+.k .lm{left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:calc(var(--u) * .24);opacity:.65}
+.kb.dev .k .lb{font-family:var(--dev);font-size:calc(var(--u) * .36);left:12%;bottom:10%;font-weight:600}
+.kb.dev .k .ls{font-family:var(--dev);font-size:calc(var(--u) * .27);left:12%;top:9%}
+.kb.dev .k .la{font-family:var(--dev)}
+.k.home .cap{border-bottom-width:4px}
+.kb.nocolor .k.home .cap{border-color:var(--muted)}
+.k.bump .cap::after{content:"";position:absolute;left:50%;bottom:11%;width:24%;height:3px;border-radius:2px;background:currentColor;opacity:.55;transform:translateX(-50%)}
+.k.entertop{padding-bottom:0}
+.k.entertop .cap{border-bottom-right-radius:0;border-bottom-left-radius:calc(var(--u) * .15);border-bottom-width:1px}
+.k.enterbot{padding-top:0}
+.k.enterbot .cap{border-top:0;border-top-left-radius:0;border-top-right-radius:0}
+.k.mod .cap{background:var(--panel-2)}
+.k.dim .cap{opacity:.32;filter:saturate(.35)}
+.k.new .cap{box-shadow:0 0 0 2px var(--ink)}
+.kb.small .k.new .cap::before{display:none}
+.kb.dev .k.new .cap::before{top:auto;bottom:6%}
+.k.new .cap::before{content:"neu";position:absolute;right:5%;top:6%;font-size:calc(var(--u) * .16);font-weight:700;background:var(--ink);color:var(--panel);border-radius:4px;padding:1px 3px;line-height:1.1;font-family:var(--ui)}
+.k.target{position:relative;z-index:2}
+.k.target .cap{opacity:1;filter:none;transform:translateY(-2px) scale(1.05);box-shadow:0 0 0 3px var(--ink),0 0 14px 4px var(--fc);animation:pulse 1.2s ease-in-out infinite}
+.k.target.th .cap,.k.target.mod .cap{background:var(--accent);border-color:#E65100;color:#fff}
+.kb.nocolor .k.target .cap{background:var(--fc);border-color:var(--fd);color:var(--fi)}
+.k.press .cap{transform:translateY(2px);border-bottom-width:1px;filter:brightness(.93)}
+.k.wrong .cap{background:var(--bad) !important;border-color:var(--bad) !important;color:#fff;animation:shake .25s}
+.k.wrong .cap::after{content:"✕";position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--u) * .5);font-weight:700;color:#fff;background:var(--bad);opacity:1;width:auto;height:auto;transform:none;left:0;bottom:0;border-radius:inherit}
+.kb.blind .k .lbl{visibility:hidden}
+.kb.blind .k.home .cap::after{opacity:.9}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px var(--ink),0 0 10px 2px var(--fc)}50%{box-shadow:0 0 0 3px var(--ink),0 0 22px 8px var(--fc)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.kbfoot{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:10px;font-size:12px;color:var(--muted)}
+.kbfoot .sw{display:inline-flex;align-items:center;gap:5px}
+.kbfoot .sw i{width:13px;height:13px;border-radius:3px;background:var(--fc);border:1px solid var(--fd)}
+
+/* ---------- Hands ---------- */
+.hands{margin-top:6px}
+.hands svg{display:block;width:100%;max-width:600px;margin:0 auto}
+.finger{fill:var(--fc);stroke:var(--fd);stroke-width:1.5;transition:opacity .15s,stroke .15s}
+.hands.lit .finger:not(.on){opacity:.4}
+.finger.thumb{fill:var(--palm);stroke:var(--palm-line)}
+.finger.on{stroke:var(--ink);stroke-width:3;filter:drop-shadow(0 0 8px var(--fc))}
+.finger.thumb.on{fill:var(--accent);--fc:var(--accent)}
+.palm{fill:var(--palm);stroke:var(--palm-line);stroke-width:1.5}
+.flabel{font-family:var(--ui);font-weight:700;font-size:15px;fill:var(--fi);text-anchor:middle;dominant-baseline:central;pointer-events:none;opacity:.8}
+.flabel.dev{font-family:var(--dev);font-size:16px}
+.handcap{text-align:center;font-size:14px;color:var(--muted);min-height:21px;margin-top:2px}
+.handcap b{color:var(--ink)}
+
+details.help{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px;box-shadow:var(--shadow)}
+details.help summary{cursor:pointer;font-weight:700;font-size:16px}
+details.help .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px 28px;margin-top:10px;font-size:15px}
+details.help h3{font-size:15px;margin:12px 0 4px}
+details.help p,details.help ul{margin:0 0 6px}
+footer{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:640px){
+  .statsrow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{margin-left:0}
+  h1{font-size:21px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Demos</a>
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><i style="--fc:#1E88E5"></i><i style="--fc:#43A047"></i><i style="--fc:#9B51E0"></i><i style="--fc:#FBC02D"></i><i style="--fc:#FF9800"></i></div>
+      <div>
+        <h1>10-Finger-System</h1>
+        <p>Blind schreiben lernen – Schritt für Schritt, jeder Finger hat seine Farbe.</p>
+      </div>
+    </div>
+    <div class="seg" id="layoutSeg" role="group" aria-label="Tastaturlayout">
+      <button data-l="de" aria-pressed="false">Deutsch<small>QWERTZ</small></button>
+      <button data-l="en" aria-pressed="false">English<small>QWERTY (US)</small></button>
+      <button data-l="in" aria-pressed="false">InScript<small>हिन्दी</small></button>
+    </div>
+    <button class="iconbtn" id="setBtn" aria-expanded="false" aria-controls="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      Einstellungen
+    </button>
+  </header>
+
+  <section class="settings" id="settings" aria-label="Einstellungen">
+    <h2>Einstellungen</h2>
+    <div class="setgrid">
+      <label><input type="checkbox" id="optStop"><span>Bei Fehler anhalten<small>Erst wenn die richtige Taste gedrückt ist, geht es weiter (empfohlen für Anfänger).</small></span></label>
+      <label><input type="checkbox" id="optHint"><span>Nächste Taste hervorheben<small>Taste und Finger leuchten auf. Für Fortgeschrittene abschaltbar.</small></span></label>
+      <label><input type="checkbox" id="optColors"><span>Fingerfarben auf der Tastatur</span></label>
+      <label><input type="checkbox" id="optHands"><span>Hände anzeigen</span></label>
+      <label><input type="checkbox" id="optBlind"><span>Blindmodus<small>Beschriftung der Bildschirmtastatur ausblenden.</small></span></label>
+      <label><input type="checkbox" id="optSound"><span>Ton bei Fehlern</span></label>
+      <div class="sel">Tasten auswerten
+        <select id="optMap">
+          <option value="pos">nach Tastenposition (empfohlen)</option>
+          <option value="sys">nach Zeichen des Systems</option>
+        </select>
+        <small>„Position“ simuliert das gewählte Layout – du musst nichts am Computer umstellen. „System“ nimmt das Zeichen, das dein Betriebssystem liefert.</small>
+      </div>
+      <div class="sel">Tastatur für InScript
+        <select id="optInGeo">
+          <option value="iso">deutsche Tastatur (QWERTZ)</option>
+          <option value="ansi">US-Tastatur (QWERTY)</option>
+        </select>
+        <small>Bestimmt Form und lateinische Beschriftung der InScript-Tasten.</small>
+      </div>
+    </div>
+    <div class="saveblock">
+      <h3>Fortschritt</h3>
+      <p>Speichere deinen Fortschritt als Datei, um ihn zu sichern oder auf einem anderen Gerät bzw. in einem anderen Browser weiterzumachen.</p>
+      <div class="saverow">
+        <button class="sbtn primary act-save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Fortschritt speichern</button>
+        <button class="sbtn act-load"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Fortschritt laden</button>
+        <button class="sbtn danger act-reset">Zurücksetzen</button>
+        <span class="savemsg" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tabCourse" aria-selected="true">Kurs</button>
+    <button role="tab" id="tabFree" aria-selected="false">Freies Üben</button>
+  </nav>
+
+  <div class="app" id="app">
+    <aside aria-label="Lektionen">
+      <h2>Lektionen</h2>
+      <div class="overall"><span id="overallTxt"></span><div class="bar"><i id="overallBar"></i></div></div>
+      <ol class="lessons" id="lessonList"></ol>
+      <div class="saverow">
+        <button class="sbtn act-save" title="Fortschritt als Datei speichern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Speichern</button>
+        <button class="sbtn act-load" title="Gespeicherte Datei laden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Laden</button>
+        <span class="savemsg" aria-live="polite"></span>
+      </div>
+    </aside>
+    <input type="file" id="loadFile" accept=".json,application/json" hidden>
+
+    <div class="stage">
+      <section class="card" id="lessonCard">
+        <div class="lhead">
+          <div>
+            <div class="kicker" id="lKicker"></div>
+            <h2 id="lTitle"></h2>
+          </div>
+          <div class="steps" id="steps"></div>
+        </div>
+        <div class="intro" id="intro"></div>
+      </section>
+
+      <section class="card" id="freeCard" hidden>
+        <div class="freebar">
+          <div class="sel">Übungstext
+            <select id="freeSrc">
+              <option value="learned">Wörter aus gelernten Tasten</option>
+              <option value="all">Alle Wörter</option>
+              <option value="sentences">Sätze</option>
+              <option value="weak">Meine schwachen Tasten</option>
+              <option value="custom">Eigener Text</option>
+            </select>
+          </div>
+          <div class="sel">Länge
+            <select id="freeLen">
+              <option value="120">kurz (ca. 1 Minute)</option>
+              <option value="250" selected>mittel</option>
+              <option value="450">lang</option>
+            </select>
+          </div>
+          <button class="btn primary" id="freeGo">Neuer Text</button>
+          <span class="note" id="freeNote"></span>
+          <div class="customwrap" id="customWrap">
+            <textarea id="customTxt" placeholder="Eigenen Text hier einfügen …"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card typing" id="typingCard">
+        <div class="next" id="next" aria-live="polite"></div>
+        <div class="textbox" id="textbox" tabindex="0" aria-label="Übungstext"></div>
+        <div class="startHint" id="startHint"></div>
+        <div class="statsrow">
+          <div class="stat"><span>Zeit</span><b id="sTime">0:00</b></div>
+          <div class="stat"><span>Anschläge / Min.</span><b id="sCpm">0</b></div>
+          <div class="stat"><span>Genauigkeit</span><b id="sAcc">100 %</b></div>
+          <div class="stat"><span>Fehler</span><b id="sErr">0</b></div>
+        </div>
+        <div class="progress"><div class="bar"><i id="pBar"></i></div></div>
+        <div class="result" id="result" aria-live="polite"></div>
+      </section>
+
+      <section class="card kbcard">
+        <div class="kbwrap" id="kbwrap"><div class="kb" id="kb"></div></div>
+        <div class="hands" id="hands"></div>
+        <div class="handcap" id="handcap"></div>
+        <div class="kbfoot" id="kbfoot"></div>
+      </section>
+    </div>
+  </div>
+
+  <details class="help">
+    <summary>So lernst du das 10-Finger-System richtig</summary>
+    <div class="cols">
+      <div>
+        <h3>Die Grundstellung</h3>
+        <p>Die Finger ruhen auf der mittleren Buchstabenreihe: links auf <b>A S D F</b>, rechts auf <b>J K L Ö</b> (englisch: <b>J K L ;</b>). Auf F und J ertastest du kleine Erhebungen – so findest du die Position ohne hinzusehen. Beide Daumen liegen auf der Leertaste.</p>
+        <h3>Jeder Finger hat seine Tasten</h3>
+        <p>Die Farben auf der Tastatur zeigen, welcher Finger welche Taste drückt. Ein Finger verlässt die Grundstellung nur kurz und kehrt sofort zurück.</p>
+        <h3>Großbuchstaben</h3>
+        <p>Die Umschalttaste ⇧ drückst du immer mit dem kleinen Finger der <i>anderen</i> Hand: für F also ⇧ rechts, für J ⇧ links.</p>
+      </div>
+      <div>
+        <h3>Haltung</h3>
+        <ul>
+          <li>Aufrecht sitzen, Füße flach am Boden.</li>
+          <li>Oberarme locker, Unterarme etwa waagrecht.</li>
+          <li>Handgelenke nicht abknicken und nicht aufstützen.</li>
+          <li>Finger leicht gekrümmt, Anschlag kurz und locker.</li>
+        </ul>
+        <h3>Üben</h3>
+        <ul>
+          <li>Nicht auf die Tastatur schauen – der Blick bleibt am Bildschirm.</li>
+          <li>Genauigkeit vor Tempo: Ziel sind mindestens 95 % richtige Anschläge.</li>
+          <li>Gleichmäßiger Rhythmus statt hektischer Sprints.</li>
+          <li>Lieber täglich 10–15 Minuten als einmal pro Woche eine Stunde.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>InScript (Hindi)</h3>
+        <p>InScript ist das indische Standardlayout für Devanagari. Vokalzeichen (Matras) liegen auf der linken Hand, die häufigsten Konsonanten auf der rechten. Ein Vokalzeichen folgt immer dem Konsonanten – auch ि, das davor geschrieben aussieht: र + ि = रि. Das Halant ् verbindet Konsonanten: क + ् + र = क्र.</p>
+        <p>Du musst Hindi nicht am Computer einrichten: Mit „Tasten auswerten nach Position“ wird die gedrückte Taste in das InScript-Zeichen umgewandelt.</p>
+        <h3>Tastenkürzel</h3>
+        <p><b>Esc</b> startet die Übung neu, <b>Enter</b> geht nach dem Ergebnis weiter.</p>
+      </div>
+    </div>
+  </details>
+  <footer>Dein Fortschritt wird automatisch in diesem Browser gespeichert. Mit „Speichern“ sicherst du ihn als Datei.</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* =========================================================
+   Speicher
+   ========================================================= */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const settings = Object.assign({
+  layout: 'de', stop: true, hint: true, colors: true, hands: true, blind: false, sound: false, map: 'pos', inGeo: 'iso'
+}, store.get('zfs.settings', {}));
+const progress = Object.assign({ de: {}, en: {}, in: {} }, store.get('zfs.progress', {}));
+const keyStats = Object.assign({ de: {}, en: {}, in: {} }, store.get('zfs.keys', {}));
+const saveSettings = () => store.set('zfs.settings', settings);
+const saveProgress = () => store.set('zfs.progress', progress);
+
+/* =========================================================
+   Finger
+   ========================================================= */
+// Fingerfarben: Blau – Grün – Violett – Gelb (Fläche, Kante, Schrift)
+const FBLUE = ['#1E88E5', '#1259A8', '#ffffff'], FGREEN = ['#43A047', '#2B6E2F', '#ffffff'], FVIOLET = ['#9B51E0', '#6A2BA8', '#ffffff'], FYELLOW = ['#FBC02D', '#C99400', '#1f1a00'], ORANGE = ['#FF9800', '#E65100', '#ffffff'];
+const fv = f => { const c = FINGERS[f].c; return `--fc:${c[0]};--fd:${c[1]};--fi:${c[2]}`; };
+const setFv = (el, f) => { const c = FINGERS[f].c; el.style.setProperty('--fc', c[0]); el.style.setProperty('--fd', c[1]); el.style.setProperty('--fi', c[2]); };
+const FINGERS = {
+  lp: { name: 'linker kleiner Finger', c: FBLUE, hand: 'l' },
+  lr: { name: 'linker Ringfinger', c: FGREEN, hand: 'l' },
+  lm: { name: 'linker Mittelfinger', c: FVIOLET, hand: 'l' },
+  li: { name: 'linker Zeigefinger', c: FYELLOW, hand: 'l' },
+  th: { name: 'Daumen', c: ORANGE, hand: 'b' },
+  ri: { name: 'rechter Zeigefinger', c: FYELLOW, hand: 'r' },
+  rm: { name: 'rechter Mittelfinger', c: FVIOLET, hand: 'r' },
+  rr: { name: 'rechter Ringfinger', c: FGREEN, hand: 'r' },
+  rp: { name: 'rechter kleiner Finger', c: FBLUE, hand: 'r' }
+};
+const FINGER_OF = {};
+Object.entries({
+  lp: 'Backquote Digit1 Tab KeyQ CapsLock KeyA ShiftLeft IntlBackslash KeyZ',
+  lr: 'Digit2 KeyW KeyS KeyX',
+  lm: 'Digit3 KeyE KeyD KeyC',
+  li: 'Digit4 Digit5 KeyR KeyT KeyF KeyG KeyV KeyB',
+  ri: 'Digit6 Digit7 KeyY KeyU KeyH KeyJ KeyN KeyM',
+  rm: 'Digit8 KeyI KeyK Comma',
+  rr: 'Digit9 KeyO KeyL Period',
+  rp: 'Digit0 Minus Equal Backspace KeyP BracketLeft BracketRight Backslash Semicolon Quote Enter Slash ShiftRight',
+  th: 'Space'
+}).forEach(([f, s]) => s.split(' ').forEach(c => { FINGER_OF[c] = f; }));
+const HOME = { lp: 'KeyA', lr: 'KeyS', lm: 'KeyD', li: 'KeyF', ri: 'KeyJ', rm: 'KeyK', rr: 'KeyL', rp: 'Semicolon', th: 'Space' };
+const HOME_CODES = new Set(Object.values(HOME));
+
+/* =========================================================
+   Layouts  (Taste -> [normal, Umschalt, AltGr])
+   ========================================================= */
+function baseLetters(swapYZ) {
+  const m = {};
+  for (const ch of 'qwertyuiopasdfghjklzxcvbnm') {
+    let out = ch;
+    if (swapYZ && ch === 'y') out = 'z'; else if (swapYZ && ch === 'z') out = 'y';
+    m['Key' + ch.toUpperCase()] = [out, out.toUpperCase()];
+  }
+  return m;
+}
+const DE_KEYS = Object.assign(baseLetters(true), {
+  Backquote: ['^', '°'], Digit1: ['1', '!'], Digit2: ['2', '"', '²'], Digit3: ['3', '§', '³'], Digit4: ['4', '$'],
+  Digit5: ['5', '%'], Digit6: ['6', '&'], Digit7: ['7', '/', '{'], Digit8: ['8', '(', '['], Digit9: ['9', ')', ']'],
+  Digit0: ['0', '=', '}'], Minus: ['ß', '?', '\\'], Equal: ['´', '`'],
+  KeyQ: ['q', 'Q', '@'], KeyE: ['e', 'E', '€'], KeyM: ['m', 'M', 'µ'],
+  BracketLeft: ['ü', 'Ü'], BracketRight: ['+', '*', '~'],
+  Semicolon: ['ö', 'Ö'], Quote: ['ä', 'Ä'], Backslash: ['#', "'"],
+  IntlBackslash: ['<', '>', '|'], Comma: [',', ';'], Period: ['.', ':'], Slash: ['-', '_']
+});
+const EN_KEYS = Object.assign(baseLetters(false), {
+  Backquote: ['`', '~'], Digit1: ['1', '!'], Digit2: ['2', '@'], Digit3: ['3', '#'], Digit4: ['4', '$'], Digit5: ['5', '%'],
+  Digit6: ['6', '^'], Digit7: ['7', '&'], Digit8: ['8', '*'], Digit9: ['9', '('], Digit0: ['0', ')'], Minus: ['-', '_'], Equal: ['=', '+'],
+  BracketLeft: ['[', '{'], BracketRight: [']', '}'], Backslash: ['\\', '|'],
+  Semicolon: [';', ':'], Quote: ["'", '"'], Comma: [',', '<'], Period: ['.', '>'], Slash: ['/', '?']
+});
+// Windows InScript (Hindi Traditional)
+const IN_KEYS = {
+  Backquote: ['ॊ', 'ऒ'], Digit1: ['1', 'ऍ', '१'], Digit2: ['2', 'ॅ', '२'], Digit3: ['3', '्र', '३'], Digit4: ['4', 'र्', '४'],
+  Digit5: ['5', 'ज्ञ', '५'], Digit6: ['6', 'त्र', '६'], Digit7: ['7', 'क्ष', '७'], Digit8: ['8', 'श्र', '८'], Digit9: ['9', '(', '९'],
+  Digit0: ['0', ')', '०'], Minus: ['-', 'ः'], Equal: ['ृ', 'ऋ'],
+  KeyQ: ['ौ', 'औ'], KeyW: ['ै', 'ऐ'], KeyE: ['ा', 'आ'], KeyR: ['ी', 'ई'], KeyT: ['ू', 'ऊ'], KeyY: ['ब', 'भ'], KeyU: ['ह', 'ङ'],
+  KeyI: ['ग', 'घ'], KeyO: ['द', 'ध'], KeyP: ['ज', 'झ'], BracketLeft: ['ड', 'ढ'], BracketRight: ['़', 'ञ'], Backslash: ['ॉ', 'ऑ'],
+  KeyA: ['ो', 'ओ'], KeyS: ['े', 'ए'], KeyD: ['्', 'अ'], KeyF: ['ि', 'इ'], KeyG: ['ु', 'उ'], KeyH: ['प', 'फ'], KeyJ: ['र', 'ऱ'],
+  KeyK: ['क', 'ख'], KeyL: ['त', 'थ'], Semicolon: ['च', 'छ'], Quote: ['ट', 'ठ'],
+  KeyZ: ['ॆ', 'ऎ'], KeyX: ['ं', 'ँ'], KeyC: ['म', 'ण'], KeyV: ['न', 'ऩ'], KeyB: ['व', 'ऴ'], KeyN: ['ल', 'ळ'], KeyM: ['स', 'श'],
+  Comma: [',', 'ष'], Period: ['.', '।'], Slash: ['य', 'य़']
+};
+const LAYOUTS = {
+  de: { name: 'Deutsch (QWERTZ)', keys: DE_KEYS, geo: () => 'iso', dev: false, lang: 'de' },
+  en: { name: 'English (QWERTY)', keys: EN_KEYS, geo: () => 'ansi', dev: false, lang: 'en' },
+  in: { name: 'InScript', keys: IN_KEYS, geo: () => settings.inGeo, dev: true, lang: 'hi' }
+};
+
+const R0 = ['Backquote', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'];
+const R1 = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight'];
+const R2 = ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote'];
+const R3 = ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash'];
+function geometry(type) {
+  const one = a => a.map(c => [c, 1]);
+  const bottom = [['ControlLeft', 1.25], ['MetaLeft', 1.25], ['AltLeft', 1.25], ['Space', 6.25], ['AltRight', 1.25], ['MetaRight', 1.25], ['ContextMenu', 1.25], ['ControlRight', 1.25]];
+  if (type === 'iso') return [
+    [...one(R0), ['Backspace', 2]],
+    [['Tab', 1.5], ...one(R1), ['Enter', 1.5, 'entertop']],
+    [['CapsLock', 1.75], ...one(R2), ['Backslash', 1], ['Enter', 1.25, 'enterbot']],
+    [['ShiftLeft', 1.25], ['IntlBackslash', 1], ...one(R3), ['ShiftRight', 2.75]],
+    bottom
+  ];
+  return [
+    [...one(R0), ['Backspace', 2]],
+    [['Tab', 1.5], ...one(R1), ['Backslash', 1.5]],
+    [['CapsLock', 1.75], ...one(R2), ['Enter', 2.25]],
+    [['ShiftLeft', 2.25], ...one(R3), ['ShiftRight', 2.75]],
+    bottom
+  ];
+}
+function rowOf(code) {
+  if (R0.includes(code)) return 0;
+  if (R1.includes(code)) return 1;
+  if (R2.includes(code)) return 2;
+  if (R3.includes(code) || code === 'IntlBackslash') return 3;
+  if (code === 'Backslash') return geometry(LAYOUTS[settings.layout].geo())[1].some(k => k[0] === 'Backslash') ? 1 : 2;
+  if (code === 'Space') return 4;
+  return -1;
+}
+
+const MARK_RE = /\p{M}/u;
+const LETTER_RE = /\p{L}/u;
+const isMark = ch => MARK_RE.test(ch);
+const isLetter = ch => LETTER_RE.test(ch) || isMark(ch);
+
+const c2kCache = {};
+function charMap(lid) {
+  const key = lid + (lid === 'in' ? settings.inGeo : '');
+  if (c2kCache[key]) return c2kCache[key];
+  const m = { ' ': { code: 'Space', shift: false } };
+  const keys = LAYOUTS[lid].keys;
+  for (const [code, arr] of Object.entries(keys)) {
+    const [b, s, a] = arr;
+    if (b && !m[b]) m[b] = { code, shift: false };
+    if (s && !m[s]) m[s] = { code, shift: true };
+    if (a && !m[a]) m[a] = { code, altgr: true };
+  }
+  m.__multi = Object.keys(m).filter(k => Array.from(k).length > 1).sort((x, y) => y.length - x.length);
+  return (c2kCache[key] = m);
+}
+function physLabel(code) {
+  const lid = settings.layout;
+  const src = lid === 'in' ? (settings.inGeo === 'iso' ? DE_KEYS : EN_KEYS) : LAYOUTS[lid].keys;
+  if (code === 'Space') return 'Leertaste';
+  const a = src[code];
+  if (!a) return code;
+  const up = a[0].toUpperCase();
+  return Array.from(up).length === 1 ? up : a[0];
+}
+const showCh = ch => ch === ' ' ? '␣' : (isMark(Array.from(ch)[0]) ? '◌' + ch : ch);
+
+/* =========================================================
+   Wortlisten & Sätze
+   ========================================================= */
+const WORDS = {
+de: `da das dass als all alle lass fall falls Saal Aal Hals Glas Gas lag sag half kahl Hall halls Fass fassen Last lassen Gras Graf Jagd jagen Haff Kalk Lage Salsa
+der die und in zu den von mit sich des auf für ist im dem nicht ein eine einen einer als auch es an er hat aus bei sind noch wie über so zum war haben nur oder aber vor zur bis mehr durch man sein wurde sei wenn kann gegen vom schon wird sie ich du wir ihr mein dein hier dort heute morgen immer oft
+gut groß klein alt neu schnell langsam schön lang kurz warm kalt hell dunkel früh spät leise laut still froh müde süß sauer bitter grün blau rot gelb weiß schwarz braun grau richtig falsch fast ganz sehr viel wenig jeder kein weil ob damit also dann jetzt bald nie ja nein bitte danke
+Haus Hund Katze Baum Wald Feld Weg Tag Nacht Jahr Zeit Welt Land Stadt Dorf Schule Kind Mann Frau Vater Mutter Bruder Schwester Freund Hand Kopf Auge Herz Wasser Brot Milch Kaffee Tee Apfel Zucker Salz Tisch Stuhl Bett Tür Fenster Buch Brief Wort Satz Name Farbe Ball Spiel Lied Musik Sonne Mond Stern Regen Schnee Wind See Meer Berg Fluss Insel Straße Auto Zug Rad Bahn Fuß Bein Arm Ohr Nase Mund Zahn Haar Kleid Hose Schuh Hut Jacke Geld Arbeit Woche Monat Frage Antwort Ende Anfang Idee Glück Freude Liebe Ruhe Eis Seife Geld Elf Allee Kiel Kies Hefe Fehler Ferien Feder Leder Leiter Seite Reise Kreis Preis Erde Rede Ziel Zug Ziege Tiger Uhr Ufer Jura Juli Juni Kuh Tuch Glut Mut Hut Gurke Wolke Wort Sorte Torte Post Rose Hose Quark Quelle Paket Papier Pause Panne Nadel Nudel Nebel Name Mann Mond Mantel Vogel Vase Bus Bad Bank Becher Bild Clown Couch Text Taxi Axt Hexe Box Mixer Yoga Typ Pony Baby Hobby Übung Mühe Tür Bär Käse März Mädchen Fuß Straße Grüße Maß
+gehen kommen sagen machen sehen lesen schreiben laufen fahren essen trinken spielen lernen finden geben nehmen halten legen stellen tragen rufen denken wissen kennen leben wohnen arbeiten kaufen helfen lachen singen tanzen schlafen warten öffnen hören fühlen zählen wählen üben fallen falten fassen sagen leiten reisen reiten seid sie lies fiel hielt ideal eile fies heil egal edel
+er sie es ihr euer unser alles etwas nichts selbst gerne wieder zusammen draußen drinnen oben unten links rechts vorne hinten neben zwischen unter ohne`,
+en: `ask sad dad add all fall hall glass lass flag flask shall has had lad dash flash half salad alas gall gash lash sash lag hag jag
+the of and to in is you that it he was for on are as with his they at be this have from or one had by word but not what all were we when your can said there use an each which she do how their if will up other about out many then them these so some her would make like him into time has look two more write go see number no way could people my than first water been call who oil its now find long down day did get come made may part
+lake desk sea see feed seed deal lead idea kid lid aid slide field jail fail rail read free fire fur sure rude true tree street start fresh dark park ride tired red sister desert target trust third hurt
+week work word world wait water wide window wish wolf owl own row slow follow pool quiet quick queen quiz quote square equal paper people pepper apple happy pipe top stop shop
+name night new noon man moon morning money mother mind month never number human woman
+very voice visit seven five over above love gave live baby big bring blue bubble job
+can come cool cook cold color city cat cup dance once since
+box fox next six tax taxi exit extra
+zoo zero zebra size prize lazy crazy fuzzy dizzy
+don't it's can't let's we're you're that's isn't won't
+London Paris Monday Friday April June Anna Tom Lisa Peter English`,
+hi: `कि पर तक टिकट चोट रोक कोट पेट रेत केक चुप टोपी रोटी केला कुत्ता पका पता चिट्ठी
+है हैं के की का को में से और यह वह था थी थे एक नहीं तो भी कर जो हम तुम आप क्या लिए साथ बहुत अब कुछ घर पानी दिन रात समय काम नाम बात लोग देश दोस्त किताब बच्चा माता पिता भाई बहन खाना चाय दूध फल फूल पेड़ नदी पहाड़ शहर गाँव सड़क रास्ता कक्षा पढ़ना लिखना बोलना सुनना देखना जाना आना करना होना रहना मिलना चलना बैठना खेलना सोना उठना
+अच्छा बुरा बड़ा छोटा नया पुराना सुंदर लाल नीला हरा पीला काला आज कल अभी यहाँ वहाँ कहाँ कब कैसे क्यों कौन सब हर कोई तरह प्यार दिल हाथ पैर आँख सिर मुँह कान बाल कपड़े जूते कमरा खिड़की मेज़ कुर्सी कलम कागज़ पत्र संगीत गीत भारत हिंदी भाषा शब्द वाक्य अक्षर
+टमाटर चिड़िया ऊपर नीचे अंदर बाहर पास दूर धन्यवाद नमस्ते कृपया ज्ञान क्षमा शुभ परिवार राजा रानी मोर शेर हाथी घोड़ा गाय बकरी बिल्ली मछली तोता पत्ता बादल बारिश धूप हवा आग चाँद सूरज तारा आसमान धरती समुद्र
+तेल मेला ताला चाकू दवा दाल चावल आलू गोभी मिठाई लड्डू खीर दही मक्खन नमक चीनी मसाला पूरी पराठा
+डॉक्टर कॉफ़ी ऑफ़िस बॉल कॉलेज`
+};
+const SENTENCES = {
+de: [
+  'Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.',
+  'Heute scheint die Sonne und wir gehen in den Park.',
+  'Übung macht den Meister.',
+  'Am Morgen trinke ich gerne eine Tasse Tee.',
+  'Die Katze schläft auf dem warmen Fensterbrett.',
+  'Zwölf Boxkämpfer jagen Viktor quer über den großen Sylter Deich.',
+  'Wer langsam und genau schreibt, wird bald auch schnell.',
+  'Im Herbst fallen bunte Blätter von den Bäumen.',
+  'Kannst du mir bitte das Salz geben?',
+  'Wir treffen uns um 18 Uhr am Bahnhof.',
+  'Meine Schwester liest jeden Abend ein Buch.',
+  'Der kleine Hund bellt laut, wenn es klingelt.',
+  'Im Sommer fahren wir mit dem Rad an den See.',
+  'Gute Ideen kommen oft beim Spazierengehen.',
+  'Das Frühstück steht schon auf dem Tisch!'
+],
+en: [
+  'The quick brown fox jumps over the lazy dog.',
+  'Practice makes perfect.',
+  'Pack my box with five dozen liquor jugs.',
+  'Today the sun is shining and we walk to the park.',
+  'Could you please pass me the salt?',
+  'We meet at 6 pm at the station.',
+  'Slow and accurate typing soon becomes fast typing.',
+  'In autumn, colorful leaves fall from the trees.',
+  'My cat sleeps on the warm windowsill.',
+  'Every morning I drink a cup of tea.',
+  'The little dog barks loudly when the bell rings.',
+  'Good ideas often come while you take a walk.',
+  'Breakfast is already on the table!',
+  'She reads a new book every week.',
+  'Keep your eyes on the screen, not on your hands.'
+],
+hi: [
+  'मेरा नाम अनु है।',
+  'आज मौसम बहुत अच्छा है।',
+  'हम हर दिन हिंदी पढ़ते हैं।',
+  'बच्चे बाग़ में खेल रहे हैं।',
+  'माँ रसोई में चाय बना रही है।',
+  'यह किताब बहुत रोचक है।',
+  'मुझे एक गिलास पानी चाहिए।',
+  'कल हम दिल्ली जाएँगे।',
+  'पेड़ पर एक तोता बैठा है।',
+  'धीरे धीरे अभ्यास से सब आसान हो जाता है।',
+  'मेरे दोस्त का घर नदी के पास है।',
+  'रात को आसमान में चाँद और तारे चमकते हैं।',
+  'क्या आप मेरे साथ बाज़ार चलेंगे?',
+  'सुबह की धूप बहुत सुहानी लगती है।',
+  'नमस्ते, आप कैसे हैं?'
+]
+};
+const NAMES = {
+  de: ['Anna', 'Ben', 'Lisa', 'Paul', 'Lena', 'Felix', 'Sara', 'Jonas', 'Wien', 'Graz', 'Linz', 'Berlin', 'Salzburg', 'Hamburg', 'Klara', 'Emil'],
+  en: ['Anna', 'Tom', 'Lisa', 'Peter', 'Kate', 'John', 'Sarah', 'London', 'Paris', 'Dublin', 'Monday', 'Friday', 'April', 'June', 'Emma', 'Jack']
+};
+function wordList(lid) {
+  const lang = LAYOUTS[lid].lang;
+  const raw = WORDS[lang].split(/\s+/).filter(Boolean).map(w => w.normalize('NFC'));
+  return [...new Set(raw)];
+}
+
+/* =========================================================
+   Kurs
+   ========================================================= */
+const COURSE = {
+de: [
+  { t: 'intro', title: 'Die Grundstellung', show: ['a', 's', 'd', 'f', 'j', 'k', 'l', 'ö'], text: 'a s d f j k l ö asdf jklö fdsa ölkj asdf jklö' },
+  { title: 'F und J', keys: ['f', 'j'], tip: 'Ertaste die kleinen Erhebungen auf F und J. Dort liegen die Zeigefinger – von hier aus findest du jede Taste blind. Die Leertaste drückst du mit dem Daumen.' },
+  { title: 'D und K', keys: ['d', 'k'], tip: 'Die Mittelfinger liegen auf D und K. Nur der Finger, der tippt, bewegt sich – alle anderen bleiben liegen.' },
+  { title: 'S und L', keys: ['s', 'l'], tip: 'Die Ringfinger liegen auf S und L. Tippe gleichmäßig im Takt – lieber langsam und richtig.' },
+  { title: 'A und Ö', keys: ['a', 'ö'], tip: 'Die kleinen Finger liegen auf A und Ö. Die Grundreihe ist komplett: asdf – jklö.' },
+  { title: 'G und H', keys: ['g', 'h'], tip: 'Für G und H gleiten die Zeigefinger ein kleines Stück zur Mitte und kehren sofort auf F und J zurück.' },
+  { title: 'E und I', keys: ['e', 'i'], tip: 'Die Mittelfinger greifen schräg nach oben zu E und I. Die Zeigefinger bleiben als Anker auf F und J liegen.' },
+  { title: 'R und U', keys: ['r', 'u'], tip: 'Die Zeigefinger tippen R und U – eine Reihe höher, leicht nach links.' },
+  { title: 'T und Z', keys: ['t', 'z'], tip: 'T und Z liegen oben zur Mitte hin. Zeigefinger strecken, tippen, zurück auf F und J.' },
+  { title: 'W und O', keys: ['w', 'o'], tip: 'Die Ringfinger tippen nach oben: W und O.' },
+  { title: 'Q und P', keys: ['q', 'p'], tip: 'Die kleinen Finger tippen nach oben: Q und P. Die Hand bleibt dabei ruhig liegen.' },
+  { title: 'N und M', keys: ['n', 'm'], tip: 'Der rechte Zeigefinger tippt N und M in der unteren Reihe – das N liegt schräg zur Mitte.' },
+  { title: 'V und B', keys: ['v', 'b'], tip: 'Der linke Zeigefinger tippt V und B unten. Zum B ist der Weg zur Mitte etwas länger.' },
+  { title: 'C und Komma', keys: ['c', ','], tip: 'Die Mittelfinger tippen nach unten: C links, das Komma rechts.' },
+  { title: 'X und Punkt', keys: ['x', '.'], tip: 'Die Ringfinger tippen nach unten: X links, der Punkt rechts.' },
+  { title: 'Y und Bindestrich', keys: ['y', '-'], tip: 'Die kleinen Finger tippen nach unten: Y links, der Bindestrich rechts.' },
+  { title: 'Ü, Ä und ß', keys: ['ü', 'ä', 'ß'], tip: 'Der rechte kleine Finger übernimmt die Umlaute: Ü oben, Ä rechts neben Ö und ß in der Zahlenreihe.' },
+  { t: 'shift', title: 'Großbuchstaben', tip: 'Die Umschalttaste ⇧ drückst du immer mit dem kleinen Finger der anderen Hand. Erst ⇧ festhalten, dann den Buchstaben tippen, dann loslassen.' },
+  { t: 'num', title: 'Zahlen', keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], tip: 'Die Zahlenreihe erreichst du mit gestreckten Fingern: 1–5 links, 6–0 rechts. Danach immer zurück zur Grundreihe.' },
+  { t: 'punct', title: 'Satzzeichen', keys: ['?', '!', ':', '"'], tip: 'Diese Zeichen brauchen ⇧: ? auf ß, ! auf 1, : auf dem Punkt und " auf 2.' },
+  { t: 'text', title: 'Ganze Sätze', tip: 'Jetzt kommt alles zusammen. Achte auf einen gleichmäßigen Rhythmus – und schau nicht auf die Tastatur.' }
+],
+en: [
+  { t: 'intro', title: 'Home position', show: ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'], text: 'a s d f j k l ; asdf jkl; fdsa ;lkj asdf jkl;' },
+  { title: 'F und J', keys: ['f', 'j'], tip: 'Ertaste die kleinen Erhebungen auf F und J. Dort liegen die Zeigefinger. Die Leertaste drückst du mit dem Daumen.' },
+  { title: 'D und K', keys: ['d', 'k'], tip: 'Die Mittelfinger liegen auf D und K. Nur der tippende Finger bewegt sich.' },
+  { title: 'S und L', keys: ['s', 'l'], tip: 'Die Ringfinger liegen auf S und L. Gleichmäßig im Takt tippen.' },
+  { title: 'A und ;', keys: ['a', ';'], tip: 'Die kleinen Finger liegen auf A und dem Strichpunkt ;. Die Grundreihe ist komplett: asdf – jkl;.' },
+  { title: 'G und H', keys: ['g', 'h'], tip: 'Für G und H gleiten die Zeigefinger zur Mitte und kehren sofort zurück.' },
+  { title: 'E und I', keys: ['e', 'i'], tip: 'Die Mittelfinger greifen nach oben zu E und I.' },
+  { title: 'R und U', keys: ['r', 'u'], tip: 'Die Zeigefinger tippen R und U eine Reihe höher.' },
+  { title: 'T und Y', keys: ['t', 'y'], tip: 'T und Y liegen oben zur Mitte hin. Achtung: Auf der US-Tastatur liegt Y dort, wo im Deutschen das Z ist.' },
+  { title: 'W und O', keys: ['w', 'o'], tip: 'Die Ringfinger tippen nach oben: W und O.' },
+  { title: 'Q und P', keys: ['q', 'p'], tip: 'Die kleinen Finger tippen nach oben: Q und P.' },
+  { title: 'N und M', keys: ['n', 'm'], tip: 'Der rechte Zeigefinger tippt N und M unten.' },
+  { title: 'V und B', keys: ['v', 'b'], tip: 'Der linke Zeigefinger tippt V und B unten.' },
+  { title: 'C und Komma', keys: ['c', ','], tip: 'Die Mittelfinger tippen nach unten: C und Komma.' },
+  { title: 'X und Punkt', keys: ['x', '.'], tip: 'Die Ringfinger tippen nach unten: X und Punkt.' },
+  { title: 'Z und /', keys: ['z', '/'], tip: 'Die kleinen Finger tippen nach unten: Z links, Schrägstrich rechts.' },
+  { title: 'Apostroph und -', keys: ["'", '-'], tip: "Der rechte kleine Finger tippt den Apostroph ' (rechts neben ;) und den Bindestrich in der Zahlenreihe." },
+  { t: 'shift', title: 'Großbuchstaben', tip: 'Die Umschalttaste ⇧ drückst du immer mit dem kleinen Finger der anderen Hand. Erst ⇧ festhalten, dann tippen, dann loslassen.' },
+  { t: 'num', title: 'Zahlen', keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], tip: 'Die Zahlenreihe erreichst du mit gestreckten Fingern: 1–5 links, 6–0 rechts.' },
+  { t: 'punct', title: 'Satzzeichen', keys: ['?', '!', ':', '"'], tip: 'Mit ⇧: ? auf /, ! auf 1, : auf ; und " auf dem Apostroph.' },
+  { t: 'text', title: 'Ganze Sätze', tip: 'Jetzt kommt alles zusammen. Gleichmäßiger Rhythmus, Blick auf den Bildschirm.' }
+],
+in: [
+  { t: 'intro', title: 'Die Grundstellung', show: ['ो', 'े', '्', 'ि', 'र', 'क', 'त', 'च'], text: 'ो े ् ि र क त च ो े ् ि र क त च' },
+  { title: 'ि und र', keys: ['ि', 'र'], tip: 'InScript: Vokalzeichen (Matras) liegen links, die häufigsten Konsonanten rechts. Ein Matra tippst du nach dem Konsonanten – auch ि: र + ि = रि.' },
+  { title: '् und क', keys: ['्', 'क'], tip: 'Das Halant ् (linker Mittelfinger) verbindet Konsonanten: क + ् + र = क्र.' },
+  { title: 'े und त', keys: ['े', 'त'], tip: 'Die Ringfinger liegen auf े und त: त + े = ते.' },
+  { title: 'ो, च und ट', keys: ['ो', 'च', 'ट'], tip: 'Die kleinen Finger: ो links, च und ट rechts. Die Grundreihe ist komplett.' },
+  { title: 'ु und प', keys: ['ु', 'प'], tip: 'Die Zeigefinger gleiten zur Mitte: ु links, प rechts.' },
+  { title: 'ा und ग', keys: ['ा', 'ग'], tip: 'ा ist das häufigste Matra – linker Mittelfinger eine Reihe nach oben.' },
+  { title: 'ी und ह', keys: ['ी', 'ह'], tip: 'Die Zeigefinger tippen eine Reihe höher: ी und ह.' },
+  { title: 'ै und द', keys: ['ै', 'द'], tip: 'Die Ringfinger tippen nach oben: ै und द.' },
+  { title: 'ू und ब', keys: ['ू', 'ब'], tip: 'ू und ब liegen oben zur Mitte hin.' },
+  { title: 'ौ und ज', keys: ['ौ', 'ज'], tip: 'Die kleinen Finger tippen nach oben: ौ und ज.' },
+  { title: 'म und न', keys: ['म', 'न'], tip: 'Beide mit der linken Hand in der unteren Reihe: म mit dem Mittelfinger, न mit dem Zeigefinger.' },
+  { title: 'व und ल', keys: ['व', 'ल'], tip: 'व tippt der linke Zeigefinger, ल der rechte Zeigefinger – beide unten.' },
+  { title: 'ं und स', keys: ['ं', 'स'], tip: 'Das Anusvara ं (linker Ringfinger unten) steht nach der Silbe: स + ं = सं.' },
+  { title: 'य, Komma und Punkt', keys: ['य', ',', '.'], tip: 'य tippt der rechte kleine Finger unten, Komma und Punkt Mittel- und Ringfinger.' },
+  { title: 'ड, Nukta und ॉ', keys: ['ड', '़', 'ॉ'], tip: 'Der rechte kleine Finger streckt sich: ड, Nukta ़ (ड + ़ = ड़) und ॉ wie in डॉक्टर.' },
+  { title: '⇧ Vokale', keys: ['अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ए', 'ऐ', 'ओ', 'औ'], tip: 'Mit ⇧ werden aus den Matras selbständige Vokale: ⇧ + ि = इ, ⇧ + ा = आ. ⇧ drückst du mit dem kleinen Finger der anderen Hand.' },
+  { title: '⇧ Hauchlaute', keys: ['ख', 'थ', 'छ', 'ठ', 'फ', 'घ', 'भ', 'ध', 'झ', 'ढ'], tip: '⇧ macht aus den Konsonanten die behauchten: क → ख, त → थ, च → छ, ट → ठ, प → फ.' },
+  { title: 'Sonderzeichen', keys: ['श', 'ण', 'ष', 'ँ', '।', 'ृ', 'ज्ञ', 'क्ष', 'त्र', 'श्र'], tip: '⇧ + स = श, ⇧ + म = ण, ⇧ + Komma = ष, ⇧ + Punkt = । (Danda). Die Zahlenreihe mit ⇧ liefert ganze Ligaturen wie क्ष und ज्ञ.' },
+  { t: 'num', title: 'Zahlen', keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], tip: 'Die Zahlenreihe erreichst du mit gestreckten Fingern: 1–5 links, 6–0 rechts. Devanagari-Ziffern (१ २ ३) liegen auf Alt Gr.' },
+  { t: 'text', title: 'Ganze Sätze', tip: 'Jetzt kommt alles zusammen. Ruhig und gleichmäßig tippen.' }
+]
+};
+
+function lessonState(lid, idx) {
+  const L = COURSE[lid];
+  const known = new Set([' ']);
+  let shift = false;
+  for (let i = 0; i <= idx; i++) {
+    const l = L[i];
+    if (l.t === 'shift') shift = true;
+    (l.keys || []).forEach(k => known.add(k));
+  }
+  const cm = charMap(lid);
+  for (const k of known) if (cm[k] && cm[k].shift) shift = true;
+  const allowed = new Set();
+  for (const k of known) for (const c of Array.from(k)) allowed.add(c);
+  if (shift && !LAYOUTS[lid].dev) for (const c of [...allowed]) if (/\p{Ll}/u.test(c) && c !== 'ß') allowed.add(c.toUpperCase());
+  return { known, shift, allowed, lesson: L[idx], newKeys: L[idx].keys || [] };
+}
+
+/* =========================================================
+   Textgeneratoren
+   ========================================================= */
+const rnd = n => Math.floor(Math.random() * n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const glen = g => g.join(' ').length;
+const PUNCT = new Set([',', '.', ';', ':', '!', '?', '-', '/', "'", '"', '।']);
+
+function wordPool(lid, st) {
+  const dev = LAYOUTS[lid].dev;
+  let list = wordList(lid);
+  if (!dev && !st.shift) list = list.map(w => w.toLowerCase());
+  list = [...new Set(list)];
+  return list.filter(w => Array.from(w).every(c => st.allowed.has(c)));
+}
+function homeChar(lid, ch) {
+  const k = charMap(lid)[ch];
+  if (!k) return null;
+  const f = FINGER_OF[k.code];
+  const hc = HOME[f];
+  const arr = LAYOUTS[lid].keys[hc];
+  return arr ? arr[0] : null;
+}
+function lettersOf(st) { return [...st.known].filter(k => Array.from(k).length === 1 && isLetter(k) && !/\d/.test(k)); }
+
+function punctGroup(k, words, letters) {
+  const short = words.filter(w => w.length <= 5 && !/['"]/.test(w));
+  const w = () => short.length ? pick(short) : Array.from({ length: 2 + rnd(2) }, () => pick(letters)).join('');
+  if (k === '-' || k === '/') return w() + k + w();
+  if (k === "'") { const c = words.filter(x => x.includes("'")); return c.length ? pick(c) : w() + "'s"; }
+  if (k === '"') return '"' + w() + '"';
+  return w() + k;
+}
+
+/* --- lateinische Layouts --- */
+function drillLatin(lid, st, target) {
+  const nk = st.newKeys;
+  const letters = lettersOf(st);
+  const words = wordPool(lid, st);
+  const nkL = nk.filter(isLetter), nkP = nk.filter(k => PUNCT.has(k));
+  const g = [];
+  nkL.forEach(k => g.push(k + k + k));
+  nkL.forEach(k => { const h = homeChar(lid, k); if (h && h !== k && st.known.has(h)) { g.push(h + k + h); g.push(k + h + k); } });
+  if (nkL.length > 1) { g.push(nkL.join('')); g.push([...nkL].reverse().join('')); }
+  nkP.forEach(k => { g.push(k + k + k); });
+  let guard = 0;
+  while (glen(g) < target && guard++ < 200) {
+    if (nkP.length && (!nkL.length || Math.random() < 0.5)) g.push(punctGroup(pick(nkP), words, letters));
+    else {
+      const pool = nkL.length > 1 ? nkL : nkL.concat(letters.filter(c => !nkL.includes(c)).slice(-3));
+      const len = 2 + rnd(3);
+      let s = ''; for (let i = 0; i < len; i++) s += pick(pool);
+      if (nkL.length && !nkL.some(c => s.includes(c))) s = pick(nkL) + s.slice(1);
+      g.push(s);
+    }
+  }
+  return g.join(' ');
+}
+function mixLatin(lid, st, target) {
+  const nk = st.newKeys;
+  const letters = lettersOf(st);
+  const words = wordPool(lid, st);
+  const nkL = nk.filter(isLetter), nkP = nk.filter(k => PUNCT.has(k));
+  const g = []; let guard = 0;
+  while (glen(g) < target && guard++ < 200) {
+    if (nkP.length && Math.random() < 0.3) { g.push(punctGroup(pick(nkP), words, letters)); continue; }
+    if (words.length >= 4 && Math.random() < 0.25) { g.push(pick(words)); continue; }
+    const len = 3 + rnd(3);
+    let s = '';
+    for (let i = 0; i < len; i++) s += (nkL.length && Math.random() < 0.45) ? pick(nkL) : pick(letters);
+    g.push(s);
+  }
+  return g.join(' ');
+}
+function wordsLatin(lid, st, target) {
+  const nk = st.newKeys;
+  const pool = wordPool(lid, st);
+  const letters = lettersOf(st);
+  const nkL = nk.filter(isLetter), nkP = nk.filter(k => PUNCT.has(k));
+  if (pool.length < 6) return mixLatin(lid, st, target);
+  const withNew = pool.filter(w => nkL.some(c => w.toLowerCase().includes(c)));
+  const g = []; let last = ''; let guard = 0;
+  while (glen(g) < target && guard++ < 300) {
+    let w = (withNew.length && Math.random() < 0.6) ? pick(withNew) : pick(pool);
+    if (w === last) continue;
+    last = w;
+    if (nkP.length && Math.random() < 0.3) {
+      const k = pick(nkP);
+      if (k === "'") { const c = pool.filter(x => x.includes("'")); if (c.length) w = pick(c); }
+      else if (k === '-' || k === '/') w = w + k + pick(pool.filter(x => !x.includes("'")));
+      else if (k === '"') w = '"' + w + '"';
+      else w = w + k;
+    }
+    g.push(w);
+  }
+  return g.join(' ');
+}
+function capFirst(w) { const a = Array.from(w); return a[0].toUpperCase() + a.slice(1).join(''); }
+function shiftDrill(lid, st, target) {
+  const letters = lettersOf(st).filter(c => /\p{Ll}/u.test(c) && c !== 'ß');
+  const g = [];
+  const order = shuffle(letters);
+  order.forEach(l => g.push(l.toUpperCase() + l));
+  let guard = 0;
+  while (glen(g) < target && guard++ < 200) g.push(pick(letters).toUpperCase() + pick(letters) + pick(letters));
+  return g.join(' ');
+}
+function shiftWords(lid, st, target) {
+  const pool = wordPool(lid, st);
+  const caps = pool.filter(w => /^\p{Lu}/u.test(w)).concat((NAMES[LAYOUTS[lid].lang] || []).filter(w => Array.from(w).every(c => st.allowed.has(c))));
+  const g = []; let guard = 0;
+  while (glen(g) < target && guard++ < 300) g.push(caps.length && Math.random() < 0.7 ? pick(caps) : capFirst(pick(pool)));
+  return g.join(' ');
+}
+function makeSentences(lid, st, target, endings) {
+  const pool = wordPool(lid, st).filter(w => !/["]/.test(w));
+  const names = (NAMES[LAYOUTS[lid].lang] || []).filter(w => Array.from(w).every(c => st.allowed.has(c)));
+  const out = []; let guard = 0;
+  while (out.join(' ').length < target && guard++ < 60) {
+    const n = 3 + rnd(4);
+    const ws = [];
+    for (let i = 0; i < n; i++) ws.push(pick(pool));
+    ws[0] = Math.random() < 0.3 && names.length ? pick(names) : capFirst(ws[0]);
+    const end = pick(endings.filter(e => st.allowed.has(e) || e === ''));
+    out.push(ws.join(' ') + end);
+  }
+  return out.join(' ');
+}
+function numDrill(lid, st, target) {
+  const g = [];
+  const L = ['1', '2', '3', '4', '5'], R = ['6', '7', '8', '9', '0'];
+  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].forEach(d => g.push(d + d));
+  g.push('12345', '67890');
+  let guard = 0;
+  while (glen(g) < target && guard++ < 100) {
+    const side = Math.random() < 0.5 ? L : R;
+    const mix = Math.random() < 0.4 ? L.concat(R) : side;
+    let s = ''; const n = 2 + rnd(3);
+    for (let i = 0; i < n; i++) s += pick(mix);
+    g.push(s);
+  }
+  return g.join(' ');
+}
+function numbers(lid, st, target) {
+  const g = []; let guard = 0;
+  while (glen(g) < target && guard++ < 100) {
+    const r = Math.random();
+    if (r < 0.3) g.push(String(1950 + rnd(80)));
+    else if (r < 0.6) g.push(String(10 + rnd(90)));
+    else if (r < 0.85) g.push(String(100 + rnd(900)));
+    else g.push(String(rnd(10)));
+  }
+  return g.join(' ');
+}
+function numWords(lid, st, target) {
+  const pool = wordPool(lid, st).filter(w => !/["']/.test(w));
+  const g = []; let guard = 0;
+  while (glen(g) < target && guard++ < 100) {
+    const n = Math.random() < 0.5 ? 2 + rnd(20) : 10 + rnd(990);
+    g.push(n + ' ' + pick(pool));
+  }
+  return g.join(' ');
+}
+function punctDrill(lid, st, target) {
+  const nk = st.newKeys;
+  const words = wordPool(lid, st).filter(w => !/["']/.test(w));
+  const letters = lettersOf(st);
+  const g = [];
+  nk.forEach(k => g.push(k + k));
+  let guard = 0;
+  while (glen(g) < target && guard++ < 100) g.push(punctGroup(pick(nk), words, letters));
+  return g.join(' ');
+}
+function sentencesText(lid, st, target) {
+  const list = shuffle(SENTENCES[LAYOUTS[lid].lang]).filter(s => Array.from(s.normalize('NFC')).every(c => charMap(lid)[c]));
+  const out = [];
+  for (const s of list) { out.push(s); if (out.join(' ').length >= target) break; }
+  return out.join(' ');
+}
+
+/* --- Devanagari (InScript) --- */
+const DEV = {
+  cons: new Set(Array.from('कखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसहळ')),
+  matras: new Set(['ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ॉ', 'ॅ', 'ॆ', 'ॊ']),
+  vowels: new Set(Array.from('अआइईउऊऋएऐओऔऑ')),
+  signs: new Set(['ं', 'ँ', 'ः']),
+  nuktaBase: new Set(Array.from('डढजफकखग'))
+};
+function devSets(st) {
+  const k = [...st.known];
+  return {
+    cons: k.filter(c => DEV.cons.has(c)), mats: k.filter(c => DEV.matras.has(c)), vows: k.filter(c => DEV.vowels.has(c)),
+    signs: k.filter(c => DEV.signs.has(c)), vir: st.known.has('्'), nukta: st.known.has('़'),
+    multi: k.filter(c => Array.from(c).length > 1), punct: k.filter(c => PUNCT.has(c))
+  };
+}
+function devSyl(S, force) {
+  const C = () => pick(S.cons);
+  const M = () => S.mats.length && Math.random() < 0.65 ? pick(S.mats) : '';
+  if (force) {
+    if (DEV.cons.has(force)) {
+      let s = force;
+      if (S.vir && S.cons.length > 1 && Math.random() < 0.2) s += '्' + C();
+      return s + M();
+    }
+    if (DEV.matras.has(force)) return C() + force;
+    if (DEV.vowels.has(force)) return force + (S.cons.length && Math.random() < 0.6 ? C() + M() : '');
+    if (DEV.signs.has(force)) return C() + M() + force;
+    if (force === '्') { const a = C(); return a + '्' + C() + M(); }
+    if (force === '़') { const b = S.cons.filter(c => DEV.nuktaBase.has(c)); return (b.length ? pick(b) : 'ड') + '़' + M(); }
+    if (Array.from(force).length > 1) return force + M();
+    if (PUNCT.has(force)) return devSyl(S) + devSyl(S) + force;
+  }
+  if (S.vows.length && Math.random() < 0.15) return pick(S.vows) + (S.signs.length && Math.random() < 0.15 ? pick(S.signs) : '');
+  let s = C();
+  if (S.nukta && DEV.nuktaBase.has(s) && Math.random() < 0.2) s += '़';
+  if (S.vir && S.cons.length > 1 && Math.random() < 0.15) s += '्' + C();
+  s += M();
+  if (S.signs.length && Math.random() < 0.15) s += pick(S.signs);
+  return s;
+}
+function devGroup(S, force) {
+  const n = 1 + rnd(3);
+  const parts = [];
+  const fi = force ? rnd(n) : -1;
+  for (let i = 0; i < n; i++) parts.push(devSyl(S, i === fi ? force : null));
+  let s = parts.join('');
+  if (force && PUNCT.has(force)) s = s.replace(new RegExp('[' + [...PUNCT].map(c => '\\' + c).join('') + ']', 'g'), '') + force;
+  return s;
+}
+function drillDev(lid, st, target) {
+  const S = devSets(st);
+  const g = [];
+  st.newKeys.forEach(k => { g.push(devSyl(S, k)); g.push(devSyl(S, k)); });
+  let guard = 0;
+  while (glen(g) < target && guard++ < 200) g.push(devGroup(S, pick(st.newKeys)));
+  return g.join(' ');
+}
+function mixDev(lid, st, target) {
+  const S = devSets(st);
+  const words = wordPool(lid, st);
+  const g = []; let guard = 0;
+  while (glen(g) < target && guard++ < 200) {
+    if (words.length >= 4 && Math.random() < 0.3) g.push(pick(words));
+    else g.push(devGroup(S, st.newKeys.length && Math.random() < 0.5 ? pick(st.newKeys) : null));
+  }
+  return g.join(' ');
+}
+function wordsDev(lid, st, target) {
+  const pool = wordPool(lid, st);
+  if (pool.length < 6) return mixDev(lid, st, target);
+  const withNew = pool.filter(w => st.newKeys.some(k => w.includes(k)));
+  const g = []; let last = ''; let guard = 0;
+  while (glen(g) < target && guard++ < 300) {
+    const w = (withNew.length && Math.random() < 0.6) ? pick(withNew) : pick(pool);
+    if (w === last) continue;
+    last = w; g.push(w);
+  }
+  return g.join(' ');
+}
+
+function stepsFor(lid, idx) {
+  const st = lessonState(lid, idx);
+  const l = st.lesson;
+  const dev = LAYOUTS[lid].dev;
+  if (l.t === 'intro') return [{ name: 'Finger auflegen', gen: () => l.text }];
+  if (l.t === 'shift') return [
+    { name: 'Umschalttaste', gen: () => shiftDrill(lid, st, 100) },
+    { name: 'Namen & Nomen', gen: () => shiftWords(lid, st, 130) },
+    { name: 'Kleine Sätze', gen: () => makeSentences(lid, st, 140, ['.']) }
+  ];
+  if (l.t === 'num') return [
+    { name: 'Ziffern', gen: () => numDrill(lid, st, 90) },
+    { name: 'Zahlen', gen: () => numbers(lid, st, 100) },
+    { name: 'Zahlen & Wörter', gen: () => numWords(lid, st, 130) }
+  ];
+  if (l.t === 'punct') return [
+    { name: 'Neue Zeichen', gen: () => punctDrill(lid, st, 100) },
+    { name: 'Wörter', gen: () => wordsLatin(lid, st, 130) },
+    { name: 'Sätze', gen: () => makeSentences(lid, st, 150, ['.', '?', '!', ':']) }
+  ];
+  if (l.t === 'text') return [
+    { name: 'Text 1', gen: () => sentencesText(lid, st, 110) },
+    { name: 'Text 2', gen: () => sentencesText(lid, st, 160) },
+    { name: 'Text 3', gen: () => sentencesText(lid, st, 220) }
+  ];
+  const nWords = wordPool(lid, st).length;
+  if (dev) return [
+    { name: 'Neue Tasten', gen: () => drillDev(lid, st, 70) },
+    { name: 'Mischen', gen: () => mixDev(lid, st, 90) },
+    { name: nWords >= 6 ? 'Wörter' : 'Silben', gen: () => wordsDev(lid, st, 100) }
+  ];
+  return [
+    { name: 'Neue Tasten', gen: () => drillLatin(lid, st, 95) },
+    { name: 'Mischen', gen: () => mixLatin(lid, st, 115) },
+    { name: nWords >= 6 ? 'Wörter' : 'Kombinationen', gen: () => wordsLatin(lid, st, 135) }
+  ];
+}
+
+/* =========================================================
+   Tastatur
+   ========================================================= */
+const kbEl = document.getElementById('kb');
+const kbwrap = document.getElementById('kbwrap');
+let keyEls = {};
+const view = { mode: 'course', lesson: 0, step: 0 };
+
+function keyLabelHTML(lid, code) {
+  const L = LAYOUTS[lid];
+  const special = {
+    Backspace: '⟵', Tab: '↹', CapsLock: '⇪', ShiftLeft: '⇧', ShiftRight: '⇧', Enter: '↵',
+    ControlLeft: lid === 'en' ? 'Ctrl' : 'Strg', ControlRight: lid === 'en' ? 'Ctrl' : 'Strg',
+    MetaLeft: '❖', MetaRight: '❖', AltLeft: 'Alt', AltRight: lid === 'en' ? 'Alt' : 'Alt Gr', ContextMenu: '☰'
+  };
+  if (code === 'Space') return `<span class="lbl lm">${L.name}</span>`;
+  if (special[code]) return `<span class="lbl lm">${special[code]}</span>`;
+  const a = L.keys[code];
+  if (!a) return '';
+  const esc = s => s ? s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+  const sh = c => esc(isMark(Array.from(c)[0]) ? '◌' + c : c);
+  const [b, s, ag] = a;
+  if (L.dev) {
+    return `<span class="lbl ls">${s ? sh(s) : ''}</span><span class="lbl lb">${b ? sh(b) : ''}</span>` +
+      (ag ? `<span class="lbl la">${sh(ag)}</span>` : '') + `<span class="lbl lh">${esc(physLabel(code))}</span>`;
+  }
+  if (b && /\p{Ll}/u.test(b) && s === b.toUpperCase()) {
+    return `<span class="lbl lc">${esc(s)}</span>` + (ag ? `<span class="lbl la">${esc(ag)}</span>` : '');
+  }
+  return `<span class="lbl ls">${esc(s || '')}</span><span class="lbl lb">${esc(b)}</span>` + (ag ? `<span class="lbl la">${esc(ag)}</span>` : '');
+}
+
+function renderKeyboard() {
+  const lid = settings.layout;
+  const rows = geometry(LAYOUTS[lid].geo());
+  keyEls = {};
+  kbEl.innerHTML = '';
+  kbEl.classList.toggle('dev', LAYOUTS[lid].dev);
+  for (const row of rows) {
+    const r = document.createElement('div');
+    r.className = 'row';
+    for (const [code, w, extra] of row) {
+      const k = document.createElement('div');
+      const f = FINGER_OF[code];
+      k.className = 'k' + (extra ? ' ' + extra : '');
+      k.style.setProperty('--w', w);
+      if (f && f !== 'th') { k.classList.add('fc'); setFv(k, f); }
+      else if (f === 'th') { k.classList.add('th'); setFv(k, 'th'); }
+      else { k.classList.add('mod'); setFv(k, 'th'); }
+      if (HOME_CODES.has(code) && code !== 'Space') k.classList.add('home');
+      if (code === 'KeyF' || code === 'KeyJ') k.classList.add('bump');
+      if (!LAYOUTS[lid].keys[code] && !['Space', 'ShiftLeft', 'ShiftRight', 'Backspace'].includes(code) && FINGER_OF[code] && !['Tab', 'CapsLock', 'Enter'].includes(code)) k.classList.add('empty');
+      k.dataset.code = code;
+      k.innerHTML = `<span class="cap">${keyLabelHTML(lid, code)}</span>`;
+      (keyEls[code] = keyEls[code] || []).push(k);
+      r.appendChild(k);
+    }
+    kbEl.appendChild(r);
+  }
+  applyKbOptions();
+  sizeKeyboard();
+  renderFoot();
+}
+function applyKbOptions() {
+  kbEl.classList.toggle('nocolor', !settings.colors);
+  kbEl.classList.toggle('blind', settings.blind);
+}
+function sizeKeyboard() {
+  const w = kbwrap.clientWidth;
+  if (!w) return;
+  const u = Math.max(20, Math.min(58, Math.floor(w / 15)));
+  kbEl.style.setProperty('--u', u + 'px');
+  kbEl.classList.toggle('small', u < 38);
+}
+if (window.ResizeObserver) new ResizeObserver(sizeKeyboard).observe(kbwrap);
+else window.addEventListener('resize', sizeKeyboard);
+
+function setDim(knownSet, newSet, shiftOn) {
+  const lid = settings.layout;
+  const keys = LAYOUTS[lid].keys;
+  for (const [code, els] of Object.entries(keyEls)) {
+    let dim = false, isNew = false;
+    if (knownSet) {
+      const a = keys[code];
+      if (code === 'Space') dim = false;
+      else if (code === 'ShiftLeft' || code === 'ShiftRight') dim = !shiftOn;
+      else if (a) {
+        const outs = a.slice(0, 2).filter(Boolean);
+        const lowerKnown = outs.some(o => knownSet.has(o) || (!LAYOUTS[lid].dev && knownSet.has(o.toLowerCase())));
+        dim = !lowerKnown;
+        isNew = newSet ? outs.some(o => newSet.has(o)) : false;
+      } else dim = true;
+    }
+    els.forEach(e => { e.classList.toggle('dim', dim); e.classList.toggle('new', isNew); });
+  }
+}
+function flashKey(code, cls) {
+  (keyEls[code] || []).forEach(e => {
+    e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls);
+    clearTimeout(e['_t' + cls]);
+    e['_t' + cls] = setTimeout(() => e.classList.remove(cls), cls === 'wrong' ? 320 : 130);
+  });
+}
+function renderFoot() {
+  const items = [['lp', 'kleiner Finger'], ['lr', 'Ringfinger'], ['lm', 'Mittelfinger'], ['li', 'Zeigefinger']];
+  document.getElementById('kbfoot').innerHTML = items.map(([f, n]) => `<span class="sw" style="${fv(f)}"><i></i>${n}</span>`).join('') +
+    '<span class="sw"><i style="background:var(--palm);border:1px solid var(--palm-line)"></i>Daumen</span>' +
+    '<span>· gleiche Farbe links und rechts</span>';
+}
+
+/* =========================================================
+   Hände
+   ========================================================= */
+const handsEl = document.getElementById('hands');
+const handcap = document.getElementById('handcap');
+const FDEF = [ // linke Hand: [finger, cx, base, length, width, angle]
+  ['lp', 62, 150, 66, 30, -12],
+  ['lr', 104, 140, 96, 32, -5],
+  ['lm', 146, 137, 112, 33, 0],
+  ['li', 188, 140, 100, 33, 6],
+  ['th', 218, 168, 78, 33, 38]
+];
+function renderHands() {
+  const lid = settings.layout;
+  const W = 640;
+  let svg = `<svg viewBox="0 0 ${W} 215" role="img" aria-label="Hände mit farbigen Fingern">`;
+  const homeLbl = f => { const a = LAYOUTS[lid].keys[HOME[f]]; if (!a) return ''; const c = a[0]; return LAYOUTS[lid].dev ? showCh(c) : c.toUpperCase(); };
+  for (const side of ['l', 'r']) {
+    let fingers = '', labels = '';
+    for (const [f0, cx0, base, len, w, ang0] of FDEF) {
+      const f = side === 'l' ? f0 : (f0 === 'th' ? 'th' : 'r' + f0[1]);
+      const cx = side === 'l' ? cx0 : W - cx0;
+      const ang = side === 'l' ? ang0 : -ang0;
+      const id = f === 'th' ? 'th' + side : f;
+      fingers += `<rect class="finger${f === 'th' ? ' thumb' : ''}" data-f="${id}" style="${fv(f)}" x="${cx - w / 2}" y="${base - len}" width="${w}" height="${len + 40}" rx="${w / 2}" transform="rotate(${ang} ${cx} ${base})"><title>${FINGERS[f].name}</title></rect>`;
+      if (f !== 'th') {
+        const dy = -len + w / 2 + 9;
+        const r = ang * Math.PI / 180;
+        const x = cx - dy * Math.sin(r), y = base + dy * Math.cos(r);
+        labels += `<text class="flabel${LAYOUTS[lid].dev ? ' dev' : ''}" style="${fv(f)}" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${homeLbl(f)}</text>`;
+      }
+    }
+    const px = side === 'l' ? 38 : W - 38 - 192;
+    svg += fingers + `<rect class="palm" x="${px}" y="128" width="192" height="80" rx="40"/>` + labels;
+  }
+  svg += '</svg>';
+  handsEl.innerHTML = svg;
+  handsEl.hidden = !settings.hands;
+  handcap.hidden = !settings.hands;
+}
+function lightFingers(ids) {
+  handsEl.querySelectorAll('.finger').forEach(el => el.classList.toggle('on', ids.includes(el.dataset.f)));
+  handsEl.classList.toggle('lit', ids.length > 0);
+}
+
+/* =========================================================
+   Tipp-Engine
+   ========================================================= */
+const textbox = document.getElementById('textbox');
+const nextEl = document.getElementById('next');
+const resultEl = document.getElementById('result');
+const sTime = document.getElementById('sTime'), sCpm = document.getElementById('sCpm'), sAcc = document.getElementById('sAcc'), sErr = document.getElementById('sErr'), pBar = document.getElementById('pBar');
+const segmenter = (window.Intl && Intl.Segmenter) ? new Intl.Segmenter('hi', { granularity: 'grapheme' }) : null;
+const T = { text: [], clusters: [], cpCluster: [], els: [], pos: 0, err: [], started: false, t0: 0, ok: 0, bad: 0, done: true, onFinish: null, miss: {}, hit: {}, ticker: 0, shiftLatch: false };
+
+function loadText(str, onFinish) {
+  str = str.normalize('NFC').replace(/\s+/g, ' ').trim();
+  T.text = Array.from(str);
+  T.clusters = []; T.cpCluster = []; T.els = [];
+  const segs = segmenter ? Array.from(segmenter.segment(str), s => s.segment) : str.match(/\P{M}\p{M}*/gu) || [];
+  let i = 0;
+  segs.forEach((seg, ci) => { const n = Array.from(seg).length; T.clusters.push([i, i + n, seg]); for (let k = 0; k < n; k++) T.cpCluster[i + k] = ci; i += n; });
+  T.pos = 0; T.err = []; T.started = false; T.ok = 0; T.bad = 0; T.done = false; T.onFinish = onFinish; T.miss = {}; T.hit = {};
+  clearInterval(T.ticker);
+  textbox.classList.toggle('dev', LAYOUTS[settings.layout].dev);
+  textbox.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  T.clusters.forEach(([, , seg], ci) => {
+    const s = document.createElement('span');
+    s.className = 'c' + (seg === ' ' ? ' sp' : '');
+    s.textContent = seg;
+    frag.appendChild(s); T.els.push(s);
+  });
+  textbox.appendChild(frag);
+  document.getElementById('startHint').textContent = 'Tippe einfach los – die Zeit startet mit der ersten Taste. Esc beginnt neu.';
+  textbox.scrollTop = 0;
+  resultEl.classList.remove('show');
+  for (let c = 0; c < T.clusters.length; c++) paintCluster(c);
+  updateStats(); updateNext();
+}
+function paintCluster(ci) {
+  const el = T.els[ci]; if (!el) return;
+  const [s, e, seg] = T.clusters[ci];
+  let cls = 'c' + (seg === ' ' ? ' sp' : '');
+  let err = false; for (let i = s; i < e; i++) if (T.err[i]) err = true;
+  if (e <= T.pos) cls += ' done' + (err ? ' err' : '');
+  else if (s <= T.pos && T.pos < e && !T.done) { cls += ' cur' + (T.err[T.pos] && settings.stop ? ' miss' : ''); }
+  el.className = cls;
+}
+function scrollToCurrent() {
+  const ci = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
+  const el = T.els[ci]; if (!el) return;
+  const lh = parseFloat(getComputedStyle(textbox).lineHeight) || 40;
+  const top = el.offsetTop;
+  const want = Math.max(0, top - lh);
+  if (Math.abs(textbox.scrollTop - want) > 2) textbox.scrollTop = want;
+}
+function expectedUnit() {
+  // längste Mehrzeichen-Taste, die gelernt ist und passt
+  const cm = charMap(settings.layout);
+  const rest = T.text.slice(T.pos, T.pos + 4).join('');
+  const st = view.mode === 'course' ? lessonState(settings.layout, view.lesson) : null;
+  for (const m of cm.__multi) if (rest.startsWith(m) && (!st || st.known.has(m))) return m;
+  return T.text[T.pos];
+}
+function updateNext() {
+  const lid = settings.layout;
+  document.querySelectorAll('.k.target').forEach(e => e.classList.remove('target'));
+  if (T.done || T.pos >= T.text.length) { nextEl.innerHTML = ''; lightFingers([]); handcap.innerHTML = ''; return; }
+  const unit = expectedUnit();
+  const k = charMap(lid)[unit];
+  const caps = '<span class="caps" id="capsWarn">Feststelltaste ist aktiv</span>';
+  if (!k) { nextEl.innerHTML = `Nächstes Zeichen: <b>${unit}</b> – auf diesem Layout nicht vorhanden` + caps; return; }
+  const f = FINGER_OF[k.code];
+  const fname = FINGERS[f].name;
+  const ids = [f === 'th' ? 'thr' : f];
+  let shiftCode = null;
+  if (k.shift) { shiftCode = FINGERS[f].hand === 'l' ? 'ShiftRight' : 'ShiftLeft'; ids.push(FINGERS[f].hand === 'l' ? 'rp' : 'lp'); }
+  if (k.altgr) ids.push('thr');
+  if (settings.hint) {
+    (keyEls[k.code] || []).forEach(e => e.classList.add('target'));
+    if (shiftCode) (keyEls[shiftCode] || []).forEach(e => e.classList.add('target'));
+    if (k.altgr) (keyEls.AltRight || []).forEach(e => e.classList.add('target'));
+    lightFingers(ids);
+  } else lightFingers([]);
+  const dev = LAYOUTS[lid].dev;
+  const kc = unit === ' ' ? '<span class="kc th">Leertaste</span>' :
+    `<span class="kc${dev ? ' dev' : ''}" style="${fv(f)}">${escapeHTML(showCh(unit))}</span>`;
+  let txt = `<span>Nächste Taste:</span> ${kc}`;
+  if (shiftCode) txt += ` <span class="plus">+ ⇧ ${shiftCode === 'ShiftRight' ? 'rechts' : 'links'}</span>`;
+  if (k.altgr) txt += ' <span class="plus">+ Alt Gr</span>';
+  txt += ` <span><b>${fname}</b>${dev && unit !== ' ' ? ` · Taste ${physLabel(k.code)}` : ''}</span>`;
+  nextEl.innerHTML = txt + caps;
+  nextEl.querySelector('.kc') && settings.hint === false && (nextEl.querySelector('.kc').style.opacity = '.35');
+  const curEl = T.els[T.cpCluster[T.pos]];
+  if (curEl) setFv(curEl, f);
+  handcap.innerHTML = settings.hint ? `<b>${fname}</b>${shiftCode ? ' + ' + (shiftCode === 'ShiftRight' ? 'rechter' : 'linker') + ' kleiner Finger auf ⇧' : ''}` : '';
+}
+const escapeHTML = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function fmtTime(ms) { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function currentMetrics() {
+  const now = T.done ? T.tEnd : performance.now();
+  const ms = T.started ? now - T.t0 : 0;
+  const mins = Math.max(ms / 60000, 1 / 600);
+  const cpm = T.started ? Math.round(T.ok / mins) : 0;
+  const acc = (T.ok + T.bad) ? (T.ok / (T.ok + T.bad)) * 100 : 100;
+  return { ms, cpm, wpm: Math.round(cpm / 5), acc, errors: T.bad };
+}
+function updateStats() {
+  const m = currentMetrics();
+  sTime.textContent = fmtTime(m.ms);
+  sCpm.textContent = m.cpm;
+  sAcc.textContent = (Math.floor(m.acc * 10) / 10).toLocaleString('de-DE') + ' %';
+  sErr.textContent = m.errors;
+  pBar.style.width = (T.text.length ? (T.pos / T.text.length) * 100 : 0) + '%';
+}
+
+let audioCtx = null;
+function beep() {
+  if (!settings.sound) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'triangle'; o.frequency.value = 180;
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.16);
+  } catch (e) {}
+}
+
+function handleInput(ch, code) {
+  if (T.done || !T.text.length) return;
+  if (!T.started) {
+    T.started = true; T.t0 = performance.now();
+    document.getElementById('startHint').textContent = '';
+    T.ticker = setInterval(updateStats, 250);
+  }
+  const cps = Array.from(ch);
+  const exp = T.text.slice(T.pos, T.pos + cps.length).join('');
+  const expChar = T.text[T.pos];
+  const oldCi = T.cpCluster[T.pos];
+  if (ch === exp) {
+    T.ok++;
+    for (let i = 0; i < cps.length; i++) { const c = T.text[T.pos + i]; if (!T.err[T.pos + i]) T.hit[c] = (T.hit[c] || 0) + 1; }
+    T.pos += cps.length;
+    if (code) flashKey(code, 'press');
+  } else {
+    T.bad++;
+    if (!T.err[T.pos]) T.miss[expChar] = (T.miss[expChar] || 0) + 1;
+    T.err[T.pos] = true;
+    if (code) flashKey(code, 'wrong');
+    beep();
+    if (!settings.stop) T.pos++;
+  }
+  const newCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
+  for (let c = Math.min(oldCi, newCi); c <= Math.max(oldCi, newCi); c++) paintCluster(c);
+  if (T.pos >= T.text.length) { finish(); return; }
+  if (newCi !== oldCi) scrollToCurrent();
+  if (settings.stop && ch !== exp) { const el = T.els[newCi]; if (el) { el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); } }
+  updateNext();
+  updateStats();
+}
+function handleBackspace() {
+  if (T.done || settings.stop || T.pos === 0) return;
+  const oldCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
+  T.pos--;
+  const newCi = T.cpCluster[T.pos];
+  T.err[T.pos] = false;
+  for (let c = Math.min(oldCi, newCi); c <= Math.max(oldCi, newCi); c++) paintCluster(c);
+  scrollToCurrent(); updateNext(); updateStats();
+}
+function finish() {
+  T.done = true; T.tEnd = performance.now();
+  clearInterval(T.ticker);
+  T.els.forEach((_, c) => paintCluster(c));
+  updateStats(); updateNext();
+  const ks = keyStats[settings.layout];
+  for (const [c, n] of Object.entries(T.hit)) { ks[c] = ks[c] || { n: 0, e: 0 }; ks[c].n += n; }
+  for (const [c, n] of Object.entries(T.miss)) { ks[c] = ks[c] || { n: 0, e: 0 }; ks[c].e += n; }
+  store.set('zfs.keys', keyStats);
+  const m = currentMetrics();
+  m.weak = Object.entries(T.miss).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
+  if (T.onFinish) T.onFinish(m);
+}
+function starsFor(acc) { return acc >= 98 ? 3 : acc >= 95 ? 2 : acc >= 90 ? 1 : 0; }
+const starHTML = n => '★'.repeat(n) + `<span class="off">${'★'.repeat(3 - n)}</span>`;
+
+/* =========================================================
+   Eingabe
+   ========================================================= */
+const MODS = new Set(['ShiftLeft', 'ShiftRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'MetaLeft', 'MetaRight', 'CapsLock', 'ContextMenu', 'OSLeft', 'OSRight']);
+function produced(e) {
+  const lid = settings.layout;
+  if (e.code === 'Space' || e.key === ' ') return ' ';
+  const entry = LAYOUTS[lid].keys[e.code];
+  if (settings.map === 'pos' && entry) {
+    const altgr = (e.getModifierState && e.getModifierState('AltGraph')) || (e.ctrlKey && e.altKey);
+    if (altgr) return entry[2] || null;
+    let ch = e.shiftKey ? entry[1] : entry[0];
+    const caps = e.getModifierState && e.getModifierState('CapsLock');
+    if (caps && !LAYOUTS[lid].dev && entry[0] && /\p{Ll}/u.test(entry[0]) && entry[1] === entry[0].toUpperCase()) ch = e.shiftKey ? entry[0] : entry[1];
+    return ch || null;
+  }
+  if (e.key && e.key !== 'Dead' && Array.from(e.key).length <= 4 && !/^[A-Z][a-zA-Z]+$/.test(e.key)) return e.key.normalize('NFC');
+  return null;
+}
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  const capsEl = document.getElementById('capsWarn');
+  if (capsEl && e.getModifierState) capsEl.classList.toggle('on', e.getModifierState('CapsLock'));
+  if (resultEl.classList.contains('show')) {
+    if (e.key === 'Enter') { e.preventDefault(); const b = resultEl.querySelector('[data-primary]'); if (b) b.click(); }
+    else if (e.key === 'Escape') { e.preventDefault(); restartStep(); }
+    return;
+  }
+  if (e.key === 'Escape') { e.preventDefault(); restartStep(); return; }
+  if (e.metaKey || (e.ctrlKey && !e.altKey)) return;
+  if (MODS.has(e.code)) { (keyEls[e.code] || []).forEach(k => k.classList.add('press')); return; }
+  if (e.key === 'Backspace') { e.preventDefault(); handleBackspace(); flashKey('Backspace', 'press'); return; }
+  if (e.key === 'Tab' || e.key === 'Enter') return;
+  const ch = produced(e);
+  if (ch == null) return;
+  e.preventDefault();
+  handleInput(ch, e.code);
+});
+document.addEventListener('keyup', e => {
+  if (MODS.has(e.code)) (keyEls[e.code] || []).forEach(k => k.classList.remove('press'));
+  const capsEl = document.getElementById('capsWarn');
+  if (capsEl && e.getModifierState) capsEl.classList.toggle('on', e.getModifierState('CapsLock'));
+});
+// Bildschirmtastatur anklickbar
+kbEl.addEventListener('click', e => {
+  const k = e.target.closest('.k'); if (!k) return;
+  const code = k.dataset.code;
+  if (code === 'ShiftLeft' || code === 'ShiftRight') { T.shiftLatch = !T.shiftLatch; (keyEls.ShiftLeft || []).concat(keyEls.ShiftRight || []).forEach(x => x.classList.toggle('press', T.shiftLatch)); return; }
+  if (code === 'Backspace') { handleBackspace(); return; }
+  let ch = null;
+  if (code === 'Space') ch = ' ';
+  else { const a = LAYOUTS[settings.layout].keys[code]; if (a) ch = T.shiftLatch ? a[1] : a[0]; }
+  if (T.shiftLatch) { T.shiftLatch = false; (keyEls.ShiftLeft || []).concat(keyEls.ShiftRight || []).forEach(x => x.classList.remove('press')); }
+  if (ch) handleInput(ch, code);
+});
+
+/* =========================================================
+   Kurs-Ansicht
+   ========================================================= */
+const lessonList = document.getElementById('lessonList');
+function lessonProg(lid, i) { return progress[lid][i] || { s: [], stars: 0 }; }
+function renderLessonList() {
+  const lid = settings.layout;
+  const L = COURSE[lid];
+  let done = 0;
+  lessonList.innerHTML = '';
+  L.forEach((l, i) => {
+    const p = lessonProg(lid, i);
+    const nSteps = stepsFor(lid, i).length;
+    const passed = (p.s || []).filter(Boolean).length;
+    if (p.stars) done++;
+    const li = document.createElement('li');
+    const sub = l.t === 'intro' ? (l.show || []).join(' ') : l.t === 'shift' ? '⇧ + Buchstabe' : l.t === 'text' ? 'alles zusammen' : (l.keys || []).map(showCh).join(' ');
+    li.innerHTML = `<button class="${i === view.lesson ? 'cur ' : ''}${p.stars ? 'done' : passed ? 'part' : ''}${LAYOUTS[lid].dev ? ' dev' : ''}" data-i="${i}">
+      <span class="num">${p.stars ? '✓' : i}</span>
+      <span class="lt"><b>${escapeHTML(l.title)}</b><span>${escapeHTML(sub)}</span></span>
+      <span class="stars">${p.stars ? starHTML(p.stars) : passed ? `${passed}/${nSteps}` : ''}</span></button>`;
+    lessonList.appendChild(li);
+  });
+  document.getElementById('overallTxt').textContent = `${done} von ${L.length} Lektionen geschafft`;
+  document.getElementById('overallBar').style.width = (done / L.length * 100) + '%';
+  const cur = lessonList.querySelector('.cur');
+  if (cur && cur.scrollIntoView && window.innerWidth <= 920) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+lessonList.addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  openLesson(+b.dataset.i, 0);
+});
+
+const ICON_TIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>';
+function keyChip(lid, ch) {
+  const k = charMap(lid)[ch];
+  if (!k) return '';
+  const f = FINGER_OF[k.code];
+  const row = rowOf(k.code);
+  let dir = '';
+  if (k.code === HOME[f]) dir = 'Grundposition';
+  else if (row === 2) dir = 'seitlich in der Grundreihe';
+  else if (row === 1) dir = 'eine Reihe nach oben';
+  else if (row === 3) dir = 'eine Reihe nach unten';
+  else if (row === 0) dir = 'Zahlenreihe';
+  let mod = '';
+  if (k.shift) mod = ` · mit ⇧ ${FINGERS[f].hand === 'l' ? 'rechts' : 'links'}`;
+  if (k.altgr) mod = ' · mit Alt Gr';
+  const dev = LAYOUTS[lid].dev;
+  const label = dev ? showCh(ch) : (isLetter(ch) ? ch.toUpperCase() : ch);
+  const phys = (dev || k.shift) ? ` · Taste ${physLabel(k.code)}` : '';
+  return `<div class="nk${f === 'th' ? ' th' : ''}" style="${fv(f)}"><span class="kc${dev ? ' dev' : ''}">${escapeHTML(label)}</span><div><b>${FINGERS[f].name}</b>${dir}${mod}${phys}</div></div>`;
+}
+function renderIntro() {
+  const lid = settings.layout;
+  const l = COURSE[lid][view.lesson];
+  const el = document.getElementById('intro');
+  let html = '';
+  if (l.t === 'intro') {
+    const left = l.show.slice(0, 4).map(showCh).join(' '), right = l.show.slice(4).map(showCh).join(' ');
+    html += `<div class="tip">${ICON_TIP}<span>Lege die Finger auf die <b>Grundreihe</b>: links <b>${escapeHTML(left)}</b>, rechts <b>${escapeHTML(right)}</b>. Auf <b>F</b> und <b>J</b> spürst du kleine Erhebungen. Die Daumen ruhen auf der Leertaste. Tippe dann die Zeichen unten nach – jeder Finger drückt nur „seine“ Taste.</span></div>`;
+    html += `<ul class="rules">
+      <li><b>1 · Haltung</b>Aufrecht sitzen, Unterarme etwa waagrecht, Handgelenke locker und nicht aufgestützt.</li>
+      <li><b>2 · Grundstellung</b>Nach jedem Anschlag kehrt der Finger zurück auf seine Taste in der Grundreihe.</li>
+      <li><b>3 · Nicht hinschauen</b>Der Blick bleibt am Bildschirm. Die Farben unten zeigen dir den richtigen Finger.</li>
+      <li><b>4 · Genau vor schnell</b>Ziel: mindestens 95 % richtige Anschläge. Tempo kommt mit der Übung von selbst.</li>
+      <li><b>5 · Rhythmus</b>Gleichmäßig tippen, wie ein Metronom – auch bei schwierigen Tasten.</li>
+      <li><b>6 · Kurz & oft</b>Täglich 10–15 Minuten bringen mehr als selten eine lange Einheit.</li>
+    </ul>`;
+  } else {
+    const keys = l.t === 'shift' ? [] : (l.keys || []);
+    if (keys.length) html += `<div class="newkeys">${keys.map(k => keyChip(lid, k)).join('')}</div>`;
+    if (l.t === 'shift') {
+      const ex = LAYOUTS[lid].keys.KeyF[1], ex2 = LAYOUTS[lid].keys.KeyJ[1];
+      html += `<div class="newkeys">${keyChip(lid, ex)}${keyChip(lid, ex2)}</div>`;
+    }
+    if (l.tip) html += `<div class="tip">${ICON_TIP}<span>${escapeHTML(l.tip)}</span></div>`;
+  }
+  el.innerHTML = html;
+}
+function renderSteps() {
+  const lid = settings.layout;
+  const steps = stepsFor(lid, view.lesson);
+  const p = lessonProg(lid, view.lesson);
+  document.getElementById('steps').innerHTML = steps.map((s, i) =>
+    `<button class="${i === view.step ? 'cur' : ''} ${p.s && p.s[i] ? 'ok' : ''}" data-s="${i}"><i>${p.s && p.s[i] ? '✓' : i + 1}</i>${escapeHTML(s.name)}</button>`).join('');
+}
+document.getElementById('steps').addEventListener('click', e => {
+  const b = e.target.closest('button[data-s]'); if (!b) return;
+  openLesson(view.lesson, +b.dataset.s);
+});
+let currentSteps = [];
+function openLesson(i, step) {
+  const lid = settings.layout;
+  view.mode = 'course'; view.lesson = i; view.step = step || 0;
+  store.set('zfs.pos.' + lid, i);
+  const l = COURSE[lid][i];
+  document.getElementById('lKicker').textContent = i === 0 ? 'Lektion 0 · Einstieg' : `Lektion ${i} von ${COURSE[lid].length - 1}`;
+  document.getElementById('lTitle').textContent = l.title;
+  currentSteps = stepsFor(lid, i);
+  const st = lessonState(lid, i);
+  if (l.t === 'intro') setDim(new Set(l.show.concat([' '])), new Set(l.show), false);
+  else setDim(st.known, new Set(l.t === 'shift' ? [] : st.newKeys), st.shift);
+  renderIntro(); renderSteps(); renderLessonList();
+  startStep();
+}
+function startStep() {
+  const step = currentSteps[view.step];
+  loadText(step.gen(), m => showCourseResult(m));
+}
+function restartStep() {
+  if (view.mode === 'course') startStep(); else startFree(true);
+}
+function showCourseResult(m) {
+  const lid = settings.layout;
+  const stars = starsFor(m.acc);
+  const passed = stars > 0;
+  const p = progress[lid][view.lesson] = lessonProg(lid, view.lesson);
+  p.s = p.s || [];
+  const prev = p.s[view.step];
+  if (passed && (!prev || stars > prev.stars || (stars === prev.stars && m.cpm > prev.cpm))) p.s[view.step] = { stars, acc: Math.round(m.acc * 10) / 10, cpm: m.cpm };
+  const nSteps = currentSteps.length;
+  let lessonDone = false;
+  if (p.s.filter(Boolean).length === nSteps) {
+    const ls = Math.min(...p.s.slice(0, nSteps).map(x => x.stars));
+    if (!p.stars || ls > p.stars) p.stars = ls;
+    lessonDone = true;
+  }
+  saveProgress();
+  renderSteps(); renderLessonList();
+  const isLastStep = view.step >= nSteps - 1;
+  const isLastLesson = view.lesson >= COURSE[lid].length - 1;
+  let title, msg;
+  if (!passed) { title = 'Fast geschafft!'; msg = 'Für diese Stufe brauchst du mindestens 90 % Genauigkeit. Tippe ruhiger – die richtige Taste ist wichtiger als das Tempo.'; }
+  else if (isLastStep && lessonDone) { title = isLastLesson ? 'Kurs abgeschlossen! 🎉' : 'Lektion geschafft!'; msg = isLastLesson ? 'Du kennst jetzt alle Tasten. Unter „Freies Üben“ kannst du weiter an Tempo und Sicherheit arbeiten.' : 'Sehr gut. Weiter geht es mit der nächsten Lektion.'; }
+  else { title = stars === 3 ? 'Ausgezeichnet!' : stars === 2 ? 'Gut gemacht!' : 'Bestanden!'; msg = stars < 3 ? 'Mit 98 % gibt es drei Sterne – du kannst die Stufe jederzeit wiederholen.' : 'Weiter zur nächsten Stufe.'; }
+  let primaryLabel = 'Nochmal', primary = 'retry';
+  if (passed) {
+    if (!isLastStep) { primaryLabel = 'Nächste Stufe'; primary = 'step'; }
+    else if (!isLastLesson) { primaryLabel = 'Nächste Lektion'; primary = 'lesson'; }
+    else { primaryLabel = 'Freies Üben'; primary = 'free'; }
+  }
+  const weak = m.weak.length ? `<div class="weak">Fehler bei: ${m.weak.map(c => `<span class="w">${escapeHTML(showCh(c))}</span>`).join('')}</div>` : '';
+  resultEl.innerHTML = `<div class="bigstars">${starHTML(stars)}</div><h3>${title}</h3>
+    <div class="nums"><div><b>${(Math.floor(m.acc * 10) / 10).toLocaleString('de-DE')} %</b>Genauigkeit</div><div><b>${m.cpm}</b>Anschläge/Min.</div><div><b>${m.wpm}</b>Wörter/Min.</div><div><b>${fmtTime(m.ms)}</b>Zeit</div></div>
+    ${weak}<p>${msg}</p>
+    <div class="btnrow">${primary !== 'retry' ? `<button class="btn" data-act="retry">Nochmal<kbd>Esc</kbd></button>` : ''}<button class="btn primary" data-primary data-act="${primary}">${primaryLabel}<kbd>Enter</kbd></button></div>`;
+  resultEl.classList.add('show');
+}
+resultEl.addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'retry') restartStep();
+  else if (a === 'step') openLesson(view.lesson, view.step + 1);
+  else if (a === 'lesson') openLesson(view.lesson + 1, 0);
+  else if (a === 'free') setMode('free');
+  else if (a === 'again') startFree(false);
+});
+
+/* =========================================================
+   Freies Üben
+   ========================================================= */
+const freeSrc = document.getElementById('freeSrc'), freeLen = document.getElementById('freeLen'), customWrap = document.getElementById('customWrap'), customTxt = document.getElementById('customTxt'), freeNote = document.getElementById('freeNote');
+function highestLesson(lid) {
+  let hi = -1;
+  COURSE[lid].forEach((_, i) => { const p = progress[lid][i]; if (p && (p.stars || (p.s && p.s.some(Boolean)))) hi = i; });
+  return Math.max(hi, Math.min(5, COURSE[lid].length - 1));
+}
+function cleanCustom(lid, s) {
+  s = s.normalize('NFC').replace(/[„“”«»]/g, '"').replace(/[‚‘’]/g, "'").replace(/[–—]/g, '-').replace(/…/g, '...').replace(/\s+/g, ' ').trim();
+  const cm = charMap(lid);
+  const removed = new Set();
+  const out = Array.from(s).filter(c => { if (cm[c]) return true; removed.add(c); return false; }).join('').replace(/\s+/g, ' ').trim();
+  return { text: out, removed: [...removed] };
+}
+let lastFreeText = '';
+function startFree(sameText) {
+  const lid = settings.layout;
+  const target = +freeLen.value;
+  const src = freeSrc.value;
+  let text = '';
+  freeNote.textContent = '';
+  if (sameText && lastFreeText) text = lastFreeText;
+  else if (src === 'learned') {
+    const i = highestLesson(lid);
+    const st = lessonState(lid, i);
+    const pool = wordPool(lid, st);
+    if (pool.length >= 6) { const g = []; while (glen(g) < target) g.push(pick(pool)); text = g.join(' '); }
+    else text = LAYOUTS[lid].dev ? mixDev(lid, st, target) : mixLatin(lid, st, target);
+    freeNote.textContent = `Tasten bis Lektion ${i}: „${COURSE[lid][i].title}“`;
+  } else if (src === 'all') {
+    const st = lessonState(lid, COURSE[lid].length - 1);
+    const pool = wordPool(lid, st);
+    const g = []; while (glen(g) < target) g.push(pick(pool)); text = g.join(' ');
+  } else if (src === 'sentences') {
+    text = sentencesText(lid, null, target);
+  } else if (src === 'weak') {
+    const ks = keyStats[lid];
+    const weak = Object.entries(ks).filter(([c, v]) => c !== ' ' && v.n + v.e >= 4 && v.e > 0).sort((a, b) => (b[1].e / (b[1].n + b[1].e)) - (a[1].e / (a[1].n + a[1].e))).slice(0, 6).map(x => x[0]);
+    if (!weak.length) { freeNote.textContent = 'Noch keine schwachen Tasten bekannt – übe zuerst ein paar Lektionen.'; text = sentencesText(lid, null, target); }
+    else {
+      const st = lessonState(lid, COURSE[lid].length - 1);
+      const pool = wordPool(lid, st).filter(w => weak.some(c => w.includes(c)));
+      const g = [];
+      while (glen(g) < target) g.push(pool.length && Math.random() < 0.7 ? pick(pool) : (LAYOUTS[lid].dev ? devGroup(devSets(st), pick(weak)) : pick(weak).repeat(2) + pick(weak)));
+      text = g.join(' ');
+      freeNote.textContent = 'Schwerpunkt: ' + weak.map(showCh).join(' ');
+    }
+  } else if (src === 'custom') {
+    const r = cleanCustom(lid, customTxt.value);
+    if (!r.text) { freeNote.textContent = 'Füge zuerst einen Text ein.'; return; }
+    text = r.text;
+    if (r.removed.length) freeNote.textContent = 'Nicht auf diesem Layout vorhanden und entfernt: ' + r.removed.slice(0, 12).join(' ');
+  }
+  lastFreeText = text;
+  setDim(null);
+  loadText(text, m => showFreeResult(m));
+}
+function showFreeResult(m) {
+  const weak = m.weak.length ? `<div class="weak">Fehler bei: ${m.weak.map(c => `<span class="w">${escapeHTML(showCh(c))}</span>`).join('')}</div>` : '';
+  resultEl.innerHTML = `<div class="bigstars">${starHTML(starsFor(m.acc))}</div><h3>Fertig!</h3>
+    <div class="nums"><div><b>${(Math.floor(m.acc * 10) / 10).toLocaleString('de-DE')} %</b>Genauigkeit</div><div><b>${m.cpm}</b>Anschläge/Min.</div><div><b>${m.wpm}</b>Wörter/Min.</div><div><b>${fmtTime(m.ms)}</b>Zeit</div></div>
+    ${weak}<div class="btnrow"><button class="btn" data-act="retry">Gleicher Text<kbd>Esc</kbd></button><button class="btn primary" data-primary data-act="again">Neuer Text<kbd>Enter</kbd></button></div>`;
+  resultEl.classList.add('show');
+}
+freeSrc.addEventListener('change', () => { customWrap.classList.toggle('show', freeSrc.value === 'custom'); if (freeSrc.value !== 'custom') startFree(false); });
+freeLen.addEventListener('change', () => startFree(false));
+document.getElementById('freeGo').addEventListener('click', e => { e.currentTarget.blur(); startFree(false); });
+
+/* =========================================================
+   Modus, Layout, Einstellungen
+   ========================================================= */
+const tabCourse = document.getElementById('tabCourse'), tabFree = document.getElementById('tabFree');
+function setMode(mode) {
+  view.mode = mode;
+  tabCourse.setAttribute('aria-selected', mode === 'course');
+  tabFree.setAttribute('aria-selected', mode === 'free');
+  document.getElementById('app').classList.toggle('free', mode === 'free');
+  document.getElementById('lessonCard').hidden = mode !== 'course';
+  document.getElementById('freeCard').hidden = mode !== 'free';
+  if (mode === 'course') openLesson(view.lesson, view.step);
+  else { customWrap.classList.toggle('show', freeSrc.value === 'custom'); startFree(false); }
+}
+tabCourse.addEventListener('click', () => setMode('course'));
+tabFree.addEventListener('click', () => setMode('free'));
+
+function firstOpenLesson(lid) {
+  const saved = store.get('zfs.pos.' + lid, null);
+  if (saved != null && COURSE[lid][saved]) return saved;
+  const i = COURSE[lid].findIndex((_, i) => !(progress[lid][i] && progress[lid][i].stars));
+  return i < 0 ? 0 : i;
+}
+function setLayout(lid) {
+  settings.layout = lid; saveSettings();
+  document.querySelectorAll('#layoutSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === lid));
+  document.documentElement.lang = lid === 'in' ? 'de' : 'de';
+  renderKeyboard(); renderHands();
+  view.lesson = firstOpenLesson(lid); view.step = 0;
+  setMode(view.mode);
+}
+document.getElementById('layoutSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-l]'); if (!b) return;
+  b.blur();
+  if (b.dataset.l !== settings.layout) setLayout(b.dataset.l);
+});
+
+const setBtn = document.getElementById('setBtn'), setPanel = document.getElementById('settings');
+setBtn.addEventListener('click', () => { const o = !setPanel.classList.contains('open'); setPanel.classList.toggle('open', o); setBtn.setAttribute('aria-expanded', o); setBtn.blur(); });
+const bind = (id, key, after) => {
+  const el = document.getElementById(id);
+  if (el.type === 'checkbox') { el.checked = !!settings[key]; el.addEventListener('change', () => { settings[key] = el.checked; saveSettings(); after && after(); el.blur(); }); }
+  else { el.value = settings[key]; el.addEventListener('change', () => { settings[key] = el.value; saveSettings(); after && after(); el.blur(); }); }
+};
+bind('optStop', 'stop', () => restartStep());
+bind('optHint', 'hint', () => updateNext());
+bind('optColors', 'colors', applyKbOptions);
+bind('optHands', 'hands', () => { renderHands(); updateNext(); });
+bind('optBlind', 'blind', applyKbOptions);
+bind('optSound', 'sound');
+bind('optMap', 'map');
+bind('optInGeo', 'inGeo', () => { if (settings.layout === 'in') { renderKeyboard(); renderHands(); setMode(view.mode); } });
+
+textbox.addEventListener('click', () => textbox.focus({ preventScroll: true }));
+
+/* =========================================================
+   Fortschritt speichern / laden
+   ========================================================= */
+function syncSettingsUI() {
+  const map = { optStop: 'stop', optHint: 'hint', optColors: 'colors', optHands: 'hands', optBlind: 'blind', optSound: 'sound', optMap: 'map', optInGeo: 'inGeo' };
+  for (const [id, key] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (el.type === 'checkbox') el.checked = !!settings[key]; else el.value = settings[key];
+  }
+}
+function saveMsg(text, isErr) {
+  document.querySelectorAll('.savemsg').forEach(el => {
+    el.textContent = text; el.classList.toggle('err', !!isErr);
+    clearTimeout(el._t); el._t = setTimeout(() => { el.textContent = ''; }, 6000);
+  });
+}
+function countDone() {
+  let n = 0;
+  for (const lid of Object.keys(COURSE)) for (const p of Object.values(progress[lid] || {})) if (p && p.stars) n++;
+  return n;
+}
+function exportProgress() {
+  const pos = {};
+  for (const lid of Object.keys(COURSE)) pos[lid] = store.get('zfs.pos.' + lid, null);
+  const data = { app: '10-finger-system', version: 1, saved: new Date().toISOString(), settings, progress, keyStats, pos };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  a.href = URL.createObjectURL(blob);
+  a.download = `10-finger-fortschritt-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  saveMsg(`Gespeichert (${countDone()} Lektionen geschafft).`);
+}
+function applyLoaded(data) {
+  if (!data || data.app !== '10-finger-system' || typeof data.progress !== 'object') throw new Error('Das ist keine Fortschritts-Datei dieser Seite.');
+  for (const lid of Object.keys(COURSE)) {
+    const pr = data.progress[lid];
+    progress[lid] = (pr && typeof pr === 'object') ? pr : {};
+    const ks = data.keyStats && data.keyStats[lid];
+    keyStats[lid] = (ks && typeof ks === 'object') ? ks : {};
+    const pos = data.pos && data.pos[lid];
+    if (Number.isInteger(pos) && COURSE[lid][pos]) store.set('zfs.pos.' + lid, pos);
+  }
+  if (data.settings && typeof data.settings === 'object') {
+    for (const k of Object.keys(settings)) if (k in data.settings && typeof data.settings[k] === typeof settings[k]) settings[k] = data.settings[k];
+    if (!LAYOUTS[settings.layout]) settings.layout = 'de';
+  }
+  saveProgress(); store.set('zfs.keys', keyStats); saveSettings();
+  syncSettingsUI();
+  setLayout(settings.layout);
+  const when = data.saved ? new Date(data.saved).toLocaleDateString('de-AT') : '';
+  saveMsg(`Geladen${when ? ' (Stand ' + when + ')' : ''}: ${countDone()} Lektionen geschafft.`);
+}
+const loadFile = document.getElementById('loadFile');
+loadFile.addEventListener('change', () => {
+  const f = loadFile.files && loadFile.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { applyLoaded(JSON.parse(r.result)); }
+    catch (err) { saveMsg(err instanceof SyntaxError ? 'Die Datei konnte nicht gelesen werden.' : err.message, true); }
+    loadFile.value = '';
+  };
+  r.onerror = () => saveMsg('Die Datei konnte nicht gelesen werden.', true);
+  r.readAsText(f);
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('.act-save, .act-load, .act-reset');
+  if (!b) return;
+  b.blur();
+  if (b.classList.contains('act-save')) exportProgress();
+  else if (b.classList.contains('act-load')) {
+    if (countDone() > 0 && !confirm('Der aktuelle Fortschritt wird durch die Datei ersetzt. Fortfahren?')) return;
+    loadFile.click();
+  } else if (b.classList.contains('act-reset')) {
+    if (!confirm('Gesamten Fortschritt in allen Layouts löschen? Tipp: Speichere ihn vorher als Datei.')) return;
+    for (const lid of Object.keys(COURSE)) { progress[lid] = {}; keyStats[lid] = {}; store.set('zfs.pos.' + lid, null); }
+    saveProgress(); store.set('zfs.keys', keyStats);
+    setLayout(settings.layout);
+    saveMsg('Fortschritt zurückgesetzt.');
+  }
+});
+
+/* Start */
+setLayout(LAYOUTS[settings.layout] ? settings.layout : 'de');
+})();
+</script>
+</body>
+</html>
