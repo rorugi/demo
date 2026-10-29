@@ -179,7 +179,7 @@ aside h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(
 .stat span{display:block;font-size:12px;color:var(--muted)}
 .stat b{font-size:20px;font-variant-numeric:tabular-nums}
 .progress{margin-top:10px}
-.result{position:absolute;inset:0;background:var(--panel);border-radius:12px;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:10px}
+.result{position:absolute;inset:0;background:var(--panel);border-radius:12px;display:none;flex-direction:column;align-items:center;justify-content:safe center;text-align:center;gap:8px;padding:10px;overflow:auto}
 .result.show{display:flex}
 .result h3{margin:0;font-size:22px}
 .result .bigstars{font-size:34px;letter-spacing:4px;color:#e0a100;line-height:1}
@@ -206,11 +206,23 @@ aside h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(
 .testinfo{flex-basis:100%;font-size:14px;color:var(--muted);margin:2px 0 0}
 .histcard h2{font-size:17px;margin:0 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .histcard h2 .linkbtn{margin-left:auto;font-size:13px;color:var(--bad)}
-.histchart{width:100%;height:auto;max-height:190px;display:block;margin-bottom:10px}
+:root{--z1:#F4511E;--z2:#00ACC1;--z3:#43A047}
+.histchart{width:100%;max-width:820px;height:auto;display:block;margin:0 auto 10px}
 .histchart .gl{stroke:var(--line);stroke-width:1}
-.histchart .ln{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
-.histchart .pt{fill:var(--panel);stroke:var(--accent);stroke-width:2}
+.histchart .ax{stroke:var(--muted);stroke-width:1}
+.histchart .band{opacity:.13}
+.histchart .bandlbl{font-weight:700;font-size:11px;opacity:.85}
+.histchart .ln{fill:none;stroke:var(--ink);stroke-opacity:.45;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.histchart .pt{stroke:var(--panel);stroke-width:2}
 .histchart text{font-family:var(--ui);font-size:11px;fill:var(--muted)}
+.histchart .axt{font-size:12px;font-weight:600;fill:var(--ink)}
+.levelbar{width:100%;max-width:640px;height:auto;display:block}
+.levelbar text{font-family:var(--ui);font-size:11px;fill:var(--muted)}
+.levelbar .zl{font-size:12px;font-weight:700;fill:#fff}
+.levelbar .mk{stroke:var(--ink);stroke-opacity:.55;stroke-width:1.5}
+.levelbar .me{fill:var(--ink)}
+.levelbar .met{font-size:13px;font-weight:700;fill:var(--ink)}
+.zone{display:inline-block;padding:1px 9px;border-radius:999px;color:#fff;font-weight:700;font-size:14px}
 .histtable{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
 .histtable th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:5px 8px}
 .histtable td{border-bottom:1px solid var(--line);padding:6px 8px}
@@ -1964,6 +1976,39 @@ function buildTestText(lid, idx) {
   while (len < 6000) { const x = list[i % list.length].x; parts.push(x); len += x.length + 1; i++; }
   return parts.join(' ');
 }
+// Einordnung: drei Bereiche, Referenzwerte (Netto-WPM, 1 Wort = 5 Zeichen)
+const ZONES = [['schwach', 'var(--z1)'], ['mittel', 'var(--z2)'], ['gut', 'var(--z3)']];
+const LEVELS = {
+  latin: { max: 200, cuts: [40, 80], marks: [[27, 'Zwei-Finger'], [52, 'Durchschnitt'], [108, 'Dt. Meisterschaft'], [156, 'WM 2020 (online)'], [191, 'Weltrekord']],
+    note: 'Bereiche: schwach unter 40, mittel 40–80 (ausgebildete Tastschreiber), gut ab 80 WPM. 100 % = Weltrekord 191 WPM (Intersteno-WM 2003, 30 Minuten).' },
+  dev: { max: 60, cuts: [20, 30], marks: [[30, 'Prüfungsnorm Hindi (SSC)']],
+    note: 'Für Devanagari gibt es keinen belegten Weltrekord. Referenz ist die indische Prüfungsnorm für Hindi: 30 WPM. Bereiche: schwach unter 20, mittel 20–30, gut ab 30 WPM.' }
+};
+const levelOf = lid => LEVELS[LAYOUTS[lid].dev ? 'dev' : 'latin'];
+function zoneOf(lid, wpm) { const L = levelOf(lid); return wpm < L.cuts[0] ? 0 : wpm < L.cuts[1] ? 1 : 2; }
+function levelBar(lid, wpm) {
+  const L = levelOf(lid);
+  const W = 640, x0 = 10, x1 = W - 10, by = 34, bh = 22;
+  const x = v => x0 + Math.min(v, L.max) / L.max * (x1 - x0);
+  const edges = [0, L.cuts[0], L.cuts[1], L.max];
+  let g = '';
+  g += `<clipPath id="lbclip"><rect x="${x0}" y="${by}" width="${x1 - x0}" height="${bh}" rx="7"/></clipPath><g clip-path="url(#lbclip)">`;
+  ZONES.forEach(([, col], i) => { const a = x(edges[i]), b = x(edges[i + 1]); g += `<rect x="${a}" y="${by}" width="${b - a}" height="${bh}" fill="${col}"/>`; });
+  g += '</g>';
+  ZONES.forEach(([name], i) => { const a = x(edges[i]), b = x(edges[i + 1]); g += `<text class="zl" x="${(a + b) / 2}" y="${by + 15.5}" text-anchor="middle">${name}</text>`; });
+  // Referenzmarken, Beschriftung abwechselnd in zwei Zeilen
+  L.marks.forEach(([v, lbl], i) => {
+    const xx = x(v), row = i % 2;
+    g += `<line class="mk" x1="${xx}" x2="${xx}" y1="${by}" y2="${by + bh + 6 + row * 13}"/>`;
+    const anchor = xx > W - 70 ? 'end' : xx < 70 ? 'start' : 'middle';
+    g += `<text x="${xx}" y="${by + bh + 17 + row * 13}" text-anchor="${anchor}">${lbl} ${v}</text>`;
+  });
+  // eigenes Ergebnis
+  const xe = x(wpm);
+  const anchor = xe > W - 60 ? 'end' : xe < 60 ? 'start' : 'middle';
+  g += `<path class="me" d="M${xe - 7},${by - 11} L${xe + 7},${by - 11} L${xe},${by - 2} Z"/><text class="met" x="${xe}" y="${by - 15}" text-anchor="${anchor}">Du: ${wpm} WPM${wpm > L.max ? ' ▸' : ''}</text>`;
+  return `<svg class="levelbar" viewBox="0 0 ${W} ${by + bh + 34}" role="img" aria-label="Einordnung: ${wpm} WPM, Bereich ${ZONES[zoneOf(lid, wpm)][0]}">${g}</svg>`;
+}
 function testResult(m) {
   const mins = Math.max(m.ms / 60000, 1 / 600);
   const grossApm = Math.round(m.chars / mins);
@@ -1999,10 +2044,12 @@ function showTestResult(m, idx, dur) {
     cmp = `Letztes Mal: <b>${last.n} WPM</b> (${d > 0 ? '+' : ''}${d}) · Bestwert bisher: <b>${best} WPM</b>${r.netWpm > best ? ' – neuer Bestwert!' : ''}`;
   }
   const fmt = v => (Math.round(v * 10) / 10).toLocaleString('de-DE');
-  resultEl.innerHTML = `<h3>${full ? 'Zeit abgelaufen' : 'Test beendet'}</h3>
-    <div class="nums"><div><b>${r.netWpm}</b>Netto-WPM</div><div><b>${r.netApm}</b>Netto-Anschläge/Min.</div><div><b>${r.grossApm}</b>Brutto-Anschläge/Min.</div><div><b>${m.left}</b>Fehler (${fmt(r.errPct)} %)</div></div>
+  const z = ZONES[zoneOf(lid, r.netWpm)];
+  const pct = Math.round(r.netWpm / (LAYOUTS[lid].dev ? 30 : 191) * 100);
+  resultEl.innerHTML = `<h3>${full ? 'Zeit abgelaufen' : 'Test beendet'} · <span class="zone" style="background:${z[1]}">${z[0]}</span></h3>
+    <div class="nums"><div><b>${r.netWpm}</b>Netto-WPM</div><div><b>${r.netApm}</b>Netto-Anschläge/Min.</div><div><b>${r.grossApm}</b>Brutto-Anschläge/Min.</div><div><b>${m.left}</b>Fehler (${fmt(r.errPct)} %)</div><div><b>${pct} %</b>${LAYOUTS[lid].dev ? 'der Prüfungsnorm' : 'des Weltrekords'}</div></div>
+    ${levelBar(lid, r.netWpm)}
     <p class="cmp">${cmp}</p>
-    <p style="font-size:13px">Netto = Brutto-Wörter pro Minute minus Fehler pro Minute (1 Wort = 5 Zeichen). Korrigierte Fehler zählen nicht, kosten aber Zeit.</p>
     <div class="btnrow"><button class="btn primary" data-primary data-act="test">Nochmal<kbd>Enter</kbd></button></div>`;
   resultEl.classList.add('show');
   renderHistory();
@@ -2015,25 +2062,57 @@ function renderHistory() {
   document.getElementById('histClear').hidden = !list.length;
   const body = document.getElementById('histBody');
   if (!list.length) { body.innerHTML = '<p class="histempty">Noch keine Tests. Wähle einen Text und eine Dauer und tippe einfach los.</p>'; return; }
-  const pts = list.slice(-20);
-  const W = 640, H = 150, pad = 28;
-  const max = Math.max(10, ...pts.map(x => x.n)) * 1.15;
-  const x = i => pad + (pts.length === 1 ? (W - 2 * pad) / 2 : i * (W - 2 * pad) / (pts.length - 1));
-  const y = v => H - 20 - v / max * (H - 36);
-  const step = max > 80 ? 20 : max > 40 ? 10 : 5;
-  let grid = '';
-  for (let v = 0; v <= max; v += step) grid += `<line class="gl" x1="${pad}" x2="${W - 8}" y1="${y(v)}" y2="${y(v)}"/><text x="2" y="${y(v) + 4}">${v}</text>`;
-  const line = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.n).toFixed(1)}`).join(' ');
-  const dots = pts.map((p, i) => `<circle class="pt" cx="${x(i).toFixed(1)}" cy="${y(p.n).toFixed(1)}" r="4"><title>${p.n} WPM · Text ${p.t + 1} · ${p.m} Min.</title></circle>`).join('');
-  const chart = `<svg class="histchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Netto-WPM der letzten Tests">${grid}<text x="${pad}" y="${H - 4}">Netto-WPM der letzten ${pts.length} Tests</text>${pts.length > 1 ? `<polyline class="ln" points="${line}"/>` : ''}${dots}</svg>`;
+  const byTime = list.slice().sort((a, b) => new Date(a.d) - new Date(b.d));
+  const chart = historyChart(lid, byTime.slice(-40));
   const bestKey = {};
   list.forEach(p => { const k = p.t + '-' + p.m; if (!bestKey[k] || p.n > bestKey[k].n) bestKey[k] = p; });
-  const rows = list.slice(-12).reverse().map(p => {
+  const rows = byTime.slice(-12).reverse().map(p => {
     const dt = new Date(p.d);
     const name = (TEST_TEXTS[lang][p.t] || {}).t || '';
     return `<tr class="${bestKey[p.t + '-' + p.m] === p ? 'best' : ''}"><td>${dt.toLocaleDateString('de-AT')} ${dt.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })}</td><td>Text ${p.t + 1} – ${escapeHTML(name)}</td><td class="num">${p.m} Min.</td><td class="num">${p.n}</td><td class="num">${p.g}</td><td class="num">${(p.e || 0).toLocaleString('de-DE')} %</td></tr>`;
   }).join('');
-  body.innerHTML = chart + `<div style="overflow-x:auto"><table class="histtable"><thead><tr><th>Datum</th><th>Text</th><th class="num">Dauer</th><th class="num">Netto-WPM</th><th class="num">Brutto-Anschl./Min.</th><th class="num">Fehler</th></tr></thead><tbody>${rows}</tbody></table></div><p class="histempty" style="margin-top:8px">Fett: Bestwert je Text und Dauer. Vergleichbar sind nur Tests mit gleichem Text und gleicher Dauer.</p>`;
+  body.innerHTML = chart + `<div style="overflow-x:auto"><table class="histtable"><thead><tr><th>Datum</th><th>Text</th><th class="num">Dauer</th><th class="num">Netto-WPM</th><th class="num">Brutto-Anschl./Min.</th><th class="num">Fehler</th></tr></thead><tbody>${rows}</tbody></table></div><p class="histempty" style="margin-top:8px">Fett: Bestwert je Text und Dauer. Genau vergleichbar sind nur Tests mit gleichem Text und gleicher Dauer. Netto-WPM = Brutto-Wörter pro Minute minus stehengebliebene Fehler pro Minute (1 Wort = 5 Zeichen). ${levelOf(lid).note}</p>`;
+}
+function historyChart(lid, pts) {
+  const L = levelOf(lid);
+  const W = 640, H = 240, pl = 44, pr = 14, pt = 12, pb = 46;
+  const maxN = Math.max(...pts.map(p => p.n));
+  const step = L.max > 100 ? 20 : 10;
+  const yMax = Math.min(L.max, Math.max(L.cuts[1] + step, Math.ceil(maxN * 1.15 / step) * step));
+  const y = v => pt + (1 - Math.min(v, yMax) / yMax) * (H - pt - pb);
+  const ts = pts.map(p => new Date(p.d).getTime());
+  const t0 = Math.min(...ts), t1 = Math.max(...ts), span = t1 - t0;
+  const iw = W - pl - pr - 16;
+  const x = t => pl + 8 + (span ? (t - t0) / span * iw : iw / 2);
+  let g = '';
+  // Bereiche als Hintergrund
+  const edges = [0, L.cuts[0], L.cuts[1], yMax];
+  ZONES.forEach(([name, col], i) => {
+    if (edges[i] >= yMax) return;
+    const top = y(Math.min(edges[i + 1], yMax)), bot = y(edges[i]);
+    g += `<rect class="band" x="${pl}" y="${top}" width="${W - pl - pr}" height="${bot - top}" fill="${col}"/>`;
+    if (bot - top > 14) g += `<text class="bandlbl" x="${W - pr - 6}" y="${top + 13}" text-anchor="end" style="fill:${col}">${name}</text>`;
+  });
+  for (let v = 0; v <= yMax; v += step) g += `<line class="gl" x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  // Zeitachse
+  const sameDay = span < 864e5 && new Date(t0).toDateString() === new Date(t1).toDateString();
+  const fmtT = t => { const d = new Date(t); return sameDay ? d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' }); };
+  const nT = span ? Math.min(5, pts.length) : 1;
+  for (let i = 0; i < nT; i++) {
+    const t = nT === 1 ? t0 : t0 + span * i / (nT - 1);
+    const xx = x(t);
+    g += `<line class="ax" x1="${xx}" x2="${xx}" y1="${H - pb}" y2="${H - pb + 5}"/><text x="${xx}" y="${H - pb + 18}" text-anchor="${i === 0 && nT > 1 ? 'start' : i === nT - 1 && nT > 1 ? 'end' : 'middle'}">${fmtT(t)}</text>`;
+  }
+  g += `<line class="ax" x1="${pl}" x2="${W - pr}" y1="${H - pb}" y2="${H - pb}"/><line class="ax" x1="${pl}" x2="${pl}" y1="${pt}" y2="${H - pb}"/>`;
+  g += `<text class="axt" x="${(pl + W - pr) / 2}" y="${H - 6}" text-anchor="middle">Zeit${sameDay ? ' (' + new Date(t0).toLocaleDateString('de-AT') + ')' : ''}</text>`;
+  g += `<text class="axt" transform="translate(12 ${(pt + H - pb) / 2}) rotate(-90)" text-anchor="middle">Netto-WPM</text>`;
+  // Verlauf + Punkte in der Farbe ihres Bereichs
+  if (pts.length > 1) g += `<polyline class="ln" points="${pts.map((p, i) => `${x(ts[i]).toFixed(1)},${y(p.n).toFixed(1)}`).join(' ')}"/>`;
+  pts.forEach((p, i) => {
+    const dt = new Date(ts[i]);
+    g += `<circle class="pt" cx="${x(ts[i]).toFixed(1)}" cy="${y(p.n).toFixed(1)}" r="5.5" fill="${ZONES[zoneOf(lid, p.n)][1]}"><title>${p.n} WPM · ${dt.toLocaleDateString('de-AT')} ${dt.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })} · Text ${p.t + 1} · ${p.m} Min.</title></circle>`;
+  });
+  return `<svg class="histchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Netto-WPM deiner letzten ${pts.length} Tests über die Zeit">${g}</svg>`;
 }
 document.getElementById('histClear').addEventListener('click', e => {
   e.currentTarget.blur();
