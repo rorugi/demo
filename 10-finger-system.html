@@ -1462,7 +1462,7 @@ const nextEl = document.getElementById('next');
 const resultEl = document.getElementById('result');
 const sTime = document.getElementById('sTime'), sCpm = document.getElementById('sCpm'), sAcc = document.getElementById('sAcc'), sErr = document.getElementById('sErr'), pBar = document.getElementById('pBar');
 const segmenter = (window.Intl && Intl.Segmenter) ? new Intl.Segmenter('hi', { granularity: 'grapheme' }) : null;
-const T = { text: [], clusters: [], cpCluster: [], els: [], pos: 0, err: [], started: false, t0: 0, ok: 0, bad: 0, done: true, onFinish: null, miss: {}, hit: {}, ticker: 0, shiftLatch: false, limit: 0 };
+const T = { text: [], clusters: [], cpCluster: [], els: [], pos: 0, err: [], started: false, t0: 0, ok: 0, bad: 0, done: true, onFinish: null, miss: {}, hit: {}, ticker: 0, shiftLatch: false, limit: 0, errW: [], extra: {} };
 // Im Tempotest bleiben Fehler stehen (wie in einer Prüfung)
 const stopMode = () => settings.stop && view.mode !== 'test';
 
@@ -1474,7 +1474,7 @@ function loadText(str, onFinish, limit) {
   let i = 0;
   segs.forEach((seg, ci) => { const n = Array.from(seg).length; T.clusters.push([i, i + n, seg]); for (let k = 0; k < n; k++) T.cpCluster[i + k] = ci; i += n; });
   T.pendingDead = null; T.limit = limit || 0;
-  T.pos = 0; T.err = []; T.started = false; T.ok = 0; T.bad = 0; T.done = false; T.onFinish = onFinish; T.miss = {}; T.hit = {};
+  T.pos = 0; T.err = []; T.errW = []; T.extra = {}; T.started = false; T.ok = 0; T.bad = 0; T.done = false; T.onFinish = onFinish; T.miss = {}; T.hit = {};
   clearInterval(T.ticker);
   textbox.classList.toggle('dev', LAYOUTS[settings.layout].dev);
   textbox.innerHTML = '';
@@ -1498,7 +1498,7 @@ function paintCluster(ci) {
   let cls = 'c' + (seg === ' ' ? ' sp' : '');
   let err = false; for (let i = s; i < e; i++) if (T.err[i]) err = true;
   if (e <= T.pos) cls += ' done' + (err ? ' err' : '');
-  else if (s <= T.pos && T.pos < e && !T.done) { cls += ' cur' + (T.err[T.pos] && stopMode() ? ' miss' : ''); }
+  else if (s <= T.pos && T.pos < e && !T.done) { cls += ' cur' + ((T.err[T.pos] && stopMode()) || T.extra[T.pos] ? ' miss' : ''); }
   el.className = cls;
 }
 function scrollToCurrent() {
@@ -1620,13 +1620,36 @@ function handleInput(ch, code) {
     for (let i = 0; i < cps.length; i++) { const c = T.text[T.pos + i]; if (!T.err[T.pos + i]) T.hit[c] = (T.hit[c] || 0) + 1; }
     T.pos += cps.length;
     if (code) flashKey(code, 'press');
-  } else {
+  } else if (stopMode()) {
     T.bad++;
     if (!T.err[T.pos]) T.miss[expChar] = (T.miss[expChar] || 0) + 1;
     T.err[T.pos] = true;
     if (code) flashKey(code, 'wrong');
     beep();
-    if (!stopMode()) T.pos++;
+  } else {
+    // Weiterschreiben: Fehler wie in einer Prüfung werten, ohne Folgefehler
+    T.bad++;
+    if (!T.err[T.pos]) T.miss[expChar] = (T.miss[expChar] || 0) + 1;
+    if (code) flashKey(code, 'wrong');
+    beep();
+    if (ch === ' ' && expChar !== ' ') {
+      // Leertaste zu früh: Rest des Wortes fehlt (1 Fehler), weiter beim nächsten Wort
+      let j = T.pos;
+      T.errW[j] = 1;
+      while (j < T.text.length && T.text[j] !== ' ') { T.err[j] = true; if (j > T.pos) T.errW[j] = 0; j++; }
+      T.pos = Math.min(j + 1, T.text.length);
+    } else if (T.text[T.pos + 1] === ch && ch !== ' ') {
+      // ein Zeichen (auch ein Leerzeichen) ausgelassen (1 Fehler), das getippte Zeichen passt zum nächsten
+      T.err[T.pos] = true; T.errW[T.pos] = 1;
+      T.pos += 2; T.ok++; T.bad--;
+    } else if (expChar === ' ') {
+      // zusätzliches Zeichen am Wortende (1 Fehler), Cursor bleibt vor dem Leerzeichen
+      T.extra[T.pos] = (T.extra[T.pos] || 0) + 1;
+    } else {
+      // falsches Zeichen (1 Fehler)
+      T.err[T.pos] = true; T.errW[T.pos] = 1;
+      T.pos++;
+    }
   }
   const newCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
   for (let c = Math.min(oldCi, newCi); c <= Math.max(oldCi, newCi); c++) paintCluster(c);
@@ -1637,11 +1660,14 @@ function handleInput(ch, code) {
   updateStats();
 }
 function handleBackspace() {
-  if (T.done || stopMode() || T.pos === 0) return;
+  if (T.done || stopMode()) return;
+  if (T.extra[T.pos]) { T.extra[T.pos]--; paintCluster(T.cpCluster[T.pos]); updateNext(); updateStats(); return; }
+  if (T.pos === 0) return;
   const oldCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
   T.pos--;
   const newCi = T.cpCluster[T.pos];
-  T.err[T.pos] = false;
+  T.err[T.pos] = false; T.errW[T.pos] = 0;
+  if (T.extra[T.pos]) T.extra[T.pos] = 0;
   for (let c = Math.min(oldCi, newCi); c <= Math.max(oldCi, newCi); c++) paintCluster(c);
   scrollToCurrent(); updateNext(); updateStats();
 }
@@ -1657,7 +1683,9 @@ function finish() {
   store.set('zfs.keys', keyStats);
   const m = currentMetrics();
   m.chars = T.pos;
-  m.left = 0; for (let i = 0; i < T.pos; i++) if (T.err[i]) m.left++;
+  m.left = 0;
+  for (let i = 0; i < T.pos; i++) if (T.err[i]) m.left += (T.errW[i] == null ? 1 : T.errW[i]);
+  for (const [i, n] of Object.entries(T.extra)) if (+i <= T.pos) m.left += n;
   m.weak = Object.entries(T.miss).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
   if (T.onFinish) T.onFinish(m);
 }
