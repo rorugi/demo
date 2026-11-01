@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&family=Tiro+Devanagari+Hindi&family=Noto+Serif+Devanagari:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500&family=Martel:wght@400;600&family=Kalam&display=swap">
 <style>
 @font-face{font-family:"Sanskrit 2020";src:url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
-/* Layout: header, text picker + Devanagari input, large reading pane with IAST popups, sticky pace timer at the bottom */
+/* Layout: header, text picker + Devanagari input, large reading pane with IAST popups, sticky bottom bar (read aloud + optional pace timer) */
 :root{
   --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
   --slate:#22302e; --chalk:#eef2e9; --chalk-dim:rgba(238,242,233,.62);
@@ -30,7 +30,8 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
 .wrap{max-width:780px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:20px}
-body.timing .wrap{padding-bottom:calc(var(--timer-h,130px) + 55vh)}
+.wrap{padding-bottom:calc(var(--bar-h,72px) + 28px)}
+body.timing .wrap{padding-bottom:calc(var(--bar-h,130px) + 55vh)}
 header{display:grid;gap:4px}
 .back{font-size:14px;color:var(--muted);text-decoration:none}
 .back:hover{color:var(--accent)}
@@ -88,10 +89,24 @@ select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px sol
 .pop .iast{font-family:var(--f-sa);font-size:22px;line-height:1.35;overflow-wrap:anywhere}
 .pop .meta{font-size:12px;color:var(--muted);margin-top:2px}
 
-body:not(.timing) .timer{display:none}
-.timer{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--line);
-  padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
-.timer-in{max-width:780px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+/* Bottom bar: playback row is always visible; the timer row appears only when "Reading timer" is on */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--line);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 18px rgba(0,0,0,.06)}
+.bar-in{max-width:780px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.play-row{display:flex;align-items:center;gap:8px}
+.play-row select{width:auto;padding:8px 10px;font-size:15px;min-height:40px}
+.play-row #voice{flex:1 1 0;width:0;min-width:0;text-overflow:ellipsis}
+.play-row #rate{flex:0 0 auto}
+.play-row button{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.play-row button svg{width:14px;height:14px;fill:currentColor;flex:none}
+#bPlay{min-width:96px}
+.bar .shint{margin:0;font-size:12.5px;color:var(--muted)}
+.bar .shint[hidden]{display:none}
+.bar .shint.warn{color:#b4561f}
+body:not(.timing) .tm{display:none}
+.tm{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;border-top:1px solid var(--line);padding-top:8px}
+button.go{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.w.spk,.w.spk:hover{background:var(--accent);color:var(--accent-ink);box-shadow:none}
 .stat{display:grid;line-height:1.15}
 .stat b{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--muted)}
@@ -101,8 +116,9 @@ button{font:inherit;font-size:15px;font-weight:600;border-radius:10px;border:1px
   padding:8px 14px;cursor:pointer;min-height:40px}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 button:disabled{opacity:.45;cursor:default}
-.timer .hint{flex-basis:100%;font-size:12px}
-@media (max-width:520px){.btns{margin-left:0;width:100%}.btns button{flex:1}.stat b{font-size:19px}.stat.big b{font-size:24px}}
+.tm .hint{flex-basis:100%;font-size:12px}
+@media (max-width:520px){.btns{margin-left:0;width:100%}.btns button{flex:1}.stat b{font-size:19px}.stat.big b{font-size:24px}
+  .play-row{flex-wrap:wrap}.play-row #voice{flex:1 1 100%;width:100%}.play-row button{flex:1;min-width:0}}
 </style>
 </head>
 <body>
@@ -110,7 +126,7 @@ button:disabled{opacity:.45;cursor:default}
   <header>
     <a class="back" href="index.html">← Demos</a>
     <h1>Sanskrit Reader</h1>
-    <p>Read Sanskrit in Devanagari. Hover over or tap a word to see its IAST transliteration, and time yourself to see your reading pace in syllables per minute.</p>
+    <p>Read Sanskrit in Devanagari. Hover over or tap a word to see its IAST transliteration, listen to the text read aloud, and time yourself to see your reading pace in syllables per minute.</p>
   </header>
 
   <section class="controls" aria-label="Text">
@@ -163,17 +179,33 @@ button:disabled{opacity:.45;cursor:default}
 
 <div class="pop" id="pop" role="tooltip"><div class="iast" id="popIast"></div><div class="meta" id="popMeta"></div></div>
 
-<footer class="timer" aria-label="Reading timer">
-  <div class="timer-in">
-    <div class="stat"><b id="tTime">0:00</b><span>time</span></div>
-    <div class="stat"><b id="tSyl">0 / 0</b><span>syllables read</span></div>
-    <div class="stat big"><b id="tRate">–</b><span>syllables / min</span></div>
-    <div class="btns">
-      <button class="primary" id="bStart">Start</button>
-      <button id="bDone" disabled>Done</button>
-      <button id="bReset">Reset</button>
+<footer class="bar" id="bar" aria-label="Playback and reading timer">
+  <div class="bar-in">
+    <div class="play-row">
+      <select id="voice" aria-label="Voice" title="Voice"></select>
+      <select id="rate" aria-label="Speed" title="Speed">
+        <option value="0.5">0.5×</option>
+        <option value="0.65">0.65×</option>
+        <option value="0.8">0.8×</option>
+        <option value="1">1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+      </select>
+      <button class="primary" id="bPlay" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path id="playIcon" d="M4 2.5v11l9-5.5z"/></svg><span id="playLbl">Play</span></button>
+      <button id="bStop" type="button" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5h9v9h-9z"/></svg>Stop</button>
     </div>
-    <p class="hint" id="tHint">Press Start and read. Tap the word you've reached to update your pace live, or press Done at the end.</p>
+    <p class="shint" id="sHint" hidden></p>
+    <div class="tm" aria-label="Reading timer">
+      <div class="stat"><b id="tTime">0:00</b><span>time</span></div>
+      <div class="stat"><b id="tSyl">0 / 0</b><span>syllables read</span></div>
+      <div class="stat big"><b id="tRate">–</b><span>syllables / min</span></div>
+      <div class="btns">
+        <button class="go" id="bStart" type="button">Start</button>
+        <button id="bDone" type="button" disabled>Done</button>
+        <button id="bReset" type="button">Reset</button>
+      </div>
+      <p class="hint" id="tHint">Press Start and read. Tap the word you've reached to update your pace live, or press Done at the end.</p>
+    </div>
   </div>
 </footer>
 
@@ -341,7 +373,7 @@ function weigh(run){
     else if(n1 && n1.k==="C" && n2 && n2.k==="C"){ p.heavy=true; p.pos=true; }
   });
 }
-function toIAST(s){ return toIASTParts(s).map(p=>p[0]).join(""); }
+function toIAST(s){ return toIASTParts(s).map(p=>p.t).join(""); }
 
 // Syllables = vowel nuclei: independent vowels, plus every consonant that carries a vowel (not followed by virama).
 function syllables(s){
@@ -377,7 +409,7 @@ let totalSyl=0;
 const WORD_RE=/[ऀ-ॣॱ-ॿ‌‍\-]+/g; // letters & signs, excluding dandas (0964/0965) and digits (0966–096F)
 
 function render(){
-  hidePop();
+  hidePop(); stopSpeech();
   reader.innerHTML=""; words=[]; totalSyl=0;
   const sel=pick.value;
   if(sel!=="custom"){
@@ -392,7 +424,7 @@ function render(){
     while((m=WORD_RE.exec(line))){
       const w=m[0];
       if(!/[ऄ-हॐक़-ॡॲ-ॿ]/.test(w)){ continue; } // no letters: leave as punctuation
-      if(m.index>last){ const gap=line.slice(last,m.index); if(/[।॥|]/.test(gap)){ weigh(run); run=[]; } ld.appendChild(punct(gap)); }
+      if(m.index>last){ const gap=line.slice(last,m.index); if(/[।॥|]/.test(gap)){ weigh(run); run=[]; if(words.length) words[words.length-1].stop=true; } ld.appendChild(punct(gap)); }
       const sp=document.createElement("span"); sp.className="w"; sp.textContent=w;
       const syl=syllables(w); totalSyl+=syl;
       sp.dataset.i=words.length;
@@ -401,6 +433,7 @@ function render(){
       ld.appendChild(sp); last=m.index+w.length;
     }
     weigh(run);
+    if(words.length) words[words.length-1].stop=true; // a line break is a pause in speech too
     if(last<line.length) ld.appendChild(punct(line.slice(last)));
     if(!ld.childNodes.length) ld.innerHTML="&nbsp;";
     reader.appendChild(ld);
@@ -453,6 +486,7 @@ reader.addEventListener("click",e=>{
   const i=+t.dataset.i;
   showPop(i);
   if(running && optTimer.checked) markProgress(i);
+  if(sState!=="idle") jumpTo(i); // while playing or paused, tapping a word continues from there
 });
 document.addEventListener("pointerdown",e=>{ if(!e.target.closest(".w")) hidePop(); });
 addEventListener("scroll",()=>{ if(popWord!==null) showPop(popWord); },{passive:true});
@@ -510,6 +544,183 @@ bStart.addEventListener("click",()=>{ running?pause():start(); });
 bDone.addEventListener("click",done);
 bReset.addEventListener("click",resetTimer);
 
+// ---------- Read aloud ----------
+// Uses the voices built into the device/browser. Sanskrit voices are rare, so the list ranks the closest
+// alternatives first: Marathi and Hindi (same Devanagari script, similar phonology), then Kannada and other
+// Indian languages. For voices that use another Indic script, the text is converted to that script first,
+// because e.g. a Kannada voice would otherwise skip Devanagari silently.
+const synth = window.speechSynthesis;
+const voiceSel=$("voice"), rateSel=$("rate"), bPlay=$("bPlay"), bStop=$("bStop"), bar=$("bar");
+const RANK=["sa","mr","hi","kn","ne","kok","mai","te","ml","gu","ta","bn","pa","or","as"];
+const NAME_LANG={sanskrit:"sa","संस्कृत":"sa",marathi:"mr","मराठी":"mr",hindi:"hi","हिन्दी":"hi","हिंदी":"hi",kannada:"kn","ಕನ್ನಡ":"kn",
+  nepali:"ne",konkani:"kok",maithili:"mai",telugu:"te",malayalam:"ml",gujarati:"gu",tamil:"ta",bengali:"bn",bangla:"bn",punjabi:"pa",odia:"or",oriya:"or",assamese:"as"};
+const DEVA_LANGS=new Set(["sa","mr","hi","ne","kok","mai"]);
+const SCRIPT_BASE={kn:0x0C80,te:0x0C00,ml:0x0D00,gu:0x0A80,ta:0x0B80,bn:0x0980,as:0x0980,pa:0x0A00,or:0x0B00};
+let langNames; try{ langNames=new Intl.DisplayNames(["en"],{type:"language"}); }catch(e){ langNames=null; }
+const normLang=c=>(c||"").replace(/_/g,"-");
+function langName(code){ try{ return (langNames&&code)?langNames.of(code):code; }catch(e){ return code; } }
+function langOf(v){
+  const b=normLang(v.lang).split("-")[0].toLowerCase();
+  if(RANK.includes(b)) return b;
+  const n=v.name.toLowerCase();
+  for(const k in NAME_LANG) if(n.includes(k)) return NAME_LANG[k];
+  return b;
+}
+function rankOf(v){
+  const r=RANK.indexOf(langOf(v));
+  if(r>=0) return r;
+  if(/^en-IN$/i.test(normLang(v.lang))) return RANK.length; // Indian English handles romanised Sanskrit reasonably
+  return 999;
+}
+
+let voices=[];
+function buildVoices(){
+  voices=synth ? synth.getVoices() : [];
+  const prev=voiceSel.value || load("voice");
+  voiceSel.textContent="";
+  if(!voices.length){
+    const o=document.createElement("option"); o.value=""; o.textContent=synth?"Device default voice":"Speech not supported"; voiceSel.appendChild(o);
+    sizeBar(); return;
+  }
+  const sorted=voices.map((v,i)=>({v,i,r:rankOf(v),label:langName(normLang(v.lang))||v.lang}))
+    .sort((a,b)=>(a.r-b.r) || a.label.localeCompare(b.label) || a.v.name.localeCompare(b.v.name));
+  const best=sorted.filter(x=>x.r<999), rest=sorted.filter(x=>x.r>=999);
+  const opt=x=>{ const o=document.createElement("option"); o.value=x.v.voiceURI;
+    o.textContent=`${x.label} · ${x.v.name}${x.v.localService?"":" (online)"}`; return o; };
+  if(best.length){ const g=document.createElement("optgroup"); g.label="Best for Sanskrit"; best.forEach(x=>g.appendChild(opt(x))); voiceSel.appendChild(g); }
+  if(rest.length){ const g=document.createElement("optgroup"); g.label=best.length?"Other languages":"Voices on this device"; rest.forEach(x=>g.appendChild(opt(x))); voiceSel.appendChild(g); }
+  if(prev && voices.some(v=>v.voiceURI===prev)) voiceSel.value=prev;
+  else voiceSel.value=sorted[0].v.voiceURI;
+  updateVoiceHint();
+}
+function currentVoice(){ return voices.find(v=>v.voiceURI===voiceSel.value)||null; }
+function updateVoiceHint(){
+  if(sState!=="idle" || sHintLocked) return;
+  const v=currentVoice();
+  if(!v){ setHint(""); return; }
+  const l=langOf(v);
+  if(l==="sa") setHint("");
+  else if(DEVA_LANGS.has(l)) setHint(voices.some(x=>langOf(x)==="sa") ? "" : `No Sanskrit voice on this device; ${langName(l)} reads Devanagari closest.`);
+  else if(SCRIPT_BASE[l]!=null) setHint(`The text is converted to ${langName(l)} script for this voice.`);
+  else if(!DEVA_LANGS.has(l)) setHint("This voice reads a romanised version of the text.");
+  else setHint("");
+}
+let sHintLocked=false;
+function setHint(msg,warn){ const h=$("sHint"); h.textContent=msg; h.hidden=!msg; h.classList.toggle("warn",!!warn); sizeBar(); }
+
+// Text a given voice can pronounce
+const TA_PRE={"ख":"क","ग":"क","घ":"क","छ":"च","झ":"ज","ठ":"ट","ड":"ट","ढ":"ट","थ":"त","द":"त","ध":"त","फ":"प","ब":"प","भ":"प","ं":"म्","ः":"ह्"};
+const FALLBACK={"ळ":"ल","व":"ब","ष":"श","ऋ":"रि","ॠ":"री","ृ":"्रि","ॄ":"्री","ऌ":"लि","ॢ":"्लि","ङ":"न्","ञ":"न्","ं":"म्","ः":"ह्","ऽ":"","ँ":"ं"};
+const UNASSIGNED=/\p{Cn}/u;
+function toScript(s,l,depth=0){
+  const base=SCRIPT_BASE[l]; let out="";
+  for(const c of s){
+    const code=c.codePointAt(0);
+    if(code<0x0900||code>0x097F||c==="।"||c==="॥"){ out+=c; continue; }
+    const t=String.fromCodePoint(base+code-0x0900);
+    if(!UNASSIGNED.test(t)) out+=t;
+    else if(FALLBACK[c]!==undefined && depth<2) out+=toScript(FALLBACK[c],l,depth+1);
+  }
+  return out;
+}
+function romanise(s){
+  return toIAST(s).replace(/ch/g,"chh").replace(/c(?!hh)/g,"ch")
+    .replace(/ā/g,"aa").replace(/ī/g,"ee").replace(/ū/g,"oo").replace(/ṝ/g,"ree").replace(/ṛ/g,"ri").replace(/ḹ/g,"lree")
+    .replace(/[ṅñṇ]/g,"n").replace(/ṭ/g,"t").replace(/ḍ/g,"d").replace(/[śṣ]/g,"sh").replace(/ṃ|m̐/g,"m").replace(/ḥ/g,"h")
+    .replace(/ḷ/g,"l").replace(/ê/g,"e").replace(/ô/g,"o").replace(/'/g,"");
+}
+function spoken(word,v){
+  let s=word.replace(/-/g,"").normalize("NFC");
+  const l=v?langOf(v):"sa";
+  if(!v || DEVA_LANGS.has(l)) return s;
+  if(SCRIPT_BASE[l]!=null){
+    s=s.normalize("NFD").replace(/ॐ/g,"ओं");
+    if(l==="ta") s=[...s].map(c=>TA_PRE[c]??c).join("");
+    return toScript(s,l).normalize("NFC");
+  }
+  return romanise(s);
+}
+
+// Playback: one utterance per half-verse (up to a daṇḍa or line end, at most 12 words) keeps each one short,
+// which avoids the cut-off some browsers apply to long utterances and lets us restart from any word.
+let sState="idle", session=0, cur=-1, utter=null;
+function setState(s){
+  sState=s;
+  $("playLbl").textContent = s==="speaking" ? "Pause" : s==="paused" ? "Resume" : "Play";
+  $("playIcon").setAttribute("d", s==="speaking" ? "M4 2.5h3v11H4zM9 2.5h3v11H9z" : "M4 2.5v11l9-5.5z");
+  bStop.disabled = s==="idle";
+}
+function markSpeak(i){
+  if(cur>=0 && words[cur]) words[cur].el.classList.remove("spk");
+  cur=i;
+  const w=words[i]; if(!w) return;
+  w.el.classList.add("spk");
+  const r=w.el.getBoundingClientRect(), barTop=bar.getBoundingClientRect().top;
+  if(r.bottom>barTop-12) scrollBy({top:r.bottom-barTop+Math.min(160,innerHeight/4),behavior:"smooth"});
+  else if(r.top<12) scrollBy({top:r.top-Math.min(160,innerHeight/4),behavior:"smooth"});
+}
+function chunkEnd(i){ let j=i; while(j<words.length-1 && !words[j].stop && j-i<11) j++; return j; }
+function speakFrom(i,id){
+  if(id!==session) return;
+  if(i>=words.length){ finishSpeech(); return; }
+  const v=currentVoice(), j=chunkEnd(i), starts=[];
+  let text="";
+  for(let k=i;k<=j;k++){ starts.push(text.length); text+=spoken(words[k].text,v)+(k<j?" ":""); }
+  markSpeak(i);
+  const u=new SpeechSynthesisUtterance(text);
+  if(v){ u.voice=v; u.lang=normLang(v.lang); } else u.lang="hi-IN";
+  u.rate=Number(rateSel.value)||1;
+  u.onboundary=e=>{
+    if(id!==session || (e.name && e.name!=="word")) return;
+    let k=0; while(k+1<starts.length && starts[k+1]<=e.charIndex) k++;
+    if(i+k!==cur) markSpeak(i+k);
+  };
+  u.onend=()=>{ if(id===session && sState==="speaking") speakFrom(j+1,id); };
+  u.onerror=e=>{
+    if(id!==session || e.error==="interrupted" || e.error==="canceled") return;
+    finishSpeech();
+    sHintLocked=true; setHint(`Couldn't play (${e.error}). Try another voice.`,true);
+  };
+  utter=u; // keep a reference: some browsers drop events of garbage-collected utterances
+  synth.speak(u);
+}
+function play(from){
+  if(!synth || !words.length) return;
+  session++; const id=session;
+  sHintLocked=false; updateVoiceHint();
+  setState("speaking");
+  if(synth.speaking||synth.pending){ synth.cancel(); setTimeout(()=>speakFrom(from,id),60); }
+  else { synth.cancel(); speakFrom(from,id); } // speak inside the tap so mobile browsers allow audio
+}
+function pauseSpeech(){ session++; synth.cancel(); setState("paused"); }
+function jumpTo(i){ if(sState==="speaking") play(i); else { markSpeak(i); } }
+function finishSpeech(){
+  session++;
+  if(cur>=0 && words[cur]) words[cur].el.classList.remove("spk");
+  cur=-1; setState("idle"); updateVoiceHint();
+}
+function stopSpeech(){ if(sState==="idle") return; if(synth) synth.cancel(); finishSpeech(); }
+bPlay.addEventListener("click",()=>{
+  if(sState==="speaking") pauseSpeech();
+  else if(sState==="paused") play(Math.max(cur,0));
+  else play(0);
+});
+bStop.addEventListener("click",stopSpeech);
+voiceSel.addEventListener("change",()=>{ store("voice",voiceSel.value); sHintLocked=false; updateVoiceHint(); if(sState==="speaking") play(Math.max(cur,0)); });
+rateSel.addEventListener("change",()=>{ store("rate",rateSel.value); if(sState==="speaking") play(Math.max(cur,0)); });
+{ const r0=load("rate"); if(r0 && [...rateSel.options].some(o=>o.value===r0)) rateSel.value=r0; else rateSel.value="0.8"; }
+function sizeBar(){ requestAnimationFrame(()=>document.documentElement.style.setProperty("--bar-h",bar.offsetHeight+"px")); }
+if(!synth || typeof SpeechSynthesisUtterance==="undefined"){
+  bPlay.disabled=true; voiceSel.disabled=true; rateSel.disabled=true;
+  buildVoices(); setHint("This browser can't read aloud. Try a current Chrome, Edge or Safari.",true);
+} else {
+  buildVoices();
+  if("onvoiceschanged" in synth) synth.addEventListener("voiceschanged",buildVoices);
+  setTimeout(()=>{ if(!voices.length) buildVoices(); },800);
+  setTimeout(()=>{ if(!voices.length) buildVoices(); },2500);
+}
+addEventListener("pagehide",()=>{ session++; if(synth) synth.cancel(); });
+
 // ---------- Wiring ----------
 pick.addEventListener("change",()=>{
   if(pick.value!=="custom") input.value=TEXTS[+pick.value].text;
@@ -529,8 +740,7 @@ function applyFont(){ document.documentElement.style.setProperty("--f-read",`${f
 function applyTimer(){
   document.body.classList.toggle("timing",optTimer.checked);
   if(!optTimer.checked) resetTimer();
-  const ft=document.querySelector(".timer");
-  requestAnimationFrame(()=>document.documentElement.style.setProperty("--timer-h",ft.offsetHeight+"px"));
+  sizeBar();
 }
 const f0=load("font"); if(f0 && [...fontSel.options].some(o=>o.value===f0)) fontSel.value=f0;
 optLong.checked=load("long")==="1";
@@ -539,7 +749,7 @@ fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value)
 optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
 optTimer.addEventListener("change",applyTimer);
 $("infoBtn").addEventListener("click",e=>{ const box=$("info"); box.hidden=!box.hidden; e.currentTarget.setAttribute("aria-expanded",String(!box.hidden)); });
-addEventListener("resize",()=>{ if(optTimer.checked) applyTimer(); });
+addEventListener("resize",sizeBar);
 applyFont(); applyTimer();
 
 pick.value="0"; input.value=TEXTS[0].text; render();
