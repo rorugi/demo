@@ -63,11 +63,12 @@
     .heroart{position:relative;min-width:0}
     .feature-frame{background:var(--frame-bg);border:1px solid var(--frame-line);padding:10px;border-radius:18px;transform:rotate(1.3deg);box-shadow:0 40px 100px #0005}
     .slider{position:relative;overflow:hidden;aspect-ratio:1.07;border-radius:11px;background:var(--frame-inner)}
-    .slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .7s ease,visibility 0s linear .7s}.slide.active{opacity:1;visibility:visible;transition:opacity .7s ease,visibility 0s}
-    .slide .media{position:absolute;inset:0}.slide img{width:100%;height:100%;display:block;object-fit:contain;opacity:0;transition:opacity .4s}.slide .media.cover img{object-fit:cover}.slide .media.loaded img{opacity:1}.slide .media.loading{background:linear-gradient(100deg,#3a332d 30%,#463e37 50%,#3a332d 70%);background-size:300% 100%;animation:shimmer 1.4s linear infinite}.slide .media.failed:before{content:"Bild momentan nicht erreichbar";position:absolute;inset:0;display:grid;place-items:center;color:#cdbfae;font-size:.85rem;font-weight:700}
-    .slide:after{content:"";position:absolute;inset:72% 0 0;background:linear-gradient(transparent,#140f0b99);pointer-events:none;transition:inset .35s,background .35s}.slider.reveal .slide:after{inset:36% 0 0;background:linear-gradient(transparent,#140f0bec)}
+    .track{display:flex;height:100%;width:100%;will-change:transform;transition:transform .5s cubic-bezier(.22,.8,.24,1)}.track.noanim{transition:none}.cslide{flex:0 0 100%;min-width:0;height:100%;position:relative;overflow:hidden;user-select:none;-webkit-user-select:none}.cslide img{-webkit-user-drag:none}
+    .slider .track{position:absolute;inset:0}.slider{touch-action:pan-y}
+    .cslide .media{position:absolute;inset:0}.cslide img{width:100%;height:100%;display:block;object-fit:contain;opacity:0;transition:opacity .4s}.cslide .media.cover img{object-fit:cover}.cslide .media.loaded img{opacity:1}.cslide .media.loading{background:linear-gradient(100deg,#3a332d 30%,#463e37 50%,#3a332d 70%);background-size:300% 100%;animation:shimmer 1.4s linear infinite}.cslide .media.failed:before{content:"Bild momentan nicht erreichbar";position:absolute;inset:0;display:grid;place-items:center;color:#cdbfae;font-size:.85rem;font-weight:700}
+    .cslide:after{content:"";position:absolute;inset:72% 0 0;background:linear-gradient(transparent,#140f0b99);pointer-events:none;transition:inset .35s,background .35s}.slider.reveal .cslide:after{inset:36% 0 0;background:linear-gradient(transparent,#140f0bec)}
     .slidelink{position:absolute;inset:0;z-index:1;display:block;text-decoration:none;color:#fff}
-    .feature-caption{position:absolute;bottom:62px;left:22px;right:22px;z-index:2;pointer-events:none;color:#fff;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .35s,transform .35s,visibility 0s linear .35s}.slider.reveal .slide.active .feature-caption{opacity:1;visibility:visible;transform:none;transition:opacity .35s,transform .35s,visibility 0s}.feature-caption span{display:block;color:var(--accent);font-size:.72rem;font-weight:850;letter-spacing:.14em;margin-bottom:9px;text-transform:uppercase}.feature-caption strong{font-size:clamp(1.35rem,2.4vw,2.35rem);line-height:1.05;letter-spacing:-.04em;display:block;max-width:420px}
+    .feature-caption{position:absolute;bottom:62px;left:22px;right:22px;z-index:2;pointer-events:none;color:#fff;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .35s,transform .35s,visibility 0s linear .35s}.slider.reveal .cslide.active .feature-caption{opacity:1;visibility:visible;transform:none;transition:opacity .35s,transform .35s,visibility 0s}.feature-caption span{display:block;color:var(--accent);font-size:.72rem;font-weight:850;letter-spacing:.14em;margin-bottom:9px;text-transform:uppercase}.feature-caption strong{font-size:clamp(1.35rem,2.4vw,2.35rem);line-height:1.05;letter-spacing:-.04em;display:block;max-width:420px}
     .sliderbar{position:absolute;left:18px;right:14px;bottom:14px;z-index:3;display:flex;align-items:center;gap:8px}
     .dots{display:flex;gap:6px;flex:1;flex-wrap:wrap}.dots button{height:6px;width:18px;border-radius:9px;border:0;padding:0;background:#ffffff59;transition:width .3s,background .3s}.dots button[aria-current="true"]{background:var(--accent);width:34px}
     .sbtn{height:34px;width:34px;border-radius:50%;border:1px solid #ffffff3d;background:#00000059;color:#fff;display:grid;place-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:0}.sbtn:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}.sbtn svg{width:16px;height:16px}
@@ -77,18 +78,21 @@
     .section{padding:75px 0}.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:32px}.overline{font-size:.72rem;letter-spacing:.17em;font-weight:900;text-transform:uppercase;color:var(--faint);margin-bottom:11px}.section h2{font-size:clamp(2.1rem,4vw,4.4rem);line-height:1.03;letter-spacing:-.06em;margin:0;font-weight:800}.section-note{max-width:470px;color:var(--muted);font-size:.97rem;margin:0}.statement{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:70px}.statement>div{padding:28px 24px 28px 0}.statement>div+div{padding-left:25px;border-left:1px solid var(--line)}.statement .num{font-size:.71rem;color:var(--accent-text);font-weight:850;letter-spacing:.12em}.statement h3{font-size:1.35rem;line-height:1.2;margin:8px 0 8px;letter-spacing:-.035em}.statement p{font-size:.86rem;color:var(--muted);margin:0}
 
     /* Filterleiste */
-    .controls{position:sticky;top:0;z-index:20;background:var(--controls-bg);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border-block:1px solid var(--line);padding:15px 0 13px}.control-row{display:flex;align-items:center;gap:15px}.search{flex:1;min-width:220px;position:relative}.search span{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:1.08rem;color:var(--faint)}.search input{width:100%;height:45px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);padding:0 14px 0 44px;font-size:.9rem;color:var(--ink)}.sort{height:45px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);padding:0 12px;color:var(--ink-2);max-width:178px}.ghostbtn{height:45px;border:1px solid var(--line-2);background:transparent;border-radius:9px;padding:0 14px;color:var(--ink-2);font-size:.8rem;font-weight:750;white-space:nowrap}.ghostbtn:hover{border-color:var(--accent);color:var(--accent-text)}.export{height:45px;background:var(--btn-dark);border:0;border-radius:9px;padding:0 17px;color:var(--btn-dark-ink);font-size:.8rem;font-weight:750}.export:hover{background:var(--btn-dark-hi)}.pills{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding:12px 0 0}.pills::-webkit-scrollbar{display:none}.pill{flex:none;border:1px solid var(--line-2);border-radius:99px;background:transparent;padding:9px 14px;font-size:.74rem;font-weight:850;color:var(--ink-2)}.pill:hover{border-color:var(--accent)}.pill.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}.pill small{opacity:.56;margin-left:5px;font-size:.7rem}.resultbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:26px 0 20px;font-size:.76rem;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}.savedtoggle{border:0;background:transparent;color:var(--ink-2);text-transform:uppercase;font-size:.76rem;font-weight:850;letter-spacing:.07em}.savedtoggle.on{color:var(--accent-text)}.dot{height:8px;width:8px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:8px}
+    .controls{position:sticky;top:0;z-index:20;background:var(--controls-bg);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border-block:1px solid var(--line);padding:15px 0 13px}.control-row{display:flex;align-items:center;gap:15px}.search{flex:1;min-width:220px;position:relative}.search span{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:1.08rem;color:var(--faint)}.search input{width:100%;height:45px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);padding:0 14px 0 44px;font-size:.9rem;color:var(--ink)}.sort{height:45px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);padding:0 12px;color:var(--ink-2);max-width:178px}.ghostbtn{height:45px;border:1px solid var(--line-2);background:transparent;border-radius:9px;padding:0 14px;color:var(--ink-2);font-size:.8rem;font-weight:750;white-space:nowrap}.ghostbtn:hover{border-color:var(--accent);color:var(--accent-text)}.export{height:45px;background:var(--btn-dark);border:0;border-radius:9px;padding:0 17px;color:var(--btn-dark-ink);font-size:.8rem;font-weight:750}.export:hover{background:var(--btn-dark-hi)}.pills{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding:12px 0 0}.pills::-webkit-scrollbar{display:none}.pill{flex:none;border:1px solid var(--line-2);border-radius:99px;background:transparent;padding:9px 14px;font-size:.74rem;font-weight:850;color:var(--ink-2)}.pill:hover{border-color:var(--accent)}.pill.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}.pill.fav span{color:var(--accent);font-size:.9rem;line-height:1}.pill.fav.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.pill.fav.active span{color:var(--on-accent)}.favhint{color:var(--accent-text);font-weight:850}.pill small{opacity:.56;margin-left:5px;font-size:.7rem}.resultbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:26px 0 20px;font-size:.76rem;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}.savedtoggle{border:0;background:transparent;color:var(--ink-2);text-transform:uppercase;font-size:.76rem;font-weight:850;letter-spacing:.07em}.savedtoggle.on{color:var(--accent-text)}.dot{height:8px;width:8px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:8px}
 
     /* Karten */
     .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;align-items:start}.item{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:13px;overflow:hidden;transition:transform .2s,box-shadow .2s,border-color .2s}.item:hover{transform:translateY(-4px);box-shadow:var(--shadow)}.item.open{border-color:var(--accent-line);box-shadow:var(--shadow)}.item.open:hover{transform:none}.item.flash{animation:flash 1.6s ease}@keyframes flash{0%,40%{box-shadow:0 0 0 4px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
-    .thumb{aspect-ratio:5/4;background:var(--thumb);position:relative;overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s,transform .5s}.thumb.loaded img{opacity:1}.item:hover .thumb img{transform:scale(1.035)}.thumb.fit-contain img{object-fit:contain}.thumb.loading{background:linear-gradient(100deg,var(--thumb) 30%,var(--thumb-hi) 50%,var(--thumb) 70%);background-size:300% 100%;animation:shimmer 1.4s linear infinite}@keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
-    .fallback{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:22px;color:var(--ink-2);font-size:.9rem;font-weight:750;background:radial-gradient(circle at 15% 16%,var(--accent-tint),var(--thumb) 75%)}.fallback small{font-weight:600;font-size:.76rem;color:var(--muted)}.thumb.failed img{display:none}.thumb.failed .fallback{display:flex}
+    .thumb{aspect-ratio:5/4;background:var(--thumb);position:relative;overflow:hidden;touch-action:pan-y}.thumb .track{position:absolute;inset:0}.thumb .cslide img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s,transform .5s}.thumb .cslide.loaded img{opacity:1}.item:hover .thumb .cslide img{transform:scale(1.03)}.thumb.fit-contain .cslide img{object-fit:contain}.thumb.loading{background:linear-gradient(100deg,var(--thumb) 30%,var(--thumb-hi) 50%,var(--thumb) 70%);background-size:300% 100%;animation:shimmer 1.4s linear infinite}@keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
+    .fallback{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:22px;color:var(--ink-2);font-size:.9rem;font-weight:750;background:radial-gradient(circle at 15% 16%,var(--accent-tint),var(--thumb) 75%)}.fallback small{font-weight:600;font-size:.76rem;color:var(--muted)}.thumb.failed .track{display:none}.thumb.failed .fallback{display:flex}
     .thumb:after{content:"";position:absolute;inset:55% 0 0;background:linear-gradient(transparent,#1a0e052e);pointer-events:none}
     .casenum{position:absolute;left:12px;top:12px;z-index:2;background:var(--chip-bg);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:99px;padding:5px 10px;font-size:.66rem;font-weight:900;letter-spacing:.12em;color:var(--chip-ink);pointer-events:none}
     .hit{position:absolute;inset:0;z-index:1;border:0;background:transparent;padding:0;display:flex;align-items:flex-end;justify-content:flex-end}.hit:focus-visible{outline-offset:-4px}
     .plus{margin:12px;height:38px;min-width:38px;padding:0 13px;border-radius:99px;background:var(--accent);color:var(--on-accent);display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:.74rem;font-weight:900;letter-spacing:.04em;box-shadow:0 0 0 2px #fffdf9cc,0 6px 18px #00000033;transition:background .2s}.plus i{font-style:normal;font-size:1.25rem;line-height:1;display:inline-block;transition:transform .25s}.item.open .plus i{transform:rotate(45deg)}.hit:hover .plus{background:var(--accent-hi)}.plus em{font-style:normal}
     .iconbtn{position:absolute;z-index:2;height:36px;width:36px;border-radius:100%;border:1px solid #ffffffae;background:#ffffffdb;display:grid;place-items:center;color:#2b2016;padding:0;font-size:1.05rem}.iconbtn:hover{background:#fff}.iconbtn svg{width:17px;height:17px}
-    .save{right:12px;top:12px}.save.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+    .save{right:12px;top:12px}.save.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.save.pop{animation:pop .35s ease}@keyframes pop{50%{transform:scale(1.25)}}
+    .vnav{position:absolute;top:50%;z-index:2;transform:translateY(-50%);height:34px;width:34px;border-radius:50%;border:1px solid #ffffff8c;background:#ffffffd9;color:#2b2016;display:grid;place-items:center;padding:0;opacity:0;transition:opacity .2s}.vnav svg{width:16px;height:16px}.vprev{left:10px}.vnext{right:10px}.thumb.multi:hover .vnav,.vnav:focus-visible{opacity:1}@media(hover:none){.thumb.multi .vnav{opacity:.92}}.vnav[hidden]{display:none}
+    .vdots{position:absolute;z-index:2;left:50%;bottom:24px;transform:translateX(-50%);display:flex;gap:5px;pointer-events:none}.vdots span{height:6px;width:6px;border-radius:9px;background:#ffffffa6;box-shadow:0 0 0 1px #0000002e;transition:width .25s,background .25s}.vdots span.on{width:16px;background:var(--accent)}
+    .vbadge{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#000000a6;color:#fff;font-size:.6rem;font-weight:850;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:99px;white-space:nowrap}
     .zoom{left:12px;bottom:12px;width:38px;height:38px}
     .details{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s ease}.item.open .details{grid-template-rows:1fr}.details>div{overflow:hidden;min-height:0}.dbody{padding:20px 20px 22px}
     .micro{display:flex;justify-content:space-between;gap:10px;font-size:.67rem;letter-spacing:.12em;color:var(--faint);font-weight:900;text-transform:uppercase}.dbody h3{font-size:clamp(1.3rem,1.6vw,1.7rem);line-height:1.1;letter-spacing:-.042em;margin:12px 0 6px}.who{font-size:.84rem;font-weight:750;color:var(--ink-2);margin:0 0 12px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.tags span{font-size:.64rem;font-weight:850;letter-spacing:.06em;border-radius:99px;padding:4px 9px;background:var(--surface-2);color:var(--ink-2)}.tags .caution{background:var(--accent-tint);color:var(--accent-text)}
@@ -96,7 +100,7 @@
     .question{background:var(--accent-tint);padding:12px 13px;border-radius:7px;color:var(--ink);font-size:.84rem;line-height:1.45;margin:4px 0 6px}.question b{display:block;color:var(--accent-text);font-size:.63rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px}
     .disclaimer{border-left:3px solid var(--accent);background:var(--warn-bg);padding:10px 12px;border-radius:4px;font-size:.8rem;color:var(--warn-ink);margin:10px 0 4px;line-height:1.5}
     .links{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.external{display:inline-flex;background:var(--btn-dark);color:var(--btn-dark-ink);text-decoration:none;border-radius:999px;padding:9px 14px;font-size:.76rem;font-weight:850}.external:hover{background:var(--btn-dark-hi)}.external.alt{background:transparent;border:1px solid var(--line-2);color:var(--ink)}.external.alt:hover{border-color:var(--accent)}
-    .srclist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}.srclist li{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--muted);min-width:0}.srclist a{text-decoration:none;border-bottom:1px solid var(--line-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.srclist a:hover{border-color:var(--accent)}.srclist span{flex:none}.srclist b{flex:none;height:8px;width:8px;border-radius:50%;background:var(--line-2)}.srclist li.ok b{background:#3fa66a}.srclist li.bad b{background:#d35a3a}.srclist li.ok{color:var(--ink);font-weight:700}.rights{font-size:.7rem;color:var(--faint);margin:14px 0 0}
+    .srclist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}.srclist li{display:flex;align-items:flex-start;gap:8px;font-size:.75rem;color:var(--muted);min-width:0;line-height:1.6}.srclist li>div{min-width:0}.srclist strong{color:var(--ink);font-weight:750}.srclist a{text-decoration:none;border-bottom:1px solid var(--line-2);word-break:break-all}.srclist a.win{color:var(--accent-text);border-color:var(--accent)}.srclist a:hover{border-color:var(--accent)}.srclist b{flex:none;height:8px;width:8px;border-radius:50%;background:var(--line-2);margin-top:6px}.srclist li.ok b{background:#3fa66a}.srclist li.bad b{background:#d35a3a}.rights{font-size:.7rem;color:var(--faint);margin:14px 0 0}
     .empty{padding:75px 20px;text-align:center;border:1px dashed var(--line-2);border-radius:12px;color:var(--muted);grid-column:1/-1}.empty h3{color:var(--ink);margin-top:0}
 
     /* Methode & Fuß */
@@ -105,15 +109,15 @@
 
     /* Vollbild */
     .lightbox{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#0b0907;color:#fff;overflow:hidden}.lightbox::backdrop{background:#000c}
-    .lb-stage{position:absolute;inset:0;display:grid;place-items:center;padding:64px 16px 76px}.lb-stage img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;opacity:0;transition:opacity .3s;border-radius:4px;box-shadow:0 20px 80px #000a}.lb-stage.loaded img{opacity:1}.lb-stage .lb-msg{position:absolute;color:#cdbfae;font-size:.9rem;font-weight:700;display:none}.lb-stage.loading .lb-msg,.lb-stage.failed .lb-msg{display:block}
+    .lb-stage{position:absolute;inset:0;overflow:hidden;touch-action:pan-y}.lb-stage .cslide{display:grid;place-items:center;padding:64px 70px 84px}.lb-stage .cslide img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;opacity:0;transition:opacity .3s;border-radius:4px;box-shadow:0 20px 80px #000a}.lb-stage .cslide.loaded img{opacity:1}.lb-stage .cslide.msg span{color:#cdbfae;font-size:.9rem;font-weight:700}.lb-stage .vbadge{top:70px}
     .lb-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;z-index:2}.lb-count{font-size:.72rem;font-weight:900;letter-spacing:.14em;color:#e9dccd}.lb-actions{display:flex;gap:8px}
     .lb-btn{height:42px;min-width:42px;border-radius:99px;border:1px solid #ffffff38;background:#ffffff14;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;font-size:.76rem;font-weight:800;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.lb-btn:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}.lb-btn svg{width:18px;height:18px;flex:none}
     .lb-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2}.lb-prev{left:14px}.lb-next{right:14px}
-    .lb-bottom{position:absolute;bottom:0;left:0;right:0;padding:16px;display:flex;justify-content:center;z-index:2}
+    .lb-bottom{position:absolute;bottom:0;left:0;right:0;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:2;pointer-events:none}.lb-bottom>*{pointer-events:auto}.lb-dots{display:flex;gap:6px}.lb-dots span{height:6px;width:6px;border-radius:9px;background:#ffffff59}.lb-dots span.on{width:18px;background:var(--accent)}
 
     @media(max-width:1060px){.hero{gap:35px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:clamp(3.6rem,7vw,6rem)}}
-    @media(max-width:760px){.wrap{width:min(100% - 32px,1440px)}.topbar{height:62px}.topnav a,.navnum{display:none}.themebtn em{display:none}.themebtn{padding:0 9px}.hero{grid-template-columns:1fr;padding:45px 0 70px;gap:50px}.hero h1{font-size:clamp(3.45rem,13vw,6rem)}.heroart{max-width:590px;margin:0 auto;width:100%}.feature-stamp{right:-4px;top:-30px;width:88px;height:88px;font-size:.62rem}.feature-caption{left:16px;right:16px;bottom:58px}.hero-footer{gap:25px;margin-top:35px}.section{padding:51px 0}.section-head{display:block}.section-note{margin:13px 0 0}.statement{grid-template-columns:1fr;margin-bottom:45px}.statement>div,.statement>div+div{border-left:0;padding:18px 0}.statement>div+div{border-top:1px solid var(--line)}.control-row{flex-wrap:wrap;gap:10px}.search{flex-basis:100%}.sort{flex:1;max-width:none;min-width:0}.ghostbtn,.export{flex:none;padding:0 12px}.grid{grid-template-columns:1fr;gap:17px}.method{margin-top:55px;padding:56px 0}.method-grid,.closing-grid{grid-template-columns:1fr;gap:30px}.closing{padding:55px 0}.hero-stat strong{font-size:1.25rem}.plus em{display:none}.resultbar{font-size:.68rem}.lb-nav{top:auto;bottom:14px;transform:none}.lb-stage{padding:60px 8px 74px}.lb-btn em{display:none}}
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.item,.thumb img,.details,.plus i,.slide{transition:none}.thumb.loading,.slide .media.loading{animation:none}}
+    @media(max-width:760px){.wrap{width:min(100% - 32px,1440px)}.topbar{height:62px}.topnav a,.navnum{display:none}.themebtn em{display:none}.themebtn{padding:0 9px}.hero{grid-template-columns:1fr;padding:45px 0 70px;gap:50px}.hero h1{font-size:clamp(3.45rem,13vw,6rem)}.heroart{max-width:590px;margin:0 auto;width:100%}.feature-stamp{right:-4px;top:-30px;width:88px;height:88px;font-size:.62rem}.feature-caption{left:16px;right:16px;bottom:58px}.hero-footer{gap:25px;margin-top:35px}.section{padding:51px 0}.section-head{display:block}.section-note{margin:13px 0 0}.statement{grid-template-columns:1fr;margin-bottom:45px}.statement>div,.statement>div+div{border-left:0;padding:18px 0}.statement>div+div{border-top:1px solid var(--line)}.control-row{flex-wrap:wrap;gap:10px}.search{flex-basis:100%}.sort{flex:1;max-width:none;min-width:0}.ghostbtn,.export{flex:none;padding:0 12px}.grid{grid-template-columns:1fr;gap:17px}.method{margin-top:55px;padding:56px 0}.method-grid,.closing-grid{grid-template-columns:1fr;gap:30px}.closing{padding:55px 0}.hero-stat strong{font-size:1.25rem}.plus em{display:none}.resultbar{font-size:.68rem}.lb-nav{top:auto;bottom:14px;transform:none}.lb-stage .cslide{padding:60px 8px 120px}.lb-btn em{display:none}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.item,.thumb img,.details,.plus i,.cslide{transition:none}.thumb.loading,.cslide .media.loading{animation:none}}
   </style>
 </head>
 <body>
@@ -146,8 +150,8 @@
           <button class="feature-stamp" id="slReveal" type="button" aria-pressed="false" aria-controls="slides">WAS<br>SIEHT MAN<br>DA?</button>
           <div class="feature-frame">
             <div class="slider" id="slider" role="region" aria-roledescription="Karussell" aria-label="Vorschau ausgewählter Bildfälle">
-              <div id="slides"></div>
-              <div class="sliderbar">
+              <div class="track" id="slides"></div>
+              <div class="sliderbar" data-nodrag>
                 <div class="dots" id="dots" role="group" aria-label="Bild wählen"></div>
                 <button class="sbtn" id="slPause" type="button" aria-label="Automatischen Wechsel anhalten"><svg><use href="#i-pause"/></svg></button>
                 <button class="sbtn" id="slPrev" type="button" aria-label="Vorheriges Bild"><svg><use href="#i-left"/></svg></button>
@@ -169,11 +173,11 @@
         <div><span class="num">02 / SOZIAL</span><h3>Darstellen ≠ Neutral sein</h3><p>Bildgeneratoren reproduzieren, vereinheitlichen und gelegentlich verstärken erlernte kulturelle Stereotype.</p></div>
         <div><span class="num">03 / PSYCHOLOGISCH</span><h3>Erinnern ≠ Erlebt haben</h3><p>Auch synthetische Bilder können Vertrauen, Nostalgie, Empathie und unter Umständen falsche Erinnerungen hervorrufen.</p></div>
       </div>
-      <div class="section-head" id="archiv"><div><div class="overline">Das Bildarchiv</div><h2>Ikonen, Irrtümer<br>& Kontroversen.</h2></div><p class="section-note">Zuerst nur das Bild: Jeder Fall zeigt sich ohne Titel und Herkunft. <strong>⤢</strong> öffnet das Bild im Vollbild, <strong>＋ Details</strong> klappt Kontext, Leitfrage, Quellenstatus und Quellen auf. Jedes Bild wird von mehreren externen Quellen geladen – fällt eine aus, springt automatisch die nächste ein.</p></div>
+      <div class="section-head" id="archiv"><div><div class="overline">Das Bildarchiv</div><h2>Ikonen, Irrtümer<br>& Kontroversen.</h2></div><p class="section-note">Zuerst nur das Bild: Jeder Fall zeigt sich ohne Titel und Herkunft. <strong>⤢</strong> öffnet das Bild im Vollbild, <strong>☆</strong> merkt es als Favorit, <strong>＋ Details</strong> klappt Kontext, Leitfrage, Quellenstatus und Quellen auf. Gibt es mehrere Bildvarianten, lässt sich mit Pfeilen oder Wischen durchblättern. Jedes Bild wird von mehreren externen Quellen geladen – fällt eine aus, springt automatisch die nächste ein.</p></div>
     </section>
 
     <div class="controls"><div class="wrap"><div class="control-row"><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Suche: Mond, Bias, Rembrandt, Fotografie …" aria-label="Bildarchiv durchsuchen"></label><select class="sort" id="sort" aria-label="Sortieren"><option value="featured">Kuratiert</option><option value="newest">Neueste zuerst</option><option value="oldest">Älteste zuerst</option><option value="alpha">A–Z</option></select><button class="ghostbtn" id="toggleAll" aria-pressed="false">Alle aufklappen</button><button class="export" id="export" title="Sichtbare Fälle als CSV für Tabellen und Forschungsnotizen exportieren">CSV ↓</button></div><div class="pills" id="pills" aria-label="Themenfilter"></div></div></div>
-    <section class="wrap" aria-label="Bildkatalog"><div class="resultbar"><div><span class="dot"></span><span id="resultCount">Bilder werden geladen</span></div><button class="savedtoggle" id="savedOnly" aria-pressed="false">☆ Merkliste anzeigen</button></div><div class="grid" id="gallery"></div></section>
+    <section class="wrap" aria-label="Bildkatalog"><div class="resultbar"><div><span class="dot"></span><span id="resultCount">Bilder werden geladen</span></div><span class="favhint" id="favHint"></span></div><div class="grid" id="gallery"></div></section>
 
     <section class="method" id="methode"><div class="wrap method-grid"><div><div class="overline">Vorschlag für die Forschung</div><h2>Erst sehen.<br>Dann wissen.<br>Dann neu sehen.</h2><p>Für eine kulturpsychologische Untersuchung lohnt sich eine zweistufige Präsentation: zunächst das Bild ohne Herkunftsinformation, anschließend mit Aufklärung über Entstehung, Verbreitung und Kontroverse. Das Archiv oben ist genau so aufgebaut: Das Bild steht allein, die Einordnung folgt erst nach dem Aufklappen.</p><p>Besonders aufschlussreich ist das Paar <strong>„The Electrician“</strong> (KI-Bild, als Fotografie ausgezeichnet) und <strong>„FLAMINGONE“</strong> (echte Fotografie, als KI ausgezeichnet). Es macht sichtbar, dass Fehlurteile in beide Richtungen möglich sind.</p></div><div class="steps"><div class="step"><i>01</i><div><strong>Blindes Urteil erfassen</strong><p>Ist das Bild echt, KI-generiert oder unklar? Sicherheit auf einer Skala dokumentieren.</p></div></div><div class="step"><i>02</i><div><strong>Emotion & Bedeutung erfragen</strong><p>Vertrauen, Irritation, Nostalgie, Empathie und spontane kulturelle Assoziationen messen.</p></div></div><div class="step"><i>03</i><div><strong>Provenienz offenlegen</strong><p>Quelle, Herstellungsweise und offene Fragen getrennt von Spekulationen darstellen.</p></div></div><div class="step"><i>04</i><div><strong>Urteil erneut erfassen</strong><p>Verändern sich Glaubwürdigkeit, ästhetischer Wert, moralische Bewertung und Erinnerung an das Bild?</p></div></div></div></div></section>
   </main>
@@ -181,11 +185,11 @@
   <footer class="closing"><div class="wrap closing-grid"><div><div class="eyebrow">Diskussion statt Bildgläubigkeit</div><h2>Die Frage ist<br>nicht nur:<br><span style="color:var(--accent)">„Ist es KI?“</span></h2><p>Sondern auch: Warum vertrauen wir diesem Bild? Welche Welt wird darin sichtbar? Und welche bleibt unsichtbar?</p></div><div><div class="overline">Über diesen Atlas</div><p>Diese Sammlung vereint dokumentierte Kunstwerke, virale Desinformation, wissenschaftliche Rekonstruktionen, Forschungsillustrationen, algorithmische Fehler und Internet-Memes. Sie ist ein Arbeitsinstrument für eine kulturpsychologische Analyse, keine vollständige Chronik der KI-Bildgeschichte.</p><p class="copyright"><strong>Quellen & Rechte.</strong> Diese Seite enthält selbst keine Bilddateien. Jedes Bild wird direkt von externen Adressen geladen: zuerst von der jeweiligen Originalseite, dann – falls diese nicht antwortet – von unabhängigen Zweitquellen, dem öffentlichen Bildcache wsrv.nl oder dem Internet Archive. Nur wenn all das scheitert, erscheint bei einigen Fällen ein ausdrücklich gekennzeichnetes vergleichbares Motiv. Welche Quelle gerade genutzt wird, steht in den Details jedes Falls. Das bedeutet keine freie Nachnutzung: Vor Veröffentlichung oder Weiterverbreitung bitte individuelle Nutzungsrechte prüfen. Technische Ursachen sind bei ungeklärten Vorfällen ausdrücklich als unbestätigt gekennzeichnet.</p><small>Kuratiert für die kulturpsychologische Diskussion · Stand: 3. November 2026</small></div></div></footer>
 
   <dialog class="lightbox" id="lightbox" aria-label="Bild im Vollbild">
-    <div class="lb-stage" id="lbStage"><img id="lbImg" alt="" referrerpolicy="no-referrer"><span class="lb-msg" id="lbMsg">Bild wird geladen …</span></div>
+    <div class="lb-stage" id="lbStage"><div class="track" id="lbTrack"></div></div>
     <div class="lb-top"><span class="lb-count" id="lbCount"></span><div class="lb-actions"><button class="lb-btn" id="lbClose" type="button" aria-label="Vollbild verlassen"><svg><use href="#i-shrink"/></svg><em>Verkleinern</em></button></div></div>
     <button class="lb-btn lb-nav lb-prev" id="lbPrev" type="button" aria-label="Vorheriges Bild"><svg><use href="#i-left"/></svg></button>
     <button class="lb-btn lb-nav lb-next" id="lbNext" type="button" aria-label="Nächstes Bild"><svg><use href="#i-right"/></svg></button>
-    <div class="lb-bottom"><button class="lb-btn" id="lbDetails" type="button">＋ Details zu diesem Bild</button></div>
+    <div class="lb-bottom"><div class="lb-dots" id="lbDots" aria-hidden="true"></div><button class="lb-btn" id="lbDetails" type="button">＋ Details zu diesem Bild</button></div>
   </dialog>
 
   <script>
@@ -242,32 +246,54 @@
     {id:'codedgaze',title:'The Coded Gaze – sichtbar nur mit Maske',year:2018,who:'Joy Buolamwini · MIT Media Lab',topics:['Geschichte','Kultur','Wahrnehmung'],type:'Dokumentation eines Erkennungsfehlers',certainty:'belegt',featured:47,images:['https://media.wbur.org/wp/2020/11/1118_coded-bias-1.jpg','https://www.ciffcalgary.ca/assets/Films/2020/e511b32224/157391_JoyinMaskStill.png','https://images.ctfassets.net/3k9mve5oh53t/1JAiiRoW9PNro8RSrE1VYT/aea2695f9e587c7527eacc5c4c32646c/PH20_Shalini_Kantayya_Coded_Bias.png'],similar:['https://news.mit.edu/sites/default/files/images/201802/MIT-Gender-Shades-A1.jpg'],summary:'Eine junge Schwarze Forscherin hält sich eine weiße Maske vor das Gesicht – erst dann meldet die Software: Gesicht erkannt.',question:'Was bedeutet es, wenn eine Maschine manche Menschen schlicht nicht sieht?',context:'Als Doktorandin am MIT Media Lab stellte Joy Buolamwini fest, dass eine Gesichtserkennung ihr Gesicht erst erkannte, als sie eine weiße Maske trug; sie nannte das „Coded Gaze“. In der Studie „Gender Shades“ (2018, mit Timnit Gebru) testete sie Systeme von IBM, Microsoft und Face++ an 1.270 Gesichtern: Bei hellhäutigen Männern lag die Fehlerquote höchstens bei 0,8 Prozent, bei dunkelhäutigen Frauen bei bis zu 34,7 Prozent. Der Dokumentarfilm „Coded Bias“ (2020) machte das Maskenbild weltbekannt.',caveat:'Filmstill aus „Coded Bias“; zeigt eine reale, öffentlich bekannte Forscherin.',source:'https://news.mit.edu/2018/study-finds-gender-skin-type-bias-artificial-intelligence-systems-0212',sourceLabel:'Bericht · MIT News',extra:'https://www.media.mit.edu/projects/gender-shades/overview/'},
     {id:'obamadeepfake',title:'„Obama“ warnt vor Deepfakes',year:2018,who:'BuzzFeed · Jordan Peele / Monkeypaw Productions',topics:['Geschichte','Wahrheit','Politik'],type:'Standbild eines Deepfake-Aufklärungsvideos',certainty:'belegt',featured:48,images:['https://www.tubefilter.com/wp-content/uploads/2018/04/Obama-Peele-BuzzFeed-fake-news-video-1400x825.jpg','https://thegrio.com/wp-content/uploads/2018/04/Obama-Jordan-Peele--scaled.jpg','https://static.euronews.com/articles/stories/03/13/07/21/1200x675_cmsv2_67f63061-5f4f-5634-85f7-7304e10abc18-3130721.jpg'],similar:['https://acmi-website-media-prod.s3.amazonaws.com/media/original_images/Jordan_Pelle_Barack_Obama_Deepfake_Video_Buzzfeed.jpg.1200x1200_q85.jpg'],summary:'Barack Obama scheint in die Kamera zu sprechen – doch Stimme und Worte gehören einem Comedian.',question:'Schützt ein Video, das mit einer Fälschung vor Fälschungen warnt – oder gewöhnt es uns an sie?',context:'Im April 2018 veröffentlichte BuzzFeed mit dem Regisseur Jordan Peele ein Video, in dem ein manipulierter Obama Dinge sagt, die er nie gesagt hat; Peele lieh ihm die Stimme. Erzeugt wurde es mit Videobearbeitung und der frühen Deepfake-Software FakeApp. Am Ende zeigt ein geteilter Bildschirm den Trick. Das Video gehörte zu den ersten Deepfakes, die ein breites Publikum erreichten, und war als Warnung vor Desinformation gedacht.',caveat:'Absichtlich als Fälschung kenntlich gemachtes Aufklärungsvideo über einen realen Politiker.',source:'https://www.euronews.com/2018/04/17/watch-obama-appears-in-fake-news-awareness-video-or-does-he-',sourceLabel:'Bericht · Euronews',extra:'https://www.acmi.net.au/works/60888--jordan-peeles-fake-news-psa-with-barack-obama/'},
     {id:'imagenetroulette',title:'ImageNet Roulette – wie Maschinen Menschen etikettieren',year:2019,who:'Kate Crawford & Trevor Paglen · Fondazione Prada',topics:['Geschichte','Kultur'],type:'Kunstprojekt über Trainingsdaten',certainty:'belegt',featured:49,images:['https://storage.ghost.io/c/51/f8/51f871d8-b6be-4a73-b958-0ca4fff0110a/content/images/hyperallergic-newspack-s3-amazonaws-com/uploads/2019/09/landeemvaorw4aal7sa.jpg','https://www.artribune.com/wp-content/uploads/events/2019/09/10/76214_Fondazione%20Prada%20-%20Training%20Humans%2016%20(1200x1200).jpg'],similar:['https://www.ilpost.it/wp-content/uploads/2019/09/prada_08-400x540.jpg'],summary:'Zwei Gesichter mit grünen Rahmen und Etiketten – vergeben von einem Modell, das auf Personenkategorien eines berühmten Bilddatensatzes trainiert wurde.',question:'Welche Weltsicht steckt in den Kategorien, mit denen Maschinen Menschen einordnen lernen?',context:'Für die Ausstellung „Training Humans“ (Mailand, ab September 2019) entwickelten Kate Crawford und Trevor Paglen eine App, die hochgeladene Selfies mit den Personenkategorien des Datensatzes ImageNet beschriftete – oft mit rassistischen und frauenfeindlichen Begriffen. Das Projekt ging viral. Kurz darauf stufte das ImageNet-Team 1.593 von 2.832 Personenkategorien als problematisch ein und kündigte an, rund 600.000 Bilder zu entfernen. Die Online-Version wurde Ende September 2019 abgeschaltet.',caveat:'Gezeigt werden die Künstler selbst, nicht etikettierte Fotos von Privatpersonen. Ein direkter Zusammenhang mit der Bereinigung ist eine Einordnung der Presse.',source:'https://image-net.org/update-sep-17-2019',sourceLabel:'Stellungnahme · ImageNet',extra:'https://hyperallergic.com/518822/600000-images-removed-from-ai-database-after-art-project-exposes-racist-bias/'},
-    {id:'avocado',title:'Ein Sessel in Form einer Avocado',year:2021,who:'OpenAI · DALL·E',topics:['Geschichte','Kunst'],type:'Frühe Text-zu-Bild-Ergebnisse',certainty:'belegt',featured:50,images:['https://i.gzn.jp/img/2021/01/06/openai-dall-e/03.png','https://cdn.thenewstack.io/media/2021/01/fabc6bdd-7053f3db-dall-e-openai-1.png'],fit:'contain',summary:'Ein Raster grüner Sessel mit Kern als Kissen – entstanden aus einem einzigen Satz.',question:'Warum wurde ausgerechnet ein absurdes Möbelstück zum Symbol einer neuen Bildtechnik?',context:'Am 5. Januar 2021 stellte OpenAI DALL·E vor, ein Modell mit zwölf Milliarden Parametern, das Bilder aus Textbeschreibungen erzeugt. Die Eingabe „an armchair in the shape of an avocado“ wurde zum Aushängeschild: Sie zeigte, dass das Modell Begriffe kombinieren kann, die nie zusammen fotografiert wurden. Der Name verbindet Salvador Dalí und den Pixar-Roboter WALL·E. Öffentlich nutzbar war das Modell damals noch nicht; den Durchbruch für alle brachten 2022 DALL·E 2, Midjourney und Stable Diffusion.',source:'https://openai.com/index/dall-e/',sourceLabel:'Ankündigung · OpenAI',extra:'https://thenewstack.io/avocado-chairs-at-the-intersection-of-human-language-and-neural-networks/'}
+    {id:'avocado',title:'Ein Sessel in Form einer Avocado',year:2021,who:'OpenAI · DALL·E',topics:['Geschichte','Kunst'],type:'Frühe Text-zu-Bild-Ergebnisse',certainty:'belegt',featured:50,images:['https://i.gzn.jp/img/2021/01/06/openai-dall-e/03.png','https://cdn.thenewstack.io/media/2021/01/fabc6bdd-7053f3db-dall-e-openai-1.png'],fit:'contain',summary:'Ein Raster grüner Sessel mit Kern als Kissen – entstanden aus einem einzigen Satz.',question:'Warum wurde ausgerechnet ein absurdes Möbelstück zum Symbol einer neuen Bildtechnik?',context:'Am 5. Januar 2021 stellte OpenAI DALL·E vor, ein Modell mit zwölf Milliarden Parametern, das Bilder aus Textbeschreibungen erzeugt. Die Eingabe „an armchair in the shape of an avocado“ wurde zum Aushängeschild: Sie zeigte, dass das Modell Begriffe kombinieren kann, die nie zusammen fotografiert wurden. Der Name verbindet Salvador Dalí und den Pixar-Roboter WALL·E. Öffentlich nutzbar war das Modell damals noch nicht; den Durchbruch für alle brachten 2022 DALL·E 2, Midjourney und Stable Diffusion.',source:'https://openai.com/index/dall-e/',sourceLabel:'Ankündigung · OpenAI',extra:'https://thenewstack.io/avocado-chairs-at-the-intersection-of-human-language-and-neural-networks/'},
+    {id:'christies',title:'Augmented Intelligence – die erste KI-Kunstauktion',year:2025,who:'Christie’s New York · Top-Los von Refik Anadol',topics:['Kunst','Business'],type:'Auktion für KI-Kunst',certainty:'belegt',featured:51,images:['https://www.christies.com/img/LotImages/2025/NYR/2025_NYR_23942_0006_000(refik_anadol_machine_hallucinations_-_iss_dreams_-_a014602).jpg?mode=max','https://resources.heni.com/ef96309b-1aa0-4807-9821-3296144aee5e.jpg?width=1024','https://cdn.sanity.io/images/cxgd3urn/production/b02b4ee36351040fbcce7f1d16a68b322e68232c-1236x2000.jpg?w=1200&h=1942&q=85&fit=crop&auto=format'],summary:'Fließende Farbfelder aus Hunderttausenden Aufnahmen der Raumstation ISS – das teuerste Los der ersten großen Auktion, die nur KI-Kunst versteigerte.',question:'Ist KI-Kunst Einfluss oder Aneignung – und wer entscheidet das: der Markt oder die Künstlerinnen?',context:'Christie’s versteigerte vom 20. Februar bis 5. März 2025 34 Werke, 28 fanden Käufer, der Gesamterlös lag bei 728.784 Dollar. Spitzenlos war Refik Anadols „Machine Hallucinations – ISS Dreams – A“ für 277.200 Dollar; dabei waren auch Arbeiten von Harold Cohen und Holly Herndon & Mat Dryhurst. Ein offener Brief forderte die Absage, weil viele Modelle mit urheberrechtlich geschützten Werken ohne Lizenz trainiert seien; bis Ende der Auktion unterschrieben fast 6.500 Menschen. Christie’s hielt an der Auktion fest.',caveat:'Der Vorwurf des „Diebstahls“ ist rechtlich umstritten und nicht entschieden. Die Angaben zum Schätzwert der Auktion weichen zwischen Quellen ab.',source:'https://www.theartnewspaper.com/2025/03/05/christies-augmented-intelligence-sale',sourceLabel:'Bericht · The Art Newspaper',extra:'https://www.npr.org/2025/02/17/nx-s1-5296911/christies-ai-art-auction-protests'},
+    {id:'zarya',title:'Zarya of the Dawn – Urheberrecht ohne Bilder',year:2023,who:'Kris Kashtanova · US Copyright Office',topics:['Kunst','Business'],type:'Comic mit Midjourney-Bildern',certainty:'belegt',featured:52,images:['https://creativecommons.org/wp-content/uploads/2023/02/Zarya-of-the-Dawn.jpg','https://img.onmanorama.com/content/dam/mm/en/news/world/images/2023/2/23/zarya-of--the-dawn.jpg'],similar:['https://www.thefashionlaw.com/wp-content/uploads/2023/01/aicomicbook-1024x538.webp'],summary:'Eine junge Frau in einer dunklen, verlassenen Stadt – eine Figur aus einem 18-seitigen Comic, dessen Bilder mit Midjourney entstanden.',question:'Wem gehört ein Bild, wenn ein Mensch die Geschichte erzählt, aber eine Maschine die Bilder zeichnet?',context:'Das US Copyright Office registrierte den Comic 2022 zunächst vollständig. Nach Bekanntwerden des KI-Einsatzes beschränkte es den Schutz im Februar 2023 auf den Text sowie die Auswahl und Anordnung von Text und Bildern; die Midjourney-Bilder selbst seien mangels menschlicher Urheberschaft nicht schutzfähig. Die Entscheidung prägte den Grundsatz, dass nur menschliche Gestaltung urheberrechtlich zählt.',source:'https://www.copyright.gov/docs/zarya-of-the-dawn.pdf',sourceLabel:'Entscheidung · US Copyright Office',extra:'https://creativecommons.org/2023/02/27/zarya-of-the-dawn-us-copyright-office-affirms-limits-on-copyright-of-ai-outputs/'},
+    {id:'xhairymutantx',title:'xhairymutantx – alle Bilder werden Holly',year:2024,who:'Holly Herndon & Mat Dryhurst · Whitney Biennial',topics:['Kunst','Kultur','Internet'],type:'KI-Modell als Kunstwerk',certainty:'belegt',featured:53,images:['https://whitneymedia.org/assets/image/830136/large_holly_herndon.jpg','https://storage.ghost.io/c/c1/40/c140e303-376f-497c-9fb7-f0b1dcb364ce/content/images/2024/03/large_Herndon_xhairymutantx_Embedding_Study_1.jpg','https://www.christies.com/img/LotImages/2025/NYR/2025_NYR_23942_0003_000(holly_herndon_amp_mat_dryhurst_embedding_study_1_amp_2060837).jpg?mode=max'],summary:'Eine Figur mit übergroßer roter Haarmähne, verzerrt und doch wiedererkennbar – egal, was man eingibt.',question:'Wie viel Kontrolle haben wir über unser Abbild, wenn das Internet zum Trainingsmaterial wird?',context:'Für die Whitney Biennial 2024 trainierten Herndon und Dryhurst ein Bildmodell auf kostümierte Bilder von Herndon. Jede Eingabe der Besucher erzeugt eine seltsame Version von ihr. Die Ergebnisse landen in einer öffentlichen Galerie auf der Website des Museums – und damit möglicherweise in den Trainingsdaten künftiger Modelle. Das Werk macht die eigene Person bewusst zum Datensatz und fragt, wer über ein Gesicht im Netz verfügt. Zwei Drucke daraus erzielten 2025 bei Christie’s 94.500 Dollar.',caveat:'Die Künstlerin hat der Nutzung ihres Abbilds selbst zugestimmt; die Bilder zeigen absichtlich verzerrte Körper.',source:'https://whitney.org/exhibitions/xhairymutantx',sourceLabel:'Ausstellung · Whitney Museum',extra:'https://onlineonly.christies.com.cn/s/augmented-intelligence/holly-herndon-b-1980-mat-dryhurst-b-1984-3/249745'},
+    {id:'passersby',title:'Memories of Passersby I',year:2019,who:'Mario Klingemann · Sotheby’s London',topics:['Kunst'],type:'Autonome generative Installation',certainty:'belegt',featured:54,images:['https://sothebys-com.brightspotcdn.com/6b/62/1d95cbd4466aa23e2900eebad3c2/klingemann-ai-art-memories-of-passerby-5.jpg','https://images.prismic.io/barnebys%2F6959c96d-3ffd-4bc8-a02f-25f074ad36df_mario+klingemann_+memories+of+passersby+i+%282018%29.+image+courtesy+sotheby%27s..jpg?auto=format%2Ccompress','https://news.artnet.com/app/news-upload/2019/02/Memories-of-Passersby-4-1024x683.jpg'],summary:'Zwei Bildschirme in Goldrahmen über einer Holzkonsole zeigen endlos neue Porträts in der Manier Alter Meister – von Menschen, die es nie gab.',question:'Kann man ein Werk besitzen, das sich nie wiederholt und nie fertig ist?',context:'Die Arbeit von 2018 kam im März 2019 bei Sotheby’s in London unter den Hammer und erzielte mit Aufgeld 40.000 Pfund. Sotheby’s bewarb sie als erstes in sich geschlossenes generatives KI-Werk auf dem Kunstmarkt. In der Konsole arbeiten mehrere GANs, trainiert auf Tausenden Porträts des 17. bis 19. Jahrhunderts; Klingemann brachte dem System seine ästhetischen Vorlieben mit einer Art Auswahl-App bei. Gemessen am Hype um „Edmond de Belamy“ fiel das Ergebnis bescheiden aus.',source:'https://www.sothebys.com/en/articles/artificial-intelligence-and-the-art-of-mario-klingemann',sourceLabel:'Einführung · Sotheby’s',extra:'https://news.artnet.com/market/artificial-intelligence-sothebys-1481590'},
+    {id:'mosaicvirus',title:'Mosaic Virus – Tulpen im Takt von Bitcoin',year:2019,who:'Anna Ridler',topics:['Kunst','Business'],type:'GAN-Videoinstallation',certainty:'belegt',featured:55,images:['https://ars.electronica.art/outofthebox/files/2019/08/48686667618_895374a749_o.jpg'],similar:['https://annaridler.com/content/works/mosaic-2019/block_2/0KH-Muc_Flowers-Forever_IMG_4628.jpg','https://dam.org/museum/wp-content/uploads/2021/06/ridler-myriad01-1024x683.jpg'],summary:'Künstliche Tulpen blühen auf drei Bildschirmen – je höher der Bitcoin-Kurs, desto stärker gestreift ihre Blüten.',question:'Was verrät der Vergleich zwischen Tulpenwahn und Krypto-Spekulation über unseren Umgang mit Wert?',context:'Ridler fotografierte während einer Residenz in den Niederlanden rund 10.000 einzelne Tulpen und beschriftete jedes Foto von Hand – ein eigener, transparenter Trainingsdatensatz. Das daraus trainierte GAN erzeugt Tulpen, deren Streifen vom aktuellen Bitcoin-Kurs gesteuert werden. Im 17. Jahrhundert waren gerade gestreifte Tulpen am wertvollsten; die Streifen stammten von einem Virus, dem Mosaikvirus. Die Arbeit erhielt 2019 eine Anerkennung beim Prix Ars Electronica.',source:'https://annaridler.com/mosaic-virus',sourceLabel:'Werkseite · Anna Ridler',extra:'https://ars.electronica.art/outofthebox/en/mosaic-virus/'},
+    {id:'zizi',title:'The Zizi Show – Drag gegen den Datensatz',year:2020,who:'Jake Elwes · V&A London',topics:['Kunst','Kultur'],type:'Deepfake-Kabarett',certainty:'belegt',featured:56,images:['https://www.jakeelwes.com/images/project-zizi-show.jpg','https://d25o917d47sdqt.cloudfront.net/app/uploads/2023/06/08105735/the-zizi-show-03.jpg'],similar:['https://www.jakeelwes.com/images/project-zizi19.jpg','https://images.euronews.com/articles/stories/07/68/75/30/1536x864_cmsv2_b06727ae-17af-5b97-a867-59301639c23a-7687530.jpg'],summary:'Schillernde Drag-Performerinnen, deren Körper und Gesichter beim Tanzen sichtbar flimmern und ineinander übergehen.',question:'Was passiert mit einem Modell, das gelernt hat, was „normal“ aussieht, wenn man ihm Vielfalt zeigt?',context:'2019 trainierte Jake Elwes ein Gesichtsmodell, das auf 70.000 Gesichtern basierte, mit 1.000 Bildern von Drag- und genderfluiden Gesichtern nach („Zizi – Queering the Dataset“). Für „The Zizi Show“ filmte er ab 2020 Londoner Drag-Künstlerinnen in einem während der Pandemie geschlossenen Kabarett; die Bewegungen einer Person lassen sich auf den Körper einer anderen übertragen, die Glitches sind gewollt. Die Mitwirkenden gaben ihre Zustimmung und werden bei Aufführungen bezahlt. Das V&A nahm eine Fassung in seine Sammlung auf und zeigte sie 2023 als erste Ausstellung seiner neuen digitalen Galerie.',caveat:'Die Deepfakes zeigen reale, namentlich beteiligte Performerinnen – mit deren Einverständnis.',source:'https://www.jakeelwes.com/project-zizi-show.html',sourceLabel:'Projektseite · Jake Elwes',extra:'https://collections.vam.ac.uk/item/O1761891/the-zizi-show-file-jake-elwes/'},
+    {id:'cocacola',title:'Coca-Colas KI-Weihnachtstrucks',year:2024,who:'Coca-Cola · Secret Level, Silverside AI, Wild Card',topics:['Business','Kultur'],type:'KI-generierter Werbespot',certainty:'belegt',featured:57,images:['https://www.adsoftheworld.com/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBM0kvRUE9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ==--e8d09e21c0e23d8f326bbed134922202bea24d3b/Coca-Cola%20-%20Silver%20Santa%20AI-Generated%20Christmas%20Ad%202024.jpg','https://the-decoder.com/wp-content/uploads/2024/11/coca_cola_ai_spot.png'],similar:['https://media-cldnry.s-nbcnews.com/image/upload/t_focal-760x428,f_auto,q_auto:best/mpx/2704722219/2024_11/1731934432495_tdy_news_7a_cheung_coke_ai_241118_1920x1080-5kbe0l.jpg','https://www.adsoftheworld.com/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBeXltRWc9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ==--e2334390ace9cf30f33f909643cfbb83f0d95752/hq720.jpg'],summary:'Rote Trucks rollen durch verschneite Städte, Menschen und Tiere staunen – der berühmte Weihnachtsspot, neu erzeugt mit KI.',question:'Warum stört uns gerade bei Weihnachtswerbung, dass niemand die Bilder gemacht hat?',context:'Im November 2024 veröffentlichte Coca-Cola drei KI-generierte Neuauflagen seines Klassikers „Holidays Are Coming“ von 1995, produziert von drei Studios mit Werkzeugen wie Runway, Luma und Kling. Viele Zuschauer empfanden die Spots als seelenlos und unheimlich; Kreative kritisierten den Verzicht auf menschliche Arbeit. Coca-Cola verteidigte die Spots als Zusammenarbeit menschlicher Erzähler mit generativer KI – und legte im November 2025 mit einer weiteren KI-Version nach, für die nach eigenen Angaben über 70.000 Clips in 30 Tagen entstanden.',source:'https://www.nbcnews.com/news/amp/rcna180665',sourceLabel:'Bericht · NBC News',extra:'https://www.today.com/today/amp/rcna241799'},
+    {id:'toysrus',title:'Toys“R”Us und der erste Sora-Werbefilm',year:2024,who:'Toys“R”Us Studios · Native Foreign · OpenAI Sora',topics:['Business'],type:'KI-generierter Markenfilm',certainty:'belegt',featured:58,images:['https://images.ctfassets.net/jdtwqhzvc2n1/6Nk5NWEcqMGT60L8hABVA3/b3155126b39c5d69fb445fce35f1a0c5/Toys_R_Us_OpenAI.jpg?w=800&q=75','https://cdn.decrypt.co/resize/1024/height/512/wp-content/uploads/2024/06/Toys-R-Us-Sora-scaled-gID_7.jpg'],summary:'Ein Junge träumt in einem nostalgisch beleuchteten Laden von einer Spielzeugwelt – doch sein Gesicht verändert sich von Einstellung zu Einstellung.',question:'Wie verändert sich eine Gründungslegende, wenn sie von einer Maschine erzählt wird?',context:'Im Juni 2024 zeigte Toys“R”Us beim Werbefestival Cannes Lions einen rund einminütigen Film über die Gründung des Unternehmens, fast vollständig erzeugt mit OpenAIs damals noch nicht öffentlichem Videomodell Sora. Die Agentur nannte ihn den ersten Markenfilm mit Sora. Kritiker fanden ihn unheimlich, verwiesen auf das wechselnde Gesicht des Jungen und fehlerhafte Hände – und warfen der Marke vor, an echten Kreativen und Kinderdarstellern zu sparen.',caveat:'Der abgebildete Junge ist eine KI-generierte Figur; gezeigt wird ein Standbild des Films.',source:'https://venturebeat.com/ai/toys-r-us-unveils-first-commercial-made-with-openais-sora',sourceLabel:'Bericht · VentureBeat',extra:'https://decrypt.co/237017/ai-film-toys-r-us-sora-controversy'},
+    {id:'levis',title:'Levi’s und die künstliche Vielfalt',year:2023,who:'Levi Strauss & Co. · Lalaland.ai',topics:['Business','Kultur'],type:'KI-generierte Models',certainty:'belegt',featured:59,images:['https://www.levistrauss.com/wp-content/uploads/2023/03/lalaland_hero.jpg','https://www.engadget.com/engadget/levis-will-supplement-human-models-with-ai-generated-fakes-190011557/8f655a20-ca72-11ed-bffb-0420addf0c0b.jpg','https://imgproxy.divecdn.com/Tk4A3H2IBRFWnACob2JwGNtgC13xGILMxR5UHz8gRrk/g:nowe:0:35/c:1167:659/rs:fill:1200:675:1/Z3M6Ly9kaXZlc2l0ZS1zdG9yYWdlL2RpdmVpbWFnZS9sYWxhbGFuZC5qcGVn.webp'],summary:'Models verschiedener Hautfarben und Körperformen in Levi’s-Kleidung – keines davon existiert.',question:'Ist synthetische Vielfalt ein Fortschritt in der Darstellung – oder ersetzt sie die Menschen, die sie zeigen soll?',context:'Im März 2023 kündigte Levi’s an, mit dem Amsterdamer Studio Lalaland.ai KI-generierte Models zu testen, um Produkte an mehr Körperformen, Altersgruppen und Hautfarben zu zeigen. Kritik folgte prompt: Das sei vorgetäuschte Diversität, die echte Models – besonders Models of Color – Aufträge koste. Sechs Tage später ergänzte Levi’s die Mitteilung: Der Test sei kein Weg, Diversität voranzubringen, und ersetze keine echten Fotoshootings.',source:'https://www.levistrauss.com/2023/03/22/lsco-partners-with-lalaland-ai/',sourceLabel:'Mitteilung · Levi Strauss & Co.',extra:'https://www.nbcnews.com/business/business-news/ai-models-levis-controversy-backlash-rcna77280'},
+    {id:'sportsillustrated',title:'Drew Ortiz – der Autor, den es nicht gab',year:2023,who:'Sports Illustrated · The Arena Group · AdVon Commerce',topics:['Business','Wahrheit'],type:'KI-generiertes Autorenporträt',certainty:'belegt',featured:60,images:['https://futurism.com/wp-content/uploads/2023/11/drew.jpg?strip=all&quality=85&w=1200&h=421'],summary:'Ein freundlicher junger Mann mit kurzen braunen Haaren lächelt neben seiner Autorenbiografie – das Foto stammt aus einem Katalog KI-generierter Gesichter.',question:'Was bleibt vom Vertrauen in eine Zeitschrift, wenn schon die Gesichter ihrer Autoren gekauft sind?',context:'Im November 2023 deckte das Magazin Futurism auf, dass Produkttests bei Sports Illustrated unter Namen erschienen, hinter denen keine realen Menschen standen. Das Porträt des angeblichen Outdoor-Fans „Drew Ortiz“ war auf einer Website für KI-Porträts käuflich, ebenso das einer weiteren Autorin. Der Verlag wies die Vorwürfe zurück, verwies auf einen externen Dienstleister, entfernte die Inhalte und beendete die Zusammenarbeit. Wenige Wochen später wurde die Konzernführung entlassen – offiziell ohne Bezug zum Skandal.',caveat:'Die Porträts zeigen synthetische Gesichter, keine realen Journalisten. Ob die Texte selbst KI-generiert waren, bestritt der Verlag.',source:'https://futurism.com/sports-illustrated-ai-generated-writers',sourceLabel:'Enthüllung · Futurism',extra:'https://www.pbs.org/newshour/economy/sports-illustrated-found-publishing-ai-generated-stories-photos-and-authors'},
+    {id:'guess',title:'Das KI-Model in der Vogue',year:2025,who:'Guess · Seraphinne Vallora · Vogue (Anzeige)',topics:['Business','Kultur'],type:'Anzeige mit KI-generiertem Model',certainty:'belegt',featured:61,images:['https://img-cdn.publive.online/filters:format(webp)/filters:format(webp)/afaqs/media/media_files/2025/07/29/mixcollage-29-jul-2025-12-20-pm-3875-2025-07-29-12-20-59.jpg'],similar:['https://storage.ghost.io/c/a2/c9/a2c929dd-49fd-47cd-9801-f80720a3d16e/content/images/size/w1200/2025/08/Vogue-and-Guess-spark-backlash-with-AI-model-ad.webp','https://cdn.abcotvs.com/dip/images/17390999_080125-wpvi-n1-vogue-ai-pkg-video--vid.jpg'],summary:'Eine makellose blonde Frau im gestreiften Sommerkleid – auf einer Doppelseite der Vogue, gekennzeichnet nur im Kleingedruckten.',question:'Welche Schönheitsnormen setzen Bilder von Körpern, die niemand haben kann, weil es sie nicht gibt?',context:'In der August-Ausgabe 2025 der amerikanischen Vogue erschien eine Guess-Anzeige mit KI-generierten Models der Londoner Agentur Seraphinne Vallora; der Hinweis darauf stand nur in kleiner Schrift. In sozialen Medien entbrannte Kritik an unrealistischen Schönheitsidealen, an fehlenden Aufträgen für Models und Fotografen und an der schwachen Kennzeichnung; eine Essstörungs-Hilfsorganisation nannte die Entwicklung besorgniserregend. Vogue betonte, es handle sich um eine bezahlte Anzeige, nicht um eine redaktionelle Entscheidung.',caveat:'Berührt Körperbild und Essstörungen. Die Formulierung „erstes KI-Model in der Vogue“ ist Medienzuspitzung.',source:'https://abc7news.com/post/controversy-stirs-ai-generated-models-new-guess-ads-appearing-vogue/17390923/',sourceLabel:'Bericht · ABC News',extra:'https://www.malaymail.com/news/life/2025/07/28/lazy-and-cheap-fashion-mag-vogue-under-fire-for-debuting-ai-generated-model-in-print-campaign-video/185491'},
+    {id:'aitana',title:'Aitana López – die Influencerin ohne Launen',year:2023,who:'The Clueless · Barcelona',topics:['Business','Internet','Kultur'],type:'KI-generierte Influencerin',certainty:'belegt',featured:62,images:['https://www.entrepreneur.com/wp-content/uploads/sites/2/2023/11/1701129114-Aitana-214.jpg?resize=1024,682','https://www.hola.com/us/horizon/landscape/1200/76c536e7e944-aitana-lopez.jpg'],summary:'Eine junge Frau mit pinkem Haar posiert für Fitness- und Lifestyle-Fotos – Hunderttausende folgen ihr, obwohl es sie nicht gibt.',question:'Was suchen Menschen in der Nähe zu einer Person, die nur aus Bildern besteht?',context:'Die Barcelonaer Agentur The Clueless erschuf 2023 die virtuelle Influencerin, nach Angaben ihres Gründers, weil reale Influencer Projekte durch Allüren gefährdet hätten. Aitana wirbt für Marken und verdient laut Agentur mehrere tausend Euro im Monat; die Angaben schwanken stark. Kritiker sehen darin den Verlust von Aufträgen für reale Menschen, das Verwischen von Echt und Unecht und unrealistische Schönheitsbilder für junge Frauen.',caveat:'Einnahmen und Kundennamen sind Angaben der Agentur. Ein Teil ihrer Inhalte ist erotisch ausgerichtet.',source:'https://www.entrepreneur.com/business-news/this-ai-fitness-model-makes-11000-a-month/465975',sourceLabel:'Bericht · Entrepreneur',extra:'https://bgr.com/business/spanish-influencer-agency-designed-this-ai-model-after-deciding-real-life-influencers-are-a-pain/'},
+    {id:'mcdonalds',title:'„The Most Terrible Time of the Year“',year:2025,who:'McDonald’s Niederlande · TBWA\\Neboko · The Sweetshop',topics:['Business','Kultur'],type:'KI-generierter Werbespot',certainty:'belegt',featured:63,images:['https://cms.interestingengineering.com/wp-content/uploads/2025/12/IE-9.jpg','https://campaignbrief.com/wp-content/uploads/2025/12/McDonalds-Netherlands-1-1024x513.jpg'],similar:['https://cdn.radioafrica.digital/image/2025/12/47045585-3750-4159-899c-6c2a55d0660d.jpg'],summary:'Ein Weihnachtsmann im Stau, verlorene Geschenke, stürzende Schlittschuhläufer – Weihnachtschaos als komplett KI-generierter Spot.',question:'Wo liegt die Grenze, ab der ein Publikum KI-Werbung nicht mehr nur als Technik, sondern als Respektlosigkeit empfindet?',context:'Am 6. Dezember 2025 veröffentlichte McDonald’s Niederlande einen 45-sekündigen, vollständig KI-generierten Spot, der „It’s the Most Wonderful Time of the Year“ zum „schrecklichsten“ Teil des Jahres umdichtete. Nach Vorwürfen von „KI-Schrott“ schaltete das Unternehmen erst die Kommentare ab und nahm das Video nach drei Tagen offline. McDonald’s sprach von einer wichtigen Lernerfahrung im Umgang mit KI; die Produktionsfirma verteidigte die Arbeit ihres Teams.',source:'https://www.nbcnews.com/world/europe/mcdonalds-ai-generated-christmas-advert-social-media-backlash-rcna248590',sourceLabel:'Bericht · NBC News',extra:'https://www.bnnbloomberg.ca/business/company-news/2025/12/10/not-lovin-it-mcdonalds-pulls-dutch-ai-christmas-ad'}
   ];
 
   /* ---------- Bildquellen mit automatischem Fallback ---------- */
   const STAGGER_MS=3500;   // Antwortet eine Quelle nicht in dieser Zeit, startet parallel die nächste
   const GIVEUP_MS=15000;   // Danach gilt eine einzelne Quelle als nicht erreichbar
   const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return 'extern'}};
+  const viaCache=u=>'https://wsrv.nl/?url='+encodeURIComponent(u)+'&w=1600&we&q=85';
+  const viaArchive=u=>'https://web.archive.org/web/2026im_/'+u;
+  /* Beste Einzelquelle eines Falls (Vorschau-Slider, CSV): Original → Zweitquellen → Cache → Archiv → Vergleichsbilder */
   function sourcesFor(x){
     const list=x.images.map((u,i)=>({url:u,label:(i===0?'Original · ':'Zweitquelle · ')+host(u)}));
-    const p=x.images[0];
-    list.push({url:'https://wsrv.nl/?url='+encodeURIComponent(p)+'&w=1600&we&q=85',label:'Bildcache · wsrv.nl'});
-    list.push({url:'https://web.archive.org/web/2026im_/'+p,label:'Archivkopie · Internet Archive'});
+    list.push({url:viaCache(x.images[0]),label:'Bildcache · wsrv.nl'});
+    list.push({url:viaArchive(x.images[0]),label:'Archivkopie · Internet Archive'});
     (x.similar||[]).forEach(u=>list.push({url:u,label:'Vergleichbares Motiv · '+host(u),similar:true}));
     return list;
   }
+  /* Bildvarianten eines Falls (Karten-Karussell, Vollbild): jede Variante hat eigene Ausweichquellen */
+  function variantsOf(x){
+    if(x._v)return x._v;
+    const v=[{key:x.id+'#0',kind:'orig',label:'Original',chain:[{url:x.images[0],label:host(x.images[0])},{url:viaCache(x.images[0]),label:'Cache wsrv.nl'},{url:viaArchive(x.images[0]),label:'Internet Archive'}]}];
+    x.images.slice(1).forEach((u,i)=>v.push({key:x.id+'#a'+i,kind:'alt',label:'Zweitquelle',chain:[{url:u,label:host(u)},{url:viaCache(u),label:'Cache wsrv.nl'}]}));
+    (x.similar||[]).forEach((u,i)=>v.push({key:x.id+'#s'+i,kind:'similar',label:'Vergleichsbild',chain:[{url:u,label:host(u)},{url:viaCache(u),label:'Cache wsrv.nl'}]}));
+    return x._v=v;
+  }
   const state=new Map();
-  function resolveImage(x,cb){
-    let s=state.get(x.id);
+  function resolveChain(key,chain,cb){
+    let s=state.get(key);
     if(s&&s.done){cb(s);return}
     if(s){s.waiters.push(cb);return}
-    const srcs=sourcesFor(x);
-    s={srcs,winner:null,status:srcs.map(()=>'wait'),done:false,failed:false,waiters:[cb]};state.set(x.id,s);
+    s={srcs:chain,winner:null,status:chain.map(()=>'wait'),done:false,failed:false,waiters:[cb]};state.set(key,s);
     let next=0,dead=0;
-    const finish=()=>{s.done=true;const w=s.waiters;s.waiters=[];w.forEach(f=>f(s));refreshSourceLists(x.id)};
+    const finish=()=>{s.done=true;const w=s.waiters;s.waiters=[];w.forEach(f=>f(s))};
     const start=()=>{
-      if(s.done||next>=srcs.length)return;
+      if(s.done||next>=chain.length)return;
       const i=next++;s.status[i]='try';
       const probe=new Image();probe.referrerPolicy='no-referrer';probe.decoding='async';
       let settled=false;
@@ -275,29 +301,93 @@
       const giveup=setTimeout(()=>fail(),GIVEUP_MS);
       function fail(){if(settled)return;settled=true;clearTimeout(stagger);clearTimeout(giveup);probe.onload=probe.onerror=null;
         s.status[i]='bad';dead++;if(s.done)return;
-        if(dead>=srcs.length){s.failed=true;finish()}else start();}
+        if(dead>=chain.length){s.failed=true;finish()}else start();}
       probe.onload=()=>{if(settled)return;
         if(probe.naturalWidth<48||probe.naturalHeight<48){fail();return} // Platzhalter / Hotlink-Sperrbild
         settled=true;clearTimeout(stagger);clearTimeout(giveup);s.status[i]='ok';
         if(s.done)return;s.winner=i;finish();};
       probe.onerror=fail;
-      probe.src=srcs[i].url;
+      probe.src=chain[i].url;
     };
     start();
   }
-  function paint(el,x){
+  const winnerUrl=s=>s.srcs[s.winner].url;
+  const vState=v=>state.get(v.key);
+  const okVariants=x=>variantsOf(x).filter(v=>{const s=vState(v);return s&&s.done&&!s.failed});
+  const allSettled=x=>variantsOf(x).every(v=>{const s=vState(v);return s&&s.done});
+  const started=new Set();
+  function loadVariants(x){
+    if(started.has(x.id))return;started.add(x.id);
+    const vs=variantsOf(x);
+    const done=()=>variantChanged(x.id);
+    resolveChain(vs[0].key,vs[0].chain,()=>{done();vs.slice(1).forEach(v=>resolveChain(v.key,v.chain,done))});
+    setTimeout(()=>vs.slice(1).forEach(v=>resolveChain(v.key,v.chain,done)),2500);
+  }
+  function paint(el,x){ // einzelnes Bild (Vorschau-Slider)
     const img=el.querySelector('img');
     el.classList.remove('loaded','failed');el.classList.add('loading');
-    resolveImage(x,s=>{
+    resolveChain(x.id+'#best',sourcesFor(x),s=>{
       el.classList.remove('loading');
       if(s.failed){el.classList.add('failed');return}
-      img.src=s.srcs[s.winner].url;
+      img.src=winnerUrl(s);
       const show=()=>el.classList.add('loaded');
       if(img.complete&&img.naturalWidth)show();else{img.addEventListener('load',show,{once:true});img.addEventListener('error',()=>el.classList.add('failed'),{once:true})}
     });
   }
   const byId=id=>collection.find(c=>c.id===id);
-  const io='IntersectionObserver' in window?new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);const x=byId(e.target.dataset.case);if(x)paint(e.target,x)}})},{rootMargin:'500px 0px'}):null;
+
+  /* ---------- Karussell: echtes Verschieben per Pfeil, Tastatur, Maus und Touch ---------- */
+  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  class Carousel{
+    constructor(root,track,opt={}){this.root=root;this.track=track;this.opt=opt;this.loop=!!opt.loop;this.i=0;this.n=0;this.justDragged=false;this.bind()}
+    setSlides(html,index=0){
+      this.n=html.length;
+      const parts=this.loop&&this.n>1?[html[this.n-1],...html,html[0]]:html;
+      this.track.innerHTML=parts.join('');
+      if(this.loop&&this.n>1){this.track.firstElementChild.classList.add('clone');this.track.lastElementChild.classList.add('clone');this.track.firstElementChild.setAttribute('aria-hidden','true');this.track.lastElementChild.setAttribute('aria-hidden','true')}
+      this.i=Math.max(0,Math.min(index,this.n-1));this.place(this.i,false);
+      this.root.classList.toggle('multi',this.n>1);
+    }
+    off(i){return this.loop&&this.n>1?i+1:i}
+    place(i,anim,px=0){this.track.classList.toggle('noanim',!anim||reduceMotion.matches);this.track.style.transform=`translate3d(calc(${-this.off(i)*100}% + ${px}px),0,0)`}
+    go(i,anim=true){
+      if(this.n<2){if(this.opt.onEdge&&i!==this.i){this.place(this.i,true);this.opt.onEdge(i<this.i?-1:1)}return}
+      if(!this.loop&&(i<0||i>=this.n)){this.place(this.i,true);this.opt.onEdge&&this.opt.onEdge(i<0?-1:1);return}
+      const real=(i%this.n+this.n)%this.n;
+      if(this.loop&&real!==i&&anim&&!reduceMotion.matches){
+        this.place(i,true);clearTimeout(this.wrapT);
+        const fix=()=>{clearTimeout(this.wrapT);this.track.removeEventListener('transitionend',fix);this.place(real,false)};
+        this.track.addEventListener('transitionend',fix);this.wrapT=setTimeout(fix,600);
+      }else this.place(real,anim);
+      this.i=real;this.opt.onChange&&this.opt.onChange(real);
+    }
+    bind(){
+      let sx=0,sy=0,dx=0,drag=false,down=false,id=null,t0=0;
+      const r=this.root;
+      r.addEventListener('pointerdown',e=>{
+        if(this.n<2&&!this.opt.onEdge||e.button>0||e.target.closest('[data-nodrag]'))return;
+        down=true;drag=false;sx=e.clientX;sy=e.clientY;dx=0;id=e.pointerId;t0=performance.now();
+      });
+      r.addEventListener('pointermove',e=>{
+        if(!down||e.pointerId!==id)return;
+        dx=e.clientX-sx;const dy=e.clientY-sy;
+        if(!drag){if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)*1.2){drag=true;try{r.setPointerCapture(id)}catch(_){}this.opt.onDragStart&&this.opt.onDragStart()}else if(Math.abs(dy)>10){down=false;return}else return}
+        let d=dx;const atStart=!this.loop&&this.i===0&&dx>0,atEnd=!this.loop&&this.i===this.n-1&&dx<0;
+        if(atStart||atEnd||this.n<2)d=dx*.35;
+        this.place(this.i,false,d);
+      });
+      const end=e=>{
+        if(!down||e.pointerId!==id)return;down=false;
+        if(!drag)return;drag=false;this.justDragged=true;setTimeout(()=>{this.justDragged=false},60);
+        const w=r.clientWidth||1,fast=Math.abs(dx)/(performance.now()-t0)>.5&&Math.abs(dx)>30;
+        if(Math.abs(dx)>w*.18||fast)this.go(this.i+(dx<0?1:-1));else this.place(this.i,true);
+        this.opt.onDragEnd&&this.opt.onDragEnd();
+      };
+      r.addEventListener('pointerup',end);r.addEventListener('pointercancel',end);
+      r.addEventListener('click',e=>{if(this.justDragged){e.stopPropagation();e.preventDefault();this.justDragged=false}},true);
+      r.addEventListener('dragstart',e=>e.preventDefault());
+    }
+  }
 
   /* ---------- Hell / Dunkel ---------- */
   const themeKey='ki-bildatlas-theme',mq=matchMedia('(prefers-color-scheme: dark)');
@@ -310,33 +400,45 @@
   mq.addEventListener?.('change',syncThemeBtn);syncThemeBtn();
 
   /* ---------- Archiv ---------- */
-  const categories=[['Alle','all'],['Bildwahrheit','Wahrheit'],['Kamera-KI','Kamera'],['Rekonstruktion','Rekonstruktion'],['KI-Geschichte','Geschichte'],['Kultur & Bias','Kultur'],['Maschinenblick','Wahrnehmung'],['Gedächtnis','Gedächtnis'],['Kunst','Kunst'],['Politik','Politik'],['Internet & Memes','Internet']];
-  let active='all',savedOnly=false,sortBy='featured',query='';
-  const opened=new Set();
+  const categories=[['Alle','all'],['Favoriten','fav'],['Bildwahrheit','Wahrheit'],['Kamera-KI','Kamera'],['Rekonstruktion','Rekonstruktion'],['KI-Geschichte','Geschichte'],['Kultur & Bias','Kultur'],['Maschinenblick','Wahrnehmung'],['Gedächtnis','Gedächtnis'],['Kunst','Kunst'],['Marketing & Business','Business'],['Politik','Politik'],['Internet & Memes','Internet']];
+  let active='all',sortBy='featured',query='';
+  const opened=new Set(),cardV=new Map(),cards=new Map();
   const storageKey='ki-bildatlas-2026-favorites';
   let saved=new Set();try{saved=new Set(JSON.parse(localStorage.getItem(storageKey)||'[]'))}catch(e){}
   const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const status=x=>x.certainty==='offen'?'Herkunft nicht gesichert':x.certainty==='belegt'?'Dokumentierter Fall':'Einordnung offen';
   const nr=x=>String(x.featured).padStart(2,'0');
-  function visible(){let a=collection.filter(x=>(active==='all'||x.topics.includes(active))&&(!savedOnly||saved.has(x.id))&&(!query||([x.title,x.who,x.summary,x.question,x.context,x.type,x.year,...x.topics].join(' ').toLocaleLowerCase('de').includes(query))));return a.sort((a,b)=>sortBy==='newest'?b.year-a.year||a.featured-b.featured:sortBy==='oldest'?a.year-b.year||a.featured-b.featured:sortBy==='alpha'?a.title.localeCompare(b.title,'de'):a.featured-b.featured)}
-  function renderPills(){$('pills').innerHTML=categories.filter(([l,k])=>k==='all'||collection.some(x=>x.topics.includes(k))).map(([label,key])=>`<button class="pill ${active===key?'active':''}" data-topic="${esc(key)}" aria-pressed="${active===key}">${esc(label)} <small>${key==='all'?collection.length:collection.filter(x=>x.topics.includes(key)).length}</small></button>`).join('');$('pills').querySelectorAll('button').forEach(el=>el.addEventListener('click',()=>{active=el.dataset.topic;renderPills();render()}))}
+  const matchesTopic=x=>active==='all'||(active==='fav'?saved.has(x.id):x.topics.includes(active));
+  function visible(){let a=collection.filter(x=>matchesTopic(x)&&(!query||([x.title,x.who,x.summary,x.question,x.context,x.type,x.year,...x.topics].join(' ').toLocaleLowerCase('de').includes(query))));return a.sort((a,b)=>sortBy==='newest'?b.year-a.year||a.featured-b.featured:sortBy==='oldest'?a.year-b.year||a.featured-b.featured:sortBy==='alpha'?a.title.localeCompare(b.title,'de'):a.featured-b.featured)}
+  function renderPills(){
+    const count=k=>k==='all'?collection.length:k==='fav'?saved.size:collection.filter(x=>x.topics.includes(k)).length;
+    $('pills').innerHTML=categories.filter(([l,k])=>k==='all'||k==='fav'||count(k)>0).map(([label,key])=>key==='fav'
+      ?`<button class="pill fav ${active===key?'active':''}" data-topic="fav" aria-pressed="${active===key}" aria-label="Nur Favoriten anzeigen (${saved.size})" title="Nur Favoriten anzeigen"><span aria-hidden="true">${saved.size?'★':'☆'}</span> <small>${saved.size}</small></button>`
+      :`<button class="pill ${active===key?'active':''}" data-topic="${esc(key)}" aria-pressed="${active===key}">${esc(label)} <small>${count(key)}</small></button>`).join('');
+    $('pills').querySelectorAll('button').forEach(el=>el.addEventListener('click',()=>{active=el.dataset.topic;renderPills();render();toResults()}));
+    $('favHint').innerHTML=saved.size?`★ ${saved.size} ${saved.size===1?'Favorit':'Favoriten'}`:'☆ Bilder mit dem Stern merken';
+  }
   function sourceListHTML(x){
-    const s=state.get(x.id);const srcs=s?s.srcs:sourcesFor(x);
-    return srcs.map((src,i)=>{const st=s?s.status[i]:'wait';const cls=s&&s.winner===i?'ok':st==='bad'?'bad':'';
-      const note=s&&s.winner===i?(src.similar?' – angezeigt (vergleichbares Motiv)':' – angezeigt'):st==='bad'?' – nicht erreichbar':'';
-      return `<li class="${cls}"><b aria-hidden="true"></b><a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(src.label)}</a><span>${note}</span></li>`}).join('');
+    const shown=cardV.get(x.id);
+    return variantsOf(x).map((v,k)=>{const s=vState(v);const ok=s&&s.done&&!s.failed,bad=s&&s.failed;
+      const links=v.chain.map((c,i)=>`<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer" class="${s&&s.winner===i?'win':''}">${esc(c.label)}</a>`).join(' · ');
+      const note=ok?(shown===v.key?' – angezeigt':' – verfügbar'):bad?' – nicht erreichbar':s?' – lädt …':'';
+      return `<li class="${ok?'ok':bad?'bad':''}"><b aria-hidden="true"></b><div><strong>${k+1}. ${esc(v.label)}</strong><span>${note}</span><br>${links}</div></li>`}).join('');
   }
   function refreshSourceLists(id){const x=byId(id);document.querySelectorAll(`[data-srclist="${CSS.escape(id)}"]`).forEach(ul=>ul.innerHTML=sourceListHTML(x))}
   function card(x){
     const open=opened.has(x.id);
     return `<article class="item ${open?'open':''}" data-id="${esc(x.id)}" id="fall-${esc(x.id)}">
-      <div class="thumb ${x.fit==='contain'?'fit-contain':''}" data-case="${esc(x.id)}">
-        <img decoding="async" referrerpolicy="no-referrer" alt="Bildfall ${nr(x)}">
+      <div class="thumb loading ${x.fit==='contain'?'fit-contain':''}" data-case="${esc(x.id)}">
+        <div class="track"></div>
         <div class="fallback">Bildfall ${nr(x)}<small>Gerade ist keine der Bildquellen erreichbar.<br>Die Quellen findest du in den Details.</small></div>
         <span class="casenum">${nr(x)}</span>
         <button class="hit" data-toggle="${esc(x.id)}" aria-expanded="${open}" aria-controls="d-${esc(x.id)}" aria-label="Details zu Bildfall ${nr(x)} ${open?'zuklappen':'aufklappen'}"><span class="plus"><i aria-hidden="true">+</i><em>Details</em></span></button>
-        <button class="iconbtn zoom" data-zoom="${esc(x.id)}" aria-label="Bildfall ${nr(x)} im Vollbild ansehen" title="Vollbild"><svg><use href="#i-expand"/></svg></button>
-        <button class="iconbtn save ${saved.has(x.id)?'on':''}" aria-label="${saved.has(x.id)?'Aus Merkliste entfernen':'Zur Merkliste hinzufügen'}: Bildfall ${nr(x)}" data-save="${esc(x.id)}">${saved.has(x.id)?'★':'☆'}</button>
+        <button class="vnav vprev" data-nodrag data-vstep="-1" aria-label="Vorherige Bildvariante"><svg><use href="#i-left"/></svg></button>
+        <button class="vnav vnext" data-nodrag data-vstep="1" aria-label="Nächste Bildvariante"><svg><use href="#i-right"/></svg></button>
+        <div class="vdots" data-nodrag aria-hidden="true"></div>
+        <button class="iconbtn zoom" data-nodrag data-zoom="${esc(x.id)}" aria-label="Bildfall ${nr(x)} im Vollbild ansehen" title="Vollbild"><svg><use href="#i-expand"/></svg></button>
+        <button class="iconbtn save ${saved.has(x.id)?'on':''}" data-nodrag aria-pressed="${saved.has(x.id)}" aria-label="Bildfall ${nr(x)} als Favorit ${saved.has(x.id)?'entfernen':'merken'}" title="Favorit" data-save="${esc(x.id)}">${saved.has(x.id)?'★':'☆'}</button>
       </div>
       <div class="details" id="d-${esc(x.id)}" ${open?'':'inert'}><div><div class="dbody">
         <div class="micro"><span>${esc(x.year)} / ${esc(x.topics.join(' · '))}</span><span>${nr(x)}</span></div>
@@ -348,11 +450,43 @@
         <div class="kv"><span>Historischer Kontext & Kontroverse</span><p>${esc(x.context)}</p></div>
         ${x.caveat?`<p class="disclaimer"><strong>Wichtige Einschränkung:</strong> ${esc(x.caveat)}</p>`:''}
         <div class="links"><a class="external" href="${esc(x.source)}" target="_blank" rel="noopener noreferrer">${esc(x.sourceLabel)} ↗</a>${x.extra?`<a class="external alt" href="${esc(x.extra)}" target="_blank" rel="noopener noreferrer">Ergänzende Quelle ↗</a>`:''}</div>
-        <div class="kv" style="margin-top:14px"><span>Bildquellen (automatischer Wechsel)</span><ul class="srclist" data-srclist="${esc(x.id)}">${sourceListHTML(x)}</ul></div>
+        <div class="kv" style="margin-top:14px"><span>Bildvarianten & Quellen (automatischer Wechsel)</span><ul class="srclist" data-srclist="${esc(x.id)}">${sourceListHTML(x)}</ul></div>
         <p class="rights">Abbildungen stammen von externen Seiten. Rechte vor Wiederverwendung prüfen.</p>
       </div></div></div>
     </article>`;
   }
+  const slideImg=(x,v,cls='')=>{const s=vState(v);return `<div class="cslide ${cls}" data-v="${esc(v.key)}"><img src="${esc(winnerUrl(s))}" alt="Bildfall ${nr(x)}" referrerpolicy="no-referrer" draggable="false" decoding="async" onload="this.parentNode.classList.add('loaded')">${v.kind==='similar'?'<span class="vbadge">Vergleichsbild</span>':''}</div>`};
+  function mountCard(thumb){
+    const x=byId(thumb.dataset.case);if(!x)return;
+    const c=new Carousel(thumb,thumb.querySelector('.track'),{onChange:i=>{const v=c.list[i];if(v)cardV.set(x.id,v.key);syncCardUI(thumb,c);refreshSourceLists(x.id)}});
+    c.list=[];thumb._car=c;
+    if(!cards.has(x.id))cards.set(x.id,new Set());cards.get(x.id).add(thumb);
+    updateCard(thumb,x);loadVariants(x);
+  }
+  function syncCardUI(thumb,c){
+    const dots=thumb.querySelector('.vdots');
+    dots.innerHTML=c.n>1?c.list.map((v,k)=>`<span class="${k===c.i?'on':''}"></span>`).join(''):'';
+    thumb.querySelector('.vprev').hidden=!(c.n>1&&c.i>0);thumb.querySelector('.vnext').hidden=!(c.n>1&&c.i<c.n-1);
+    thumb.querySelector('.vprev').setAttribute('aria-label',`Vorherige Bildvariante (${c.i+1} von ${c.n})`);thumb.querySelector('.vnext').setAttribute('aria-label',`Nächste Bildvariante (${c.i+1} von ${c.n})`);
+  }
+  function updateCard(thumb,x){
+    const c=thumb._car;const ok=okVariants(x);
+    const keys=ok.map(v=>v.key).join('|');
+    if(keys!==c.keys){
+      c.keys=keys;c.list=ok;
+      const want=cardV.get(x.id);let idx=Math.max(0,ok.findIndex(v=>v.key===want));
+      c.setSlides(ok.map(v=>slideImg(x,v)),idx);
+      if(ok[idx])cardV.set(x.id,ok[idx].key);
+      syncCardUI(thumb,c);
+    }
+    thumb.classList.toggle('loading',!ok.length&&!allSettled(x));
+    thumb.classList.toggle('failed',!ok.length&&allSettled(x));
+  }
+  function variantChanged(id){
+    const x=byId(id);(cards.get(id)||[]).forEach(t=>{if(t.isConnected)updateCard(t,x);else cards.get(id).delete(t)});
+    refreshSourceLists(id);if(lb.open&&lbList[lbIndex]===id)lbRender();
+  }
+  const io='IntersectionObserver' in window?new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);mountCard(e.target)}})},{rootMargin:'500px 0px'}):null;
   function setOpen(article,open){
     const id=article.dataset.id;open?opened.add(id):opened.delete(id);
     article.classList.toggle('open',open);
@@ -363,92 +497,120 @@
   function syncToggleAll(){const list=visible();const all=list.length>0&&list.every(x=>opened.has(x.id));$('toggleAll').textContent=all?'Alle zuklappen':'Alle aufklappen';$('toggleAll').setAttribute('aria-pressed',String(all))}
   function render(){
     const list=visible();
-    $('resultCount').textContent=`${list.length} von ${collection.length} Fällen`;
-    $('savedOnly').classList.toggle('on',savedOnly);$('savedOnly').setAttribute('aria-pressed',String(savedOnly));$('savedOnly').textContent=savedOnly?'★ Gesamtes Archiv anzeigen':'☆ Nur Merkliste anzeigen';
-    $('gallery').innerHTML=list.length?list.map(card).join(''):'<div class="empty"><h3>Keine passenden Fälle gefunden.</h3><p>Versuche einen allgemeineren Suchbegriff oder entferne einen Filter.</p></div>';
-    $('gallery').querySelectorAll('.thumb').forEach(t=>{const s=state.get(t.dataset.case);if(s&&s.done||!io){paint(t,byId(t.dataset.case))}else io.observe(t)});
+    $('resultCount').textContent=active==='fav'?`${list.length} ${list.length===1?'Favorit':'Favoriten'}`:`${list.length} von ${collection.length} Fällen`;
+    cards.clear();
+    $('gallery').innerHTML=list.length?list.map(card).join(''):active==='fav'&&!query?'<div class="empty"><h3>Noch keine Favoriten.</h3><p>Tippe bei einem Bild auf ☆ oben rechts – es erscheint dann hier.</p></div>':'<div class="empty"><h3>Keine passenden Fälle gefunden.</h3><p>Versuche einen allgemeineren Suchbegriff oder entferne einen Filter.</p></div>';
+    $('gallery').querySelectorAll('.thumb').forEach(t=>{if(started.has(t.dataset.case)||!io)mountCard(t);else io.observe(t)});
     syncToggleAll();
   }
+  function toResults(){const bar=document.querySelector('.resultbar'),c=document.querySelector('.controls');const top=bar.getBoundingClientRect().top-c.offsetHeight;if(top<0)window.scrollTo({top:window.scrollY+top,behavior:'auto'})}
   function revealCase(id,openIt){
     let art=document.getElementById('fall-'+id);
-    if(!art){active='all';savedOnly=false;query='';$('search').value='';renderPills();render();art=document.getElementById('fall-'+id)}
+    if(!art){active='all';query='';$('search').value='';renderPills();render();art=document.getElementById('fall-'+id)}
     if(!art)return;
     if(openIt&&!art.classList.contains('open'))setOpen(art,true);
-    art.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+    art.scrollIntoView({behavior:reduceMotion.matches?'auto':'smooth',block:'center'});
     art.classList.remove('flash');void art.offsetWidth;art.classList.add('flash');
+  }
+  function toggleSave(id){
+    saved.has(id)?saved.delete(id):saved.add(id);try{localStorage.setItem(storageKey,JSON.stringify([...saved]))}catch(err){}
+    renderPills();
+    if(active==='fav'){render();return}
+    document.querySelectorAll(`[data-save="${CSS.escape(id)}"]`).forEach(sv=>{const on=saved.has(id);sv.classList.toggle('on',on);sv.textContent=on?'★':'☆';sv.setAttribute('aria-pressed',String(on));sv.setAttribute('aria-label',`Bildfall ${nr(byId(id))} als Favorit ${on?'entfernen':'merken'}`);sv.classList.remove('pop');void sv.offsetWidth;sv.classList.add('pop')});
   }
   $('gallery').addEventListener('click',e=>{
     const z=e.target.closest('[data-zoom]');
     if(z){openLightbox(z.dataset.zoom,visible().map(x=>x.id));return}
+    const vs=e.target.closest('[data-vstep]');
+    if(vs){const c=vs.closest('.thumb')._car;if(c)c.go(c.i+Number(vs.dataset.vstep));return}
+    const sv=e.target.closest('[data-save]');
+    if(sv){toggleSave(sv.dataset.save);return}
     const t=e.target.closest('[data-toggle]');
     if(t){const art=t.closest('.item');setOpen(art,!art.classList.contains('open'));return}
-    const sv=e.target.closest('[data-save]');
-    if(sv){const id=sv.dataset.save;saved.has(id)?saved.delete(id):saved.add(id);try{localStorage.setItem(storageKey,JSON.stringify([...saved]))}catch(err){}
-      if(savedOnly){render();return}
-      const on=saved.has(id);sv.classList.toggle('on',on);sv.textContent=on?'★':'☆';sv.setAttribute('aria-label',`${on?'Aus Merkliste entfernen':'Zur Merkliste hinzufügen'}: Bildfall ${sv.closest('.item').querySelector('.casenum').textContent}`)}
   });
+  $('gallery').addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;const th=e.target.closest('.thumb');if(!th||!th._car||th._car.n<2)return;e.preventDefault();th._car.go(th._car.i+(e.key==='ArrowRight'?1:-1))});
   $('toggleAll').addEventListener('click',()=>{const list=visible();const all=list.every(x=>opened.has(x.id));list.forEach(x=>all?opened.delete(x.id):opened.add(x.id));document.querySelectorAll('#gallery .item').forEach(a=>setOpen(a,!all))});
-  $('search').addEventListener('input',e=>{query=e.target.value.toLocaleLowerCase('de').trim();render()});$('sort').addEventListener('change',e=>{sortBy=e.target.value;render()});$('savedOnly').addEventListener('click',()=>{savedOnly=!savedOnly;render()});
-  $('export').addEventListener('click',()=>{const headers=['Nr','Titel','Jahr','Urheber/Kontext','Kategorien','Typ','Quellenstatus','Kurzbeschreibung','Analysefrage','Kontext','Einschraenkung','Quelle','Bildquellen'];const rows=visible().map(x=>[nr(x),x.title,x.year,x.who,x.topics.join('; '),x.type,status(x),x.summary,x.question,x.context,x.caveat||'',x.source,sourcesFor(x).map(s=>s.url).join(' | ')]);const csv='﻿'+[headers,...rows].map(a=>a.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(';')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='KI-Bildatlas-Faelle.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+  $('search').addEventListener('input',e=>{query=e.target.value.toLocaleLowerCase('de').trim();render()});$('sort').addEventListener('change',e=>{sortBy=e.target.value;render();toResults()});
+  $('export').addEventListener('click',()=>{const headers=['Nr','Titel','Jahr','Urheber/Kontext','Kategorien','Typ','Quellenstatus','Favorit','Kurzbeschreibung','Analysefrage','Kontext','Einschraenkung','Quelle','Bildquellen'];const rows=visible().map(x=>[nr(x),x.title,x.year,x.who,x.topics.join('; '),x.type,status(x),saved.has(x.id)?'ja':'',x.summary,x.question,x.context,x.caveat||'',x.source,sourcesFor(x).map(s=>s.url).join(' | ')]);const csv='﻿'+[headers,...rows].map(a=>a.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(';')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='KI-Bildatlas-Faelle.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 
-  /* ---------- Vollbild ---------- */
-  const lb=$('lightbox');let lbList=[],lbIndex=0,lbToken=0;
-  function showLb(){
-    const x=byId(lbList[lbIndex]);if(!x)return;const token=++lbToken;
-    const st=$('lbStage'),img=$('lbImg');st.classList.remove('loaded','failed');st.classList.add('loading');$('lbMsg').textContent='Bild wird geladen …';img.removeAttribute('src');img.alt=`Bildfall ${nr(x)}`;
-    $('lbCount').textContent=`BILDFALL ${nr(x)}${lbList.length>1?` · ${lbIndex+1} / ${lbList.length}`:''}`;
-    $('lbPrev').hidden=$('lbNext').hidden=lbList.length<2;
-    resolveImage(x,s=>{if(token!==lbToken)return;st.classList.remove('loading');
-      if(s.failed){st.classList.add('failed');$('lbMsg').textContent='Gerade ist keine der Bildquellen erreichbar.';return}
-      img.onload=()=>{if(token===lbToken)st.classList.add('loaded')};img.src=s.srcs[s.winner].url;if(img.complete&&img.naturalWidth)st.classList.add('loaded')});
-    [1,-1].forEach(d=>{const n=byId(lbList[(lbIndex+d+lbList.length)%lbList.length]);if(n)resolveImage(n,()=>{})});
+  /* ---------- Vollbild: wischt durch die Varianten, am Ende weiter zum nächsten Fall ---------- */
+  const lb=$('lightbox');let lbList=[],lbIndex=0;
+  const lbCar=new Carousel($('lbStage'),$('lbTrack'),{onChange:()=>lbSync(),onEdge:d=>lbCase(d)});lbCar.list=[];
+  function lbRender(index){
+    const x=byId(lbList[lbIndex]);if(!x)return;loadVariants(x);
+    const ok=okVariants(x);const keys=ok.map(v=>v.key).join('|');
+    if(keys===lbCar.keys&&index===undefined){lbSync();return}
+    const curKey=lbCar.list[lbCar.i]&&lbCar.list[lbCar.i].key;
+    let idx=index==='last'?ok.length-1:typeof index==='number'?index:Math.max(0,ok.findIndex(v=>v.key===curKey));
+    lbCar.keys=keys;lbCar.list=ok;
+    if(ok.length)lbCar.setSlides(ok.map(v=>slideImg(x,v)),Math.max(0,idx));
+    else{lbCar.setSlides([`<div class="cslide msg"><span>${allSettled(x)?'Gerade ist keine der Bildquellen erreichbar.':'Bild wird geladen …'}</span></div>`],0)}
+    lbSync();
   }
-  function openLightbox(id,list){lbList=list&&list.length?list:[id];lbIndex=Math.max(0,lbList.indexOf(id));showLb();
+  function lbSync(){
+    const x=byId(lbList[lbIndex]);if(!x)return;const n=lbCar.list.length;
+    $('lbCount').textContent=`BILDFALL ${nr(x)}${n>1?` · BILD ${lbCar.i+1} / ${n}`:''}${lbList.length>1?` · FALL ${lbIndex+1} / ${lbList.length}`:''}`;
+    const many=lbList.length>1||n>1;$('lbPrev').hidden=$('lbNext').hidden=!many;
+    $('lbDots').innerHTML=n>1?lbCar.list.map((v,k)=>`<span class="${k===lbCar.i?'on':''}"></span>`).join(''):'';
+  }
+  function lbCase(d){
+    if(lbList.length<2)return;
+    lbIndex=(lbIndex+d+lbList.length)%lbList.length;lbCar.keys=null;lbRender(d<0?'last':0);
+    if(!reduceMotion.matches&&$('lbTrack').animate)$('lbTrack').parentNode.animate([{opacity:.25,transform:`translateX(${d*60}px)`},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.22,.8,.24,1)'});
+    const n=byId(lbList[(lbIndex+d+lbList.length)%lbList.length]);if(n)loadVariants(n);
+  }
+  function lbStep(d){const i=lbCar.i+d;if(lbCar.n>1&&i>=0&&i<lbCar.n)lbCar.go(i);else lbCase(d)}
+  function openLightbox(id,list){
+    lbList=list&&list.length?list:[id];lbIndex=Math.max(0,lbList.indexOf(id));lbCar.keys=null;
+    const x=byId(id);const want=cardV.get(id);const ok=x?okVariants(x):[];
+    lbRender(Math.max(0,ok.findIndex(v=>v.key===want)));
     if(!lb.open){lb.showModal();if(lb.requestFullscreen&&!document.fullscreenElement){lb.requestFullscreen().catch(()=>{})}}
     $('lbClose').focus();pauseSlider(true)}
   function closeLightbox(){if(document.fullscreenElement){document.exitFullscreen().catch(()=>{})}if(lb.open)lb.close()}
   lb.addEventListener('close',()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});pauseSlider(false)});
-  const step=d=>{lbIndex=(lbIndex+d+lbList.length)%lbList.length;showLb()};
-  $('lbClose').addEventListener('click',closeLightbox);$('lbPrev').addEventListener('click',()=>step(-1));$('lbNext').addEventListener('click',()=>step(1));
+  $('lbClose').addEventListener('click',closeLightbox);$('lbPrev').addEventListener('click',()=>lbStep(-1));$('lbNext').addEventListener('click',()=>lbStep(1));
   $('lbDetails').addEventListener('click',()=>{const id=lbList[lbIndex];closeLightbox();setTimeout(()=>revealCase(id,true),120)});
-  $('lbStage').addEventListener('click',e=>{if(e.target===$('lbStage'))closeLightbox()});
-  lb.addEventListener('keydown',e=>{if(e.key==='ArrowRight'&&lbList.length>1)step(1);if(e.key==='ArrowLeft'&&lbList.length>1)step(-1)});
-  let tx=null;lb.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});lb.addEventListener('touchend',e=>{if(tx==null||lbList.length<2)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)step(dx<0?1:-1);tx=null});
+  $('lbStage').addEventListener('click',e=>{if(!e.target.closest('img'))closeLightbox()});
+  lb.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();lbStep(1)}if(e.key==='ArrowLeft'){e.preventDefault();lbStep(-1)}});
 
   /* ---------- Vorschau-Slider ---------- */
   const slides=collection.filter(x=>x.slide).sort((a,b)=>a.slide-b.slide);
-  let revealed=false,sIndex=0,sTimer=null,userPaused=matchMedia('(prefers-reduced-motion: reduce)').matches,tempPaused=0;const SLIDE_MS=6500;
-  $('slides').innerHTML=slides.map((x,i)=>`<div class="slide${i===0?' active':''}" role="group" aria-roledescription="Bild" aria-label="${i+1} von ${slides.length}" ${i===0?'':'aria-hidden="true"'}>
-      <div class="media${x.slideFit==='cover'?' cover':''}" data-case="${esc(x.id)}"><img alt="Vorschaubild ${i+1}" referrerpolicy="no-referrer"></div>
-      <a class="slidelink" href="#fall-${esc(x.id)}" data-reveal="${esc(x.id)}" ${i===0?'':'tabindex="-1"'} aria-label="Zum Bildfall ${nr(x)} im Archiv"></a>
+  let revealed=false,sTimer=null,userPaused=reduceMotion.matches,tempPaused=0;const SLIDE_MS=6500;
+  const heroCar=new Carousel($('slider'),$('slides'),{loop:true,onChange:i=>heroSync(i),onDragStart:()=>pauseSlider(true),onDragEnd:()=>pauseSlider(false)});
+  heroCar.setSlides(slides.map((x,i)=>`<div class="cslide" data-idx="${i}" role="group" aria-roledescription="Bild" aria-label="${i+1} von ${slides.length}">
+      <div class="media${x.slideFit==='cover'?' cover':''}" data-case="${esc(x.id)}"><img alt="Vorschaubild ${i+1}" referrerpolicy="no-referrer" draggable="false"></div>
+      <a class="slidelink" href="#fall-${esc(x.id)}" data-reveal="${esc(x.id)}" tabindex="-1" aria-label="Zum Bildfall ${nr(x)} im Archiv"></a>
       <div class="feature-caption" aria-live="polite"><span>${nr(x)} / ${esc(x.kicker)}</span><strong>${esc(x.hook)}</strong></div>
-    </div>`).join('');
-  $('dots').innerHTML=slides.map((x,i)=>`<button type="button" aria-label="Bild ${i+1}" aria-current="${i===0}"></button>`).join('');
-  const slideEls=[...$('slides').children],dotEls=[...$('dots').children],painted=new Set();
-  function prep(i){const el=slideEls[i];if(!el||painted.has(i))return;painted.add(i);paint(el.querySelector('.media'),slides[i])}
-  function go(i){sIndex=(i+slides.length)%slides.length;setReveal(false);
-    slideEls.forEach((el,k)=>{const on=k===sIndex;el.classList.toggle('active',on);on?el.removeAttribute('aria-hidden'):el.setAttribute('aria-hidden','true');el.querySelector('.slidelink').tabIndex=on?0:-1});
-    dotEls.forEach((d,k)=>d.setAttribute('aria-current',String(k===sIndex)));prep(sIndex);prep(sIndex+1<slides.length?sIndex+1:0);schedule()}
-  function schedule(){clearTimeout(sTimer);if(!userPaused&&!tempPaused&&!revealed&&!document.hidden)sTimer=setTimeout(()=>go(sIndex+1),SLIDE_MS)}
+    </div>`),0);
+  $('dots').innerHTML=slides.map((x,i)=>`<button type="button" data-nodrag aria-label="Bild ${i+1}" aria-current="${i===0}"></button>`).join('');
+  const dotEls=[...$('dots').children],painted=new Set();
+  function prep(i){if(painted.has(i))return;painted.add(i);$('slides').querySelectorAll(`.cslide[data-idx="${i}"] .media`).forEach(m=>paint(m,slides[i]))}
+  function heroSync(i){
+    setReveal(false);
+    $('slides').querySelectorAll('.cslide').forEach(el=>{const on=Number(el.dataset.idx)===i;el.classList.toggle('active',on);if(!el.classList.contains('clone')){on?el.removeAttribute('aria-hidden'):el.setAttribute('aria-hidden','true');el.querySelector('.slidelink').tabIndex=on?0:-1}});
+    dotEls.forEach((d,k)=>d.setAttribute('aria-current',String(k===i)));
+    prep(i);prep((i+1)%slides.length);prep((i-1+slides.length)%slides.length);schedule();
+  }
+  function schedule(){clearTimeout(sTimer);if(!userPaused&&!tempPaused&&!revealed&&!document.hidden)sTimer=setTimeout(()=>heroCar.go(heroCar.i+1),SLIDE_MS)}
   function pauseSlider(on){tempPaused=Math.max(0,tempPaused+(on?1:-1));schedule()}
   function syncPause(){$('slPause').innerHTML=`<svg><use href="#i-${userPaused?'play':'pause'}"/></svg>`;$('slPause').setAttribute('aria-label',userPaused?'Automatischen Wechsel starten':'Automatischen Wechsel anhalten')}
-  $('slPrev').addEventListener('click',()=>go(sIndex-1));$('slNext').addEventListener('click',()=>go(sIndex+1));
+  $('slPrev').addEventListener('click',()=>heroCar.go(heroCar.i-1));$('slNext').addEventListener('click',()=>heroCar.go(heroCar.i+1));
   $('slPause').addEventListener('click',()=>{userPaused=!userPaused;syncPause();schedule()});
-  $('slZoom').addEventListener('click',()=>openLightbox(slides[sIndex].id,slides.map(x=>x.id)));
-  dotEls.forEach((d,i)=>d.addEventListener('click',()=>go(i)));
+  $('slZoom').addEventListener('click',()=>openLightbox(slides[heroCar.i].id,slides.map(x=>x.id)));
+  dotEls.forEach((d,i)=>d.addEventListener('click',()=>heroCar.go(i)));
   $('slides').addEventListener('click',e=>{const a=e.target.closest('[data-reveal]');if(a){e.preventDefault();revealCase(a.dataset.reveal,false)}});
   const sl=$('slider');sl.addEventListener('mouseenter',()=>pauseSlider(true));sl.addEventListener('mouseleave',()=>pauseSlider(false));
   sl.addEventListener('focusin',()=>pauseSlider(true));sl.addEventListener('focusout',()=>pauseSlider(false));
-  let sx=null;sl.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});sl.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45)go(sIndex+(dx<0?1:-1));sx=null});
+  sl.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();heroCar.go(heroCar.i+1)}if(e.key==='ArrowLeft'){e.preventDefault();heroCar.go(heroCar.i-1)}});
   document.addEventListener('visibilitychange',schedule);
   function setReveal(on){revealed=on;$('slider').classList.toggle('reveal',on);const b=$('slReveal');b.setAttribute('aria-pressed',String(on));
     b.innerHTML=on?'TEXT<br>AUS-<br>BLENDEN':'WAS<br>SIEHT MAN<br>DA?';b.setAttribute('aria-label',on?'Bildbeschreibung wieder ausblenden':'Was sieht man da? Bildbeschreibung einblenden');schedule()}
   $('slReveal').addEventListener('click',()=>setReveal(!revealed));
-  syncPause();go(0);
+  syncPause();heroSync(0);
 
   /* ---------- Start ---------- */
   const years=collection.map(x=>x.year);
-  $('statCases').textContent=collection.length;$('statRange').textContent=`${Math.min(...years)}–${Math.max(...years)}`;$('statPersp').textContent=categories.filter(([l,k])=>k!=='all'&&collection.some(x=>x.topics.includes(k))).length;
+  $('statCases').textContent=collection.length;$('statRange').textContent=`${Math.min(...years)}–${Math.max(...years)}`;$('statPersp').textContent=categories.filter(([l,k])=>k!=='all'&&k!=='fav'&&collection.some(x=>x.topics.includes(k))).length;
   renderPills();render();
   if(location.hash.startsWith('#fall-')){const id=location.hash.slice(6);if(byId(id))setTimeout(()=>revealCase(id,true),300)}
   </script>
