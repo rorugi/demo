@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#dcdcd5">
 <meta name="mobile-web-app-capable" content="yes">
-<title>RRnotes_53</title>
+<link rel="manifest" href="notes.webmanifest">
+<link rel="icon" href="notes-icon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="notes-icon-180.png">
+<title>RRnotes_54</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -975,12 +978,13 @@
     <button type="button" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>Save…<small id="saveSum"></small></button>
     <button type="button" id="nbBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11z"/><path d="M6.5 3.5v17M4.5 7.5h4M4.5 12h4M4.5 16.5h4"/></svg>Notebooks…<small id="nbSum"></small></button>
     <button type="button" id="pdfMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M8.5 17.5v-4h1.4a1.3 1.3 0 0 1 0 2.6H8.5M12.5 17.5v-4h1a2 2 0 0 1 0 4zM16.5 13.5h-1.6v4M14.9 15.5h1.3"/></svg>Export PDF…</button>
+    <button type="button" id="installBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M12 7.5v7M9 11.5l3 3 3-3M10.5 18.5h3"/></svg>Install app</button>
     <button type="button" id="printMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>Print…</button>
   </div>
   <div class="menu advrow">
     <button type="button" id="advBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Advanced<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
   </div>
-  <div class="ver" id="ver">RRnotes_53</div>
+  <div class="ver" id="ver">RRnotes_54</div>
 </div>
 <div class="pop" id="advPop" role="dialog" aria-label="Advanced settings" hidden>
   <button type="button" class="back" id="advBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Settings</button>
@@ -1263,7 +1267,7 @@
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_53';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_54';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -4576,6 +4580,21 @@
       renderPage(); scheduleSave();
     }
     buildOverview();
+  }
+
+  // ---- Installable app (PWA): manifest + service worker next to notes.html ----
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+  window.addEventListener('appinstalled', () => { installEvt = null; $('installBtn').hidden = true; toast('RRnotes is installed. Open it from the home screen.'); });
+  $('installBtn').addEventListener('click', async () => {
+    closePops();
+    if (!installEvt) return;
+    installEvt.prompt();
+    try { await installEvt.userChoice; } catch (_) {}
+    installEvt = null; $('installBtn').hidden = true;
+  });
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && /\/notes(\.html)?$/.test(location.pathname)) {
+    navigator.serviceWorker.register('notes-sw.js', { scope: './notes' }).catch(() => {});
   }
 
   // ---- Start ----
