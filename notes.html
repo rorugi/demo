@@ -1,4 +1,8 @@
 <!doctype html>
+<!--
+  RRnotes · Copyright (c) 2026 Roland Russwurm · MIT License (full text in Settings → About)
+  Made with the help of AI (Claude by Anthropic).
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -8,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_57</title>
+<title>RRnotes_58</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -474,6 +478,13 @@
   .aboutdlg dt { opacity: .6; }
   .aboutdlg dd { margin: 0; }
   .dlg.aboutdlg .row { justify-content: center; }
+  .aboutdlg .upd { font-size: 12.5px; min-height: 16px; margin: -8px 0 12px; opacity: .75; }
+  .aboutdlg .legal { border-top: 1px solid var(--bar-line); margin-top: 4px; padding-top: 12px; font-size: 12px; line-height: 1.45; opacity: .8; display: grid; gap: 6px; }
+  .aboutdlg .legal p { margin: 0; font-size: 12px; opacity: 1; }
+  .aboutdlg details { text-align: left; }
+  .aboutdlg summary { cursor: pointer; text-align: center; list-style: none; text-decoration: underline; text-underline-offset: 2px; }
+  .aboutdlg summary::-webkit-details-marker { display: none; }
+  .aboutdlg details pre { white-space: pre-wrap; font: 11px/1.45 var(--ui); margin: 8px 0 0; padding: 10px; border: 1px solid var(--bar-line); border-radius: 8px; max-height: 180px; overflow: auto; }
 
   /* ---------- dialogs ---------- */
   .dlg {
@@ -1256,7 +1267,21 @@
   <div class="vers" id="aboutVer"></div>
   <p>A paper notebook for writing with a stylus.</p>
   <dl id="aboutInfo"></dl>
-  <div class="row"><button type="button" class="primary" id="aboutDone">Close</button></div>
+  <div class="upd" id="aboutUpd" aria-live="polite"></div>
+  <div class="legal">
+    <p>© 2026 Roland Russwurm</p>
+    <p>Made with the help of AI (Claude by Anthropic).</p>
+    <details><summary>MIT License</summary><pre>MIT License
+
+Copyright (c) 2026 Roland Russwurm
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre></details>
+  </div>
+  <div class="row" style="margin-top:14px"><button type="button" id="aboutUpdate">Update</button><button type="button" class="primary" id="aboutDone">Close</button></div>
 </dialog>
 
 <dialog class="dlg" id="confirmDlg" aria-labelledby="confirmTitle">
@@ -1314,7 +1339,7 @@
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_57';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_58';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -4738,13 +4763,55 @@
     const n = VERSION.match(/_(\d+)$/);
     $('aboutVer').textContent = n ? `Version ${+n[1]}` : VERSION;
     const installed = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
-    let kept = 'unknown';
+    let kept = 'unknown', used = 'unknown', free = 'unknown';
     try { if (navigator.storage && navigator.storage.persisted) kept = (await navigator.storage.persisted()) ? 'kept permanently' : 'may be cleared by the browser'; } catch (_) {}
-    const rows = [['Build', VERSION], ['Running as', installed ? 'installed app' : 'web page'], ['Notebooks', `${nbIdx.loaded.length} open`], ['Browser storage', kept]];
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        const est = await navigator.storage.estimate();
+        if (isFinite(est.usage)) used = fmtBytes(est.usage);
+        if (isFinite(est.quota) && isFinite(est.usage)) free = fmtBytes(Math.max(0, est.quota - est.usage));
+      }
+    } catch (_) {}
+    const rows = [['Build', VERSION], ['Running as', installed ? 'installed app' : 'web page'], ['Notebooks', `${nbIdx.loaded.length} open`],
+      ['Storage used', used], ['Storage available', free], ['Browser storage', kept]];
+    $('aboutUpd').textContent = '';
+    $('aboutUpdate').disabled = false; $('aboutUpdate').textContent = 'Update';
     $('aboutInfo').innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
     $('aboutDlg').showModal();
   });
   $('aboutDone').addEventListener('click', () => $('aboutDlg').close());
+  function fmtBytes(n) {
+    const u = ['bytes', 'KB', 'MB', 'GB', 'TB'];
+    let i = 0;
+    while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; }
+    return `${i ? n.toFixed(n < 10 ? 1 : 0) : n} ${u[i]}`;
+  }
+  // Update: ask the server for the newest notes.html; if it is newer, switch to it (notebooks stay in the browser)
+  const verNo = v => { const m = String(v).match(/RRnotes_(\d+)/); return m ? +m[1] : 0; };
+  $('aboutUpdate').addEventListener('click', async () => {
+    const say = t => { $('aboutUpd').textContent = t; };
+    if (!/^https?:$/.test(location.protocol)) { say('This copy was opened from a file. Updates come with the web page or the installed app.'); return; }
+    const btn = $('aboutUpdate');
+    btn.disabled = true; say('Checking for a new version…');
+    try {
+      const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration('./notes');
+      if (reg) reg.update().catch(() => {});
+      const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error(res.status);
+      const m = (await res.text()).match(/const VERSION = '(RRnotes_\d+)'/);
+      const latest = m ? verNo(m[1]) : 0, mine = verNo(VERSION);
+      if (latest > mine) {
+        say(`Version ${latest} found. Restarting…`);
+        await flushSave();
+        setTimeout(() => location.reload(), 600);
+        return;
+      }
+      say(latest ? `Version ${mine} is the newest.` : 'No version found on the server.');
+    } catch (_) {
+      say('The server can’t be reached right now. Try again when you’re online.');
+    }
+    btn.disabled = false;
+  });
 
   // ---- Start ----
   window.addEventListener('resize', layout);

@@ -18,6 +18,14 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  // "Update" in About: always ask the server, and keep what it sends as the new copy
+  if (url.searchParams.has('check') && /\/notes(\.html)?$/.test(url.pathname)) {
+    e.respondWith(fetch(new URL('./notes.html', location).href, { cache: 'no-store' }).then(async res => {
+      if (res.ok) (await caches.open(CACHE)).put('./notes.html', res.clone());
+      return res;
+    }));
+    return;
+  }
   if (req.mode === 'navigate' || /\/notes(\.html)?$/.test(url.pathname)) {
     e.respondWith((async () => {
       const cache = await caches.open(CACHE);
