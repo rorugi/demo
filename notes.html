@@ -8,7 +8,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_54</title>
+<title>RRnotes_57</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -168,6 +168,20 @@
   .toolbar button:disabled:hover { background: transparent; }
   .toolbar svg { width: 20px; height: 20px; }
   .sep { width: 1px; height: 20px; background: var(--bar-line); margin: 0 3px; flex: none; }
+  /* empty space: a placeholder as big as a button, does nothing */
+  .toolbar .space { width: 34px; height: 34px; flex: none; }
+  .tblist .ico.spaceico i { width: 18px; height: 18px; border: 1.5px dashed currentColor; border-radius: 4px; opacity: .45; box-sizing: border-box; }
+  /* pen locks: what presets, size and colour buttons may not change */
+  .locks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .locks button { min-width: 0; padding: 0 4px; height: 34px; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden; white-space: nowrap; border: 1px solid var(--bar-line); border-radius: 8px; background: transparent; color: var(--bar-fg); font: 500 12px/1 var(--ui); cursor: pointer; }
+  .locks button svg { flex: none; width: 13px; height: 13px; opacity: .45; }
+  .locks button[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); font-weight: 600; }
+  .locks button[aria-pressed="true"] svg { opacity: 1; }
+  .locksub { font-size: 11.5px; opacity: .6; margin-top: -4px; }
+  /* a pen with locks shows a small lock top left */
+  .pen svg.penlock { position: absolute; left: 3px; top: 3px; width: 10px; height: 10px; transform: none; display: none; opacity: .7; }
+  .pen.locked svg.penlock { display: block; }
+  .tblist .ico.pen svg.penlock { width: 10px; height: 10px; left: 1px; top: 1px; transform: none; }
   .toolbar.vertical .sep { width: 20px; height: 1px; margin: 3px 0; }
   .toolbar.vertical [data-type="zoom"], .toolbar.vertical [data-type="pages"] { min-width: 34px; font-size: 10.5px; padding: 0 2px; }
   /* app mark of RRnotes: the two R above a pencil bent into a smile */
@@ -442,7 +456,24 @@
   }
   .pop .back:hover { background: var(--active); }
   .pop .back svg { width: 18px; height: 18px; }
-  .ver { font-size: 11px; opacity: .5; padding: 2px 2px 0; font-variant-numeric: tabular-nums; }
+  /* names shown when a stylus or mouse hovers over a toolbar button */
+  .tip {
+    position: fixed; z-index: 40; pointer-events: none; max-width: 240px;
+    padding: 5px 8px; border-radius: 6px; background: var(--brand); color: var(--brand-fg);
+    font: 500 12px/1.3 var(--ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .2); opacity: 0; transition: opacity .12s;
+  }
+  .tip.on { opacity: 1; }
+  /* about */
+  .aboutdlg { text-align: center; }
+  .aboutdlg .mark { width: 72px; height: 65px; margin: 4px auto 10px; border-radius: 16px; background: var(--brand); color: var(--brand-fg); display: grid; place-items: center; }
+  .aboutdlg .mark svg { width: 52px; height: 47px; }
+  .aboutdlg h2 { font-size: 20px; margin-bottom: 2px; }
+  .aboutdlg .vers { font: 600 15px/1.3 var(--ui); font-variant-numeric: tabular-nums; margin-bottom: 12px; }
+  .aboutdlg dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0 0 16px; text-align: left; font-size: 13px; }
+  .aboutdlg dt { opacity: .6; }
+  .aboutdlg dd { margin: 0; }
+  .dlg.aboutdlg .row { justify-content: center; }
 
   /* ---------- dialogs ---------- */
   .dlg {
@@ -931,6 +962,13 @@
   <h3 data-for="pen preset color">Opacity <output id="opVal" for="opacity">100%</output></h3>
   <input type="range" class="opacity" id="opacity" min="10" max="100" step="5" value="100" aria-label="Opacity" data-for="pen preset color">
   <label class="hlrow" for="hlToggle" data-for="pen preset color"><span>Highlighter<span class="sub">Drawn behind existing ink</span></span><span class="switch"><input type="checkbox" id="hlToggle"><i></i></span></label>
+  <h3 data-for="pen">Locked against presets</h3>
+  <div class="locks" id="locks" data-for="pen">
+    <button type="button" data-lock="color" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Colour</button>
+    <button type="button" data-lock="width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Thickness</button>
+    <button type="button" data-lock="opacity" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Opacity</button>
+  </div>
+  <div class="locksub" data-for="pen">Presets, size and colour buttons leave locked values alone. This menu still changes them.</div>
   <button type="button" class="wide-btn subtle" id="savePreset" data-for="pen">Save as preset</button>
 </div>
 
@@ -983,8 +1021,8 @@
   </div>
   <div class="menu advrow">
     <button type="button" id="advBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Advanced<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button type="button" id="aboutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/></svg>About</button>
   </div>
-  <div class="ver" id="ver">RRnotes_54</div>
 </div>
 <div class="pop" id="advPop" role="dialog" aria-label="Advanced settings" hidden>
   <button type="button" class="back" id="advBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Settings</button>
@@ -1212,6 +1250,15 @@
   </div>
 </dialog>
 
+<dialog class="dlg aboutdlg" id="aboutDlg" aria-labelledby="aboutTitle">
+  <div class="mark" id="aboutMark"></div>
+  <h2 id="aboutTitle">RRnotes</h2>
+  <div class="vers" id="aboutVer"></div>
+  <p>A paper notebook for writing with a stylus.</p>
+  <dl id="aboutInfo"></dl>
+  <div class="row"><button type="button" class="primary" id="aboutDone">Close</button></div>
+</dialog>
+
 <dialog class="dlg" id="confirmDlg" aria-labelledby="confirmTitle">
   <h2 id="confirmTitle"></h2>
   <p id="confirmText"></p>
@@ -1267,7 +1314,7 @@
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_54';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_57';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1400,6 +1447,7 @@
   // ---- Toolbar model ----
   const ITEM_TYPES = {
     pen:    { label: 'Pen', multi: true },
+    space:  { label: 'Empty space', multi: true },
     preset: { label: 'Preset', multi: true },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -1439,6 +1487,7 @@
   });
   function cleanItemData(it, o) {
     if (it.type === 'pen' || it.type === 'preset') o.brush = cleanBrush(it.brush);
+    if (it.type === 'pen' && it.locks) { const l = {}; ['color', 'width', 'opacity'].forEach(k => { if (it.locks[k] === true) l[k] = true; }); if (Object.keys(l).length) o.locks = l; }
     if (it.type === 'size') o.width = cleanWidth(it.width);
     if (it.type === 'color') o.paint = cleanPaint(it.paint);
     return o;
@@ -1716,7 +1765,8 @@
   // ---- Undo / redo: snapshots of every page's stroke list (strokes themselves never change) ----
   const undoStack = [], redoStack = [];
   // a snapshot also remembers which strokes were selected, so undo/redo keep the selection
-  const snapshot = () => ({ pages: pages.map(p => p.strokes.slice()), cur,
+  // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
+  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice() })), cur,
     selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
     markChanged();
@@ -1726,7 +1776,8 @@
     updateToolbarState();
   }
   function restore(s) {
-    pages = s.pages.map(st => ({ strokes: st.slice() }));
+    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); return e.page; });
+    if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
     const again = s.selIdx && s.selIdx.length ? s.selIdx.map(i => pages[cur].strokes[i]).filter(Boolean) : null;
     if (again && again.length) sel = { page: cur, items: again, box: selBox(again) };
@@ -1760,7 +1811,6 @@
     renderSelection();
     if (typeof magIndicator === 'function') magIndicator();
     mapInkChanged();
-    $('ver').textContent = `${VERSION} · ${pages.length} ${pages.length === 1 ? 'page' : 'pages'}`;
     $('allPagesSum').textContent = `${cur + 1} / ${pages.length}`;
     updateToolbarState();
   }
@@ -1852,7 +1902,8 @@
   function itemButton(it) {
     const t = it.type, a = `data-id="${it.id}" data-type="${t}"`;
     switch (t) {
-      case 'pen': return `<button type="button" class="pen realpen" ${a} aria-pressed="false" title="Pen · tap again for colour, thickness and opacity">${ICON.nib}<span class="inkinfo"><span class="swatch"></span><small></small></span></button>`;
+      case 'pen': return `<button type="button" class="pen realpen" ${a} aria-pressed="false" title="Pen · tap again for colour, thickness and opacity">${ICON.nib}<span class="inkinfo"><span class="swatch"></span><small></small></span>${PENLOCK}</button>`;
+      case 'space': return `<span class="space" ${a} aria-hidden="true"></span>`;
       case 'eraser': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Eraser" title="Eraser · tap again for size">${ICON.eraser}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
@@ -1975,6 +2026,7 @@
     fitToolbars();
     placeToolbar();
     $('tbSum').textContent = bars.length > 1 ? `${bars.length} toolbars` : '';
+    document.querySelectorAll('.toolbar [title]').forEach(el => { el.dataset.tip = el.title; el.removeAttribute('title'); });   // names come from our own hover label
   }
   function setSwatch(sw, b) {
     const col = displayColor(b.color, b.pickedOnDark);
@@ -1993,6 +2045,7 @@
     if (ico) { ico.style.setProperty('--c', col); ico.style.setProperty('--fo', Math.max(0.35, b.opacity)); }
   }
   const sizeLine = w => Math.max(1.3, Math.min(6.5, 0.8 + w * 3)).toFixed(1);
+  const PENLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="penlock" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>';
   const GEARMARK = '<svg class="gearmark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></svg>';
   const SIZE_S = '<svg class="sizes-s" viewBox="0 0 26 16" aria-hidden="true"><path d="M3 11.5C5.5 5 9.5 3.2 11.8 6.6c1.6 2.4 1.9 5.8 5 5.4C19.6 11.6 21.7 7.8 23 4"/></svg>';
   function paintSizeBtn(el, it) {
@@ -2013,14 +2066,25 @@
   const effBrush = () => ({ ...brush() });
   const samePaint = (a, b) => a.color.toLowerCase() === b.color.toLowerCase() && a.opacity === b.opacity && !!a.highlighter === !!b.highlighter && !!a.pickedOnDark === !!b.pickedOnDark;
   const isMod = it => it.type === 'size' || it.type === 'color' || it.type === 'preset';
-  const modMatches = it => tool === 'pen' && (it.type === 'size' ? brush().width === it.width
-    : it.type === 'color' ? samePaint(brush(), it.paint)
-    : brush().width === it.brush.width && samePaint(brush(), it.brush));
+  // locks: a pen can keep its colour, thickness and/or opacity when presets are tapped
+  const penLocks = () => itemById(penId).locks || {};
+  const modValues = it => it.type === 'size' ? { width: it.width } : it.type === 'color' ? cleanPaint(it.paint) : cleanBrush(it.brush);
+  const modKeys = it => (it.type === 'size' ? ['width'] : it.type === 'color' ? ['color', 'opacity'] : ['color', 'width', 'opacity']).filter(k => !penLocks()[k]);
+  const sameVal = (k, a, b) => k === 'color' ? a.color.toLowerCase() === b.color.toLowerCase() && !!a.pickedOnDark === !!b.pickedOnDark : a[k] === b[k];
+  const keepsMode = () => Object.keys(penLocks()).length > 0;    // a pen with locks stays highlighter / normal pen
+  const modMatches = it => {
+    if (tool !== 'pen') return false;
+    const v = modValues(it), keys = modKeys(it);
+    if (!keys.length) return false;
+    if (!keepsMode() && it.type !== 'size' && !!v.highlighter !== !!brush().highlighter) return false;
+    return keys.every(k => sameVal(k, brush(), v));
+  };
   const modUsable = () => tool === 'pen' || (tool === 'lasso' && !!sel);
+  const modLocked = it => tool === 'pen' && !modKeys(it).length;   // everything it sets is locked on this pen
   function applyMod(it) {
-    if (it.type === 'size') brush().width = it.width;
-    else if (it.type === 'color') Object.assign(brush(), cleanPaint(it.paint));
-    else Object.assign(brush(), cleanBrush(it.brush));
+    const v = modValues(it), b = brush();
+    modKeys(it).forEach(k => { b[k] = v[k]; if (k === 'color') b.pickedOnDark = v.pickedOnDark; });
+    if (it.type !== 'size' && !keepsMode()) b.highlighter = v.highlighter;
   }
   const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
   function updateToolbarState() {
@@ -2036,33 +2100,35 @@
           const penNo = penList.indexOf(it) + 1;
           el.setAttribute('aria-pressed', String(tool === 'pen' && penId === it.id));
           setSwatch(el.querySelector('.swatch'), it.brush);
-          el.setAttribute('aria-label', `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penNo}, ${it.brush.width} mm, ${Math.round(it.brush.opacity * 100)} % opacity`);
+          const lk = Object.keys(it.locks || {});
+          el.classList.toggle('locked', lk.length > 0);
+          el.setAttribute('aria-label', `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penNo}, ${it.brush.width} mm, ${Math.round(it.brush.opacity * 100)} % opacity${lk.length ? ', locked: ' + lk.map(k => k === 'width' ? 'thickness' : k).join(', ') : ''}`);
           break;
         }
         case 'eraser': el.setAttribute('aria-pressed', String(tool === 'eraser')); break;
         case 'lasso': el.setAttribute('aria-pressed', String(tool === 'lasso')); break;
         case 'preset': {
           const on = modMatches(it), b = it.brush;
-          el.classList.toggle('match', on); el.disabled = !modUsable();
+          el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
           paintPreset(el, b);
           el.setAttribute('aria-label', `Preset: ${b.highlighter ? 'highlighter, ' : ''}${b.color}, ${b.width} mm${b.opacity < 1 ? `, ${Math.round(b.opacity * 100)} % opacity` : ''}${on ? ', matches the pen' : ''}. Tap to give it to the pen, tap again to change`);
-          el.title = el.disabled ? 'Preset · choose a pen first' : 'Preset';
+          el.dataset.tip = modLocked(it) ? 'Preset · locked on this pen' : el.disabled ? 'Preset · choose a pen first' : 'Preset';
           break;
         }
         case 'size': {
           const on = modMatches(it);
-          el.classList.toggle('match', on); el.disabled = !modUsable();
+          el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
           paintSizeBtn(el, it);
           el.setAttribute('aria-label', `Stroke size ${it.width} mm${on ? ', matches the pen' : ''}. Tap to give it to the pen, tap again to change`);
-          el.title = `Stroke size ${it.width} mm`;
+          el.dataset.tip = `Stroke size ${it.width} mm`;
           break;
         }
         case 'color': {
           const on = modMatches(it);
-          el.classList.toggle('match', on); el.disabled = !modUsable();
+          el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
           paintColorBtn(el, it);
           el.setAttribute('aria-label', `Colour ${it.paint.color}${it.paint.highlighter ? ', highlighter' : ''}${it.paint.opacity < 1 ? `, ${Math.round(it.paint.opacity * 100)} % opacity` : ''}. Tap to give it to the pen, tap again to change`);
-          el.title = it.paint.highlighter ? 'Highlighter colour' : 'Colour';
+          el.dataset.tip = it.paint.highlighter ? 'Highlighter colour' : 'Colour';
           break;
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
@@ -2072,14 +2138,14 @@
           el.setAttribute('aria-pressed', String(zoomLocked));
           el.querySelector('.shackle').setAttribute('d', zoomLocked ? LOCK_CLOSED : LOCK_OPEN);
           const l = zoomLocked ? 'Zoom locked' : 'Zoom unlocked: pinch with two fingers';
-          el.setAttribute('aria-label', l); el.title = l;
+          el.setAttribute('aria-label', l); el.dataset.tip = l;
           break;
         }
         case 'fs': {
           const on = !!fsElement();
           el.querySelector('.fsi').setAttribute('d', on ? FS_EXIT : FS_ENTER);
           const l = on ? 'Exit full screen' : 'Full screen';
-          el.setAttribute('aria-label', l); el.title = l;
+          el.setAttribute('aria-label', l); el.dataset.tip = l;
           break;
         }
         case 'zoom': el.textContent = Math.round(view.zoom * 100) + '%'; el.disabled = Math.abs(view.zoom - 1) < 0.005; break;
@@ -2258,6 +2324,12 @@
     if (hex) paintPicker(); else if (e.target.value.trim()) { e.target.classList.add('bad'); toast('Enter a hex code like #1F6FD1.'); }
   });
   $('pkHex').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+  $('locks').querySelectorAll('[data-lock]').forEach(b => b.addEventListener('click', () => {
+    const p = itemById(penId), k = b.dataset.lock, l = { ...(p.locks || {}) };
+    if (l[k]) delete l[k]; else l[k] = true;
+    if (Object.keys(l).length) p.locks = l; else delete p.locks;
+    penChanged(false);
+  }));
   // the pen's ink as a new preset, placed right after the pen
   $('savePreset').addEventListener('click', () => {
     const p = itemById(penId), bar = barOf(penId);
@@ -2327,6 +2399,7 @@
       const i = b.querySelector('i'); i.style.setProperty('--c', shown); i.style.opacity = br.opacity;
     });
     $('hlToggle').checked = br.highlighter;
+    $('locks').querySelectorAll('[data-lock]').forEach(b => b.setAttribute('aria-pressed', String(!!penLocks()[b.dataset.lock])));
     const customW = !WIDTHS.includes(br.width);
     $('customWidthBox').setAttribute('aria-pressed', String(customW));
     if (!keepInput) $('customWidth').value = customW ? String(br.width) : '';
@@ -2750,8 +2823,9 @@
     itemsChanged();
   });
   function rowIcon(it) {
-    if (it.type === 'pen') return `<span class="ico pen realpen">${ICON.nib}<span class="inkinfo"><span class="swatch"></span><small></small></span></span>`;
+    if (it.type === 'pen') return `<span class="ico pen realpen${it.locks ? ' locked' : ''}">${ICON.nib}<span class="inkinfo"><span class="swatch"></span><small></small></span>${PENLOCK}</span>`;
     if (it.type === 'sep') return `<span class="ico sepico"><i></i></span>`;
+    if (it.type === 'space') return `<span class="ico spaceico"><i></i></span>`;
     if (it.type === 'br') return `<span class="ico">${ICON.br}</span>`;
     if (it.type === 'size') return `<span class="ico sizeico" style="--sw:${sizeLine(it.width)};--c:currentColor">${SIZE_S}</span>`;
     if (it.type === 'preset') return `<span class="ico pen preset">${ICON.pen}<span class="inkinfo"><span class="swatch"></span><small></small></span>${GEARMARK}</span>`;
@@ -2774,7 +2848,7 @@
         : `<li class="fixed"><span class="handle" aria-hidden="true"></span><span class="ico gripico">${GRIP}</span><span class="name">Toolbar handle</span></li>`;
     tbList.innerHTML = first + (edBar.items.length ? '' : '<li class="empty">No buttons yet. Add some below.</li>') +
       edBar.items.map(it => {
-        const name = it.type === 'pen' ? `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penList.indexOf(it) + 1}<small>${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}</small>`
+        const name = it.type === 'pen' ? `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penList.indexOf(it) + 1}<small>${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}${it.locks ? ' · locked: ' + Object.keys(it.locks).map(k => k === 'width' ? 'thickness' : k).join(', ') : ''}</small>`
           : it.type === 'preset' ? `${it.brush.highlighter ? 'Highlighter preset' : 'Preset'}<small>${it.brush.color.toUpperCase()} · ${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}</small>`
           : it.type === 'size' ? `Stroke size<small>${it.width} mm</small>`
           : it.type === 'color' ? `${it.paint.highlighter ? 'Highlighter colour' : 'Colour'}<small>${it.paint.color.toUpperCase()}${it.paint.opacity < 1 ? ' · ' + Math.round(it.paint.opacity * 100) + ' %' : ''}</small>`
@@ -2793,7 +2867,7 @@
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'pen' ? ICON.nib : t === 'preset' ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1) scale(.42)" stroke-width="3.6"><path fill="var(--panel)" d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.nib : t === 'preset' ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1) scale(.42)" stroke-width="3.6"><path fill="var(--panel)" d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
@@ -3088,7 +3162,7 @@
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
         items: b.items.map(it => it.type === 'pen' || it.type === 'preset'
-          ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark }
+          ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark, ...(it.locks ? { locked: { color: !!it.locks.color, thickness: !!it.locks.width, opacity: !!it.locks.opacity } } : {}) }
           : it.type === 'size' ? { type: 'size', widthMm: it.width }
           : it.type === 'color' ? { type: 'color', color: it.paint.color, opacity: it.paint.opacity, highlighter: it.paint.highlighter, colorPickedOnDarkPaper: it.paint.pickedOnDark }
           : { type: it.type })
@@ -3119,7 +3193,7 @@
     try { o = JSON.parse(await file.text()); } catch (_) { o = null; }
     if (!o || o.app !== 'notizblock' || o.kind !== 'options') { toast(`${file.name} isn't an RRnotes options file.`); return; }
     const fileItems = list => list.map(i => !i ? i
-      : i.type === 'pen' || i.type === 'preset' ? { type: i.type, brush: { color: i.color, width: i.widthMm, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
+      : i.type === 'pen' || i.type === 'preset' ? { type: i.type, locks: i.locked ? { color: i.locked.color === true, width: i.locked.thickness === true, opacity: i.locked.opacity === true } : null, brush: { color: i.color, width: i.widthMm, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
@@ -4596,6 +4670,81 @@
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && /\/notes(\.html)?$/.test(location.pathname)) {
     navigator.serviceWorker.register('notes-sw.js', { scope: './notes' }).catch(() => {});
   }
+
+  // ---- Tool names on hover (stylus held above the screen, or a mouse) ----
+  const lockedNames = it => it.locks ? ' · locked: ' + Object.keys(it.locks).map(k => k === 'width' ? 'thickness' : k).join(', ') : '';
+  function toolName(el) {
+    if (el.id === 'app') return 'Settings';
+    if (el.classList.contains('tbmin')) return 'Minimize or show the toolbar';
+    if (el.classList.contains('grip')) return 'Toolbar · tap for layout, drag to move';
+    const it = el.dataset.id && itemById(el.dataset.id);
+    if (!it) return '';
+    const ink = b => `${b.highlighter ? 'highlighter, ' : ''}${b.width} mm${b.opacity < 1 ? ', ' + Math.round(b.opacity * 100) + ' %' : ''}`;
+    switch (it.type) {
+      case 'pen': return `Pen ${pens().indexOf(it) + 1} · ${ink(it.brush)}${lockedNames(it)}`;
+      case 'preset': return `Preset · ${it.brush.color.toUpperCase()}, ${ink(it.brush)}${el.disabled ? (modLocked(it) ? ' · locked on this pen' : ' · choose a pen first') : ''}`;
+      case 'size': return `Stroke size · ${it.width} mm${el.disabled ? ' · choose a pen first' : ''}`;
+      case 'color': return `Colour · ${it.paint.color.toUpperCase()}${it.paint.highlighter ? ', highlighter' : ''}${el.disabled ? ' · choose a pen first' : ''}`;
+      case 'eraser': return 'Eraser';
+      case 'lasso': return 'Select';
+      case 'magnifier': return 'Magnifier';
+      case 'undo': return 'Undo';
+      case 'redo': return 'Redo';
+      case 'lock': return zoomLocked ? 'Zoom locked' : 'Zoom unlocked';
+      case 'fs': return fsElement() ? 'Exit full screen' : 'Full screen';
+      case 'zoom': return 'Zoom · tap to fit the page';
+      case 'real': return 'Real paper size (1:1)';
+      case 'pages': return 'All pages';
+      case 'print': return 'Print';
+      case 'save': return 'Save notebook';
+    }
+    return '';
+  }
+  {
+    const tip = document.createElement('div');
+    tip.className = 'tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true;
+    document.body.appendChild(tip);
+    let timer = 0, over = null;
+    const hide = () => { clearTimeout(timer); over = null; tip.classList.remove('on'); tip.hidden = true; };
+    const target = e => e.target.closest && e.target.closest('.toolbar [data-id], .toolbar .app, .toolbar .grip, .toolbar .tbmin');
+    document.addEventListener('pointerover', e => {
+      if (e.pointerType === 'touch') return;
+      const el = target(e);
+      if (!el || el === over) return;
+      if (el.title) { el.dataset.tip = el.title; el.removeAttribute('title'); }   // our label replaces the browser's
+      hide(); over = el;
+      timer = setTimeout(() => {
+        const text = toolName(el) || el.dataset.tip || '';
+        if (!text || over !== el) return;
+        tip.textContent = text; tip.hidden = false;
+        const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect(), vert = !!el.closest('.toolbar.vertical');
+        let x, y;
+        if (vert) { x = r.right + 8; if (x + t.width > innerWidth - 4) x = r.left - t.width - 8; y = r.top + (r.height - t.height) / 2; }
+        else { y = r.bottom + 8; if (y + t.height > innerHeight - 4) y = r.top - t.height - 8; x = r.left + (r.width - t.width) / 2; }
+        tip.style.left = Math.max(4, Math.min(innerWidth - t.width - 4, x)) + 'px';
+        tip.style.top = Math.max(4, Math.min(innerHeight - t.height - 4, y)) + 'px';
+        tip.classList.add('on');
+      }, 350);
+    });
+    document.addEventListener('pointerout', e => { const el = target(e); if (el && el === over && !el.contains(e.relatedTarget)) hide(); });
+    document.addEventListener('pointerdown', hide, true);
+    window.addEventListener('scroll', hide, true);
+  }
+
+  // ---- About: name and version ----
+  $('aboutBtn').addEventListener('click', async () => {
+    closePops();
+    $('aboutMark').innerHTML = LOGO;
+    const n = VERSION.match(/_(\d+)$/);
+    $('aboutVer').textContent = n ? `Version ${+n[1]}` : VERSION;
+    const installed = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
+    let kept = 'unknown';
+    try { if (navigator.storage && navigator.storage.persisted) kept = (await navigator.storage.persisted()) ? 'kept permanently' : 'may be cleared by the browser'; } catch (_) {}
+    const rows = [['Build', VERSION], ['Running as', installed ? 'installed app' : 'web page'], ['Notebooks', `${nbIdx.loaded.length} open`], ['Browser storage', kept]];
+    $('aboutInfo').innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+    $('aboutDlg').showModal();
+  });
+  $('aboutDone').addEventListener('click', () => $('aboutDlg').close());
 
   // ---- Start ----
   window.addEventListener('resize', layout);
