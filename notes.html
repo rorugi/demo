@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_63</title>
+<title>RRnotes_64</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -241,10 +241,11 @@
   .note [data-nact="move"] { cursor: grab; }
   .sticky-ico .body { fill: var(--nc, transparent); }
   .notepop { width: 248px; }
-  .noteswatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .noteswatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
   .noteswatches button { aspect-ratio: 1; border-radius: 6px; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
   .noteswatches [aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--bar-fg); }
-  .seg.notesizes { grid-template-columns: repeat(3, 1fr); }
+  .seg.notesizes { grid-template-columns: repeat(4, 1fr); }
+  .seg.notesizes button { font-size: 12px; padding: 0 2px; white-space: nowrap; }
   .papers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .papers button {
     display: grid; justify-items: center; gap: 5px; padding: 6px 0 5px;
@@ -877,7 +878,7 @@
   .overview header .ovchip svg { width: 18px; height: 18px; }
   .overview header .ovchip .body { fill: transparent; }
   .overview header .ovchip[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
-  .overview header .ovchip[aria-pressed="true"] .body { fill: #fff27a; }
+  .overview header .ovchip[aria-pressed="true"] .body { fill: #e8dd4d; }
   .overview header #ovDone { margin-left: 0; }
   .overview header { flex-wrap: wrap; }
   .overview .ovzoom { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--bar-fg); }
@@ -1021,7 +1022,7 @@
   <div class="noteswatches" id="noteSwatches"></div>
   <h3 data-nfor="tool note">Size</h3>
   <div class="seg notesizes" id="noteSizes" data-nfor="tool note">
-    <button type="button" data-s="38">S · 38 mm</button><button type="button" data-s="51">M · 51 mm</button><button type="button" data-s="76">L · 76 mm</button>
+    <button type="button" data-s="xs">XS · 38×15</button><button type="button" data-s="s">S · 38</button><button type="button" data-s="m">M · 51</button><button type="button" data-s="l">L · 76</button>
   </div>
   <label class="hlrow" for="notesShownToggle" data-nfor="tool"><span>Show sticky notes<span class="sub">Hidden sticky notes keep their place and ink</span></span><span class="switch"><input type="checkbox" id="notesShownToggle"><i></i></span></label>
   <button type="button" class="wide-btn subtle" id="noteMove" data-nfor="note">Move to page…</button>
@@ -1387,7 +1388,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_63';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_64';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1711,16 +1712,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   let pages = [{ strokes: [] }], cur = 0;
   // ---- Sticky notes: on a page, { id, x, y (mm, top left), size (mm, square), color, folded, strokes (in sticky note coordinates) } ----
-  const NOTE_COLORS = { yellow: '#fff27a', orange: '#ffc46b', pink: '#ffa3c8', green: '#b8eb8a', blue: '#a6d8ff', purple: '#d3bdff' };
-  const NOTE_SIZES = [38, 51, 76];
+  const NOTE_COLORS = { purple: '#6e5a92', blue: '#22acd1', grey: '#a9c4cf', rose: '#d29db4', pink: '#f66499', yellow: '#e8dd4d', green: '#c6e780', orange: '#f6be5d' };
+  const NOTE_SIZES = { xs: [38, 15], s: [38, 38], m: [51, 51], l: [76, 76] };   // width × height in mm
+  const noteW = n => n.size, noteHt = n => n.h || n.size;
   const DOT_R = 2.6;                         // a folded sticky note: a dot of this radius (mm)
   const notesOf = pg => pg.notes || (pg.notes = []);
   function cleanNote(n) {
     if (!n || typeof n !== 'object') return null;
-    const size = +n.size >= 10 && +n.size <= 200 ? +n.size : 51;
+    const size = +n.size >= 10 && +n.size <= 200 ? +n.size : 51, h = +n.h >= 10 && +n.h <= 200 ? +n.h : size;
     return {
       id: typeof n.id === 'string' && n.id ? n.id : Math.random().toString(36).slice(2, 9),
-      x: isFinite(n.x) ? +n.x : 10, y: isFinite(n.y) ? +n.y : 10, size,
+      x: isFinite(n.x) ? +n.x : 10, y: isFinite(n.y) ? +n.y : 10, size, h,
       color: NOTE_COLORS[n.color] ? n.color : 'yellow',
       folded: !!n.folded,
       strokes: (Array.isArray(n.strokes) ? n.strokes : []).map(cleanStroke).filter(Boolean)
@@ -1728,7 +1730,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const cleanNotes = list => (Array.isArray(list) ? list : []).map(cleanNote).filter(Boolean);
   let notesShown = store.get('notesShown', true) !== false;
-  const noteCfg = (c => ({ color: c && NOTE_COLORS[c.color] ? c.color : 'yellow', size: c && NOTE_SIZES.includes(+c.size) ? +c.size : 51 }))(store.get('noteCfg', null));
+  const noteCfg = (c => ({ color: c && NOTE_COLORS[c.color] ? c.color : 'yellow', size: c && NOTE_SIZES[c.size] ? c.size : 'm' }))(store.get('noteCfg', null));
   (function loadNotebook() {
     const nb = null;    // the backup is read by loadBackup() once everything is set up
     if (nb && Array.isArray(nb.pages) && nb.pages.length) {
@@ -3171,7 +3173,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       newPages = groups.map(g => ({
         strokes: [...g.querySelectorAll('[class~="ink"] path')].map(readPath).filter(Boolean),
         notes: cleanNotes([...g.querySelectorAll('[data-sticky]')].map(el => ({
-          x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), size: parseFloat(el.getAttribute('data-size')),
+          x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), size: parseFloat(el.getAttribute('data-size')), h: parseFloat(el.getAttribute('data-h')),
           color: el.getAttribute('data-color'), folded: el.getAttribute('data-folded') === '1',
           strokes: [...el.querySelectorAll('.nink path')].map(readPath).filter(Boolean)
         })))
@@ -3501,8 +3503,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           c += `q ${col} rg 0.3 0.3 0.3 RG 0.25 w ${P(cx + r, cy)} m ${P(cx + r, cy + m)} ${P(cx + m, cy + r)} ${P(cx, cy + r)} c ${P(cx - m, cy + r)} ${P(cx - r, cy + m)} ${P(cx - r, cy)} c ${P(cx - r, cy - m)} ${P(cx - m, cy - r)} ${P(cx, cy - r)} c ${P(cx + m, cy - r)} ${P(cx + r, cy - m)} ${P(cx + r, cy)} c B Q\n`;
           continue;
         }
-        const z = pdfNum(n.size);
-        c += `q 1 0 0 1 ${pdfNum(n.x)} ${pdfNum(n.y)} cm ${col} rg 0 0 ${z} ${z} re f 0 0 ${z} ${z} re W n\n` + inkOps(n.strokes) + 'Q\n';
+        const z = pdfNum(noteW(n)), zh = pdfNum(noteHt(n));
+        c += `q 1 0 0 1 ${pdfNum(n.x)} ${pdfNum(n.y)} cm ${col} rg 0 0 ${z} ${zh} re f 0 0 ${z} ${zh} re W n\n` + inkOps(n.strokes) + 'Q\n';
       }
       return c + 'Q\n';
     });
@@ -3548,7 +3550,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // static: thumbnails, page map, magnifier, flipping, print; ui: the page with handles; file: data to reopen it
   function noteMarkup(n, mode) {
     const c = NOTE_COLORS[n.color] || NOTE_COLORS.yellow, ui = mode === 'ui', file = mode === 'file';
-    const data = file ? ` data-sticky="1" data-x="${+n.x.toFixed(2)}" data-y="${+n.y.toFixed(2)}" data-size="${n.size}" data-color="${n.color}"${n.folded ? ' data-folded="1"' : ''}` : '';
+    const data = file ? ` data-sticky="1" data-x="${+n.x.toFixed(2)}" data-y="${+n.y.toFixed(2)}" data-size="${n.size}" data-h="${noteHt(n)}" data-color="${n.color}"${n.folded ? ' data-folded="1"' : ''}` : '';
     const nid = ui ? ` data-nid="${n.id}"` : '';
     if (n.folded) {
       const r = ui ? dotR() : DOT_R;
@@ -3556,12 +3558,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       return `<g class="note folded"${nid}${data}><circle cx="${+(n.x + r).toFixed(2)}" cy="${+(n.y + r).toFixed(2)}" r="${+r.toFixed(2)}" fill="${c}" stroke="rgba(0,0,0,.3)" stroke-width="${ui ? +(1 / S()).toFixed(3) : 0.25}"${ui ? ' data-nact="unfold"' : ''}/>` +
         (file ? `<g class="nink" display="none" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>` : '') + '</g>';
     }
-    const z = n.size;
-    let out = `<g class="note"${nid}${data}><rect x="${+(n.x + 0.5).toFixed(2)}" y="${+(n.y + 0.9).toFixed(2)}" width="${z}" height="${z}" fill="#000" opacity=".14"/>` +
-      `<svg x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${z}" viewBox="0 0 ${z} ${z}" overflow="hidden"><rect width="${z}" height="${z}" fill="${c}"/>` +
+    const z = noteW(n), zh = noteHt(n);
+    let out = `<g class="note"${nid}${data}><rect x="${+(n.x + 0.5).toFixed(2)}" y="${+(n.y + 0.9).toFixed(2)}" width="${z}" height="${zh}" fill="#000" opacity=".14"/>` +
+      `<svg x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${zh}" viewBox="0 0 ${z} ${zh}" overflow="hidden"><rect width="${z}" height="${zh}" fill="${c}"/>` +
       `<g class="nink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>`;
     if (ui) {
-      const h = Math.min(noteH, z / 3), k = h / 24, sw = +(1.4 / S()).toFixed(3);
+      const h = Math.min(noteH, z / 3, zh / 2.2), k = h / 24, sw = +(1.4 / S()).toFixed(3);   // a flat XS note gets smaller handles
       const ink = 'rgba(40,36,20,.55)';
       // top left: drag handle (six dots)
       out += `<g data-nact="move"><rect width="${h}" height="${h}" fill="transparent"/>` +
@@ -3570,7 +3572,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       out += `<g data-nact="gear" transform="translate(${+(z - h).toFixed(3)} 0)"><rect width="${h}" height="${h}" fill="transparent"/>` +
         `<g transform="translate(${+(h * 0.2).toFixed(3)} ${+(h * 0.2).toFixed(3)}) scale(${+(h * 0.6 / 24).toFixed(4)})" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"><path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g></g>`;
       // bottom right: a dog-ear that folds the sticky note away
-      out += `<g data-nact="fold" transform="translate(${+(z - h).toFixed(3)} ${+(z - h).toFixed(3)})"><rect width="${h}" height="${h}" fill="transparent"/>` +
+      out += `<g data-nact="fold" transform="translate(${+(z - h).toFixed(3)} ${+(zh - h).toFixed(3)})"><rect width="${h}" height="${h}" fill="transparent"/>` +
         `<path d="M${h} ${+(h * 0.35).toFixed(3)}L${+(h * 0.35).toFixed(3)} ${h}L${h} ${h}z" fill="rgba(0,0,0,.14)"/><path d="M${h} ${+(h * 0.35).toFixed(3)}L${+(h * 0.35).toFixed(3)} ${h}" stroke="${ink}" stroke-width="${sw}" fill="none"/></g>`;
     }
     return out + '</svg></g>';
@@ -3579,6 +3581,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function renderNotes() {
     noteH = noteHandle();
     noteLayer.innerHTML = notesMarkup(pages[cur], 'ui');
+    // a menu open for one sticky note stays attached to its (redrawn) gear
+    if (openPop === notePop && noteEdit.kind === 'note') {
+      const g = noteLayer.querySelector(`[data-nid="${noteEdit.note.id}"] [data-nact="gear"]`);
+      if (g) popAnchor = g;
+    }
   }
   // the sticky note under a point (open ones only, topmost first)
   function noteAt(x, y) {
@@ -3586,7 +3593,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const list = notesOf(pages[cur]);
     for (let i = list.length - 1; i >= 0; i--) {
       const n = list[i];
-      if (!n.folded && x >= n.x && y >= n.y && x <= n.x + n.size && y <= n.y + n.size) return n;
+      if (!n.folded && x >= n.x && y >= n.y && x <= n.x + noteW(n) && y <= n.y + noteHt(n)) return n;
     }
     return null;
   }
@@ -3598,9 +3605,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function placeNote(e) {
     const [x, y] = toMM(e);
     if (x < 0 || y < 0 || x > W || y > H) return;
-    const z = Math.min(noteCfg.size, W, H);
+    const [sw0, sh0] = NOTE_SIZES[noteCfg.size], z = Math.min(sw0, W), zh = Math.min(sh0, H);
     remember();
-    notesOf(pages[cur]).push({ id: uid(), x: Math.max(0, Math.min(W - z, x - z / 2)), y: Math.max(0, Math.min(H - z, y - z / 2)), size: z, color: noteCfg.color, folded: false, strokes: [] });
+    notesOf(pages[cur]).push({ id: uid(), x: Math.max(0, Math.min(W - z, x - z / 2)), y: Math.max(0, Math.min(H - zh, y - zh / 2)), size: z, h: zh, color: noteCfg.color, folded: false, strokes: [] });
     if (!notesShown) { notesShown = true; store.set('notesShown', true); }
     tool = 'pen';                           // ready to write on it
     renderNotes(); mapInkChanged(); updateToolbarState(); scheduleSave();
@@ -3621,7 +3628,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!a.moved && Math.hypot(x - a.start[0], y - a.start[1]) < 1.5) return;
     if (!a.on) { clearTimeout(a.timer); a.on = true; }
     a.moved = true;
-    n.x = Math.max(0, Math.min(W - n.size, x - a.off[0])); n.y = Math.max(0, Math.min(H - n.size, y - a.off[1]));
+    n.x = Math.max(0, Math.min(W - noteW(n), x - a.off[0])); n.y = Math.max(0, Math.min(H - noteHt(n), y - a.off[1]));
     if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; renderNotes(); if (active === a) fadeNote(n, true); });
   }
   function endPeek() {
@@ -3655,7 +3662,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let noteFrame = 0;
   function noteDragMove(e) {
     const a = active, n = a.note, [x, y] = toMM(e);
-    const nx = Math.max(0, Math.min(W - n.size, x - a.off[0])), ny = Math.max(0, Math.min(H - n.size, y - a.off[1]));
+    const nx = Math.max(0, Math.min(W - noteW(n), x - a.off[0])), ny = Math.max(0, Math.min(H - noteHt(n), y - a.off[1]));
     if (!a.moved && Math.hypot(nx - n.x, ny - n.y) < 0.5) return;
     a.moved = true; n.x = nx; n.y = ny;
     if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; renderNotes(); });
@@ -3687,11 +3694,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('noteSwatches').appendChild(b);
   });
   $('noteSizes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-    const z = Math.min(+b.dataset.s, W, H);
+    const [sw0, sh0] = NOTE_SIZES[b.dataset.s], z = Math.min(sw0, W), zh = Math.min(sh0, H);
     if (noteEdit.kind === 'note') {               // keeps its top left corner, stays on the page; ink outside is kept, just hidden
       const n = noteEdit.note;
-      if (n.size !== z) { remember(); n.size = z; n.x = Math.max(0, Math.min(W - z, n.x)); n.y = Math.max(0, Math.min(H - z, n.y)); renderNotes(); mapInkChanged(); scheduleSave(); }
-    } else { noteCfg.size = +b.dataset.s; store.set('noteCfg', noteCfg); }
+      if (n.size !== z || noteHt(n) !== zh) { remember(); n.size = z; n.h = zh; n.x = Math.max(0, Math.min(W - z, n.x)); n.y = Math.max(0, Math.min(H - zh, n.y)); renderNotes(); mapInkChanged(); scheduleSave(); }
+    } else { noteCfg.size = b.dataset.s; store.set('noteCfg', noteCfg); }
     renderNotePop();
     if (openPop) placePop();
   }));
@@ -3711,7 +3718,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!n || !src || i === pages.indexOf(src)) { goTo(i); return; }
     remember();
     src.notes.splice(src.notes.indexOf(n), 1);
-    n.x = Math.max(0, Math.min(W - n.size, n.x)); n.y = Math.max(0, Math.min(H - n.size, n.y));
+    n.x = Math.max(0, Math.min(W - noteW(n), n.x)); n.y = Math.max(0, Math.min(H - noteHt(n), n.y));
     notesOf(pages[i]).push(n);
     goTo(i);
     toast(`Sticky note moved to page ${i + 1}.`);
@@ -3734,8 +3741,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('notePopTitle').textContent = k === 'note' ? 'This sticky note' : 'New sticky notes';
     $('notePopTitle').hidden = false;
     $('noteSwatches').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === color)));
-    const size = k === 'note' ? noteEdit.note.size : noteCfg.size;
-    $('noteSizes').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === size)));
+    const is = b => { const [w, h] = NOTE_SIZES[b.dataset.s]; return k === 'note' ? noteEdit.note.size === w && noteHt(noteEdit.note) === h : noteCfg.size === b.dataset.s; };
+    $('noteSizes').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(is(b))));
     $('notesShownToggle').checked = notesShown;
   }
 
@@ -4494,7 +4501,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }, 450);
     }
     // while writing on a sticky note, the live ink is cut at its edge like the finished stroke
-    liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + note.size) * S()}px ${vh - view.ty - (note.y + note.size) * S()}px ${view.tx + note.x * S()}px)` : '';
+    liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + noteW(note)) * S()}px ${vh - view.ty - (note.y + noteHt(note)) * S()}px ${view.tx + note.x * S()}px)` : '';
     liveWrap.style.opacity = br.opacity;   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
     liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
@@ -5082,8 +5089,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pg || !pg.notes || !pg.notes.length || !paper) return -1;
     const pr = paper.getBoundingClientRect(), k = pr.width / W, mx = (x - pr.left) / k, my = (y - pr.top) / k, m = 8 / k;
     for (let i = pg.notes.length - 1; i >= 0; i--) {
-      const n = pg.notes[i], z = n.folded ? DOT_R * 2 : n.size;
-      if (mx >= n.x - m && my >= n.y - m && mx <= n.x + z + m && my <= n.y + z + m) return i;
+      const n = pg.notes[i], z = n.folded ? DOT_R * 2 : noteW(n), zh = n.folded ? DOT_R * 2 : noteHt(n);
+      if (mx >= n.x - m && my >= n.y - m && mx <= n.x + z + m && my <= n.y + zh + m) return i;
     }
     return -1;
   }
@@ -5094,12 +5101,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     og.mode = 'nlift';
     const paper = thumb.querySelector('.paper'), pr = paper.getBoundingClientRect(), k = pr.width / W;    // px per mm in the thumbnail
     const el = paper.querySelector(`[data-ovnote="${ni}"]`);
-    const size = n.folded ? DOT_R * 2 : n.size;
+    const size = n.folded ? DOT_R * 2 : noteW(n), sizeH = n.folded ? DOT_R * 2 : noteHt(n);
     const left = pr.left + n.x * k, top = pr.top + n.y * k;
     const ghost = document.createElement('div');
     ghost.className = 'noteghost';
-    ghost.innerHTML = `<svg viewBox="${n.x} ${n.y} ${size} ${size}" xmlns="${NS}">${noteMarkup(n, 'static')}</svg>`;
-    Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: size * k + 'px', height: size * k + 'px', borderRadius: n.folded ? '50%' : '0' });
+    ghost.innerHTML = `<svg viewBox="${n.x} ${n.y} ${size} ${sizeH}" xmlns="${NS}">${noteMarkup(n, 'static')}</svg>`;
+    Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: size * k + 'px', height: sizeH * k + 'px', borderRadius: n.folded ? '50%' : '0' });
     ghost.style.setProperty('--ox', (og.x0 - left) + 'px'); ghost.style.setProperty('--oy', (og.y0 - top) + 'px');
     document.body.appendChild(ghost);
     if (el) el.classList.add('lifted');
@@ -5124,10 +5131,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (t.classList.contains('add')) { remember(); pages.push({ strokes: [] }); i = pages.length - 1; }
     else { i = +t.dataset.i; remember(); }
     // where it was let go: same grip point on the target page
-    const pr = t.querySelector('.paper').getBoundingClientRect(), k = pr.width / W, size = n.folded ? DOT_R * 2 : n.size;
+    const pr = t.querySelector('.paper').getBoundingClientRect(), k = pr.width / W, size = n.folded ? DOT_R * 2 : noteW(n), sizeH = n.folded ? DOT_R * 2 : noteHt(n);
     const nx = (g.lastX - pr.left) / k - g.offMm[0], ny = (g.lastY - pr.top) / k - g.offMm[1];
     src.notes.splice(src.notes.indexOf(n), 1);
-    n.x = Math.max(0, Math.min(W - size, nx)); n.y = Math.max(0, Math.min(H - size, ny));
+    n.x = Math.max(0, Math.min(W - size, nx)); n.y = Math.max(0, Math.min(H - sizeH, ny));
     notesOf(pages[i]).push(n);
     if (i === cur || g.from === cur) renderPage();
     scheduleSave();
