@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_64</title>
+<title>RRnotes_65</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -130,19 +130,19 @@
     transform: translateY(-50%);
   }
   /* minimize / maximize: a minimized toolbar shows only its first icon and this button */
-  .toolbar .tbmin { min-width: 22px !important; width: 22px; padding: 0 !important; opacity: .55; }
+  .toolbar .tbmin { min-width: 34px !important; width: 34px; height: 34px; padding: 0 !important; opacity: .55; }
   .toolbar .tbmin:hover { opacity: 1; }
-  .toolbar .tbmin svg { width: 16px; height: 16px; transition: transform .15s; }
-  .toolbar.vertical .tbmin { width: 34px; height: 22px; }
+  .toolbar .tbmin svg { width: 18px; height: 18px; transition: transform .15s; }
+  .toolbar.vertical .tbmin { width: 34px; height: 34px; }
   .toolbar.vertical .tbmin svg { transform: rotate(90deg); }
   .toolbar.min .tbmin svg { transform: rotate(180deg); }
   .toolbar.vertical.min .tbmin svg { transform: rotate(270deg); }
   .toolbar.min .tb-items { display: none; }
-  /* a letter handle looks like the app mark: a dark tile with an italic letter */
+  /* a letter handle looks like the app mark: a dark tile with an upright letter */
   .toolbar .grip.letter {
     width: 30px; min-width: 30px !important; height: 30px; margin: 0 2px; opacity: 1;
     background: var(--brand); color: var(--brand-fg); border-radius: 8px;
-    font: italic 700 18px/1 var(--mark);
+    font: normal 700 18px/1 var(--mark);
   }
   .toolbar .grip.letter:hover { background: var(--brand) !important; opacity: 1; }
   .toolbar.vertical .grip.letter { margin: 2px 0; }
@@ -195,7 +195,7 @@
     background: var(--brand);
     color: var(--brand-fg);
     border-radius: 8px;
-    font: italic 700 18px/1 var(--mark);
+    font: normal 700 18px/1 var(--mark);
     cursor: grab;
   }
   /* app mark: two serif R with a pencil underneath */
@@ -595,7 +595,7 @@
   .tblist .ico.pen svg { width: 18px; height: 18px; transform: translate(0, -4px); }
   .tblist .ico .inkinfo { left: 3px; bottom: 1px; }
   .tblist .ico.pen svg.gearmark { width: 11px; height: 11px; left: 2px; top: 1px; transform: none; }
-  .tblist .ico.app { width: 30px; height: 26px; border-radius: 7px; background: var(--brand); color: var(--brand-fg); font: italic 700 15px/1 var(--mark); margin: 0 2px; }
+  .tblist .ico.app { width: 30px; height: 26px; border-radius: 7px; background: var(--brand); color: var(--brand-fg); font: normal 700 15px/1 var(--mark); margin: 0 2px; }
   .tblist .ico.sepico i { width: 18px; height: 1.5px; background: currentColor; opacity: .5; }
   .tblist .name { flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tblist .name small { opacity: .55; font-size: 12px; margin-left: 4px; font-variant-numeric: tabular-nums; }
@@ -879,13 +879,20 @@
   .overview header .ovchip .body { fill: transparent; }
   .overview header .ovchip[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
   .overview header .ovchip[aria-pressed="true"] .body { fill: #e8dd4d; }
-  .overview header #ovDone { margin-left: 0; }
-  .overview header { flex-wrap: wrap; }
-  .overview .ovzoom { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--bar-fg); }
-  .overview .ovzoom svg { width: 16px; height: 16px; opacity: .6; flex: none; }
-  .overview .ovzoom svg.big { width: 20px; height: 20px; }
-  .overview .ovzoom input { width: 130px; accent-color: var(--brand); }
-  .overview header .ovchip { margin-left: 0; }
+  .overview header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .overview .ovtop, .overview .ovtools { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .overview .ovtop .ovtitles { flex: 1; }
+  .overview header #ovDone { margin-left: auto; flex: none; }
+  .overview header .ovchip { margin-left: 0; flex: none; }
+  /* preview size: a long slider with a big knob, easy to set with a finger */
+  .overview .ovzoom { flex: 1; display: flex; align-items: center; gap: 10px; color: var(--bar-fg); min-width: 0; }
+  .overview .ovzoom svg { width: 20px; height: 20px; opacity: .6; flex: none; }
+  .overview .ovzoom svg.big { width: 26px; height: 26px; }
+  .overview .ovzoom input { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 36px; margin: 0; background: transparent; cursor: pointer; }
+  .overview .ovzoom input::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: var(--bar-line); }
+  .overview .ovzoom input::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -11px; border-radius: 50%; background: var(--brand); box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
+  .overview .ovzoom input::-moz-range-track { height: 8px; border-radius: 4px; background: var(--bar-line); }
+  .overview .ovzoom input::-moz-range-thumb { width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--brand); box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
   .overview.picking .thumb .del { display: none; }
   .overview.picking .thumb.cur { opacity: .45; }
   .overview header button {
@@ -1022,7 +1029,7 @@
   <div class="noteswatches" id="noteSwatches"></div>
   <h3 data-nfor="tool note">Size</h3>
   <div class="seg notesizes" id="noteSizes" data-nfor="tool note">
-    <button type="button" data-s="xs">XS · 38×15</button><button type="button" data-s="s">S · 38</button><button type="button" data-s="m">M · 51</button><button type="button" data-s="l">L · 76</button>
+    <button type="button" data-s="xs">XS · 15</button><button type="button" data-s="s">S · 38</button><button type="button" data-s="m">M · 51</button><button type="button" data-s="l">L · 76</button>
   </div>
   <label class="hlrow" for="notesShownToggle" data-nfor="tool"><span>Show sticky notes<span class="sub">Hidden sticky notes keep their place and ink</span></span><span class="switch"><input type="checkbox" id="notesShownToggle"><i></i></span></label>
   <button type="button" class="wide-btn subtle" id="noteMove" data-nfor="note">Move to page…</button>
@@ -1160,10 +1167,12 @@
 
 <div class="overview" id="overview" hidden>
   <header>
-    <div class="ovtitles"><h2 id="ovTitle">Pages</h2><span id="ovSub">Tap to open · hold and drag to reorder</span></div>
+    <div class="ovtop"><div class="ovtitles"><h2 id="ovTitle">Pages</h2><span id="ovSub">Tap to open · hold and drag to reorder</span></div>
+    <button type="button" id="ovDone">Done</button></div>
+    <div class="ovtools">
     <label class="ovzoom" title="Preview size"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><input type="range" id="ovZoom" min="70" max="420" step="10" aria-label="Preview size"><svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/></svg></label>
     <button type="button" class="ovchip" id="ovNotesBtn" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Sticky notes</button>
-    <button type="button" id="ovDone">Done</button>
+    </div>
   </header>
   <div class="ov-grid" id="ovGrid"></div>
 </div>
@@ -1388,7 +1397,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_64';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_65';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -4960,7 +4969,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup(n, 'static')}</g>`).join('') : ''}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
@@ -5089,7 +5098,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pg || !pg.notes || !pg.notes.length || !paper) return -1;
     const pr = paper.getBoundingClientRect(), k = pr.width / W, mx = (x - pr.left) / k, my = (y - pr.top) / k, m = 8 / k;
     for (let i = pg.notes.length - 1; i >= 0; i--) {
-      const n = pg.notes[i], z = n.folded ? DOT_R * 2 : noteW(n), zh = n.folded ? DOT_R * 2 : noteHt(n);
+      const n = pg.notes[i], z = noteW(n), zh = noteHt(n);       // folded ones are shown opened here
       if (mx >= n.x - m && my >= n.y - m && mx <= n.x + z + m && my <= n.y + zh + m) return i;
     }
     return -1;
@@ -5101,12 +5110,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     og.mode = 'nlift';
     const paper = thumb.querySelector('.paper'), pr = paper.getBoundingClientRect(), k = pr.width / W;    // px per mm in the thumbnail
     const el = paper.querySelector(`[data-ovnote="${ni}"]`);
-    const size = n.folded ? DOT_R * 2 : noteW(n), sizeH = n.folded ? DOT_R * 2 : noteHt(n);
+    const size = noteW(n), sizeH = noteHt(n);
     const left = pr.left + n.x * k, top = pr.top + n.y * k;
     const ghost = document.createElement('div');
     ghost.className = 'noteghost';
-    ghost.innerHTML = `<svg viewBox="${n.x} ${n.y} ${size} ${sizeH}" xmlns="${NS}">${noteMarkup(n, 'static')}</svg>`;
-    Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: size * k + 'px', height: sizeH * k + 'px', borderRadius: n.folded ? '50%' : '0' });
+    ghost.innerHTML = `<svg viewBox="${n.x} ${n.y} ${size} ${sizeH}" xmlns="${NS}">${noteMarkup({ ...n, folded: false }, 'static')}</svg>`;
+    Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: size * k + 'px', height: sizeH * k + 'px' });
     ghost.style.setProperty('--ox', (og.x0 - left) + 'px'); ghost.style.setProperty('--oy', (og.y0 - top) + 'px');
     document.body.appendChild(ghost);
     if (el) el.classList.add('lifted');
@@ -5131,7 +5140,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (t.classList.contains('add')) { remember(); pages.push({ strokes: [] }); i = pages.length - 1; }
     else { i = +t.dataset.i; remember(); }
     // where it was let go: same grip point on the target page
-    const pr = t.querySelector('.paper').getBoundingClientRect(), k = pr.width / W, size = n.folded ? DOT_R * 2 : noteW(n), sizeH = n.folded ? DOT_R * 2 : noteHt(n);
+    const pr = t.querySelector('.paper').getBoundingClientRect(), k = pr.width / W, size = noteW(n), sizeH = noteHt(n);
     const nx = (g.lastX - pr.left) / k - g.offMm[0], ny = (g.lastY - pr.top) / k - g.offMm[1];
     src.notes.splice(src.notes.indexOf(n), 1);
     n.x = Math.max(0, Math.min(W - size, nx)); n.y = Math.max(0, Math.min(H - sizeH, ny));
