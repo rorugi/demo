@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_65</title>
+<title>RRnotes_66</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -1397,7 +1397,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_65';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_66';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -4435,7 +4435,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // inside the window: two fingers move around the original page or pinch to zoom
   {
     const view$ = $('magView'), mt = new Map();
-    let g = null, mouse = null;
+    let g = null, mouse = null, hold = null;
+    // one finger, like a sticky note: held it turns see-through (25 %), moved it moves the window
+    const fadeMag = on => { magwin.style.transition = 'opacity .15s'; magwin.style.opacity = on ? 0.25 : ''; };
+    const endHold = () => { if (!hold) return; clearTimeout(hold.timer); if (hold.on) fadeMag(false); hold = null; };
     const pair = () => { const [a, b] = [...mt.values()]; return { d: Math.hypot(b.x - a.x, b.y - a.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; };
     const begin = () => { const t = pair(); g = { d0: t.d, ds: t.d, mx0: t.mx, my0: t.my, scale0: mag.scale, src0: mag.src.slice(), mode: null }; };
     const zoomTo = (scale, cx, cy, scale0, src0) => {       // keep the page point under (cx, cy) in place
@@ -4450,7 +4453,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (e.pointerType === 'touch') {
         view$.setPointerCapture(e.pointerId);
         mt.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (mt.size === 2) begin();
+        if (mt.size === 1) {
+          const h = hold = { id: e.pointerId, x: e.clientX, y: e.clientY, win0: { ...mag.win }, on: false, moved: false };
+          h.timer = setTimeout(() => { if (hold === h) { h.on = true; fadeMag(true); } }, 180);
+        }
+        if (mt.size === 2) { endHold(); begin(); }     // two fingers: move or zoom what it shows
       } else if (e.pointerType === 'mouse') {
         view$.setPointerCapture(e.pointerId);
         mouse = { id: e.pointerId, x: e.clientX, y: e.clientY, src0: mag.src.slice() };
@@ -4465,6 +4472,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
       if (!mt.has(e.pointerId)) return;
       mt.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (hold && e.pointerId === hold.id && mt.size === 1) {
+        const dx = e.clientX - hold.x, dy = e.clientY - hold.y;
+        if (!hold.moved && Math.hypot(dx, dy) < 6) return;
+        if (!hold.on) { clearTimeout(hold.timer); hold.on = true; fadeMag(true); }
+        hold.moved = true;
+        mag.win.x = hold.win0.x + dx; mag.win.y = hold.win0.y + dy;
+        clampWin(); magView();
+        return;
+      }
       if (!g || mt.size < 2) return;
       const t = pair();
       g.ds += (t.d - g.ds) * 0.6;
@@ -4479,6 +4495,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
     const up = e => {
       if (mouse && e.pointerId === mouse.id) mouse = null;
+      if (hold && e.pointerId === hold.id) endHold();
       if (mt.delete(e.pointerId) && mt.size < 2) g = null;
     };
     view$.addEventListener('pointerup', up); view$.addEventListener('pointercancel', up);
