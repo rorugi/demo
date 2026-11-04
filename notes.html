@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_58</title>
+<title>RRnotes_59</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -235,6 +235,16 @@
   /* highlighters sit behind the ink and blend like real highlighter ink */
   .hlg { mix-blend-mode: multiply; }
   body.paper-dark .hlg { mix-blend-mode: screen; }
+  /* post-its: always light paper, so their highlighter ink multiplies */
+  body .note .hlg { mix-blend-mode: multiply; }
+  .note [data-nact] { cursor: pointer; }
+  .note [data-nact="move"] { cursor: grab; }
+  .postit-ico .body { fill: var(--nc, transparent); }
+  .notepop { width: 248px; }
+  .noteswatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .noteswatches button { aspect-ratio: 1; border-radius: 6px; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+  .noteswatches [aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--bar-fg); }
+  .seg.notesizes { grid-template-columns: repeat(3, 1fr); }
   .papers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .papers button {
     display: grid; justify-items: center; gap: 5px; padding: 6px 0 5px;
@@ -941,6 +951,7 @@
       <path class="grid" fill="none" stroke-width="0.15"/>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
       <g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+      <g class="notes" id="noteLayer"></g>
       <g class="sel-layer" id="selLayer"></g>
       <g class="mag-layer" id="magLayer"></g>
     </svg>
@@ -981,6 +992,19 @@
   </div>
   <div class="locksub" data-for="pen">Presets, size and colour buttons leave locked values alone. This menu still changes them.</div>
   <button type="button" class="wide-btn subtle" id="savePreset" data-for="pen">Save as preset</button>
+</div>
+
+<!-- post-it menu: the tool (colour, size, show / hide) or one post-it (colour, delete) -->
+<div class="pop notepop" id="notePop" role="dialog" aria-label="Post-its" hidden>
+  <div class="poptitle" id="notePopTitle" hidden></div>
+  <h3>Colour</h3>
+  <div class="noteswatches" id="noteSwatches"></div>
+  <h3 data-nfor="tool">Size</h3>
+  <div class="seg notesizes" id="noteSizes" data-nfor="tool">
+    <button type="button" data-s="38">S · 38 mm</button><button type="button" data-s="51">M · 51 mm</button><button type="button" data-s="76">L · 76 mm</button>
+  </div>
+  <label class="hlrow" for="notesShownToggle" data-nfor="tool"><span>Show post-its<span class="sub">Hidden post-its keep their place and ink</span></span><span class="switch"><input type="checkbox" id="notesShownToggle"><i></i></span></label>
+  <button type="button" class="wide-btn" id="noteDelete" data-nfor="note">Delete post-it</button>
 </div>
 
 <!-- additional toolbar: tap its handle -->
@@ -1240,6 +1264,7 @@
     <label class="check"><input type="radio" name="pdfWhat" id="pdfCur" checked> This page</label>
     <label class="check"><input type="radio" name="pdfWhat" id="pdfAll"> <span id="pdfAllLabel">All pages</span></label>
     <label class="check"><input type="checkbox" id="pdfGrid" checked> Include background grid</label>
+    <label class="check"><input type="checkbox" id="pdfNotes" checked> Include post-its</label>
   </div>
   <div class="row">
     <button type="button" id="pdfCancel">Cancel</button>
@@ -1254,6 +1279,7 @@
     <label class="check"><input type="radio" name="printWhat" id="printCur" checked> This page</label>
     <label class="check"><input type="radio" name="printWhat" id="printAll"> <span id="printAllLabel">All pages</span></label>
     <label class="check"><input type="checkbox" id="printGrid" checked> Print background grid</label>
+    <label class="check"><input type="checkbox" id="printNotes" checked> Print post-its</label>
   </div>
   <div class="row">
     <button type="button" id="printCancel">Cancel</button>
@@ -1339,7 +1365,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_58';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_59';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1451,6 +1477,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const ICON = {
     pen: svg('<path class="body" d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><path d="M13 6.5l4.5 4.5"/>', ' class="pen-ico"'),
     nib: svg('<g transform="rotate(45 12 12)"><path class="body" d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>', ' class="pen-ico"'),
+    postit: svg('<path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/>', ' class="postit-ico"'),
     marker: svg('<path class="body" d="M14.6 3.4l5.9 5.9-7.6 7.6-5.9-5.9z"/><path d="M7 11l-2.4 4.6 3.7 3.7L13 17"/><path d="M3 21.2h7" stroke-width="2.4"/>', ' class="pen-ico"'),
     eraser: svg('<path d="M14.6 4.2l5.2 5.2a1.5 1.5 0 0 1 0 2.1L12.3 19H7.8l-3.6-3.6a1.5 1.5 0 0 1 0-2.1l8.3-8.3a1.5 1.5 0 0 1 2.1 0z"/><path d="M9.2 8.6l6.2 6.2M7.8 19H20"/>'),
     sepbr: svg('<path d="M8 4v16" stroke-dasharray="2.5 2.2"/><path d="M19 5v6.5a3 3 0 0 1-3 3h-4"/><path d="M14.5 12l-2.5 2.5 2.5 2.5"/>'),
@@ -1474,6 +1501,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pen:    { label: 'Pen', multi: true },
     space:  { label: 'Empty space', multi: true },
     preset: { label: 'Preset', multi: true },
+    postit: { label: 'Post-it' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
     undo:   { label: 'Undo' },
@@ -1523,7 +1551,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return [
       { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) },
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b) })),
-      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
+      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'postit' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
     ];
@@ -1660,6 +1688,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   };
 
   let pages = [{ strokes: [] }], cur = 0;
+  // ---- Post-its: on a page, { id, x, y (mm, top left), size (mm, square), color, folded, strokes (in post-it coordinates) } ----
+  const NOTE_COLORS = { yellow: '#fff27a', orange: '#ffc46b', pink: '#ffa3c8', green: '#b8eb8a', blue: '#a6d8ff', purple: '#d3bdff' };
+  const NOTE_SIZES = [38, 51, 76];
+  const DOT_R = 2.6;                         // a folded post-it: a dot of this radius (mm)
+  const notesOf = pg => pg.notes || (pg.notes = []);
+  function cleanNote(n) {
+    if (!n || typeof n !== 'object') return null;
+    const size = +n.size >= 10 && +n.size <= 200 ? +n.size : 51;
+    return {
+      id: typeof n.id === 'string' && n.id ? n.id : Math.random().toString(36).slice(2, 9),
+      x: isFinite(n.x) ? +n.x : 10, y: isFinite(n.y) ? +n.y : 10, size,
+      color: NOTE_COLORS[n.color] ? n.color : 'yellow',
+      folded: !!n.folded,
+      strokes: (Array.isArray(n.strokes) ? n.strokes : []).map(cleanStroke).filter(Boolean)
+    };
+  }
+  const cleanNotes = list => (Array.isArray(list) ? list : []).map(cleanNote).filter(Boolean);
+  let notesShown = store.get('notesShown', true) !== false;
+  const noteCfg = (c => ({ color: c && NOTE_COLORS[c.color] ? c.color : 'yellow', size: c && NOTE_SIZES.includes(+c.size) ? +c.size : 51 }))(store.get('noteCfg', null));
   (function loadNotebook() {
     const nb = null;    // the backup is read by loadBackup() once everything is set up
     if (nb && Array.isArray(nb.pages) && nb.pages.length) {
@@ -1743,7 +1790,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (typeof closeMag === 'function' && mag) closeMag();
     undoStack.length = redoStack.length = 0;
     if (nb && Array.isArray(nb.pages) && nb.pages.length) {
-      pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean) }));
+      pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes) }));
       cur = Math.min(pages.length - 1, Math.max(0, nb.cur | 0));
       compactPages(pages);
       applySetup(cleanSetup(nb.setup), true);
@@ -1785,13 +1832,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     backupReady = true;
     await writeCurrent();
   }
-  const hasInk = () => pages.some(p => p.strokes.length);
+  const hasInk = () => pages.some(p => p.strokes.length || (p.notes && p.notes.length));
 
   // ---- Undo / redo: snapshots of every page's stroke list (strokes themselves never change) ----
   const undoStack = [], redoStack = [];
   // a snapshot also remembers which strokes were selected, so undo/redo keep the selection
   // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
-  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice() })), cur,
+  const copyNotes = list => (list || []).map(n => ({ ...n, strokes: n.strokes.slice() }));
+  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes) })), cur,
     selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
     markChanged();
@@ -1801,7 +1849,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
   }
   function restore(s) {
-    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); return e.page; });
+    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); return e.page; });
     if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
     const again = s.selIdx && s.selIdx.length ? s.selIdx.map(i => pages[cur].strokes[i]).filter(Boolean) : null;
@@ -1833,6 +1881,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   function renderPage() {
     pageInk.innerHTML = inkMarkup(pages[cur].strokes, false, true);
+    renderNotes();
     renderSelection();
     if (typeof magIndicator === 'function') magIndicator();
     mapInkChanged();
@@ -1884,6 +1933,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
     updateMap();
     if (mag) { clampWin(); magView(); }
+    if (notesShown && pages[cur] && pages[cur].notes && pages[cur].notes.length && Math.abs(noteHandle() - noteH) > 0.2) renderNotes();
     if (active && active.pts) { redrawActive(); drawTip([]); }
     placeSelbar();
   }
@@ -1930,6 +1980,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'pen': return `<button type="button" class="pen realpen" ${a} aria-pressed="false" title="Pen · tap again for colour, thickness and opacity">${ICON.nib}<span class="inkinfo"><span class="swatch"></span><small></small></span>${PENLOCK}</button>`;
       case 'space': return `<span class="space" ${a} aria-hidden="true"></span>`;
       case 'eraser': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Eraser" title="Eraser · tap again for size">${ICON.eraser}</button>`;
+      case 'postit': return `<button type="button" class="eraser" ${a} aria-pressed="false">${ICON.postit}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
       case 'undo': return `<button type="button" ${a} aria-label="Undo" title="Undo">${ICON.undo}</button>`;
@@ -2132,6 +2183,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
         case 'eraser': el.setAttribute('aria-pressed', String(tool === 'eraser')); break;
         case 'lasso': el.setAttribute('aria-pressed', String(tool === 'lasso')); break;
+        case 'postit':
+          el.setAttribute('aria-pressed', String(tool === 'postit'));
+          el.style.setProperty('--nc', notesShown ? NOTE_COLORS[noteCfg.color] : 'transparent');
+          el.setAttribute('aria-label', `Post-it, ${notesShown ? 'shown' : 'hidden'}. Tap to place one, tap again for colour, size and show / hide`);
+          break;
         case 'preset': {
           const on = modMatches(it), b = it.brush;
           el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
@@ -2195,6 +2251,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         break;
       case 'lasso':
         if (tool !== 'lasso') { tool = 'lasso'; closePops(); updateToolbarState(); }
+        break;
+      case 'postit':
+        if (tool === 'postit') { openPop === notePop && noteEdit.kind === 'tool' ? closePops() : (noteEdit = { kind: 'tool' }, renderNotePop(), showPop(notePop, el)); }
+        else { if (sel) clearSelection(); tool = 'postit'; closePops(); updateToolbarState(); }
         break;
       case 'size':
       case 'color':
@@ -2450,10 +2510,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }));
   $('clearPage').addEventListener('click', async () => {
     closePops();
-    if (!pages[cur].strokes.length) return;
+    if (!pages[cur].strokes.length && !notesOf(pages[cur]).length) return;
     if (!(await ask(`Clear page ${cur + 1}?`, 'Everything written on this page is removed. Undo brings it back.', 'Clear page'))) return;
     remember();
-    pages[cur].strokes = [];
+    pages[cur].strokes = []; pages[cur].notes = [];
     renderPage(); scheduleSave();
   });
 
@@ -2612,7 +2672,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function mapInkChanged() {
     magInkChanged();
     if (!mmVisible || mmInkFrame) return;
-    mmInkFrame = requestAnimationFrame(() => { mmInkFrame = 0; mmInk.innerHTML = inkMarkup(pages[cur].strokes); });
+    mmInkFrame = requestAnimationFrame(() => { mmInkFrame = 0; mmInk.innerHTML = inkMarkup(pages[cur].strokes) + notesMarkup(pages[cur]); });
   }
   function mmHit(x, y) {
     if (!mmVisible) return false;
@@ -2990,7 +3050,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridUse}<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">\n`;
       s += inkMarkup(p.strokes, true);
-      s += `\n</g>\n</g>\n`;
+      s += `\n</g>\n`;
+      if (p.notes && p.notes.length) s += `<g class="postits">${notesMarkup(p, 'file')}</g>\n`;
+      s += `</g>\n`;
     });
     return s + '</svg>\n';
   }
@@ -3079,12 +3141,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       } : null);
       const groups = [...doc.querySelectorAll('[data-page]')];
       if (!groups.length) throw new Error('notebook');
+      const readPath = p => cleanStroke({
+        d: p.getAttribute('d'), c: p.getAttribute('data-c') || p.getAttribute('stroke'), w: parseFloat(p.getAttribute('stroke-width')),
+        o: p.hasAttribute('stroke-opacity') ? parseFloat(p.getAttribute('stroke-opacity')) : 1,
+        h: p.getAttribute('data-hl') === '1', k: p.getAttribute('data-k') === 'dark'
+      });
       newPages = groups.map(g => ({
-        strokes: [...g.querySelectorAll('[class~="ink"] path')].map(p => cleanStroke({
-          d: p.getAttribute('d'), c: p.getAttribute('data-c') || p.getAttribute('stroke'), w: parseFloat(p.getAttribute('stroke-width')),
-          o: p.hasAttribute('stroke-opacity') ? parseFloat(p.getAttribute('stroke-opacity')) : 1,
-          h: p.getAttribute('data-hl') === '1', k: p.getAttribute('data-k') === 'dark'
-        })).filter(Boolean)
+        strokes: [...g.querySelectorAll('[class~="ink"] path')].map(readPath).filter(Boolean),
+        notes: cleanNotes([...g.querySelectorAll('[data-postit]')].map(el => ({
+          x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), size: parseFloat(el.getAttribute('data-size')),
+          color: el.getAttribute('data-color'), folded: el.getAttribute('data-folded') === '1',
+          strokes: [...el.querySelectorAll('.nink path')].map(readPath).filter(Boolean)
+        })))
       }));
     } catch (err) {
       toast(`${file.name} isn't an RRnotes notebook. Choose an SVG saved from RRnotes.`);
@@ -3310,10 +3378,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('printMenuBtn').addEventListener('click', openPrint);
   $('printCancel').addEventListener('click', () => printDlg.close());
   gridBox.addEventListener('change', () => store.set('printGrid', gridBox.checked));
+  $('printNotes').checked = store.get('printNotes', true) !== false;
+  $('printNotes').addEventListener('change', e => store.set('printNotes', e.target.checked));
   $('printGo').addEventListener('click', () => {
     const list = $('printAll').checked ? pages : [pages[cur]];
     $('printArea').innerHTML = list.map(p =>
-      `<div class="psheet"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/><g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes, true)}</g></svg></div>`
+      `<div class="psheet"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/><g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes, true)}</g>${$('printNotes').checked && p.notes ? p.notes.map(n => noteMarkup(n, 'print')).join('') : ''}</svg></div>`
     ).join('');
     document.body.classList.toggle('print-no-grid', !gridBox.checked);
     printDlg.close();
@@ -3323,6 +3393,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- PDF export: built here, no library; strokes stay vector curves ----
   const pdfDlg = $('pdfDlg');
   $('pdfGrid').checked = store.get('pdfGrid', true) !== false;
+  $('pdfNotes').checked = store.get('pdfNotes', true) !== false;
   $('pdfMenuBtn').addEventListener('click', () => {
     closePops();
     $('pdfAllLabel').textContent = `All pages (${pages.length})`;
@@ -3335,12 +3406,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('pdfName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('pdfGo').click(); } });
   $('pdfGo').addEventListener('click', async () => {
     const list = $('pdfAll').checked ? pages : [pages[cur]];
-    const grid = $('pdfGrid').checked;
-    store.set('pdfGrid', grid);
+    const grid = $('pdfGrid').checked, withNotes = $('pdfNotes').checked;
+    store.set('pdfGrid', grid); store.set('pdfNotes', withNotes);
     const name = $('pdfName').value.trim().replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-') || `RRnotes_${stamp()}`;
     pdfDlg.close();
     try {
-      const blob = await buildPdf(list, grid, name);
+      const blob = await buildPdf(list, grid, name, withNotes);
       saveBlob(blob, name + '.pdf', 'PDF document', 'application/pdf', '.pdf');
     } catch (err) { toast('The PDF could not be created.'); }
   });
@@ -3377,7 +3448,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!window.CompressionStream) return null;
     return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
   }
-  async function buildPdf(list, withGrid, title) {
+  async function buildPdf(list, withGrid, title, withNotes) {
     const k = 72 / 25.4, wPt = pdfNum(W * k), hPt = pdfNum(H * k);
     const gstates = new Map();                    // "opacity|blend" -> name
     const gs = (o, hl) => {
@@ -3389,11 +3460,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const streams = list.map(pg => {
       let c = `q ${pdfNum(k)} 0 0 ${pdfNum(-k)} 0 ${hPt} cm 1 J 1 j\n` + gridOps;
       const order = [...pg.strokes.filter(s => s.h), ...pg.strokes.filter(s => !s.h)];   // highlighters underneath
-      for (const st of order) {
-        const path = pdfPath(st);
-        if (!path) continue;
-        const g = st.o < 1 || st.h ? `/${gs(st.o, st.h)} gs ` : '';
-        c += `q ${g}${hexRgb(fileColor(st.c, st.k))} RG ${pdfNum(st.w)} w ${path} S Q\n`;
+      const inkOps = strokes => {
+        let o = '';
+        for (const st of [...strokes.filter(s => s.h), ...strokes.filter(s => !s.h)]) {
+          const path = pdfPath(st);
+          if (!path) continue;
+          const g = st.o < 1 || st.h ? `/${gs(st.o, st.h)} gs ` : '';
+          o += `q ${g}${hexRgb(fileColor(st.c, st.k))} RG ${pdfNum(st.w)} w ${path} S Q\n`;
+        }
+        return o;
+      };
+      c += inkOps(order);
+      // post-its on top: paper, then their ink cut at the edge; folded ones as a dot
+      if (withNotes) for (const n of pg.notes || []) {
+        const col = hexRgb(NOTE_COLORS[n.color] || NOTE_COLORS.yellow);
+        if (n.folded) {
+          const r = DOT_R, cx = n.x + r, cy = n.y + r, m = r * 0.5523, P = (x, y) => `${pdfNum(x)} ${pdfNum(y)}`;
+          c += `q ${col} rg 0.3 0.3 0.3 RG 0.25 w ${P(cx + r, cy)} m ${P(cx + r, cy + m)} ${P(cx + m, cy + r)} ${P(cx, cy + r)} c ${P(cx - m, cy + r)} ${P(cx - r, cy + m)} ${P(cx - r, cy)} c ${P(cx - r, cy - m)} ${P(cx - m, cy - r)} ${P(cx, cy - r)} c ${P(cx + m, cy - r)} ${P(cx + r, cy - m)} ${P(cx + r, cy)} c B Q\n`;
+          continue;
+        }
+        const z = pdfNum(n.size);
+        c += `q 1 0 0 1 ${pdfNum(n.x)} ${pdfNum(n.y)} cm ${col} rg 0 0 ${z} ${z} re f 0 0 ${z} ${z} re W n\n` + inkOps(n.strokes) + 'Q\n';
       }
       return c + 'Q\n';
     });
@@ -3429,6 +3516,138 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (let i = 1; i < n; i++) put(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
     put(`trailer\n<< /Size ${n} /Root 1 0 R /Info ${infoId} 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
     return new Blob(chunks, { type: 'application/pdf' });
+  }
+
+  // ---- Post-its ----
+  const noteLayer = $('noteLayer');
+  let noteH = 0;                             // size of the handles on a post-it (mm), grows when zoomed out
+  const noteHandle = () => Math.max(4.5, 24 / S());
+  const dotR = () => Math.max(DOT_R, 10 / S());
+  // static: thumbnails, page map, magnifier, flipping, print; ui: the page with handles; file: data to reopen it
+  function noteMarkup(n, mode) {
+    const c = NOTE_COLORS[n.color] || NOTE_COLORS.yellow, ui = mode === 'ui', file = mode === 'file';
+    const data = file ? ` data-postit="1" data-x="${+n.x.toFixed(2)}" data-y="${+n.y.toFixed(2)}" data-size="${n.size}" data-color="${n.color}"${n.folded ? ' data-folded="1"' : ''}` : '';
+    const nid = ui ? ` data-nid="${n.id}"` : '';
+    if (n.folded) {
+      const r = ui ? dotR() : DOT_R;
+      // in files the ink stays inside (hidden) so the post-it reopens with it
+      return `<g class="note folded"${nid}${data}><circle cx="${+(n.x + r).toFixed(2)}" cy="${+(n.y + r).toFixed(2)}" r="${+r.toFixed(2)}" fill="${c}" stroke="rgba(0,0,0,.3)" stroke-width="${ui ? +(1 / S()).toFixed(3) : 0.25}"${ui ? ' data-nact="unfold"' : ''}/>` +
+        (file ? `<g class="nink" display="none" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>` : '') + '</g>';
+    }
+    const z = n.size;
+    let out = `<g class="note"${nid}${data}><rect x="${+(n.x + 0.5).toFixed(2)}" y="${+(n.y + 0.9).toFixed(2)}" width="${z}" height="${z}" fill="#000" opacity=".14"/>` +
+      `<svg x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${z}" viewBox="0 0 ${z} ${z}" overflow="hidden"><rect width="${z}" height="${z}" fill="${c}"/>` +
+      `<g class="nink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>`;
+    if (ui) {
+      const h = Math.min(noteH, z / 3), k = h / 24, sw = +(1.4 / S()).toFixed(3);
+      const ink = 'rgba(40,36,20,.55)';
+      // top left: drag handle (six dots)
+      out += `<g data-nact="move"><rect width="${h}" height="${h}" fill="transparent"/>` +
+        [[9, 7], [15, 7], [9, 12], [15, 12], [9, 17], [15, 17]].map(([x, y]) => `<circle cx="${+(x * k).toFixed(3)}" cy="${+(y * k).toFixed(3)}" r="${+(1.5 * k).toFixed(3)}" fill="${ink}"/>`).join('') + '</g>';
+      // top right: gear for this post-it's options
+      out += `<g data-nact="gear" transform="translate(${+(z - h).toFixed(3)} 0)"><rect width="${h}" height="${h}" fill="transparent"/>` +
+        `<g transform="translate(${+(h * 0.2).toFixed(3)} ${+(h * 0.2).toFixed(3)}) scale(${+(h * 0.6 / 24).toFixed(4)})" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"><path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g></g>`;
+      // bottom right: a dog-ear that folds the post-it away
+      out += `<g data-nact="fold" transform="translate(${+(z - h).toFixed(3)} ${+(z - h).toFixed(3)})"><rect width="${h}" height="${h}" fill="transparent"/>` +
+        `<path d="M${h} ${+(h * 0.35).toFixed(3)}L${+(h * 0.35).toFixed(3)} ${h}L${h} ${h}z" fill="rgba(0,0,0,.14)"/><path d="M${h} ${+(h * 0.35).toFixed(3)}L${+(h * 0.35).toFixed(3)} ${h}" stroke="${ink}" stroke-width="${sw}" fill="none"/></g>`;
+    }
+    return out + '</svg></g>';
+  }
+  const notesMarkup = (pg, mode) => (mode === 'file' || notesShown) && pg.notes && pg.notes.length ? pg.notes.map(n => noteMarkup(n, mode)).join('') : '';
+  function renderNotes() {
+    noteH = noteHandle();
+    noteLayer.innerHTML = notesMarkup(pages[cur], 'ui');
+  }
+  // the post-it under a point (open ones only, topmost first)
+  function noteAt(x, y) {
+    if (!notesShown) return null;
+    const list = notesOf(pages[cur]);
+    for (let i = list.length - 1; i >= 0; i--) {
+      const n = list[i];
+      if (!n.folded && x >= n.x && y >= n.y && x <= n.x + n.size && y <= n.y + n.size) return n;
+    }
+    return null;
+  }
+  function setNotesShown(v) {
+    notesShown = v; store.set('notesShown', v);
+    renderNotes(); mapInkChanged(); updateToolbarState();
+    if (!$('overview').hidden) buildOverview();
+  }
+  function placeNote(e) {
+    const [x, y] = toMM(e);
+    if (x < 0 || y < 0 || x > W || y > H) return;
+    const z = Math.min(noteCfg.size, W, H);
+    remember();
+    notesOf(pages[cur]).push({ id: uid(), x: Math.max(0, Math.min(W - z, x - z / 2)), y: Math.max(0, Math.min(H - z, y - z / 2)), size: z, color: noteCfg.color, folded: false, strokes: [] });
+    if (!notesShown) { notesShown = true; store.set('notesShown', true); }
+    tool = 'pen';                           // ready to write on it
+    renderNotes(); mapInkChanged(); updateToolbarState(); scheduleSave();
+  }
+  // taps on a post-it's handles; returns true when handled
+  function noteAction(e, el) {
+    const g = el.closest('[data-nid]'), n = g && notesOf(pages[cur]).find(x => x.id === g.dataset.nid);
+    if (!n) return false;
+    const act = el.dataset.nact;
+    if (act === 'move') {
+      const [x, y] = toMM(e);
+      active = { id: e.pointerId, type: e.pointerType, noteDrag: true, note: n, off: [x - n.x, y - n.y], before: snapshot(), moved: false };
+      return true;
+    }
+    if (act === 'gear') {
+      if (openPop === notePop && noteEdit.note === n) closePops();
+      else { noteEdit = { kind: 'note', note: n }; renderNotePop(); showPop(notePop, el); }
+      return true;
+    }
+    remember();
+    n.folded = act === 'fold';
+    if (!n.folded) { const list = notesOf(pages[cur]); list.splice(list.indexOf(n), 1); list.push(n); }   // opened ones come to the front
+    renderNotes(); mapInkChanged(); scheduleSave();
+    return true;
+  }
+  let noteFrame = 0;
+  function noteDragMove(e) {
+    const a = active, n = a.note, [x, y] = toMM(e);
+    const nx = Math.max(0, Math.min(W - n.size, x - a.off[0])), ny = Math.max(0, Math.min(H - n.size, y - a.off[1]));
+    if (!a.moved && Math.hypot(nx - n.x, ny - n.y) < 0.5) return;
+    a.moved = true; n.x = nx; n.y = ny;
+    if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; renderNotes(); });
+  }
+  function endNoteDrag() {
+    const a = active;
+    active = null;
+    if (a.moved) { remember(a.before); renderNotes(); mapInkChanged(); scheduleSave(); }
+  }
+  // menu: the tool (colour, size, show / hide) or one post-it (colour, delete)
+  const notePop = $('notePop');
+  let noteEdit = { kind: 'tool' };
+  Object.entries(NOTE_COLORS).forEach(([k, c]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.k = k; b.style.setProperty('--c', c); b.setAttribute('aria-label', k[0].toUpperCase() + k.slice(1));
+    b.addEventListener('click', () => {
+      if (noteEdit.kind === 'note') { remember(); noteEdit.note.color = k; renderNotes(); mapInkChanged(); scheduleSave(); }
+      else { noteCfg.color = k; store.set('noteCfg', noteCfg); updateToolbarState(); }
+      renderNotePop();
+    });
+    $('noteSwatches').appendChild(b);
+  });
+  $('noteSizes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { noteCfg.size = +b.dataset.s; store.set('noteCfg', noteCfg); renderNotePop(); }));
+  $('notesShownToggle').addEventListener('change', e => setNotesShown(e.target.checked));
+  $('noteDelete').addEventListener('click', () => {
+    const n = noteEdit.note, list = notesOf(pages[cur]);
+    if (!n || !list.includes(n)) { closePops(); return; }
+    remember();
+    list.splice(list.indexOf(n), 1);
+    closePops(); renderNotes(); mapInkChanged(); scheduleSave();
+    toast('Post-it deleted. Undo brings it back.');
+  });
+  function renderNotePop() {
+    const k = noteEdit.kind, color = k === 'note' ? noteEdit.note.color : noteCfg.color;
+    notePop.querySelectorAll('[data-nfor]').forEach(x => { x.hidden = x.dataset.nfor !== k; });
+    $('notePopTitle').textContent = k === 'note' ? 'This post-it' : 'New post-its';
+    $('notePopTitle').hidden = false;
+    $('noteSwatches').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === color)));
+    $('noteSizes').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === noteCfg.size)));
+    $('notesShownToggle').checked = notesShown;
   }
 
   // ---- Stroke drawing ----
@@ -3578,7 +3797,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pts = parsePoints(st.d);
     return pts ? { ...st, d: toPath(simplify(pts)) } : st;
   }
-  const compactPages = list => list.forEach(pg => { pg.strokes = pg.strokes.map(compactStroke); });
+  const compactPages = list => list.forEach(pg => { pg.strokes = pg.strokes.map(compactStroke); (pg.notes || []).forEach(n => { n.strokes = n.strokes.map(compactStroke); }); });
 
   // ---- Geometry shared by the eraser and scribble-erase ----
   // Our paths are "M p0 L mid Q p1 mid … L pn", so the original points can be read back from d.
@@ -3653,7 +3872,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let eraseFrame = 0;
   // whole = stroke eraser: a touched stroke is removed completely instead of being cut
   function eraseAlong(a, b, whole) {
-    const r = eraserSize / 2, list = pages[cur].strokes, out = [];
+    const n = noteAt(b[0], b[1]);
+    if (n) {
+      const res = eraseList(n.strokes, [a[0] - n.x, a[1] - n.y], [b[0] - n.x, b[1] - n.y], whole);
+      if (res) { n.strokes = res; if (!eraseFrame) eraseFrame = requestAnimationFrame(() => { eraseFrame = 0; renderNotes(); mapInkChanged(); }); }
+      return !!res;
+    }
+    const res = eraseList(pages[cur].strokes, a, b, whole);
+    if (res) {
+      pages[cur].strokes = res;
+      if (!eraseFrame) eraseFrame = requestAnimationFrame(() => { eraseFrame = 0; renderPage(); });
+    }
+    return !!res;
+  }
+  // returns the strokes left after erasing along a→b, or null when nothing was touched
+  function eraseList(list, a, b, whole) {
+    const r = eraserSize / 2, out = [];
     let changed = false;
     for (const st of list) {
       const reach = r + st.w / 2, g = strokeGeo(st), bx = g.box;
@@ -3671,11 +3905,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       g.pts.forEach((q, i) => { if (keep[i]) run.push(q); else flush(); });
       flush();
     }
-    if (changed) {
-      pages[cur].strokes = out;
-      if (!eraseFrame) eraseFrame = requestAnimationFrame(() => { eraseFrame = 0; renderPage(); });
-    }
-    return changed;
+    return changed ? out : null;
   }
   function drawEraserCursor(x, y) {
     clearCtx(tctx);
@@ -3691,6 +3921,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearCtx(lctx);
     liveWrap.style.opacity = 1;
     liveWrap.style.mixBlendMode = 'normal';
+    liveWrap.style.clipPath = '';
     active = { id: e.pointerId, type: e.pointerType, erase: true, whole: eraserMode === 'whole', last: q, changed: false, before: snapshot() };
     active.changed = eraseAlong(q, q, active.whole);
     drawEraserCursor(q[0], q[1]);
@@ -4010,7 +4241,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pages.includes(mag.page)) { closeMag(); return; }     // its page was deleted
     $('magPaper').setAttribute('width', W); $('magPaper').setAttribute('height', H);
     $('magGrid').setAttribute('d', GRID_D);
-    $('magInk').innerHTML = inkMarkup(mag.page.strokes);
+    $('magInk').innerHTML = inkMarkup(mag.page.strokes) + notesMarkup(mag.page);
     magView();
   }
   function magView() {
@@ -4160,11 +4391,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (x < 0 || y < 0 || x > W || y > H) return;
     const br = effBrush();                  // the pen, with an active size / colour button applied
     clearCtx(lctx); clearCtx(tctx);
+    const note = noteAt(x, y);              // a stroke that starts on a post-it belongs to it
     active = { id: e.pointerId, type: e.pointerType, pts: [], sx: 0, sy: 0, color: br.color, width: br.width, opacity: br.opacity,
-               h: br.highlighter, k: br.pickedOnDark, disp: displayColor(br.color, br.pickedOnDark) };
+               h: br.highlighter, k: br.pickedOnDark, disp: note ? fileColor(br.color, br.pickedOnDark) : displayColor(br.color, br.pickedOnDark), note };
+    // while writing on a post-it, the live ink is cut at its edge like the finished stroke
+    liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + note.size) * S()}px ${vh - view.ty - (note.y + note.size) * S()}px ${view.tx + note.x * S()}px)` : '';
     liveWrap.style.opacity = br.opacity;   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
-    liveWrap.style.mixBlendMode = br.highlighter ? (paperDark ? 'screen' : 'multiply') : 'normal';
+    liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
     styleCtx(); stage.classList.add('drawing');
     feed(x, y);
   }
@@ -4172,6 +4406,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const a = active;
     if (!a) return;
     if (a.magsel) { active = null; clearCtx(tctx); return; }
+    if (a.noteDrag) { endNoteDrag(); return; }
     if (a.lasso || a.move) {                 // a lasso or move interrupted (e.g. by two fingers)
       active = null; clearCtx(tctx);
       if (a.move) { a.els.forEach(el => el.removeAttribute('transform')); selHalo.removeAttribute('transform'); selLayer.removeAttribute('transform'); placeSelbar(); }
@@ -4190,6 +4425,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     active = null;
     stage.classList.remove('drawing');
     if (!commit) { clearCtx(lctx); clearCtx(tctx); return; }
+    if (a.note) {                            // on a post-it: stored in its own coordinates
+      remember();
+      const st = cleanStroke({ d: toPath(simplify(a.pts.map(q => [q[0] - a.note.x, q[1] - a.note.y]))), c: a.color, w: a.width, o: a.opacity, h: a.h, k: a.k });
+      if (st) a.note.strokes.push(st);
+      renderNotes(); mapInkChanged(); scheduleSave();
+      const serial = ++strokeSerial;
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (!active && serial === strokeSerial) clearCtx(lctx), clearCtx(tctx); }));
+      return;
+    }
     if (scribbleOn && !a.h && isScribble(a.pts)) {
       const n = scribbleErase(a.pts, a.width);
       if (n) {
@@ -4279,14 +4523,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return pool[i];
   }
   function fillSheet(sh, i, z) {
-    sh.querySelector('.ink').innerHTML = i < pages.length ? inkMarkup(pages[i].strokes) : '';
+    sh.querySelector('.ink').innerHTML = i < pages.length ? inkMarkup(pages[i].strokes) + notesMarkup(pages[i]) : '';
     sh.querySelector('.pnum').textContent = i < pages.length ? i + 1 : 'new';
     sh.style.zIndex = z;
     sh.hidden = false;
   }
   function startFlip(dir) {
     clearTimeout(nav.timer);
-    const avail = dir > 0 ? pages.length - 1 - cur + (pages[pages.length - 1].strokes.length ? 1 : 0) : cur;
+    const avail = dir > 0 ? pages.length - 1 - cur + (pages[pages.length - 1].strokes.length || notesOf(pages[pages.length - 1]).length ? 1 : 0) : cur;
     const maxN = Math.min(FLIP_MAX, avail);
     if (maxN <= 0) { const first = dir < 0; cancelNav(); if (first) toast('This is the first page.'); return; }
     // The current page is on top; the pages it will reveal lie underneath in order.
@@ -4497,6 +4741,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     try { stage.setPointerCapture(e.pointerId); } catch (_) {}
     if (e.pointerType !== 'pen' && !active && !mapDrag && touches.size === 0 && mmHit(e.clientX, e.clientY)) { startMapDrag(e); return; }
     if (mapDrag) return;
+    // a post-it's handles (drag, gear, fold, folded dot) work with stylus, finger and mouse
+    const nact = !active && notesShown && e.target.closest && e.target.closest('#noteLayer [data-nact]');
+    if (nact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && noteAction(e, nact)) return;
 
     if (e.pointerType === 'pen') {
       penSeen = true; lastPen = performance.now();
@@ -4504,6 +4751,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       pinch = null;
       if (tool === 'lasso' && !(e.buttons & 32) && !(e.buttons & 2)) { startLasso(e); return; }
       if (tool === 'magnifier') { startMagSel(e); return; }
+      if (tool === 'postit') { placeNote(e); return; }
       if (erasing() || (e.buttons & 32) || (e.buttons & 2) || e.button === 5 || e.button === 2) startErase(e);
       else startStroke(e);
       return;
@@ -4521,12 +4769,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (info && performance.now() - lastPen > PEN_QUIET_MS) { startNav(e, info); return; }
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
       if (penSeen) return;
+      if (tool === 'postit') { placeNote(e); return; }
       tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
       return;
     }
     if (active) return;
     const info = edgeInfo(e.clientX, e.clientY);
     if (info && !(tool === 'lasso' && inSelBox(toMM(e)))) startNav(e, info);
+    else if (tool === 'postit') placeNote(e);
     else tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
   });
 
@@ -4540,6 +4790,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (nav && e.pointerId === nav.id) { navMove(e); return; }
     if (!active || e.pointerId !== active.id) return;
     const list = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+    if (active.noteDrag) { noteDragMove(e); return; }
     if (active.erase) { eraseMove(list.length ? list : [e]); return; }
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
@@ -4553,7 +4804,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (touches.delete(e.pointerId) && pinch && touches.size < 2) releasePinch();
     if (nav && e.pointerId === nav.id) { navEnd(); return; }
     if (active && e.pointerId === active.id) {
-      if (active.lasso) endLasso();
+      if (active.noteDrag) endNoteDrag();
+      else if (active.lasso) endLasso();
       else if (active.magsel) endMagSel();
       else if (active.move) endSelMove();
       else finishStroke(e, true);
@@ -4582,7 +4834,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}${notesMarkup(p)}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
@@ -4604,7 +4856,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const del = e.target.closest('.del');
     if (!del) return;
     const i = +del.closest('.thumb').dataset.i;
-    if (pages[i].strokes.length && !(await ask(`Delete page ${i + 1}?`, 'The page and everything on it is removed. Undo brings it back.', 'Delete'))) return;
+    if ((pages[i].strokes.length || notesOf(pages[i]).length) && !(await ask(`Delete page ${i + 1}?`, 'The page and everything on it is removed. Undo brings it back.', 'Delete'))) return;
     remember();
     pages.splice(i, 1);
     if (!pages.length) pages.push({ strokes: [] });
@@ -4712,6 +4964,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'color': return `Colour · ${it.paint.color.toUpperCase()}${it.paint.highlighter ? ', highlighter' : ''}${el.disabled ? ' · choose a pen first' : ''}`;
       case 'eraser': return 'Eraser';
       case 'lasso': return 'Select';
+      case 'postit': return `Post-it · ${notesShown ? 'shown' : 'hidden'}`;
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
       case 'redo': return 'Redo';
