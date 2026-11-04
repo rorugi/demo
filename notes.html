@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_62</title>
+<title>RRnotes_63</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -879,6 +879,12 @@
   .overview header .ovchip[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
   .overview header .ovchip[aria-pressed="true"] .body { fill: #fff27a; }
   .overview header #ovDone { margin-left: 0; }
+  .overview header { flex-wrap: wrap; }
+  .overview .ovzoom { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--bar-fg); }
+  .overview .ovzoom svg { width: 16px; height: 16px; opacity: .6; flex: none; }
+  .overview .ovzoom svg.big { width: 20px; height: 20px; }
+  .overview .ovzoom input { width: 130px; accent-color: var(--brand); }
+  .overview header .ovchip { margin-left: 0; }
   .overview.picking .thumb .del { display: none; }
   .overview.picking .thumb.cur { opacity: .45; }
   .overview header button {
@@ -891,7 +897,7 @@
     flex: 1;
     overflow: hidden;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--tw, 118px), 1fr));
     align-content: start;
     gap: 22px 18px;
     padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 40px) max(16px, env(safe-area-inset-left, 0px));
@@ -1154,6 +1160,7 @@
 <div class="overview" id="overview" hidden>
   <header>
     <div class="ovtitles"><h2 id="ovTitle">Pages</h2><span id="ovSub">Tap to open · hold and drag to reorder</span></div>
+    <label class="ovzoom" title="Preview size"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><input type="range" id="ovZoom" min="70" max="420" step="10" aria-label="Preview size"><svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/></svg></label>
     <button type="button" class="ovchip" id="ovNotesBtn" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Sticky notes</button>
     <button type="button" id="ovDone">Done</button>
   </header>
@@ -1380,7 +1387,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_62';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_63';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -3601,18 +3608,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // Peek: a finger held on a sticky note fades it to 10 % until the finger lifts
   function fadeNote(n, on) {
     const el = noteLayer.querySelector(`[data-nid="${n.id}"]`);
-    if (el) { el.style.transition = 'opacity .15s'; el.style.opacity = on ? 0.1 : ''; }
+    if (el) { el.style.transition = 'opacity .15s'; el.style.opacity = on ? 0.25 : ''; }
   }
-  function startPeek(e, n, delay) {
-    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false };
+  // while held (faded) it can also be moved with the same finger
+  function startPeek(e, n, delay, at) {
+    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot() };
     a.timer = setTimeout(() => { if (active === a) { a.on = true; fadeNote(n, true); } }, delay);
     active = a;
+  }
+  function peekMove(e) {
+    const a = active, n = a.note, [x, y] = toMM(e);
+    if (!a.moved && Math.hypot(x - a.start[0], y - a.start[1]) < 1.5) return;
+    if (!a.on) { clearTimeout(a.timer); a.on = true; }
+    a.moved = true;
+    n.x = Math.max(0, Math.min(W - n.size, x - a.off[0])); n.y = Math.max(0, Math.min(H - n.size, y - a.off[1]));
+    if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; renderNotes(); if (active === a) fadeNote(n, true); });
   }
   function endPeek() {
     const a = active;
     active = null;
     clearTimeout(a.timer);
-    if (a.on) fadeNote(a.note, false);
+    if (a.moved) { remember(a.before); renderNotes(); mapInkChanged(); scheduleSave(); }
+    else if (a.on) fadeNote(a.note, false);
   }
   // taps on a sticky note's handles; returns true when handled
   function noteAction(e, el) {
@@ -3626,7 +3643,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (act === 'gear') {
       if (openPop === notePop && noteEdit.note === n) closePops();
-      else { noteEdit = { kind: 'note', note: n }; renderNotePop(); showPop(notePop, el); }
+      else { noteEdit = { kind: 'note', note: n }; renderNotePop(); showPop(notePop, el); guardNotePop(); }
       return true;
     }
     remember();
@@ -3650,7 +3667,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // menu: the tool (colour, size, show / hide) or one sticky note (colour, delete)
   const notePop = $('notePop');
-  let noteEdit = { kind: 'tool' };
+  let noteEdit = { kind: 'tool' }, notePopGuard = false, guardTimer = 0;
+  // the finger or pen that opened the menu lifts right over it: that tap must not press a button in it.
+  // Buttons work again shortly after that finger or pen is lifted.
+  function guardNotePop() {
+    notePopGuard = true; clearTimeout(guardTimer);
+    guardTimer = setTimeout(() => { notePopGuard = false; }, 2000);
+    window.addEventListener('pointerup', () => { clearTimeout(guardTimer); guardTimer = setTimeout(() => { notePopGuard = false; }, 350); }, { once: true, capture: true });
+  }
+  notePop.addEventListener('click', e => { if (notePopGuard) { e.preventDefault(); e.stopPropagation(); } }, true);
   Object.entries(NOTE_COLORS).forEach(([k, c]) => {
     const b = document.createElement('button');
     b.type = 'button'; b.dataset.k = k; b.style.setProperty('--c', c); b.setAttribute('aria-label', k[0].toUpperCase() + k.slice(1));
@@ -3692,12 +3717,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     toast(`Sticky note moved to page ${i + 1}.`);
   }
   $('notesShownToggle').addEventListener('change', e => setNotesShown(e.target.checked));
-  $('noteDelete').addEventListener('click', () => {
+  $('noteDelete').addEventListener('click', async () => {
     const n = noteEdit.note, list = notesOf(pages[cur]);
-    if (!n || !list.includes(n)) { closePops(); return; }
+    closePops();
+    if (!n || !list.includes(n)) return;
+    if (!(await ask('Delete sticky note?', 'The sticky note and everything written on it are removed. Undo brings it back.', 'Delete'))) return;
+    if (!list.includes(n)) return;
     remember();
     list.splice(list.indexOf(n), 1);
-    closePops(); renderNotes(); mapInkChanged(); scheduleSave();
+    renderNotes(); mapInkChanged(); scheduleSave();
     toast('Sticky note deleted. Undo brings it back.');
   });
   function renderNotePop() {
@@ -4462,7 +4490,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const q0 = a.pts[0];
         if (a.pts.some(q => Math.hypot(q[0] - q0[0], q[1] - q0[1]) > 1.5)) return;
         finishStroke(null, false);
-        startPeek({ pointerId: id, pointerType: 'touch' }, note, 0);
+        startPeek({ pointerId: id, pointerType: 'touch' }, note, 0, q0);
       }, 450);
     }
     // while writing on a sticky note, the live ink is cut at its edge like the finished stroke
@@ -4842,7 +4870,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
       if (penSeen) {                                     // fingers don't write, but can peek under a sticky note
         const q = toMM(e), n = noteAt(q[0], q[1]);
-        if (n) startPeek(e, n, 180);
+        if (n) startPeek(e, n, 180, q);
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -4867,7 +4895,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!active || e.pointerId !== active.id) return;
     const list = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
     if (active.noteDrag) { noteDragMove(e); return; }
-    if (active.peek) return;
+    if (active.peek) { peekMove(e); return; }
     if (active.erase) { eraseMove(list.length ? list : [e]); return; }
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
@@ -4910,6 +4938,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // the overview shows sticky notes or not, on its own (independent of the page)
   let ovNotes = store.get('ovNotes', true) !== false;
   $('ovNotesBtn').addEventListener('click', () => { ovNotes = !ovNotes; store.set('ovNotes', ovNotes); buildOverview(); });
+  // preview size of the pages: slider, two-finger pinch or Ctrl + wheel
+  let ovSize = (v => v >= 70 && v <= 420 ? v : 118)(+store.get('ovZoom', 118));
+  function setOvSize(v, keep) {
+    ovSize = Math.round(Math.max(70, Math.min(420, v)));
+    ovGrid.style.setProperty('--tw', ovSize + 'px');
+    $('ovZoom').value = ovSize;
+    if (!keep) store.set('ovZoom', ovSize);
+  }
+  setOvSize(ovSize, true);
+  $('ovZoom').addEventListener('input', e => setOvSize(+e.target.value));
   const DEL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   function buildOverview() {
     ovGrid.innerHTML = pages.map((p, i) =>
@@ -4957,8 +4995,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const thumb = e.target.closest('.thumb');
     og = { id: e.pointerId, x0: e.clientX, y0: e.clientY, ly: e.clientY, lt: performance.now(), v: 0, thumb, mode: 'pending', s0: ovGrid.scrollTop };
     ovGrid.setPointerCapture(e.pointerId);
-    const onNote = thumb && e.target.closest('[data-ovnote]');
-    if (onNote && !ovPick) og.timer = setTimeout(() => startNoteLift(+thumb.dataset.i, +onNote.dataset.ovnote, onNote), 380);
+    const ni = ovPick ? -1 : ovNoteAt(thumb, e.clientX, e.clientY);
+    if (ni >= 0) og.timer = setTimeout(() => startNoteLift(+thumb.dataset.i, ni, thumb), 380);
     else if (thumb && !thumb.classList.contains('add') && !ovPick) og.timer = setTimeout(() => startLift(), 380);
   });
   ovGrid.addEventListener('pointermove', e => {
@@ -4966,7 +5004,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     og.lastX = e.clientX; og.lastY = e.clientY;
     const dx = e.clientX - og.x0, dy = e.clientY - og.y0, t = performance.now();
     og.v = (e.clientY - og.ly) / Math.max(1, t - og.lt); og.ly = e.clientY; og.lt = t;
-    if (og.mode === 'pending' && Math.hypot(dx, dy) > 8) { clearTimeout(og.timer); og.mode = 'scroll'; }
+    if (og.mode === 'pending' && Math.hypot(dx, dy) > 12) { clearTimeout(og.timer); og.mode = 'scroll'; }
     if (og.mode === 'scroll') ovGrid.scrollTop = og.s0 - dy;
     else if (og.mode === 'lift') moveLift(e.clientX, e.clientY);
     else if (og.mode === 'nlift') moveNoteLift(e.clientX, e.clientY);
@@ -4988,7 +5026,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   };
   ovGrid.addEventListener('pointerup', ogEnd);
   ovGrid.addEventListener('pointercancel', ogEnd);
-  ovGrid.addEventListener('wheel', e => { e.preventDefault(); ovGrid.scrollTop += e.deltaY; }, { passive: false });
+  ovGrid.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (e.ctrlKey) setOvSize(ovSize * Math.exp(-e.deltaY * 0.01)); else ovGrid.scrollTop += e.deltaY;
+  }, { passive: false });
+  {
+    const pts = new Map();
+    let pz = null;
+    const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+    ovGrid.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'touch') return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) {                       // two fingers: resize the previews, nothing else
+        if (og) { clearTimeout(og.timer); if (og.ghost) og.ghost.remove(); og = null; buildOverview(); }
+        pz = { d0: dist(), s0: ovSize };
+        e.stopPropagation();                      // the second finger doesn't start a tap, hold or scroll
+      }
+    }, true);
+    ovGrid.addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pz && pts.size === 2) setOvSize(pz.s0 * dist() / pz.d0);
+    }, true);
+    const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pz = null; };
+    ovGrid.addEventListener('pointerup', up, true); ovGrid.addEventListener('pointercancel', up, true);
+  }
 
   function startLift() {
     if (!og || og.mode !== 'pending') return;
@@ -5013,12 +5075,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.insertBefore(og.thumb, x > r.left + r.width / 2 ? el.nextSibling : el);
   }
   // ---- Overview: hold a sticky note to drag only it onto any page (where it is dropped) ----
-  function startNoteLift(pi, ni, el) {
+  // the sticky note under a point in a thumbnail (topmost first), with a few pixels to spare
+  function ovNoteAt(thumb, x, y) {
+    if (!ovNotes || !thumb || thumb.classList.contains('add')) return -1;
+    const pg = pages[+thumb.dataset.i], paper = thumb.querySelector('.paper');
+    if (!pg || !pg.notes || !pg.notes.length || !paper) return -1;
+    const pr = paper.getBoundingClientRect(), k = pr.width / W, mx = (x - pr.left) / k, my = (y - pr.top) / k, m = 8 / k;
+    for (let i = pg.notes.length - 1; i >= 0; i--) {
+      const n = pg.notes[i], z = n.folded ? DOT_R * 2 : n.size;
+      if (mx >= n.x - m && my >= n.y - m && mx <= n.x + z + m && my <= n.y + z + m) return i;
+    }
+    return -1;
+  }
+  function startNoteLift(pi, ni, thumb) {
     if (!og || og.mode !== 'pending') return;
     const n = pages[pi] && pages[pi].notes && pages[pi].notes[ni];
     if (!n) return;
     og.mode = 'nlift';
-    const paper = el.closest('.paper'), pr = paper.getBoundingClientRect(), k = pr.width / W;    // px per mm in the thumbnail
+    const paper = thumb.querySelector('.paper'), pr = paper.getBoundingClientRect(), k = pr.width / W;    // px per mm in the thumbnail
+    const el = paper.querySelector(`[data-ovnote="${ni}"]`);
     const size = n.folded ? DOT_R * 2 : n.size;
     const left = pr.left + n.x * k, top = pr.top + n.y * k;
     const ghost = document.createElement('div');
@@ -5027,7 +5102,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: size * k + 'px', height: size * k + 'px', borderRadius: n.folded ? '50%' : '0' });
     ghost.style.setProperty('--ox', (og.x0 - left) + 'px'); ghost.style.setProperty('--oy', (og.y0 - top) + 'px');
     document.body.appendChild(ghost);
-    el.classList.add('lifted');
+    if (el) el.classList.add('lifted');
     Object.assign(og, { ghost, note: n, from: pi, offMm: [(og.x0 - left) / k, (og.y0 - top) / k], left, top });
     vibrate(12);
   }
