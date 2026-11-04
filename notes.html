@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_59</title>
+<title>RRnotes_60</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -870,8 +870,17 @@
     gap: 12px;
     padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
   }
-  .overview header h2 { margin: 0; font: 600 17px/1.2 var(--ui); }
+  .overview header h2 { margin: 0; font: 600 17px/1.2 var(--ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .overview header span { font-size: 12.5px; opacity: .6; }
+  .overview .ovtitles { display: grid; gap: 2px; min-width: 0; }
+  .overview header .ovchip { display: flex; align-items: center; gap: 6px; padding: 0 12px; background: transparent; color: var(--bar-fg); border: 1px solid var(--bar-line); font-weight: 500; }
+  .overview header .ovchip svg { width: 18px; height: 18px; }
+  .overview header .ovchip .body { fill: transparent; }
+  .overview header .ovchip[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
+  .overview header .ovchip[aria-pressed="true"] .body { fill: #fff27a; }
+  .overview header #ovDone { margin-left: 0; }
+  .overview.picking .thumb .del { display: none; }
+  .overview.picking .thumb.cur { opacity: .45; }
   .overview header button {
     margin-left: auto;
     height: 36px; padding: 0 18px; border-radius: 9px; border: 0;
@@ -999,11 +1008,12 @@
   <div class="poptitle" id="notePopTitle" hidden></div>
   <h3>Colour</h3>
   <div class="noteswatches" id="noteSwatches"></div>
-  <h3 data-nfor="tool">Size</h3>
-  <div class="seg notesizes" id="noteSizes" data-nfor="tool">
+  <h3 data-nfor="tool note">Size</h3>
+  <div class="seg notesizes" id="noteSizes" data-nfor="tool note">
     <button type="button" data-s="38">S · 38 mm</button><button type="button" data-s="51">M · 51 mm</button><button type="button" data-s="76">L · 76 mm</button>
   </div>
   <label class="hlrow" for="notesShownToggle" data-nfor="tool"><span>Show post-its<span class="sub">Hidden post-its keep their place and ink</span></span><span class="switch"><input type="checkbox" id="notesShownToggle"><i></i></span></label>
+  <button type="button" class="wide-btn subtle" id="noteMove" data-nfor="note">Move to page…</button>
   <button type="button" class="wide-btn" id="noteDelete" data-nfor="note">Delete post-it</button>
 </div>
 
@@ -1138,8 +1148,8 @@
 
 <div class="overview" id="overview" hidden>
   <header>
-    <h2 id="ovTitle">Pages</h2>
-    <span>Tap to open · hold and drag to reorder</span>
+    <div class="ovtitles"><h2 id="ovTitle">Pages</h2><span id="ovSub">Tap to open · hold and drag to reorder</span></div>
+    <button type="button" class="ovchip" id="ovNotesBtn" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Post-its</button>
     <button type="button" id="ovDone">Done</button>
   </header>
   <div class="ov-grid" id="ovGrid"></div>
@@ -1365,7 +1375,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_59';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_60';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -3583,6 +3593,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     tool = 'pen';                           // ready to write on it
     renderNotes(); mapInkChanged(); updateToolbarState(); scheduleSave();
   }
+  // Peek: a finger held on a post-it fades it to 10 % until the finger lifts
+  function fadeNote(n, on) {
+    const el = noteLayer.querySelector(`[data-nid="${n.id}"]`);
+    if (el) { el.style.transition = 'opacity .15s'; el.style.opacity = on ? 0.1 : ''; }
+  }
+  function startPeek(e, n, delay) {
+    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false };
+    a.timer = setTimeout(() => { if (active === a) { a.on = true; fadeNote(n, true); } }, delay);
+    active = a;
+  }
+  function endPeek() {
+    const a = active;
+    active = null;
+    clearTimeout(a.timer);
+    if (a.on) fadeNote(a.note, false);
+  }
   // taps on a post-it's handles; returns true when handled
   function noteAction(e, el) {
     const g = el.closest('[data-nid]'), n = g && notesOf(pages[cur]).find(x => x.id === g.dataset.nid);
@@ -3630,7 +3656,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
     $('noteSwatches').appendChild(b);
   });
-  $('noteSizes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { noteCfg.size = +b.dataset.s; store.set('noteCfg', noteCfg); renderNotePop(); }));
+  $('noteSizes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    const z = Math.min(+b.dataset.s, W, H);
+    if (noteEdit.kind === 'note') {               // keeps its top left corner, stays on the page; ink outside is kept, just hidden
+      const n = noteEdit.note;
+      if (n.size !== z) { remember(); n.size = z; n.x = Math.max(0, Math.min(W - z, n.x)); n.y = Math.max(0, Math.min(H - z, n.y)); renderNotes(); mapInkChanged(); scheduleSave(); }
+    } else { noteCfg.size = +b.dataset.s; store.set('noteCfg', noteCfg); }
+    renderNotePop();
+    if (openPop) placePop();
+  }));
+  // move a post-it to another page: pick the page in the overview
+  let ovPick = null;                             // { note } while choosing a page for it
+  $('noteMove').addEventListener('click', () => {
+    const n = noteEdit.note;
+    if (!n || !notesOf(pages[cur]).includes(n)) { closePops(); return; }
+    closePops();
+    ovPick = { note: n };
+    openOverview();
+  });
+  function moveNoteTo(i) {
+    const n = ovPick && ovPick.note;
+    ovPick = null;
+    const src = pages.find(pg => notesOf(pg).includes(n));
+    if (!n || !src || i === pages.indexOf(src)) { goTo(i); return; }
+    remember();
+    src.notes.splice(src.notes.indexOf(n), 1);
+    n.x = Math.max(0, Math.min(W - n.size, n.x)); n.y = Math.max(0, Math.min(H - n.size, n.y));
+    notesOf(pages[i]).push(n);
+    goTo(i);
+    toast(`Post-it moved to page ${i + 1}.`);
+  }
   $('notesShownToggle').addEventListener('change', e => setNotesShown(e.target.checked));
   $('noteDelete').addEventListener('click', () => {
     const n = noteEdit.note, list = notesOf(pages[cur]);
@@ -3642,11 +3697,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
   function renderNotePop() {
     const k = noteEdit.kind, color = k === 'note' ? noteEdit.note.color : noteCfg.color;
-    notePop.querySelectorAll('[data-nfor]').forEach(x => { x.hidden = x.dataset.nfor !== k; });
+    notePop.querySelectorAll('[data-nfor]').forEach(x => { x.hidden = !x.dataset.nfor.split(' ').includes(k); });
     $('notePopTitle').textContent = k === 'note' ? 'This post-it' : 'New post-its';
     $('notePopTitle').hidden = false;
     $('noteSwatches').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === color)));
-    $('noteSizes').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === noteCfg.size)));
+    const size = k === 'note' ? noteEdit.note.size : noteCfg.size;
+    $('noteSizes').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === size)));
     $('notesShownToggle').checked = notesShown;
   }
 
@@ -4394,6 +4450,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const note = noteAt(x, y);              // a stroke that starts on a post-it belongs to it
     active = { id: e.pointerId, type: e.pointerType, pts: [], sx: 0, sy: 0, color: br.color, width: br.width, opacity: br.opacity,
                h: br.highlighter, k: br.pickedOnDark, disp: note ? fileColor(br.color, br.pickedOnDark) : displayColor(br.color, br.pickedOnDark), note };
+    if (note && e.pointerType === 'touch') {
+      const a = active, id = e.pointerId;
+      setTimeout(() => {
+        if (active !== a || !a.pts.length) return;
+        const q0 = a.pts[0];
+        if (a.pts.some(q => Math.hypot(q[0] - q0[0], q[1] - q0[1]) > 1.5)) return;
+        finishStroke(null, false);
+        startPeek({ pointerId: id, pointerType: 'touch' }, note, 0);
+      }, 450);
+    }
     // while writing on a post-it, the live ink is cut at its edge like the finished stroke
     liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + note.size) * S()}px ${vh - view.ty - (note.y + note.size) * S()}px ${view.tx + note.x * S()}px)` : '';
     liveWrap.style.opacity = br.opacity;   // whole stroke at one opacity, no darker overlaps
@@ -4407,6 +4473,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!a) return;
     if (a.magsel) { active = null; clearCtx(tctx); return; }
     if (a.noteDrag) { endNoteDrag(); return; }
+    if (a.peek) { endPeek(); return; }
     if (a.lasso || a.move) {                 // a lasso or move interrupted (e.g. by two fingers)
       active = null; clearCtx(tctx);
       if (a.move) { a.els.forEach(el => el.removeAttribute('transform')); selHalo.removeAttribute('transform'); selLayer.removeAttribute('transform'); placeSelbar(); }
@@ -4768,7 +4835,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const info = edgeInfo(e.clientX, e.clientY);
       if (info && performance.now() - lastPen > PEN_QUIET_MS) { startNav(e, info); return; }
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
-      if (penSeen) return;
+      if (penSeen) {                                     // fingers don't write, but can peek under a post-it
+        const q = toMM(e), n = noteAt(q[0], q[1]);
+        if (n) startPeek(e, n, 180);
+        return;
+      }
       if (tool === 'postit') { placeNote(e); return; }
       tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
       return;
@@ -4791,6 +4862,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!active || e.pointerId !== active.id) return;
     const list = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
     if (active.noteDrag) { noteDragMove(e); return; }
+    if (active.peek) return;
     if (active.erase) { eraseMove(list.length ? list : [e]); return; }
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
@@ -4805,6 +4877,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (nav && e.pointerId === nav.id) { navEnd(); return; }
     if (active && e.pointerId === active.id) {
       if (active.noteDrag) endNoteDrag();
+      else if (active.peek) endPeek();
       else if (active.lasso) endLasso();
       else if (active.magsel) endMagSel();
       else if (active.move) endSelMove();
@@ -4829,26 +4902,34 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Page overview ----
   const ov = $('overview'), ovGrid = $('ovGrid');
+  // the overview shows post-its or not, on its own (independent of the page)
+  let ovNotes = store.get('ovNotes', true) !== false;
+  $('ovNotesBtn').addEventListener('click', () => { ovNotes = !ovNotes; store.set('ovNotes', ovNotes); buildOverview(); });
   const DEL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   function buildOverview() {
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}${notesMarkup(p)}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}${ovNotes && p.notes ? p.notes.map(n => noteMarkup(n, 'static')).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
-    $('ovTitle').textContent = `${pages.length} ${pages.length === 1 ? 'page' : 'pages'}`;
+    const m = typeof nbMeta === 'function' && nbMeta();
+    $('ovTitle').textContent = ovPick ? 'Move post-it to a page' : (m ? m.name : 'Pages');
+    $('ovSub').textContent = ovPick ? 'Tap the page it should go to' : `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · tap to open · hold and drag to reorder`;
+    $('ovDone').textContent = ovPick ? 'Cancel' : 'Done';
+    $('ovNotesBtn').setAttribute('aria-pressed', String(ovNotes));
   }
   function openOverview() {
     closePops();
     if (active) finishStroke(null, true);
+    ov.classList.toggle('picking', !!ovPick);
     buildOverview();
     ov.hidden = false;
     const c = ovGrid.querySelector('.thumb.cur');
     if (c) ovGrid.scrollTop = Math.max(0, c.offsetTop - ovGrid.clientHeight / 2 + c.offsetHeight / 2);
   }
-  function closeOverview() { ov.hidden = true; }
+  function closeOverview() { ov.hidden = true; if (ovPick) { ovPick = null; ov.classList.remove('picking'); } }
   function goTo(i) { cur = i; renderPage(); scheduleSave(); closeOverview(); }
   $('ovDone').addEventListener('click', closeOverview);
 
@@ -4871,7 +4952,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const thumb = e.target.closest('.thumb');
     og = { id: e.pointerId, x0: e.clientX, y0: e.clientY, ly: e.clientY, lt: performance.now(), v: 0, thumb, mode: 'pending', s0: ovGrid.scrollTop };
     ovGrid.setPointerCapture(e.pointerId);
-    if (thumb && !thumb.classList.contains('add')) og.timer = setTimeout(() => startLift(), 380);
+    if (thumb && !thumb.classList.contains('add') && !ovPick) og.timer = setTimeout(() => startLift(), 380);
   });
   ovGrid.addEventListener('pointermove', e => {
     if (!og || e.pointerId !== og.id) return;
@@ -4886,8 +4967,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearTimeout(og.timer);
     const g = og; og = null;
     if (g.mode === 'pending' && g.thumb && e.type === 'pointerup') {
-      if (g.thumb.classList.contains('add')) { pages.push({ strokes: [] }); goTo(pages.length - 1); }
-      else goTo(+g.thumb.dataset.i);
+      if (g.thumb.classList.contains('add')) { pages.push({ strokes: [] }); ovPick ? moveNoteTo(pages.length - 1) : goTo(pages.length - 1); }
+      else ovPick ? moveNoteTo(+g.thumb.dataset.i) : goTo(+g.thumb.dataset.i);
     } else if (g.mode === 'scroll') {
       let v = -g.v * 16;
       const step = () => { if (Math.abs(v) < 0.4) return; ovGrid.scrollTop += v; v *= 0.94; inertia = requestAnimationFrame(step); };
