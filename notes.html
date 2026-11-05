@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_69</title>
+<title>RRnotes_70</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -800,19 +800,18 @@
     font: 600 12px/1 var(--ui); font-variant-numeric: tabular-nums; white-space: nowrap;
     pointer-events: none;
   }
-  .magbar button {
-    width: 32px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 7px;
-    background: transparent; color: inherit; cursor: pointer; padding: 0; pointer-events: auto; touch-action: none;
+  /* same round handles as on sticky notes and images */
+  .magbar button, .magresize {
+    width: 26px; height: 26px; margin: 3px; display: grid; place-items: center; border-radius: 50%; box-sizing: border-box;
+    background: rgba(255, 255, 255, .88); border: 1px solid rgba(0, 0, 0, .35); color: #33352f;
+    cursor: pointer; padding: 0; pointer-events: auto; touch-action: none; flex: none;
   }
-  .magbar button:hover { background: var(--active); }
-  .magbar svg { width: 18px; height: 18px; filter: drop-shadow(0 0 1.5px var(--paper)) drop-shadow(0 0 1.5px var(--paper)); }
+  .magbar button:hover, .magresize:hover { background: #fff; }
+  .magbar svg, .magresize svg { width: 15px; height: 15px; }
   .magbar .maggrip { cursor: grab; }
   .magbar #magClose { margin-left: auto; }
   .magbar span { padding: 0 4px; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 3px var(--paper), 0 0 3px var(--paper), 0 0 2px var(--paper); }
-  .magresize {
-    position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; cursor: nwse-resize; touch-action: none;
-    background: linear-gradient(135deg, transparent 52%, var(--mag) 52%); border-bottom-right-radius: 10px;
-  }
+  .magresize { position: absolute; right: 0; bottom: 0; cursor: nwse-resize; }
   .mag-layer rect { fill: none; stroke: var(--mag); stroke-width: 1.4px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
 
   /* ---------- selection ---------- */
@@ -1219,11 +1218,11 @@
     </svg>
   </div>
   <div class="magbar">
-    <button type="button" class="maggrip" id="magGrip" aria-label="Move magnifier" title="Drag to move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+    <button type="button" class="maggrip" id="magGrip" aria-label="Move magnifier" title="Drag to move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
     <span id="magLabel"></span>
     <button type="button" id="magClose" aria-label="Close magnifier" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
-  <div class="magresize" id="magResize" title="Drag to resize"></div>
+  <div class="magresize" id="magResize" title="Drag to resize" role="button" aria-label="Resize magnifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l14 14M5 5h6M5 5v6M19 19h-6M19 19v-6"/></svg></div>
 </div>
 <div class="riffle" id="riffle" hidden><b id="riffleNum">1 / 1</b><span id="riffleHint"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -1460,7 +1459,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_69';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_70';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
