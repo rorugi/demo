@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_82</title>
+<title>RRnotes_83</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -257,6 +257,12 @@
   .imgui [data-iact="move"] { cursor: grab; }
   .imgui [data-iact="size"] { cursor: nwse-resize; }
   .imgpop { width: 252px; }
+  .imgbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+  .imgbtns button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 4px 8px; border: 1px solid var(--bar-line); border-radius: 9px;
+    background: transparent; color: var(--bar-fg); font: 500 12.5px/1.15 var(--ui); cursor: pointer; }
+  .imgbtns button:active { background: var(--active); }
+  .imgbtns button:disabled { opacity: .35; cursor: default; }
+  .imgbtns svg { width: 22px; height: 22px; }
   .imgpop h3 output { float: right; font-weight: 600; opacity: 1; }
   .croppop { width: 268px; }
   .seg.crop3 { grid-template-columns: repeat(3, 1fr); }
@@ -1027,6 +1033,7 @@
       <g class="images" id="imgLayer"></g>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
       <g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+      <g class="images" id="imgOver"></g>
       <g class="imgui" id="imgUi"></g>
       <g class="notes" id="noteLayer"></g>
       <g class="sel-layer" id="selLayer"></g>
@@ -1095,13 +1102,13 @@
 <!-- one image: rotate, order, delete -->
 <div class="pop imgpop" id="imgPop" role="dialog" aria-label="Image" hidden>
   <div class="poptitle">Image</div>
-  <div class="seg imgrot">
+  <div class="imgbtns">
     <button type="button" id="imgRotL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8V4M5 8h4"/><path d="M5.6 8a7.5 7.5 0 1 1-.6 6"/></svg>Rotate left</button>
     <button type="button" id="imgRotR"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 8V4M19 8h-4"/><path d="M18.4 8a7.5 7.5 0 1 0 .6 6"/></svg>Rotate right</button>
   </div>
-  <div class="seg imgrot">
-    <button type="button" id="imgFront">Bring to front</button>
-    <button type="button" id="imgBack">Send to back</button>
+  <div class="imgbtns">
+    <button type="button" id="imgFront"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="10" height="10" rx="1.5" stroke-dasharray="2.4 2"/><rect x="10.5" y="10.5" width="10" height="10" rx="1.5" fill="currentColor" fill-opacity=".25"/></svg>Bring to front</button>
+    <button type="button" id="imgBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="10" height="10" rx="1.5" fill="currentColor" fill-opacity=".25"/><rect x="10.5" y="10.5" width="10" height="10" rx="1.5" stroke-dasharray="2.4 2"/></svg>Send to back</button>
   </div>
   <button type="button" class="wide-btn subtle" id="imgCrop">Crop…</button>
   <h3>Opacity <output id="imgOpVal">100%</output></h3>
@@ -1550,7 +1557,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_82';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_83';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1885,7 +1892,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const imagesOf = pg => pg.images || (pg.images = []);
   function cleanImage(m) {
     if (!m || typeof m !== 'object' || typeof m.src !== 'string' || !m.src) return null;
-    const w = +m.w > 1 && +m.w < 2000 ? +m.w : 50, h = +m.h > 1 && +m.h < 2000 ? +m.h : 50;
+    const w = +m.w > 1 && +m.w < 20000 ? +m.w : 50, h = +m.h > 1 && +m.h < 20000 ? +m.h : 50;
     const o = { id: typeof m.id === 'string' && m.id ? m.id : Math.random().toString(36).slice(2, 9), src: m.src,
       x: isFinite(m.x) ? +m.x : 10, y: isFinite(m.y) ? +m.y : 10, w, h, rot: [0, 90, 180, 270].includes(+m.rot) ? +m.rot : 0 };
     // crop: the visible part of the picture, as fractions of the (unturned) picture; opacity; lock
@@ -1893,6 +1900,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (c && c.every(v => v >= 0 && v <= 1) && c[2] - c[0] > 0.01 && c[3] - c[1] > 0.01 && !(c[0] === 0 && c[1] === 0 && c[2] === 1 && c[3] === 1)) o.crop = c;
     if (+m.op >= 0.1 && +m.op < 1) o.op = +m.op;
     if (m.lock) o.lock = true;
+    if (m.over) o.over = true;                   // brought to the front: above the handwriting
     return o;
   }
   const cleanImages = list => (Array.isArray(list) ? list : []).map(cleanImage).filter(Boolean);
@@ -2889,7 +2897,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function mapInkChanged() {
     magInkChanged();
     if (!mmVisible || mmInkFrame) return;
-    mmInkFrame = requestAnimationFrame(() => { mmInkFrame = 0; mmInk.innerHTML = imagesMarkup(pages[cur]) + inkMarkup(pages[cur].strokes) + notesMarkup(pages[cur]); });
+    mmInkFrame = requestAnimationFrame(() => { mmInkFrame = 0; mmInk.innerHTML = imagesMarkup(pages[cur]) + inkMarkup(pages[cur].strokes) + imagesMarkup(pages[cur], undefined, true) + notesMarkup(pages[cur]); });
   }
   function mmHit(x, y) {
     if (!mmVisible) return false;
@@ -3271,10 +3279,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridUse}`;
-      if (p.images && p.images.length) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
+      if (p.images && p.images.some(m => !m.over)) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
       s += `<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">\n`;
       s += inkMarkup(p.strokes, true);
       s += `\n</g>\n`;
+      if (p.images && p.images.some(m => m.over)) s += `<g class="pictures over">${imagesMarkup(p, 'file', true)}</g>\n`;
       if (p.notes && p.notes.length) s += `<g class="stickies">${notesMarkup(p, 'file')}</g>\n`;
       s += `</g>\n`;
     });
@@ -3378,7 +3387,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }))),
         images: [...g.querySelectorAll('[data-img]')].map(el => ({
           el, x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), h: parseFloat(el.getAttribute('data-h')), rot: +el.getAttribute('data-rot') || 0,
-          crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1'
+          crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1', over: el.getAttribute('data-over') === '1'
         }))
       }));
       // embedded pictures go into the browser's store, the pages keep a reference
@@ -3816,7 +3825,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('printGo').addEventListener('click', () => {
     const list = $('printAll').checked ? pages : [pages[cur]];
     $('printArea').innerHTML = list.map(p =>
-      `<div class="psheet"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes, true)}</g>${$('printNotes').checked && p.notes ? p.notes.map(n => noteMarkup(n, 'print')).join('') : ''}</svg></div>`
+      `<div class="psheet"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes, true)}</g>${imagesMarkup(p, undefined, true)}${$('printNotes').checked && p.notes ? p.notes.map(n => noteMarkup(n, 'print')).join('') : ''}</svg></div>`
     ).join('');
     document.body.classList.toggle('print-no-grid', !gridBox.checked);
     printDlg.close();
@@ -3914,7 +3923,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         xobj.set(m.src, { name: 'Im' + (xobj.size + 1), w: c.width, h: c.height, bytes: new Uint8Array(await jpg.arrayBuffer()), smask });
       } catch (_) {}
     }
-    const imageOps = pg => (pg.images || []).map(m => {
+    const imageOps = (pg, over = false) => (pg.images || []).filter(m => !!m.over === over).map(m => {
       const xo = xobj.get(m.src);
       if (!xo) return '';
       const F = fullBox(m), r = m.rot % 180 !== 0, iw = r ? F.h : F.w, ih = r ? F.w : F.h, t = m.rot * Math.PI / 180, co = Math.cos(t), si = Math.sin(t);
@@ -3938,6 +3947,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return o;
       };
       c += inkOps(order);
+      c += imageOps(pg, true);                   // images brought to the front cover the ink
       // sticky notes on top: paper, then their ink cut at the edge; folded ones as a dot
       if (withNotes) for (const n of pg.notes || []) {
         const col = hexRgb(NOTE_COLORS[n.color] || NOTE_COLORS.yellow);
@@ -4128,7 +4138,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // Peek: a finger held on a sticky note fades it to 10 % until the finger lifts
   function fadeNote(n, on) {
-    const els = n.src ? [imgLayer.querySelector(`[data-iid="${n.id}"]`), imgUi.querySelector(`[data-iid="${n.id}"]`)] : [noteLayer.querySelector(`[data-nid="${n.id}"]`)];
+    const els = n.src ? [imgEl(n.id), imgUi.querySelector(`[data-iid="${n.id}"]`)] : [noteLayer.querySelector(`[data-nid="${n.id}"]`)];
     els.forEach(el => { if (el) { el.style.transition = 'opacity .15s'; el.style.opacity = on ? 0.25 : ''; } });
   }
   // sticky notes and images: size for moving
@@ -4297,7 +4307,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Images ----
   // Stored once per picture in the browser's database ('img:<id>', a Blob); pages only refer to it.
-  const imgLayer = $('imgLayer'), imgUi = $('imgUi');
+  const imgLayer = $('imgLayer'), imgOver = $('imgOver'), imgUi = $('imgUi');
+  const imgEl = id => imgLayer.querySelector(`[data-iid="${id}"]`) || imgOver.querySelector(`[data-iid="${id}"]`);
   const imgStore = new Map();                    // id -> { url, w, h, type, blob }
   let imgMax = (v => [0, 1200, 2000, 3000].includes(v) ? v : 2000)(+store.get('imgMax', 2000));   // longest side in px, 0 = original
   async function loadImageRec(id) {
@@ -4391,19 +4402,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const inner = m.crop || F !== undefined && (F.w !== m.w || F.h !== m.h)
       ? `<svg x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}" viewBox="${f(m.x)} ${f(m.y)} ${f(m.w)} ${f(m.h)}" overflow="hidden">${body}</svg>` : body;
     const data = mode === 'file' ? ` data-img="1" data-x="${f(m.x)}" data-y="${f(m.y)}" data-w="${f(m.w)}" data-h="${f(m.h)}" data-rot="${m.rot}"` +
-      (m.crop ? ` data-crop="${m.crop.map(v => +v.toFixed(5)).join(' ')}"` : '') + (m.op ? ` data-op="${m.op}"` : '') + (m.lock ? ' data-lock="1"' : '') : '';
+      (m.crop ? ` data-crop="${m.crop.map(v => +v.toFixed(5)).join(' ')}"` : '') + (m.op ? ` data-op="${m.op}"` : '') + (m.lock ? ' data-lock="1"' : '') + (m.over ? ' data-over="1"' : '') : '';
     const o = op !== undefined ? op : m.op;
     return `<g${mode === 'ui' ? ` data-iid="${m.id}"` : ''}${data}${o ? ` opacity="${o}"` : ''}>${inner}</g>`;
   }
-  const imagesMarkup = (pg, mode) => pg && pg.images && pg.images.length ? pg.images.map(m => imageMarkup(m, mode)).join('') : '';
+  // images under the ink (over = false) or brought to the front, above it (over = true)
+  const imagesMarkup = (pg, mode, over = false) => pg && pg.images && pg.images.length ? pg.images.filter(m => !!m.over === over).map(m => imageMarkup(m, mode)).join('') : '';
   let cropSt = null;                              // { m, F, C, before } while cropping
   function renderImages() {
     const list = imagesOf(pages[cur]);
-    imgLayer.innerHTML = list.map(m => {
+    const one = m => {
       if (!cropSt || cropSt.m !== m) return imageMarkup(m, 'ui');
       const C = cropSt.C, view = { ...m, x: C.x, y: C.y, w: C.w, h: C.h, crop: null };
       return imageMarkup({ ...m, crop: null }, 'ui', cropSt.F, 0.3) + imageMarkup(view, 'ui', cropSt.F, m.op);
-    }).join('');
+    };
+    imgLayer.innerHTML = list.filter(m => !m.over).map(one).join('');
+    imgOver.innerHTML = list.filter(m => m.over).map(one).join('');
     // handles: move (top left), options (top right), size (bottom right)
     const h = Math.max(4.5, 24 / S()), r = h / 2, f = v => +(+v).toFixed(3), sw = f(1.3 / S());
     let box = null;
@@ -4492,8 +4506,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const turn = (m, d) => { const cx = m.x + m.w / 2, cy = m.y + m.h / 2; [m.w, m.h] = [m.h, m.w]; m.x = cx - m.w / 2; m.y = cy - m.h / 2; m.rot = (m.rot + d + 360) % 360; };
   $('imgRotL').addEventListener('click', () => imgChange(m => turn(m, -90)));
   $('imgRotR').addEventListener('click', () => imgChange(m => turn(m, 90)));
-  $('imgFront').addEventListener('click', () => imgChange((m, l) => { l.splice(l.indexOf(m), 1); l.push(m); }));
-  $('imgBack').addEventListener('click', () => imgChange((m, l) => { l.splice(l.indexOf(m), 1); l.unshift(m); }));
+  // front: above the handwriting and all other images (sticky notes stay on top); back: under everything
+  $('imgFront').addEventListener('click', () => imgChange((m, l) => { l.splice(l.indexOf(m), 1); l.push(m); m.over = true; }));
+  $('imgBack').addEventListener('click', () => imgChange((m, l) => { l.splice(l.indexOf(m), 1); l.unshift(m); delete m.over; }));
   // opacity (one undo step per slide), lock
   let opSnap = null;
   $('imgOp').addEventListener('pointerdown', () => { opSnap = snapshot(); });
@@ -5198,7 +5213,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const ids = new Set(sel.imgs.map(m => m.id));
       active = { id: e.pointerId, type: e.pointerType, move: true, q0: q, dx: 0, dy: 0,
                  els: [...pageInk.querySelectorAll('[data-i]')].filter(el => sel.items.includes(pages[cur].strokes[+el.dataset.i]))
-                   .concat([...imgLayer.querySelectorAll('[data-iid]'), ...imgUi.querySelectorAll('[data-iid]')].filter(el => ids.has(el.dataset.iid))) };
+                   .concat([...imgLayer.querySelectorAll('[data-iid]'), ...imgOver.querySelectorAll('[data-iid]'), ...imgUi.querySelectorAll('[data-iid]')].filter(el => ids.has(el.dataset.iid))) };
       return;
     }
     clearSelection();
@@ -5379,7 +5394,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pages.includes(mag.page)) { closeMag(); return; }     // its page was deleted
     $('magPaper').setAttribute('width', W); $('magPaper').setAttribute('height', H);
     $('magGrid').setAttribute('d', GRID_D);
-    $('magInk').innerHTML = imagesMarkup(mag.page) + inkMarkup(mag.page.strokes) + notesMarkup(mag.page);
+    $('magInk').innerHTML = imagesMarkup(mag.page) + inkMarkup(mag.page.strokes) + imagesMarkup(mag.page, undefined, true) + notesMarkup(mag.page);
     magView();
   }
   function magView() {
@@ -5694,7 +5709,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return pool[i];
   }
   function fillSheet(sh, i, z) {
-    sh.querySelector('.ink').innerHTML = i < pages.length ? imagesMarkup(pages[i]) + inkMarkup(pages[i].strokes) + notesMarkup(pages[i]) : '';
+    sh.querySelector('.ink').innerHTML = i < pages.length ? imagesMarkup(pages[i]) + inkMarkup(pages[i].strokes) + imagesMarkup(pages[i], undefined, true) + notesMarkup(pages[i]) : '';
     sh.querySelector('.pnum').textContent = i < pages.length ? i + 1 : 'new';
     sh.style.zIndex = z;
     sh.hidden = false;
@@ -5750,19 +5765,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const backQ = (p, k) => k === 0 ? clamp01(p * BACK_HALF / FLIP_FIRST) : clamp01((p - commitAt(k)) / BACK_SPAN + BACK_HALF);
   const backAngle = (p, k) => { const q = backQ(p, k); return q <= 0 ? 91 : 90 * (1 - q); };
   const backCover = (p, k) => { const a = backAngle(p, k); return a > 90 ? 0 : coverWidth(a); };
+  // The angle of every turning sheet. A sheet never overtakes the one that started before it:
+  // forward, a lower sheet is never further turned than the one above; back, a later page never lies flatter.
+  function flipAngles(p) {
+    const a = [];
+    for (let k = 0; k < nav.maxN; k++) {
+      if (nav.back) a.push(k ? Math.max(backAngle(p, k), a[k - 1]) : backAngle(p, k));
+      else a.push(k ? Math.min(sheetProgress(p, k) * 180, a[k - 1]) : sheetProgress(p, k) * 180);
+    }
+    return a;
+  }
   function flipCount(p) {
+    const ang = flipAngles(p);
     if (nav.back) {                             // the sheet of the page furthest back lies on top
       let best = 0, bestShare = -1, above = 0;
       for (let k = nav.maxN - 1; k >= 0; k--) {
-        const share = Math.max(0, backCover(p, k) - above);
+        const w = ang[k] > 90 ? 0 : coverWidth(ang[k]);
+        const share = Math.max(0, w - above);
         if (share > bestShare + 1e-6) { best = k + 1; bestShare = share; }
-        above = Math.max(above, backCover(p, k));
+        above = Math.max(above, w);
       }
       return 1 - above > bestShare + 1e-6 ? 0 : best;
     }
     let best = 0, bestShare = -1, above = 0;    // above = width covered by the sheets on top
     for (let k = 0; k <= nav.maxN; k++) {
-      const w = k < nav.maxN ? coverWidth(sheetProgress(p, k) * 180) : 1;   // the last page lies flat
+      const w = k < nav.maxN ? coverWidth(ang[k]) : 1;   // the last page lies flat
       const share = Math.max(0, w - above);
       if (share > bestShare + 1e-6) { best = k; bestShare = share; }
       above = Math.max(above, w);
@@ -5787,8 +5814,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function setFlip(p) {
     nav.p = p;
     setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
-    if (nav.back) nav.sheets.forEach((sh, k) => paintSheet(sh, backAngle(p, k), 1));
-    else nav.sheets.forEach((sh, k) => paintSheet(sh, sheetProgress(p, k) * 180, nav.dir));
+    const ang = flipAngles(p);
+    nav.sheets.forEach((sh, k) => paintSheet(sh, ang[k], nav.back ? 1 : nav.dir));
     const n = flipCount(p);
     // the page you land on when letting go gets a coloured edge; a short buzz each time it changes
     const tgt = n === 0 ? pageEl : nav.back ? nav.sheets[n - 1] : n < nav.maxN ? nav.sheets[n] : pool[nav.maxN - 1];
@@ -5798,8 +5825,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (nav.tgt !== undefined) vibrate(6);
       nav.tgt = tgt;
     }
-    if (n >= 2) bubble(`${cur + 1 + nav.dir * n} / ${pages.length + (nav.dir > 0 && cur + n >= pages.length ? 1 : 0)}`, `Release to turn ${n} pages`);
-    else $('riffle').hidden = true;
+    $('riffle').hidden = true;                   // no counter in the middle: the blue edge and the page number show it
   }
   function paintSheet(sh, a, dir) {
     sh.style.transform = `perspective(${Math.round(W * S() * 2.6)}px) rotateY(${dir > 0 ? -a : a}deg)`;
@@ -6237,7 +6263,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${inkMarkup(p.strokes)}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
