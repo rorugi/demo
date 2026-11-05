@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_80</title>
+<title>RRnotes_81</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -873,13 +873,19 @@
   .riffle b { display: block; font: 600 38px/1.1 var(--ui); font-variant-numeric: tabular-nums; color: var(--bar-fg); }
   .riffle span { font-size: 11.5px; opacity: .6; }
 
+  .smslide { position: fixed; z-index: 50; pointer-events: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px;
+    background: var(--panel); color: var(--bar-fg); border: 1px solid var(--bar-line); box-shadow: 0 6px 20px rgba(0, 0, 0, .2); font: 600 11.5px/1 var(--ui); }
+  .smslide span { opacity: .65; }
+  .smslide .trk { position: relative; width: 240px; height: 6px; border-radius: 3px; background: var(--bar-line); }
+  .smslide .trk i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--bar-fg); opacity: .5; }
+  .smslide .trk b { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--panel); border: 2px solid var(--bar-fg); box-sizing: border-box; }
   .tzoom { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px); transform: translateX(-50%); z-index: 50; pointer-events: none;
     padding: 7px 14px; border-radius: 99px; background: var(--brand); color: var(--brand-fg); font: 600 13px/1.2 var(--ui); font-variant-numeric: tabular-nums;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
   .toast {
     position: fixed;
     left: 50%;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+    top: calc(env(safe-area-inset-top, 0px) + 74px);
     transform: translateX(-50%);
     z-index: 50;
     max-width: calc(100vw - 32px);
@@ -1206,6 +1212,14 @@
       <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
         <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
       </select>
+      <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
+      <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
+        <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
+      </select>
+      <span>Hold the pen at the end of a line<span class="sub" id="holdSub"></span></span>
+      <select class="dd" id="holdAct" aria-label="Hold the pen at the end of a line">
+        <option value="smooth">Adjust the smoothing</option><option value="off">Nothing</option>
+      </select>
     </div>
   </div>
   <h3>Handles</h3>
@@ -1281,6 +1295,7 @@
 <div class="riffle" id="riffle" hidden><b id="riffleNum">1 / 1</b><span id="riffleHint"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
+<div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
 <div class="overview" id="overview" hidden>
   <header>
@@ -1529,7 +1544,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_80';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_81';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -4109,16 +4124,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // sticky notes and images: size for moving
   const objW = o => o.src ? o.w : noteW(o), objH = o => o.src ? o.h : noteHt(o);
   // while held (faded) it can also be moved with the same finger
+  // a finger has to rest on a sticky note or image for a moment before it can move it (no accidental shifts)
+  const PEEK_HOLD = 350;
   function startPeek(e, n, delay, at) {
     revealHandles(n.id);
-    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot() };
-    a.timer = setTimeout(() => { if (active === a) { a.on = true; fadeNote(n, true); } }, delay);
+    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold: delay > 0 };
+    a.timer = setTimeout(() => { if (active === a && !a.dead) { a.on = true; fadeNote(n, true); if (a.hold) vibrate(8); } }, delay);
     active = a;
   }
   function peekMove(e) {
     const a = active, n = a.note, [x, y] = toMM(e);
-    if (n.lock) return;
+    if (n.lock || a.dead) return;
     if (!a.moved && Math.hypot(x - a.start[0], y - a.start[1]) < 1.5) return;
+    if (!a.on && a.hold) { clearTimeout(a.timer); a.dead = true; return; }   // moved before the hold: leave it where it is
     if (!a.on) { clearTimeout(a.timer); a.on = true; }
     a.moved = true;
     if (n.src) { n.x = Math.max(-n.w + 5, Math.min(W - 5, x - a.off[0])); n.y = Math.max(-n.h + 5, Math.min(H - 5, y - a.off[1])); }
@@ -4423,12 +4441,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (act.startsWith('crop-')) { active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], c0: { ...cropSt.C }, moved: false }; return true; }
     if (m.lock) return true;
-    active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], m0: { ...m }, before: snapshot(), moved: false };
+    const a = active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], m0: { ...m }, before: snapshot(), moved: false };
+    if (e.pointerType === 'touch') {                // a finger moves or resizes only after resting on the handle
+      a.wait = true;
+      a.timer = setTimeout(() => { if (active === a && !a.dead) { a.wait = false; vibrate(8); } }, PEEK_HOLD);
+    }
     return true;
   }
   function imgDragMove(e) {
     const a = active, m = a.img, [x, y] = toMM(e), dx = x - a.start[0], dy = y - a.start[1];
-    if (!a.moved && Math.hypot(dx, dy) < 0.5) return;
+    if (a.dead) return;
+    if (!a.moved && Math.hypot(dx, dy) < (a.wait ? 1.5 : 0.5)) return;
+    if (a.wait) { clearTimeout(a.timer); a.dead = true; return; }
     a.moved = true;
     if (a.imgDrag.startsWith('crop-')) {         // a corner of the crop window, inside the whole picture, at least 5 mm
       const F = cropSt.F, c = a.c0, k = a.imgDrag.slice(5), MIN = 5;
@@ -4448,6 +4472,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function endImgDrag() {
     const a = active;
     active = null;
+    clearTimeout(a.timer);
     if (a.imgDrag.startsWith('crop-')) { renderImages(); if (openPop) placePop(); return; }
     if (a.moved) { remember(a.before); renderImages(); mapInkChanged(); scheduleSave(); }
   }
@@ -4669,12 +4694,99 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function feed(x, y) {
     const a = active, p = a.pts;
+    (a.raw || (a.raw = [])).push([x, y]);
     if (!p.length) { a.sx = x; a.sy = y; p.push([x, y]); return; }
     a.sx += (x - a.sx) * SMOOTH; a.sy += (y - a.sy) * SMOOTH;
     const l = p[p.length - 1];
     if (Math.hypot(a.sx - l[0], a.sy - l[1]) < MIN_D) return;
     p.push([a.sx, a.sy]); drawIncrement();
   }
+  // ---- Hold the pen at the end of a line: a slider sets the smoothing, from none (as written) to a straight line ----
+  const HOLD = { smooth: 'A slider appears: slide left for the line exactly as written, right for smoother, all the way to a straight line', off: 'Does nothing' };
+  let holdAct = (v => HOLD[v] ? v : 'smooth')(store.get('penHold', 'smooth'));
+  const HOLD_MS = 600, HOLD_SLOP = 6, SM_W = 240, SM_DEF = 0.15;
+  $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct];
+  $('holdAct').addEventListener('change', e => { holdAct = e.target.value; store.set('penHold', holdAct); $('holdSub').textContent = HOLD[holdAct]; });
+  function holdWatch(e) {                       // (re)start the timer whenever the pen really moves
+    const a = active;
+    if (holdAct !== 'smooth' || !a || a.type !== 'pen' || a.sm) return;
+    if (a.hx !== undefined && Math.hypot(e.clientX - a.hx, e.clientY - a.hy) < HOLD_SLOP) return;
+    a.hx = e.clientX; a.hy = e.clientY;
+    clearTimeout(a.holdT);
+    a.holdT = setTimeout(() => { if (active === a && !a.sm) startSmooth(a); }, HOLD_MS);
+  }
+  const pathLen = p => { let L = 0; for (let i = 1; i < p.length; i++) L += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return L; };
+  function resample(p, step) {
+    const out = [p[0]];
+    let carry = 0;
+    for (let i = 1; i < p.length; i++) {
+      const a = p[i - 1], b = p[i], d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      let t = step - carry;
+      while (t <= d) { out.push([a[0] + (b[0] - a[0]) * t / d, a[1] + (b[1] - a[1]) * t / d]); t += step; }
+      carry = (carry + d) % step;
+    }
+    const l = p[p.length - 1], o = out[out.length - 1];
+    if (Math.hypot(l[0] - o[0], l[1] - o[1]) > 1e-6) out.push(l);
+    return out;
+  }
+  // the line's deviation from the straight line between its ends is blurred (more with a higher level) and,
+  // towards the top, faded out: at 1 only the straight line is left
+  function smoothLine(raw, amt) {
+    if (raw.length < 2) return raw.slice();
+    const A = raw[0], B = raw[raw.length - 1];
+    if (amt >= 0.995) return [A, B];
+    if (amt <= 0.005) return raw.slice();
+    const step = 0.35, R = resample(raw, step), n = R.length, L = pathLen(R) || 1;
+    let acc = 0;
+    const t = R.map((q, i) => (i && (acc += Math.hypot(q[0] - R[i - 1][0], q[1] - R[i - 1][1])), acc / L));
+    const d = R.map((q, i) => [q[0] - (A[0] + (B[0] - A[0]) * t[i]), q[1] - (A[1] + (B[1] - A[1]) * t[i])]);
+    const sigma = Math.max(0.05, amt * amt * L * 0.35) / step, rad = Math.min(n, Math.ceil(sigma * 3));
+    const w = []; for (let k = 0; k <= rad; k++) w.push(Math.exp(-k * k / (2 * sigma * sigma)));
+    const at = i => i < 0 ? [-d[-i][0], -d[-i][1]] : i >= n ? [-d[2 * (n - 1) - i][0], -d[2 * (n - 1) - i][1]] : d[i];   // odd mirror: the ends stay put
+    const fade = amt > 0.8 ? 1 - (amt - 0.8) / 0.2 : 1;
+    return R.map((q, i) => {
+      let sx = 0, sy = 0, sw = 0;
+      for (let k = -rad; k <= rad; k++) { const j = i + k; if (j < -(n - 1) || j > 2 * (n - 1)) continue; const v = at(j), ww = w[Math.abs(k)]; sx += v[0] * ww; sy += v[1] * ww; sw += ww; }
+      return [A[0] + (B[0] - A[0]) * t[i] + sx / sw * fade, A[1] + (B[1] - A[1]) * t[i] + sy / sw * fade];
+    });
+  }
+  function startSmooth(a) {
+    if (!a.raw || a.raw.length < 3 || pathLen(a.raw) < 3) return;
+    a.sm = { x0: a.hx, y0: a.hy, amt: SM_DEF, orig: a.pts.slice(), raw: a.raw.slice(), live: false };
+    clearCtx(tctx);
+    const el = $('smSlide');
+    el.hidden = false;
+    const r = el.getBoundingClientRect(), trk = el.querySelector('.trk').getBoundingClientRect();
+    const left = Math.max(8, Math.min(vw - r.width - 8, a.hx - (trk.left - r.left) - SM_DEF * SM_W));
+    el.style.left = left + 'px';
+    el.style.top = Math.max(8, a.hy - r.height - 46) + 'px';
+    a.sm.trackX = left + (trk.left - r.left);
+    paintSmooth(a);
+    vibrate(10);
+  }
+  function paintSmooth(a) {
+    const v = a.sm.amt;
+    $('smThumb').style.left = (v * 100) + '%'; $('smFill').style.width = (v * 100) + '%';
+  }
+  function smoothMove(e) {
+    const a = active, sm = a.sm, dx = e.clientX - sm.x0, dy = e.clientY - sm.y0;
+    if (!sm.live && Math.abs(dy) > 28 && Math.abs(dy) > Math.abs(dx) * 1.5) { endSmooth(a, true); return false; }   // goes on writing
+    if (!sm.live && Math.abs(dx) < 4) return true;
+    sm.live = true;
+    sm.amt = clamp01((e.clientX - sm.trackX) / SM_W);
+    a.pts = smoothLine(sm.raw, sm.amt);
+    redrawActive();
+    const l = a.pts[a.pts.length - 1]; a.sx = l[0]; a.sy = l[1];
+    drawTip([]);                                   // the last piece up to the end
+    paintSmooth(a);
+    return true;
+  }
+  function endSmooth(a, resume) {
+    $('smSlide').hidden = true;
+    if (resume && a.sm) { a.pts = a.sm.orig; a.hx = undefined; redrawActive(); }
+    a.sm = null;
+  }
+
   // Compact path: start point absolute, then short steps relative to the current point, in
   // 0.01 mm units (integer maths, so rounding never drifts), repeated "q" letters left out.
   // Same curve as before: a quadratic piece through the midpoints between points.
@@ -5452,7 +5564,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (a.changed) { remember(a.before); scheduleSave(); }
       return;
     }
-    if (commit && e && e.type === 'pointerup') {
+    clearTimeout(a.holdT);
+    const smoothed = !!(a.sm && a.sm.live);
+    if (a.sm) endSmooth(a, !a.sm.live);
+    if (commit && e && e.type === 'pointerup' && !smoothed) {
       const [x, y] = toMM(e), l = a.pts[a.pts.length - 1];
       if (Math.hypot(x - l[0], y - l[1]) >= MIN_D) { a.pts.push([x, y]); drawIncrement(); }
     }
@@ -5468,7 +5583,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       requestAnimationFrame(() => requestAnimationFrame(() => { if (!active && serial === strokeSerial) clearCtx(lctx), clearCtx(tctx); }));
       return;
     }
-    if (scribbleOn && !a.h && isScribble(a.pts)) {
+    if (scribbleOn && !a.h && !smoothed && isScribble(a.pts)) {
       const n = scribbleErase(a.pts, a.width);
       if (n) {
         clearCtx(lctx); clearCtx(tctx);
@@ -5852,21 +5967,50 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Double tap with two fingers (Undo by default; see Settings → Gestures) ----
   const TAP2 = { undo: 'Undo', redo: 'Redo', overview: 'Opens the page overview', lock: 'Locks or unlocks the zoom', off: 'Does nothing' };
   let tap2Act = (v => TAP2[v] ? v : 'undo')(store.get('tap2', 'undo'));
-  let tap2 = null, tap2Last = 0;
+  let tap2 = null, tap2Last = 0, tap1Last = null;
+  const TAP1 = { zoom: 'Toggles between the whole page and 1:1 (2× without screen calibration), around the tapped spot', undo: 'Undo', redo: 'Redo', overview: 'Opens the page overview', off: 'Does nothing' };
+  let tap1Act = (v => TAP1[v] ? v : 'zoom')(store.get('tap1', 'zoom'));
   function tapDown(e) {
     const now = performance.now();
-    if (touches.size === 1) tap2 = { t: now, start: new Map([[e.pointerId, { x: e.clientX, y: e.clientY }]]), n: 1, moved: false };
+    if (touches.size === 1) tap2 = { t: now, x: e.clientX, y: e.clientY, start: new Map([[e.pointerId, { x: e.clientX, y: e.clientY }]]), n: 1, moved: false };
     else if (touches.size === 2 && tap2 && tap2.n === 1 && now - tap2.t < 220) { tap2.start.set(e.pointerId, { x: e.clientX, y: e.clientY }); tap2.n = 2; }
     else tap2 = null;
   }
   function tapUp() {
     const t = tap2, now = performance.now();
     tap2 = null;
+    if (t && t.n === 1 && !t.moved && now - t.t < 220 && penSeen) {   // one finger (only once fingers no longer write)
+      tap2Last = 0;
+      const l = tap1Last;
+      if (l && now - l.t < 380 && Math.hypot(t.x - l.x, t.y - l.y) < 50) { tap1Last = null; runTap1(t.x, t.y); }
+      else tap1Last = { t: now, x: t.x, y: t.y };
+      return;
+    }
+    tap1Last = null;
     if (!t || t.n !== 2 || t.moved || now - t.t > 350) { tap2Last = 0; return; }
     if (now - tap2Last > 450) { tap2Last = now; return; }      // the first tap: wait for the second one
     tap2Last = 0;
     runTap2();
   }
+  function runTap1(x, y) {
+    if (active || pinch || nav || tap1Act === 'off') return;
+    if (tap1Act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
+    else if (tap1Act === 'redo') { if (redoStack.length) { redo(); toast('Redo', 1000); } else toast('Nothing to redo', 1200); }
+    else if (tap1Act === 'overview') openOverview();
+    else if (tap1Act === 'zoom') {
+      const rz = realZoom(), atFit = Math.abs(view.zoom - 1) < 0.02;
+      const to = atFit ? (rz && Math.abs(rz - 1) > 0.05 ? rz : 2) : 1;
+      const was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+      zoomAt(to, x, y, view.zoom, view.tx, view.ty);              // where it should end up…
+      const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+      Object.assign(view, was);
+      zoomBack(b);                                                  // …and glide there
+      toast(to === 1 ? 'Whole page' : rz && to === rz ? '1:1' : `${Math.round(to * 100)}%`, 900);
+    }
+  }
+  $('tap1Act').value = tap1Act;
+  $('tap1Sub').textContent = TAP1[tap1Act];
+  $('tap1Act').addEventListener('change', e => { tap1Act = e.target.value; store.set('tap1', tap1Act); $('tap1Sub').textContent = TAP1[tap1Act]; });
   function runTap2() {
     if (active || tap2Act === 'off') return;
     if (tap2Act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
@@ -5922,7 +6066,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
       if (penSeen) {                                     // fingers don't write, but can peek under a sticky note
         const q = toMM(e), n = noteAt(q[0], q[1]) || imageAt(q[0], q[1]);
-        if (n) startPeek(e, n, 180, q);
+        if (n) startPeek(e, n, PEEK_HOLD, q);
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -5997,6 +6141,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
     if (active.move) { selMove(e); return; }
+    if (active.sm && smoothMove(e)) return;
+    holdWatch(e);
     for (const s of (list.length ? list : [e])) { const [x, y] = toMM(s); feed(x, y); }
     drawTip((e.getPredictedEvents && e.getPredictedEvents()) || []);
   });
