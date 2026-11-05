@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_73</title>
+<title>RRnotes_74</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -829,6 +829,7 @@
 
   /* ---------- selection ---------- */
   .sel-halo path { stroke: #1f6fd1 !important; stroke-opacity: .28 !important; }
+  .sel-halo rect.img { fill: rgba(31, 111, 209, .1); stroke: #1f6fd1; stroke-opacity: .55; stroke-width: 3px; vector-effect: non-scaling-stroke; }
   .sel-layer rect { fill: rgba(31, 111, 209, .05); stroke: #1f6fd1; stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
   .sel-layer .grab { cursor: move; }
   .selbar {
@@ -1492,7 +1493,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_73';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_74';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1988,7 +1989,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
   const copyNotes = list => (list || []).map(n => ({ ...n, strokes: n.strokes.slice() }));
   const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })) })), cur,
-    selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null });
+    selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null,
+    selImg: sel && sel.page === cur ? sel.imgs.map(m => imagesOf(pages[cur]).indexOf(m)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
     markChanged();
     undoStack.push(snap);
@@ -2000,8 +2002,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); return e.page; });
     if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
-    const again = s.selIdx && s.selIdx.length ? s.selIdx.map(i => pages[cur].strokes[i]).filter(Boolean) : null;
-    if (again && again.length) sel = { page: cur, items: again, box: selBox(again) };
+    const again = (s.selIdx || []).map(i => pages[cur].strokes[i]).filter(Boolean);
+    const againI = (s.selImg || []).map(i => imagesOf(pages[cur])[i]).filter(Boolean);
+    if (again.length || againI.length) sel = { page: cur, items: again, imgs: againI, box: selBox(again, againI) };
     else clearSelection();
     renderPage(); scheduleSave();
     if (!$('overview').hidden) buildOverview();
@@ -2413,7 +2416,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'size':
       case 'color':
       case 'preset':
-        if (sel && tool === 'lasso') { closePops(); restyleSelection(it); break; }     // change the selected strokes
+        if (sel && sel.items.length && tool === 'lasso') { closePops(); restyleSelection(it); break; }     // change the selected strokes
         if (tool !== 'pen') break;                       // needs an active pen (the button is greyed out)
         if (modMatches(it)) {                            // the pen already has it: tap again to change the button
           if (openPop === penPop && penEdit.item === it) closePops();
@@ -4732,7 +4735,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Select: circle ink with the lasso, then move or delete it ----
   const selHalo = $('selHalo'), selLayer = $('selLayer'), selbar = $('selbar');
-  let sel = null;                    // { page, items: [stroke objects], box: [x0,y0,x1,y1] in mm }
+  let sel = null;                    // { page, items: [stroke objects], imgs: [image objects], box: [x0,y0,x1,y1] in mm }
   function pointInPoly(q, poly) {
     let inside = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -4741,12 +4744,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return inside;
   }
-  function selBox(list) {
+  function selBox(list, imgs = []) {
     let b = [Infinity, Infinity, -Infinity, -Infinity];
     for (const st of list) {
       const g = strokeGeo(st).box, m = st.w / 2;
       b = [Math.min(b[0], g[0] - m), Math.min(b[1], g[1] - m), Math.max(b[2], g[2] + m), Math.max(b[3], g[3] + m)];
     }
+    for (const m of imgs) b = [Math.min(b[0], m.x), Math.min(b[1], m.y), Math.max(b[2], m.x + m.w), Math.max(b[3], m.y + m.h)];
     const pad = 1.5;
     return [b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad];
   }
@@ -4767,23 +4771,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('selPaste').hidden = !clip;
     placeSelbar();
   }
-  function setSelection(list) {
-    if (!list.length) { clearSelection(); return; }
-    sel = { page: cur, items: list, box: selBox(list) };
+  function setSelection(list, imgs = []) {
+    if (!list.length && !imgs.length) { clearSelection(); return; }
+    sel = { page: cur, items: list, imgs, box: selBox(list, imgs) };
     renderSelection(); updateToolbarState();
   }
+  const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+  const selWhat = (n, k) => [n && plural(n, 'stroke', 'strokes'), k && plural(k, 'image', 'images')].filter(Boolean).join(' and ');
   function renderSelection() {
     if (!sel) return;
-    const live = new Set(pages[cur].strokes);
-    if (sel.page !== cur || !sel.items.every(st => live.has(st))) {
+    const live = new Set(pages[cur].strokes), liveI = new Set(imagesOf(pages[cur]));
+    if (sel.page !== cur || !sel.items.every(st => live.has(st)) || !sel.imgs.every(m => liveI.has(m) && !m.lock)) {
       const keep = sel.page === cur ? sel.items.filter(st => live.has(st)) : [];
-      if (!keep.length) { clearSelection(); return; }
-      sel.items = keep; sel.box = selBox(keep);
+      const keepI = sel.page === cur ? sel.imgs.filter(m => liveI.has(m) && !m.lock) : [];
+      if (!keep.length && !keepI.length) { clearSelection(); return; }
+      sel.items = keep; sel.imgs = keepI;
     }
-    selHalo.innerHTML = sel.items.map(st => `<path d="${st.d}" stroke-width="${st.w + 1.4}"/>`).join('');
+    sel.box = selBox(sel.items, sel.imgs);                 // images can be moved or resized with their own handles
+    const f = v => +(+v).toFixed(3);
+    selHalo.innerHTML = sel.items.map(st => `<path d="${st.d}" stroke-width="${st.w + 1.4}"/>`).join('') +
+      sel.imgs.map(m => `<rect class="img" x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}"/>`).join('');
     const [x0, y0, x1, y1] = sel.box;
     selLayer.innerHTML = `<rect class="grab" x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="1"/>`;
-    $('selCount').textContent = `${sel.items.length} ${sel.items.length === 1 ? 'stroke' : 'strokes'}`;
+    $('selCount').textContent = selWhat(sel.items.length, sel.imgs.length);
     refreshSelbar();
   }
   function placeSelbar(dx = 0, dy = 0) {
@@ -4806,8 +4816,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearCtx(lctx); clearCtx(tctx);
     liveWrap.style.opacity = 1; liveWrap.style.mixBlendMode = 'normal';
     if (inSelBox(q)) {                                   // drag the selection
+      const ids = new Set(sel.imgs.map(m => m.id));
       active = { id: e.pointerId, type: e.pointerType, move: true, q0: q, dx: 0, dy: 0,
-                 els: [...pageInk.querySelectorAll('[data-i]')].filter(el => sel.items.includes(pages[cur].strokes[+el.dataset.i])) };
+                 els: [...pageInk.querySelectorAll('[data-i]')].filter(el => sel.items.includes(pages[cur].strokes[+el.dataset.i]))
+                   .concat([...imgLayer.querySelectorAll('[data-iid]'), ...imgUi.querySelectorAll('[data-iid]')].filter(el => ids.has(el.dataset.iid))) };
       return;
     }
     clearSelection();
@@ -4839,6 +4851,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const q = poly[0];
       const hit = list.slice().reverse().find(st => (strokeGeo(st).pts || strokeGeo(st).loose).some(p => Math.hypot(p[0] - q[0], p[1] - q[1]) <= st.w / 2 + 1.5));
       picked = hit ? [hit] : [];
+      const im = !hit && imageAt(q[0], q[1]);           // or else the image under it
+      if (im && !im.lock) { setSelection([], [im]); return; }
     } else {                                             // a stroke is inside when most of it is
       picked = list.filter(st => {
         const ps = strokeGeo(st).pts || strokeGeo(st).loose;
@@ -4847,6 +4861,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         for (let i = 0; i < ps.length; i += step) { total++; if (pointInPoly(ps[i], poly)) inside++; }
         return total && inside / total >= 0.5;
       });
+      // an image is inside when most of it is (locked images stay where they are)
+      const imgs = imagesOf(pages[cur]).filter(m => {
+        if (m.lock) return false;
+        let inside = 0;
+        for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) if (pointInPoly([m.x + m.w * (i + 0.5) / 5, m.y + m.h * (j + 0.5) / 5], poly)) inside++;
+        return inside >= 13;
+      });
+      setSelection(picked, imgs); return;
     }
     setSelection(picked);
   }
@@ -4864,6 +4886,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     selHalo.removeAttribute('transform'); selLayer.removeAttribute('transform');
     if (Math.hypot(dx, dy) < 0.05) { renderPage(); return; }
     remember();
+    for (const m of sel.imgs) { m.x += dx; m.y += dy; }
     const moved = new Map();
     pages[cur].strokes = pages[cur].strokes.map(st => {
       if (!sel.items.includes(st)) return st;
@@ -4874,14 +4897,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       return n;
     });
     sel.items = sel.items.map(st => moved.get(st) || st);
-    sel.box = selBox(sel.items);
+    sel.box = selBox(sel.items, sel.imgs);
     renderPage(); scheduleSave();
   }
   $('selDel').addEventListener('click', () => {
     if (!sel) return;
     remember();
-    const gone = new Set(sel.items);
+    const gone = new Set(sel.items), goneI = new Set(sel.imgs);
     pages[cur].strokes = pages[cur].strokes.filter(st => !gone.has(st));
+    pages[cur].images = imagesOf(pages[cur]).filter(m => !goneI.has(m));
     clearSelection();
     renderPage(); scheduleSave();
   });
@@ -4894,8 +4918,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Copy and paste (within the notebook, also to other pages) ----
   function copySelection() {
     if (!sel) return;
-    clip = { strokes: sel.items.map(st => ({ ...st })), box: sel.box.slice(), page: pages[cur], n: 0 };
-    toast(`Copied ${sel.items.length} ${sel.items.length === 1 ? 'stroke' : 'strokes'}. Paste on this or any other page.`);
+    clip = { strokes: sel.items.map(st => ({ ...st })), imgs: sel.imgs.map(m => ({ ...m, crop: m.crop && m.crop.slice() })), box: sel.box.slice(), page: pages[cur], n: 0 };
+    toast(`Copied ${selWhat(sel.items.length, sel.imgs.length)}. Paste on this or any other page.`);
     refreshSelbar();
   }
   // where the next paste lands: on the original page a little offset each time, elsewhere in the same spot
@@ -4916,11 +4940,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const pts = parsePoints(st.d);
       return pts ? { ...st, d: toPath(pts.map(q => [q[0] + dx, q[1] + dy])) } : { ...st };
     });
+    const addedI = clip.imgs.map(m => ({ ...m, id: uid(), x: m.x + dx, y: m.y + dy, crop: m.crop && m.crop.slice() }));
     if (clip.page === pages[cur]) clip.n++;
     pages[cur].strokes.push(...added);
+    imagesOf(pages[cur]).push(...addedI);
     tool = 'lasso';
     renderPage(); scheduleSave();
-    setSelection(added);                   // the copy is selected, ready to be moved
+    setSelection(added, addedI);           // the copy is selected, ready to be moved
     updateToolbarState();
   }
   $('selCopy').addEventListener('click', copySelection);
@@ -4955,7 +4981,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       return n;
     });
     sel.items = sel.items.map(st => map.get(st) || st);
-    sel.box = selBox(sel.items);
+    sel.box = selBox(sel.items, sel.imgs);
     renderPage(); scheduleSave();
     toast(`${it.type === 'size' ? 'Resized' : it.type === 'preset' ? 'Restyled' : 'Recoloured'} ${sel.items.length} ${sel.items.length === 1 ? 'stroke' : 'strokes'}. Undo brings the old ${it.type === 'size' ? 'size' : it.type === 'preset' ? 'look' : 'colour'} back.`);
   }
