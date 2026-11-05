@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_84</title>
+<title>RRnotes_85</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -685,11 +685,14 @@
     z-index: 3;
     pointer-events: none;
     /* darker towards the lifted edge, with a thin sheen right at the edge where it catches the light */
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, rgba(255, 255, 255, .55) 98.6%, rgba(255, 255, 255, .25) 100%);
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, var(--sheen) 98.6%, var(--sheen-out) 100%);
     opacity: 0;
     will-change: opacity;
   }
-  .page.from-left .shade { background: linear-gradient(270deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, rgba(255, 255, 255, .55) 98.6%, rgba(255, 255, 255, .25) 100%); }
+  .page.from-left .shade { background: linear-gradient(270deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, var(--sheen) 98.6%, var(--sheen-out) 100%); }
+  .page { --sheen: rgba(255, 255, 255, .55); --sheen-out: rgba(255, 255, 255, .25); }
+  /* the page you land on: its light band takes the colour of its border */
+  .page.target { --sheen: rgba(31, 111, 209, .85); --sheen-out: rgba(31, 111, 209, .5); --sheet-shine: rgba(31, 111, 209, .35); }
   .page { will-change: transform; }
   .page::before {
     content: "";
@@ -1560,7 +1563,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_84';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_85';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5698,6 +5701,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('riffle').hidden = false;
   }
 
+  // Turning back mirrors turning forward (the current page lifts at the left and turns over to the right,
+  // so the page underneath is seen while swiping). true: the previous pages swing back over the binding instead.
+  const BACK_OVER_BINDING = false;
   // Flip: the pages are bound on the left. Forward, sheets lift from the right and turn over the binding;
   // back, the previous sheets swing back from the binding and open to the right. Several can move at once.
   function sheetAt(i) {
@@ -5722,7 +5728,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const avail = dir > 0 ? pages.length - 1 - cur + (pages[pages.length - 1].strokes.length || notesOf(pages[pages.length - 1]).length || imagesOf(pages[pages.length - 1]).length ? 1 : 0) : cur;
     const maxN = Math.min(FLIP_MAX, avail);
     if (maxN <= 0) { const first = dir < 0; cancelNav(); if (first) toast('This is the first page.'); return; }
-    if (dir < 0) {
+    if (dir < 0 && BACK_OVER_BINDING) {
       // Back: the pages are bound on the left, so the previous pages swing back over the binding.
       // Each starts edge-on (a thin sliver at the left edge) and opens to the right over the current page.
       const sheets = [];
