@@ -847,7 +847,7 @@
   /* ---------- selection ---------- */
   .sel-halo path { stroke: var(--sel) !important; stroke-opacity: .28 !important; }
   .sel-halo rect.img { fill: color-mix(in srgb, var(--sel) 10%, transparent); stroke: var(--sel); stroke-opacity: .55; stroke-width: 3px; vector-effect: non-scaling-stroke; }
-  .sel-layer rect { fill: color-mix(in srgb, var(--sel) 5%, transparent); stroke: var(--sel); stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+  .sel-layer rect.grab { fill: color-mix(in srgb, var(--sel) 5%, transparent); stroke: var(--sel); stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
   .sel-layer .grab { cursor: move; }
   .selbar {
     position: fixed; z-index: 12;
@@ -864,8 +864,8 @@
   .selbar button:hover { background: var(--active); }
   .selbar #selDel { color: var(--danger); }
   /* a selected sticky note or image: border and a light tint in the selection colour */
-  .objsel { fill: color-mix(in srgb, var(--sel) 9%, transparent); stroke: var(--sel); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none;
-    filter: drop-shadow(0 0 calc(var(--sel-glow) / 2) var(--sel)); }
+  .objsel { fill: color-mix(in srgb, var(--sel) 9%, transparent); stroke: var(--sel); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .selglow rect { fill: none; stroke: var(--sel); vector-effect: non-scaling-stroke; pointer-events: none; stroke-linejoin: round; }
   .selobj .hnd { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
   .selbar svg { width: 17px; height: 17px; }
 
@@ -1632,8 +1632,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_96';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.4';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_97';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.5';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4311,7 +4311,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<svg x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${zh}" viewBox="0 0 ${z} ${zh}" overflow="hidden"><rect width="${z}" height="${zh}" fill="${c}"/>` +
       `<g class="nink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>`;
     out += '</svg>';
-    if (isSel) out += `<rect class="objsel" x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${zh}"/>`;
+    if (isSel) out += selFrame(n.x, n.y, z, zh);
     if (ui && (handleMode !== 'selected' || isSel)) {   // round handles on the corners, tinted with the note's colour: move, options, fold away
       const r = Math.min(noteH, z / 3, zh / 2.2) / 2, t = shade(c, 0.86);
       const bx = isSel ? null : { x: n.x, y: n.y, w: z, h: zh };   // selected: always visible, also in Hidden mode
@@ -4400,6 +4400,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     else if (a.type === 'touch' && !a.moved && !a.dead) selectObj(a.note);   // a finger tap, or hold and let go: select it
   }
   // ---- Selecting a sticky note or image with a finger tap: a border, its handles, and (images) the pen writes on it ----
+  function selFrame(x, y, w, h, cls = 'objsel') {
+    const f = v => +(+v).toFixed(3), r = `x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"`;
+    return `<g class="selglow">${[1, .62, .3].map((k, i) => `<rect ${r} style="stroke-width:calc(var(--sel-glow) * ${k} * 2);stroke-opacity:${[.12, .16, .22][i]}"/>`).join('')}</g><rect class="${cls}" ${r}/>`;
+  }
   const objOnPage = o => !!o && (imagesOf(pages[cur]).includes(o) || notesOf(pages[cur]).includes(o));
   function inObj(o, q) {
     if (!o) return false;
@@ -4694,7 +4698,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     imgUi.innerHTML = list.map(m => {
       const isSel = m === objSel;
       box = isSel ? null : m;
-      const selRect = isSel ? `<rect class="objsel" x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}"/>` : '';
+      const selRect = isSel ? selFrame(m.x, m.y, m.w, m.h) : '';
       const m0 = 0;                                // on the corners, half outside: nothing of the picture is covered
       if (cropSt && cropSt.m === m) {             // crop: a frame and four corner handles
         const C = cropSt.C, k = r * 0.9;
@@ -5476,7 +5480,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     selHalo.innerHTML = sel.items.map(st => `<path d="${st.d}" stroke-width="${st.w + 1.4}"/>`).join('') +
       sel.imgs.map(m => `<rect class="img" x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}"/>`).join('');
     const [x0, y0, x1, y1] = sel.box;
-    selLayer.innerHTML = `<rect class="grab" x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="1"/>`;
+    selLayer.innerHTML = selFrame(x0, y0, x1 - x0, y1 - y0, 'grab');
     $('selCount').textContent = selWhat(sel.items.length, sel.imgs.length);
     refreshSelbar();
   }
