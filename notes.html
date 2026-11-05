@@ -33,6 +33,7 @@
     --ph: 297;
     --sheet-edge: rgba(0, 0, 0, .14);
     --sheet-shine: rgba(255, 255, 255, .8);      /* the light catching the paper's edge */
+    --sel: #1f6fd1;                               /* selection colour (setting): selections, the page you land on */
     --sheet-inner: rgba(0, 0, 0, .07);
     --mag: #6b40b8;                  /* magnifier frame */
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -692,7 +693,7 @@
   .page.from-left .shade { background: linear-gradient(270deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, var(--sheen) 98.6%, var(--sheen-out) 100%); }
   .page { --sheen: rgba(255, 255, 255, .55); --sheen-out: rgba(255, 255, 255, .25); }
   /* the page you land on: its light band takes the colour of its border */
-  .page.target { --sheen: rgba(31, 111, 209, .85); --sheen-out: rgba(31, 111, 209, .5); --sheet-shine: rgba(31, 111, 209, .35); }
+  .page.target { --sheen: color-mix(in srgb, var(--sel) 85%, transparent); --sheen-out: color-mix(in srgb, var(--sel) 50%, transparent); --sheet-shine: color-mix(in srgb, var(--sel) 35%, transparent); }
   .page { will-change: transform; }
   /* the notebook's covers (seen only while turning past the first or last page): grey cardboard */
   .page.cover { background: linear-gradient(135deg, #979892, #82837d); }
@@ -704,8 +705,8 @@
   .page.turning.from-left { transform-origin: 100% 50%; }
   /* while turning: a fine edge and the page number, so sheets in the fan can be told apart */
   .page.turning { box-shadow: inset 0 0 0 1px var(--sheet-edge), inset 0 0 0 2px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
-  .page.target { box-shadow: inset 0 0 0 3px #1f6fd1, inset 0 0 0 4px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow) !important; }
-  .page.target .pnum { color: #1f6fd1; font-weight: 700; opacity: 1; }
+  .page.target { box-shadow: inset 0 0 0 3px var(--sel), inset 0 0 0 4px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow) !important; }
+  .page.target .pnum { color: var(--sel); font-weight: 700; opacity: 1; }
   .pnum {
     position: absolute; bottom: 7px; right: 12px; z-index: 2;
     font: 500 11px/1 var(--ui); font-variant-numeric: tabular-nums;
@@ -843,9 +844,9 @@
   .mag-layer rect { fill: none; stroke: var(--mag); stroke-width: 1.4px; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
 
   /* ---------- selection ---------- */
-  .sel-halo path { stroke: #1f6fd1 !important; stroke-opacity: .28 !important; }
-  .sel-halo rect.img { fill: rgba(31, 111, 209, .1); stroke: #1f6fd1; stroke-opacity: .55; stroke-width: 3px; vector-effect: non-scaling-stroke; }
-  .sel-layer rect { fill: rgba(31, 111, 209, .05); stroke: #1f6fd1; stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+  .sel-halo path { stroke: var(--sel) !important; stroke-opacity: .28 !important; }
+  .sel-halo rect.img { fill: color-mix(in srgb, var(--sel) 10%, transparent); stroke: var(--sel); stroke-opacity: .55; stroke-width: 3px; vector-effect: non-scaling-stroke; }
+  .sel-layer rect { fill: color-mix(in srgb, var(--sel) 5%, transparent); stroke: var(--sel); stroke-width: 1.2px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
   .sel-layer .grab { cursor: move; }
   .selbar {
     position: fixed; z-index: 12;
@@ -860,8 +861,10 @@
     display: flex; align-items: center; gap: 6px; font: 500 13px/1 var(--ui); cursor: pointer;
   }
   .selbar button:hover { background: var(--active); }
-  .selbar #selDel, .objbar #obDel { color: var(--danger); }
-  .objbar button span { font: inherit; opacity: 1; padding: 0; }
+  .selbar #selDel { color: var(--danger); }
+  /* a selected sticky note or image: border and a light tint in the selection colour */
+  .objsel { fill: color-mix(in srgb, var(--sel) 9%, transparent); stroke: var(--sel); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .selobj .hnd { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
   .selbar svg { width: 17px; height: 17px; }
 
   .riffle {
@@ -883,6 +886,9 @@
 
   /* explanations in the settings are hidden; a small (i) next to the option shows them */
   .sub.hint:not(.show) { display: none !important; }
+  .selcols { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 2px 2px 4px; }
+  .menu .selcols button { display: block; width: 100%; height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 50%; border: 0; padding: 0; margin: 0; background: var(--c) !important; cursor: pointer; }
+  .menu .selcols button[aria-checked="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--c); }
   .lbl1 { display: block; }
   .infobtn, .menu .infobtn, .dlg .infobtn { display: inline-flex !important; align-items: center; justify-content: center; width: 26px !important; min-width: 0; height: 24px !important;
     margin: -4px -4px -4px 0 !important; padding: 0 !important; border: 0 !important; border-radius: 50%; background: none !important; color: inherit; font: inherit;
@@ -902,9 +908,9 @@
   .stile { position: absolute; top: 0; left: 0; background: var(--paper); box-shadow: inset 0 0 0 1px var(--sheet-shine), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
   .stile > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .stile.cover { background: linear-gradient(135deg, #979892, #82837d); }
-  .stile.target { box-shadow: inset 0 0 0 3px #1f6fd1, 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .stile.target { box-shadow: inset 0 0 0 3px var(--sel), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
   .stile .snum { position: absolute; left: 0; right: 0; top: 100%; margin-top: 10px; text-align: center; font: 600 13px/1 var(--ui); color: var(--bar-fg); opacity: .6; font-variant-numeric: tabular-nums; }
-  .stile.target .snum { color: #1f6fd1; opacity: 1; }
+  .stile.target .snum { color: var(--sel); opacity: 1; }
   .tzoom { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px); transform: translateX(-50%); z-index: 50; pointer-events: none;
     padding: 7px 14px; border-radius: 99px; background: var(--brand); color: var(--brand-fg); font: 600 13px/1.2 var(--ui); font-variant-numeric: tabular-nums;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
@@ -1267,8 +1273,15 @@
     <div class="imgsizebox">
       <span>Handles on sticky notes and images<span class="sub" id="hndSub"></span></span>
       <select class="dd" id="hndModes" aria-label="Handles on sticky notes and images">
-        <option value="always">Always</option><option value="quiet">Quiet</option><option value="hidden">Hidden</option><option value="select">With Select</option>
+        <option value="selected">When selected</option><option value="always">Always</option><option value="quiet">Quiet</option><option value="hidden">Hidden</option><option value="select">With Select</option>
       </select>
+    </div>
+  </div>
+  <h3>Selection</h3>
+  <div class="menu">
+    <div class="imgsizebox">
+      <span>Selection colour<span class="sub">Marks selected sticky notes, images and writing, and the page you land on when turning or sliding</span></span>
+      <div class="selcols" id="selCols" role="radiogroup" aria-label="Selection colour"></div>
     </div>
   </div>
   <h3>Images</h3>
@@ -1307,13 +1320,6 @@
   <button type="button" id="selPaste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5h6v3H9z"/><path d="M15 5.5h2.5A1.5 1.5 0 0 1 19 7v12a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V7a1.5 1.5 0 0 1 1.5-1.5H9"/><path d="M12 11v6M9.5 14.5L12 17l2.5-2.5"/></svg>Paste</button>
   <button type="button" id="selDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5"/></svg>Delete</button>
   <button type="button" id="selDone">Done</button>
-</div>
-<!-- a finger tap on a sticky note or image: what can be done with it -->
-<div class="selbar objbar" id="objBar" role="toolbar" aria-label="Sticky note or image" hidden>
-  <button type="button" id="obOpts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Options</button>
-  <button type="button" id="obFold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14v9l-5 5H5z"/><path d="M14 19v-5h5"/></svg><span id="obFoldTxt">Fold</span></button>
-  <button type="button" id="obPage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="11" height="15" rx="1.5"/><path d="M13 13h7M17 10l3 3-3 3"/></svg>To page…</button>
-  <button type="button" id="obDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7h15M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5"/></svg>Delete</button>
 </div>
 <div class="magwin" id="magwin" hidden>
   <div class="magview" id="magView">
@@ -1608,8 +1614,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_93';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.1';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_94';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.2';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1943,6 +1949,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const notesOf = pg => pg.notes || (pg.notes = []);
   // ---- Images on a page: { id, src (stored image), x, y, w, h (mm, as shown), rot (0/90/180/270) } — always under the ink ----
   const imagesOf = pg => pg.images || (pg.images = []);
+  // writing on an image is kept in the image's own units (1000 = its width), so it moves and scales with it
+  function cleanImgStroke(st) { const c = st && cleanStroke({ ...st, w: 1 }); return c && +st.w > 0 && isFinite(+st.w) ? { ...c, w: +st.w } : null; }
   function cleanImage(m) {
     if (!m || typeof m !== 'object' || typeof m.src !== 'string' || !m.src) return null;
     const w = +m.w > 1 && +m.w < 20000 ? +m.w : 50, h = +m.h > 1 && +m.h < 20000 ? +m.h : 50;
@@ -1954,6 +1962,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (+m.op >= 0.1 && +m.op < 1) o.op = +m.op;
     if (m.lock) o.lock = true;
     if (m.over) o.over = true;                   // brought to the front: above the handwriting
+    if (Array.isArray(m.ink)) { const ink = m.ink.map(cleanImgStroke).filter(Boolean); if (ink.length) o.ink = ink; }   // writing on the image
     return o;
   }
   const cleanImages = list => (Array.isArray(list) ? list : []).map(cleanImage).filter(Boolean);
@@ -2149,7 +2158,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   function renderPage() {
-    if (objBarFor && !objOnPage(objBarFor)) hideObjBar();
+    if (objSel && !objOnPage(objSel)) objSel = null;
     pageInk.innerHTML = inkMarkup(pages[cur].strokes, false, true);
     renderImages();
     renderNotes();
@@ -2161,8 +2170,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
   // ---- View: fit scale × zoom, plus pan offset in CSS px ----
+  // selection colour: selected sticky notes, images, writing, and the page you land on while turning or sliding
+  const SEL_COLORS = { Blue: '#1f6fd1', Teal: '#0e9bb8', Green: '#2f9e41', Orange: '#f08a10', Red: '#d92b1e', Purple: '#a92fb4', Pink: '#d6336c', Graphite: '#4b5059' };
+  let selColor = (v => Object.values(SEL_COLORS).includes(v) ? v : SEL_COLORS.Blue)(store.get('selColor', SEL_COLORS.Blue));
+  function applySelColor() {
+    document.documentElement.style.setProperty('--sel', selColor);
+    const box = document.getElementById('selCols');
+    if (box) box.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.c === selColor)));
+  }
   const view = { fit: 1, zoom: 1, tx: 0, ty: 0 };
-  let objBarFor = null;            // the sticky note or image whose action bar is open
+  let objSel = null;               // the sticky note or image selected with a finger tap
   const pool = [];                 // extra sheets used while several pages turn at once
   const S = () => view.fit * view.zoom;
   let vw = 0, vh = 0, dpr = 1;
@@ -2195,7 +2212,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function applyView() {
     const s = S();
-    if (objBarFor) placeObjBar();
     for (const el of [pageEl, sheetB, ...pool]) positionSheet(el);
     for (const ctx of [lctx, tctx]) {
       ctx.restore(); ctx.save();
@@ -3471,7 +3487,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }))),
         images: [...g.querySelectorAll('[data-img]')].map(el => ({
           el, x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), h: parseFloat(el.getAttribute('data-h')), rot: +el.getAttribute('data-rot') || 0,
-          crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1', over: el.getAttribute('data-over') === '1'
+          crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1', over: el.getAttribute('data-over') === '1',
+          ink: [...el.querySelectorAll('.imgink path')].map(p => ({ d: p.getAttribute('d'), c: p.getAttribute('data-c') || p.getAttribute('stroke'), w: parseFloat(p.getAttribute('stroke-width')),
+            o: p.hasAttribute('stroke-opacity') ? parseFloat(p.getAttribute('stroke-opacity')) : 1, h: p.getAttribute('data-hl') === '1', k: p.getAttribute('data-k') === 'dark' }))
         }))
       }));
       // embedded pictures go into the browser's store, the pages keep a reference
@@ -3862,7 +3880,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
-      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, selectionColor: selColor,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, style: flipStyle, zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
@@ -3898,9 +3916,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (o.eraserMode === 'part' || o.eraserMode === 'whole') { eraserMode = o.eraserMode; store.set('eraserMode', eraserMode); }
     if (ERASER_SIZES.includes(+o.eraserSizeMm)) { eraserSize = +o.eraserSizeMm; store.set('eraserSize', eraserSize); }
     if (typeof o.zoomLocked === 'boolean') setLocked(o.zoomLocked);
-    if (['always', 'quiet', 'hidden', 'select'].includes(o.handles)) { handleMode = o.handles; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode(); }
+    if (HND_MODES.includes(o.handles)) { handleMode = o.handles; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode(); }
     if ([0, 1200, 2000, 3000].includes(o.imageMaxPx)) { imgMax = o.imageMaxPx; store.set('imgMax', imgMax); renderImgSize(); }
     if (o.stylusButton === 'grab' || o.stylusButton === 'erase') { penBtn = o.stylusButton; store.set('penBtn', penBtn); renderPenBtn(); }
+    if (Object.values(SEL_COLORS).includes(o.selectionColor)) { selColor = o.selectionColor; store.set('selColor', selColor); applySelColor(); }
     if (TAP1[o.oneFingerDoubleTap]) { tap1Act = o.oneFingerDoubleTap; store.set('tap1', tap1Act); $('tap1Act').value = tap1Act; $('tap1Sub').textContent = TAP1[tap1Act]; }
     if (HOLD[o.holdPenAtEnd]) { holdAct = o.holdPenAtEnd; store.set('penHold', holdAct); $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct]; }
     if (TAP2[o.twoFingerDoubleTap]) { tap2Act = o.twoFingerDoubleTap; store.set('tap2', tap2Act); $('tap2Act').value = tap2Act; $('tap2Sub').textContent = TAP2[tap2Act]; }
@@ -4097,7 +4116,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const M = [iw * co, iw * si, ih * si, -ih * co, cx - iw / 2 * co - ih / 2 * si, cy - iw / 2 * si + ih / 2 * co].map(pdfNum).join(' ');
       const clip = m.crop ? `${pdfNum(m.x)} ${pdfNum(m.y)} ${pdfNum(m.w)} ${pdfNum(m.h)} re W n ` : '';
       const g = m.op ? `/${gs(m.op, false)} gs ` : '';
-      return `q ${g}${clip}${M} cm /${xo.name} Do Q\n`;
+      return `q ${g}${clip}${M} cm /${xo.name} Do Q\n` + (m.ink || []).map(st0 => {   // the writing on the image
+        const st = imgStrokeToPage(m, st0), path = st && pdfPath(st);
+        if (!path) return '';
+        return `q ${st.o < 1 || st.h ? `/${gs(st.o, st.h)} gs ` : ''}${hexRgb(fileColor(st.c, st.k))} RG ${pdfNum(st.w)} w ${path} S Q\n`;
+      }).join('');
     }).join('');
     const streams = list.map(pg => {
       let c = `q ${pdfNum(k)} 0 0 ${pdfNum(-k)} 0 ${hPt} cm 1 J 1 j\n` + gridOps + imageOps(pg);
@@ -4196,7 +4219,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<g transform="translate(${f(cx - r * 0.55)} ${f(cy - r * 0.55)}) scale(${f(r * 1.1 / 24)})" fill="none" stroke="${tint ? 'rgba(30,28,20,.72)' : '#4a4d45'}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${HANDLE_ICON[act]}</g></g>`;
   }
   // which objects show their handles fully (Quiet): near the hovering stylus, or tapped with a finger
-  let handleMode = (v => ['always', 'quiet', 'hidden', 'select'].includes(v) ? v : 'quiet')(store.get('handleMode', 'quiet'));
+  const HND_MODES = ['selected', 'always', 'quiet', 'hidden', 'select'];
+  let handleMode = (v => HND_MODES.includes(v) ? v : 'selected')(store.get('handleMode', 'selected'));
+  if (!store.get('hndV2', false)) { handleMode = 'selected'; store.set('handleMode', handleMode); store.set('hndV2', true); }   // new default once
   const nearIds = new Set(), nearUntil = new Map();
   function applyNear() {
     document.querySelectorAll('#noteLayer [data-nid], #imgUi [data-iid]').forEach(g => g.classList.toggle('near', nearIds.has(g.dataset.nid || g.dataset.iid)));
@@ -4232,7 +4257,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (on) stage.classList.add('hidehnd'); else hideTimer = setTimeout(() => stage.classList.remove('hidehnd'), 700);
   }
   function applyHandleMode() {
-    ['always', 'quiet', 'hidden', 'select'].forEach(m => stage.classList.toggle('hnd-' + m, handleMode === m));
+    HND_MODES.forEach(m => stage.classList.toggle('hnd-' + m, handleMode === m));
     if (typeof renderNotes === 'function' && pages[cur]) { renderNotes(); renderImages(); }   // hidden ones are drawn differently
     const box = document.getElementById('hndModes');
     if (box) box.value = handleMode;
@@ -4255,13 +4280,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         (file ? `<g class="nink" display="none" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>` : '') + '</g>';
     }
     const z = noteW(n), zh = noteHt(n);
-    let out = `<g class="note"${nid}${data}><rect x="${+(n.x + 0.5).toFixed(2)}" y="${+(n.y + 0.9).toFixed(2)}" width="${z}" height="${zh}" fill="#000" opacity=".14"/>` +
+    const isSel = ui && n === objSel;
+    let out = `<g class="note${isSel ? ' selobj' : ''}"${nid}${data}><rect x="${+(n.x + 0.5).toFixed(2)}" y="${+(n.y + 0.9).toFixed(2)}" width="${z}" height="${zh}" fill="#000" opacity=".14"/>` +
       `<svg x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${zh}" viewBox="0 0 ${z} ${zh}" overflow="hidden"><rect width="${z}" height="${zh}" fill="${c}"/>` +
       `<g class="nink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>`;
     out += '</svg>';
-    if (ui) {                                 // round handles on the corners, tinted with the note's colour: move, options, fold away
+    if (isSel) out += `<rect class="objsel" x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${zh}"/>`;
+    if (ui && (handleMode !== 'selected' || isSel)) {   // round handles on the corners, tinted with the note's colour: move, options, fold away
       const r = Math.min(noteH, z / 3, zh / 2.2) / 2, t = shade(c, 0.86);
-      const bx = { x: n.x, y: n.y, w: z, h: zh };
+      const bx = isSel ? null : { x: n.x, y: n.y, w: z, h: zh };   // selected: always visible, also in Hidden mode
       out += handleChip('data-nact', 'move', n.x, n.y, r, t, bx) + handleChip('data-nact', 'gear', n.x + z, n.y, r, t, bx) + handleChip('data-nact', 'fold', n.x + z, n.y + zh, r, t, bx);
     }
     return out + '</g>';
@@ -4312,9 +4339,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // while held (faded) it can also be moved with the same finger
   // a finger has to rest on a sticky note or image for a moment before it can move it (no accidental shifts)
   const PEEK_HOLD = 350;
-  function startPeek(e, n, delay, at) {
+  function startPeek(e, n, delay, at, hold = delay > 0) {
     revealHandles(n.id);
-    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold: delay > 0 };
+    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold };
     a.timer = setTimeout(() => { if (active === a && !a.dead) { a.on = true; fadeNote(n, true); if (a.hold) vibrate(8); } }, delay);
     active = a;
   }
@@ -4336,40 +4363,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (a.moved) { remember(a.before); a.note.src ? renderImages() : renderNotes(); mapInkChanged(); scheduleSave(); }
     else if (a.on) fadeNote(a.note, false);
     if (a.btnTap && !a.moved) openObjMenu(a.note);   // stylus button tapped on it: its options
-    else if (a.type === 'touch' && !a.moved && !a.dead) showObjBar(a.note);   // a finger tap, or hold and let go
+    else if (a.type === 'touch' && !a.moved && !a.dead) selectObj(a.note);   // a finger tap, or hold and let go: select it
   }
-  // ---- Action bar for a sticky note or image (finger): options, fold, to another page, delete ----
-  const objBar = $('objBar');
-  function showObjBar(o) {
-    objBarFor = o;
-    $('obFold').hidden = !!o.src;
-    $('obFoldTxt').textContent = o.folded ? 'Open' : 'Fold';
-    objBar.hidden = false;
-    placeObjBar();
-  }
-  function hideObjBar() { if (objBarFor) { objBarFor = null; objBar.hidden = true; } }
-  function placeObjBar() {
-    const o = objBarFor;
-    if (!o) return;
-    const s = S(), L = view.tx + o.x * s, T = view.ty + o.y * s, R = L + (o.folded ? 2 * dotR() : objW(o)) * s, B = T + (o.folded ? 2 * dotR() : objH(o)) * s;
-    const w = objBar.offsetWidth, h = objBar.offsetHeight;
-    let y = T - h - 10;
-    if (y < 8) y = B + 10;
-    if (y + h > vh - 8) y = Math.max(8, T + 10);
-    objBar.style.left = Math.max(8, Math.min(vw - w - 8, (L + R) / 2 - w / 2)) + 'px';
-    objBar.style.top = y + 'px';
-  }
+  // ---- Selecting a sticky note or image with a finger tap: a border, its handles, and (images) the pen writes on it ----
   const objOnPage = o => !!o && (imagesOf(pages[cur]).includes(o) || notesOf(pages[cur]).includes(o));
-  function objBarAct(fn) { const o = objBarFor; hideObjBar(); if (objOnPage(o)) fn(o); }
-  $('obOpts').addEventListener('click', () => objBarAct(o => openObjMenu(o, true)));
-  $('obFold').addEventListener('click', () => objBarAct(n => {
-    remember();
-    n.folded = !n.folded;
-    if (!n.folded) { const list = notesOf(pages[cur]); list.splice(list.indexOf(n), 1); list.push(n); }
-    renderNotes(); mapInkChanged(); scheduleSave();
-  }));
-  $('obPage').addEventListener('click', () => objBarAct(o => { if (o.src) { imgEdit = o; $('imgMove').click(); } else { noteEdit = { kind: 'note', note: o }; $('noteMove').click(); } }));
-  $('obDel').addEventListener('click', () => objBarAct(o => { if (o.src) { imgEdit = o; $('imgDelete').click(); } else { noteEdit = { kind: 'note', note: o }; $('noteDelete').click(); } }));
+  function inObj(o, q) {
+    if (!o) return false;
+    if (o.folded) { const r = dotR(); return Math.hypot(q[0] - o.x - r, q[1] - o.y - r) <= r * 1.6; }
+    return q[0] >= o.x && q[1] >= o.y && q[0] <= o.x + objW(o) && q[1] <= o.y + objH(o);
+  }
+  function selectObj(o) {
+    if (objSel === o) return;
+    objSel = o;
+    clearTimeout(hideTimer); stage.classList.remove('hidehnd');   // its handles show right away, also just after writing
+    if (typeof clearSelection === 'function') clearSelection();
+    renderNotes(); renderImages();
+  }
+  function deselectObj() {
+    if (!objSel) return;
+    objSel = null;
+    renderNotes(); renderImages();
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !openPop && !document.querySelector('dialog[open]')) deselectObj(); }, true);   // before menus close
   // the options of a sticky note or image, as if its gear was tapped
   function openObjMenu(o, anyAnchor) {               // anyAnchor: without a gear (folded, handles off) next to the object itself
     if (o.src) {
@@ -4603,7 +4618,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const data = mode === 'file' ? ` data-img="1" data-x="${f(m.x)}" data-y="${f(m.y)}" data-w="${f(m.w)}" data-h="${f(m.h)}" data-rot="${m.rot}"` +
       (m.crop ? ` data-crop="${m.crop.map(v => +v.toFixed(5)).join(' ')}"` : '') + (m.op ? ` data-op="${m.op}"` : '') + (m.lock ? ' data-lock="1"' : '') + (m.over ? ' data-over="1"' : '') : '';
     const o = op !== undefined ? op : m.op;
-    return `<g${mode === 'ui' ? ` data-iid="${m.id}"` : ''}${data}${o ? ` opacity="${o}"` : ''}>${inner}</g>`;
+    const ink = arguments.length < 3 ? imgInkMarkup(m, mode) : '';      // (the crop view adds it separately)
+    return `<g${mode === 'ui' ? ` data-iid="${m.id}"` : ''}${data}>${o ? `<g opacity="${o}">${inner}</g>` : inner}${ink}</g>`;
+  }
+  const IMG_U = 1000;
+  function imgInkMarkup(m, mode) {
+    if (!m.ink || !m.ink.length) return '';
+    return `<g class="imgink" transform="translate(${+m.x.toFixed(3)} ${+m.y.toFixed(3)}) scale(${+(m.w / IMG_U).toFixed(6)})" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(m.ink, mode === 'file')}</g>`;
+  }
+  // a stroke on an image, in page millimetres (for the PDF)
+  function imgStrokeToPage(m, st) {
+    const k = m.w / IMG_U, p = parsePoints(st.d);
+    return p ? { ...st, d: toPath(p.map(([u, v]) => [m.x + u * k, m.y + v * k])), w: st.w * k } : null;
+  }
+  // after the image's box changed (turned, cropped): its writing keeps its place on the page (map: how page points move)
+  function reframeInk(m, old, map = q => q) {
+    if (!m.ink || !m.ink.length) return;
+    const k0 = old.w / IMG_U, k1 = m.w / IMG_U;
+    m.ink = m.ink.map(st => {
+      const p = parsePoints(st.d);
+      if (!p) return st;
+      return { ...st, d: toPath(p.map(([u, v]) => { const q = map([old.x + u * k0, old.y + v * k0]); return [(q[0] - m.x) / k1, (q[1] - m.y) / k1]; })), w: st.w * k0 / k1 };
+    });
   }
   // images under the ink (over = false) or brought to the front, above it (over = true)
   const imagesMarkup = (pg, mode, over = false) => pg && pg.images && pg.images.length ? pg.images.filter(m => !!m.over === over).map(m => imageMarkup(m, mode)).join('') : '';
@@ -4613,7 +4649,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const one = m => {
       if (!cropSt || cropSt.m !== m) return imageMarkup(m, 'ui');
       const C = cropSt.C, view = { ...m, x: C.x, y: C.y, w: C.w, h: C.h, crop: null };
-      return imageMarkup({ ...m, crop: null }, 'ui', cropSt.F, 0.3) + imageMarkup(view, 'ui', cropSt.F, m.op);
+      return imageMarkup({ ...m, crop: null }, 'ui', cropSt.F, 0.3) + imageMarkup(view, 'ui', cropSt.F, m.op) + imgInkMarkup(m, 'ui');
     };
     imgLayer.innerHTML = list.filter(m => !m.over).map(one).join('');
     imgOver.innerHTML = list.filter(m => m.over).map(one).join('');
@@ -4622,7 +4658,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let box = null;
     const chip = (cx, cy, act) => handleChip('data-iact', act, cx, cy, r, null, box);
     imgUi.innerHTML = list.map(m => {
-      box = m;
+      const isSel = m === objSel;
+      box = isSel ? null : m;
+      const selRect = isSel ? `<rect class="objsel" x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}"/>` : '';
       const m0 = 0;                                // on the corners, half outside: nothing of the picture is covered
       if (cropSt && cropSt.m === m) {             // crop: a frame and four corner handles
         const C = cropSt.C, k = r * 0.9;
@@ -4631,8 +4669,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           [['tl', C.x, C.y], ['tr', C.x + C.w, C.y], ['bl', C.x, C.y + C.h], ['br', C.x + C.w, C.y + C.h]].map(([c, x, y]) =>
             `<g data-iact="crop-${c}"><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 1.6)}" fill="transparent"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 0.55)}" fill="#fff" stroke="#1e2a44" stroke-width="${sw}"/></g>`).join('') + '</g>';
       }
-      if (m.lock) return `<g data-iid="${m.id}">` + chip(m.x + m.w - m0, m.y + m0, 'gear') + '</g>';   // locked: options only
-      return `<g data-iid="${m.id}">` +
+      if (handleMode === 'selected' && !isSel) return '';
+      if (m.lock) return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect + chip(m.x + m.w - m0, m.y + m0, 'gear') + '</g>';   // locked: options only
+      return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect +
         chip(m.x + m0, m.y + m0, 'move') +
         chip(m.x + m.w - m0, m.y + m0, 'gear') +
         chip(m.x + m.w - m0, m.y + m.h - m0, 'size') + '</g>';
@@ -4702,7 +4741,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const imgPop = $('imgPop'), imgAddPop = $('imgAddPop');
   imgPop.addEventListener('click', e => { if (imgPopGuard) { e.preventDefault(); e.stopPropagation(); } }, true);
   const imgChange = fn => { const m = imgEdit; if (!m || !imagesOf(pages[cur]).includes(m)) { closePops(); return; } remember(); fn(m, imagesOf(pages[cur])); renderImages(); renderImgPop(); mapInkChanged(); scheduleSave(); };
-  const turn = (m, d) => { const cx = m.x + m.w / 2, cy = m.y + m.h / 2; [m.w, m.h] = [m.h, m.w]; m.x = cx - m.w / 2; m.y = cy - m.h / 2; m.rot = (m.rot + d + 360) % 360; };
+  const turn = (m, d) => {
+    const cx = m.x + m.w / 2, cy = m.y + m.h / 2, old = { x: m.x, y: m.y, w: m.w }, sn = Math.sign(d);
+    [m.w, m.h] = [m.h, m.w]; m.x = cx - m.w / 2; m.y = cy - m.h / 2; m.rot = (m.rot + d + 360) % 360;
+    reframeInk(m, old, ([x, y]) => [cx - (y - cy) * sn, cy + (x - cx) * sn]);   // the writing turns with it
+  };
   $('imgRotL').addEventListener('click', () => imgChange(m => turn(m, -90)));
   $('imgRotR').addEventListener('click', () => imgChange(m => turn(m, 90)));
   // front: above the handwriting and all other images (sticky notes stay on top); back: under everything
@@ -4749,7 +4792,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const u = [(C.x - F.x) / F.w, (C.y - F.y) / F.h, (C.x + C.w - F.x) / F.w, (C.y + C.h - F.y) / F.h].map(v => Math.max(0, Math.min(1, v)));
       const c = boxToCrop(u, m.rot);
       if (c[0] < 0.001 && c[1] < 0.001 && c[2] > 0.999 && c[3] > 0.999) delete m.crop; else m.crop = c;
+      const old = { x: m.x, y: m.y, w: m.w };
       Object.assign(m, { x: C.x, y: C.y, w: C.w, h: C.h });
+      reframeInk(m, old);                          // the writing stays where it is (whole strokes, not cut)
       scheduleSave();
     }
     renderImages(); mapInkChanged();
@@ -4769,7 +4814,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const m = imgEdit, list = imagesOf(pages[cur]);
     closePops();
     if (!m || !list.includes(m)) return;
-    if (!(await ask('Delete image?', 'The image is removed from the page. Your writing stays. Undo brings the image back.', 'Delete'))) return;
+    if (!(await ask('Delete image?', m.ink && m.ink.length ? 'The image and the writing on it are removed. Writing on the page stays. Undo brings them back.' : 'The image is removed from the page. Your writing stays. Undo brings the image back.', 'Delete'))) return;
     if (!list.includes(m)) return;
     remember(); list.splice(list.indexOf(m), 1);
     renderImages(); mapInkChanged(); scheduleSave();
@@ -4810,7 +4855,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   $('imgSizes').addEventListener('change', e => { imgMax = +e.target.value; store.set('imgMax', imgMax); renderImgSize(); });
   renderImgSize();
-  const HND_SUB = { always: 'Always shown at full strength', quiet: 'Faint until the stylus comes near or a finger taps; hidden while writing', hidden: 'Not shown. Use the corners: top left moves, top right opens the options, bottom right folds or resizes', select: 'Only shown while the Select tool is on' };
+  const HND_SUB = { selected: 'Shown on a sticky note or image after a finger tap selects it; tap or write elsewhere to deselect', always: 'Always shown at full strength', quiet: 'Faint until the stylus comes near or a finger taps; hidden while writing', hidden: 'Not shown. Use the corners: top left moves, top right opens the options, bottom right folds or resizes', select: 'Only shown while the Select tool is on' };
   $('hndModes').addEventListener('change', e => {
     handleMode = e.target.value; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode();
   });
@@ -5197,6 +5242,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let eraseFrame = 0;
   // whole = stroke eraser: a touched stroke is removed completely instead of being cut
   function eraseAlong(a, b, whole) {
+    if (objSel && objSel.src && objSel.ink && inObj(objSel, b)) {   // on the selected image: its own writing
+      const m = objSel, k = m.w / IMG_U, u = q => [(q[0] - m.x) / k, (q[1] - m.y) / k];
+      const res = eraseList(m.ink, u(a), u(b), whole, 1 / k);
+      if (res) { m.ink = res; if (!eraseFrame) eraseFrame = requestAnimationFrame(() => { eraseFrame = 0; renderImages(); mapInkChanged(); }); }
+      return !!res;
+    }
     const n = noteAt(b[0], b[1]);
     if (n) {
       const res = eraseList(n.strokes, [a[0] - n.x, a[1] - n.y], [b[0] - n.x, b[1] - n.y], whole);
@@ -5211,8 +5262,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return !!res;
   }
   // returns the strokes left after erasing along a→b, or null when nothing was touched
-  function eraseList(list, a, b, whole) {
-    const r = eraserSize / 2, out = [];
+  function eraseList(list, a, b, whole, scale = 1) {
+    const r = eraserSize / 2 * scale, out = [];
     let changed = false;
     for (const st of list) {
       if (eraseSkip && st === eraseSkip.st) { out.push(st); continue; }
@@ -5427,7 +5478,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearCtx(tctx);
     tctx.save();
     tctx.lineWidth = 1.3 / S(); tctx.setLineDash([5 / S(), 4 / S()]);
-    tctx.strokeStyle = '#1f6fd1'; tctx.fillStyle = 'rgba(31, 111, 209, .07)';
+    tctx.strokeStyle = selColor; tctx.fillStyle = selColor + '12';
     tctx.beginPath();
     active.poly.forEach((q, i) => i ? tctx.lineTo(q[0], q[1]) : tctx.moveTo(q[0], q[1]));
     tctx.closePath(); tctx.fill(); tctx.stroke();
@@ -5762,8 +5813,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const br = effBrush();                  // the pen, with an active size / colour button applied
     clearCtx(lctx); clearCtx(tctx);
     const note = noteAt(x, y);              // a stroke that starts on a sticky note belongs to it
+    const img = !note && objSel && objSel.src && inObj(objSel, [x, y]) ? objSel : null;   // …on the selected image: to the image
     active = { id: e.pointerId, type: e.pointerType, pts: [], sx: 0, sy: 0, color: br.color, width: br.width, opacity: br.opacity,
-               h: br.highlighter, k: br.pickedOnDark, disp: note ? fileColor(br.color, br.pickedOnDark) : displayColor(br.color, br.pickedOnDark), note };
+               h: br.highlighter, k: br.pickedOnDark, disp: note ? fileColor(br.color, br.pickedOnDark) : displayColor(br.color, br.pickedOnDark), note, img };
     const held = note || (e.pointerType === 'touch' && imageAt(x, y));
     if (held && e.pointerType === 'touch') {
       const a = active, id = e.pointerId;
@@ -5811,6 +5863,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     active = null;
     stage.classList.remove('drawing'); handlesWhileWriting(false);
     if (!commit) { clearCtx(lctx); clearCtx(tctx); return; }
+    if (a.img) {                             // on the selected image: stored in the image's units, moves with it
+      const m = a.img;
+      const st = imagesOf(pages[cur]).includes(m) && cleanStroke({ d: toPath(simplify(a.pts)), c: a.color, w: a.width, o: a.opacity, h: a.h, k: a.k });
+      const pts = st && parsePoints(st.d);
+      if (pts) {
+        remember();
+        const k = m.w / IMG_U;
+        m.ink = [...(m.ink || []), { ...st, d: toPath(pts.map(([x, y]) => [(x - m.x) / k, (y - m.y) / k])), w: st.w / k }];
+        renderImages(); mapInkChanged(); scheduleSave();
+      }
+      const serial = ++strokeSerial;
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (!active && serial === strokeSerial) clearCtx(lctx), clearCtx(tctx); }));
+      return;
+    }
     if (a.note) {                            // on a sticky note: stored in its own coordinates
       remember();
       const st = cleanStroke({ d: toPath(simplify(a.pts.map(q => [q[0] - a.note.x, q[1] - a.note.y]))), c: a.color, w: a.width, o: a.opacity, h: a.h, k: a.k });
@@ -6420,7 +6486,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Pointer routing on the desk ----
   stage.addEventListener('pointerdown', e => {
-    hideObjBar();                                     // any touch on the desk closes the action bar
+    // a touch or a stroke outside the selected sticky note or image ends its selection (its handles still work)
+    if (objSel && !(e.target.closest && e.target.closest('[data-nact],[data-iact]')) && !inObj(objSel, toMM(e))) deselectObj();
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
     if (nav && nav.slide && nav.mode === 'slidewait' && e.pointerType === 'touch') {   // a second finger: a pinch, not the slider
@@ -6470,7 +6537,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
       if (penSeen) {                                     // fingers don't write, but can peek under a sticky note
         const q = toMM(e), n = noteAt(q[0], q[1]) || imageAt(q[0], q[1]);
-        if (n) startPeek(e, n, PEEK_HOLD, q);
+        if (n) startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel);   // selected: a finger drags it right away
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -6954,6 +7021,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('smVal').textContent = `${scrollMarginMm} mm`;
   applyMapCfg();
   renderFlipCfg();
+  $('selCols').innerHTML = Object.entries(SEL_COLORS).map(([n, c]) => `<button type="button" role="radio" data-c="${c}" style="--c:${c}" aria-label="${n}" title="${n}"></button>`).join('');
+  $('selCols').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    selColor = b.dataset.c; store.set('selColor', selColor); applySelColor();
+    if (typeof renderNotes === 'function') { renderNotes(); renderImages(); }
+  });
+  applySelColor();
   // settings: explanations behind a small (i), so the menus stay short; summaries of the current choice stay visible
   for (const scope of ['advPop', 'gestPop', 'flipDlg', 'mapDlg']) $(scope).querySelectorAll('.sub').forEach(sub => {
     if (sub.id === 'flipSum' || sub.id === 'mapSum') return;
