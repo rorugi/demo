@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_83</title>
+<title>RRnotes_84</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -32,6 +32,8 @@
     --pw: 210;                       /* page width and height in mm, set by Page setup */
     --ph: 297;
     --sheet-edge: rgba(0, 0, 0, .14);
+    --sheet-shine: rgba(255, 255, 255, .8);      /* the light catching the paper's edge */
+    --sheet-inner: rgba(0, 0, 0, .07);
     --mag: #6b40b8;                  /* magnifier frame */
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --mark: Georgia, "Iowan Old Style", "Times New Roman", serif;
@@ -672,7 +674,7 @@
     top: 0;
     z-index: 2;
     background: var(--paper);
-    box-shadow: 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow);
+    box-shadow: inset 0 0 0 1px var(--sheet-shine), inset 0 0 12px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow);
     overflow: hidden;
   }
   .page > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -682,11 +684,12 @@
     inset: 0;
     z-index: 3;
     pointer-events: none;
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .28) 100%);
+    /* darker towards the lifted edge, with a thin sheen right at the edge where it catches the light */
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, rgba(255, 255, 255, .55) 98.6%, rgba(255, 255, 255, .25) 100%);
     opacity: 0;
     will-change: opacity;
   }
-  .page.from-left .shade { background: linear-gradient(270deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .28) 100%); }
+  .page.from-left .shade { background: linear-gradient(270deg, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, .26) 95.5%, rgba(255, 255, 255, .55) 98.6%, rgba(255, 255, 255, .25) 100%); }
   .page { will-change: transform; }
   .page::before {
     content: "";
@@ -704,8 +707,8 @@
   /* turning back: the sheet lifts from the left and swings away over its right edge */
   .page.turning.from-left { transform-origin: 100% 50%; }
   /* while turning: a fine edge and the page number, so sheets in the fan can be told apart */
-  .page.turning { box-shadow: inset 0 0 0 1px var(--sheet-edge), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
-  .page.target { box-shadow: inset 0 0 0 3px #1f6fd1, 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow) !important; }
+  .page.turning { box-shadow: inset 0 0 0 1px var(--sheet-edge), inset 0 0 0 2px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .page.target { box-shadow: inset 0 0 0 3px #1f6fd1, inset 0 0 0 4px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow) !important; }
   .page.target .pnum { color: #1f6fd1; font-weight: 700; opacity: 1; }
   .pnum {
     position: absolute; bottom: 7px; right: 12px; z-index: 2;
@@ -735,7 +738,7 @@
     opacity: .85;
     transition: opacity .5s ease;
   }
-  body.paper-dark { --sheet-edge: rgba(255, 255, 255, .16); }
+  body.paper-dark { --sheet-edge: rgba(255, 255, 255, .16); --sheet-shine: rgba(255, 255, 255, .12); --sheet-inner: rgba(0, 0, 0, .35); }
   body.paper-dark .minimap { --mm-line: rgba(225, 228, 234, .55); --mm-view: rgba(225, 228, 234, .9); --mm-fill: rgba(225, 228, 234, .1); }
   .minimap.c-tl { top: calc(env(safe-area-inset-top, 0px) + 14px); left: calc(env(safe-area-inset-left, 0px) + 14px); }
   .minimap.c-tr { top: calc(env(safe-area-inset-top, 0px) + 14px); right: calc(env(safe-area-inset-right, 0px) + 14px); }
@@ -1557,7 +1560,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_83';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_84';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5742,17 +5745,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const commitAt = k => FLIP_FIRST + k * FLIP_NEXT;
   // Fan: each sheet takes a long stretch to rise (so 3–4 are in the air together, like riffling a
   // book) and then drops quickly. Quick: short, nearly separate turns.
-  const FAN_RISE = 0.40, FAN_FALL = 0.14;
+  const FAN_RISE = FLIP_FIRST, FAN_FALL = 0.14;   // every sheet rises at the same speed, so none can catch up
   const clamp01 = v => Math.max(0, Math.min(1, v));
   const sheetProgress = (p, k) => {
     const c = commitAt(k);
     if (flipStyle === 'fan') {
-      const start = Math.max(0, c - FAN_RISE);
-      if (p <= c) return clamp01((p - start) / (c - start)) * 0.5;
+      const start = c - FAN_RISE;
+      if (p <= c) return clamp01((p - start) / FAN_RISE) * 0.5;
       return 0.5 + clamp01((p - c) / FAN_FALL) * 0.5;
     }
-    const v = k === 0 ? p / (2 * FLIP_FIRST) : (p - c + FLIP_NEXT) / (2 * FLIP_NEXT);
-    return clamp01(v);
+    return clamp01((p - c + FLIP_FIRST) / (2 * FLIP_FIRST));     // same speed for all, each one a step later
   };
   // On release you land on the page you see the most of. Each lifting sheet covers the part
   // between the binding and its (perspective-projected) free edge; a page's visible share is the
@@ -5761,8 +5763,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const coverWidth = a => a >= 90 ? 0 : Math.min(1, Math.cos(a * Math.PI / 180) * PERSP / (PERSP - Math.sin(a * Math.PI / 180)));
   // Back: sheet k turns down steadily from upright (90°) to flat; it covers half the page at its commit point
   // (about 70°: with the perspective a sheet covers the whole page well before it lies flat)
-  const BACK_HALF = 0.22, BACK_SPAN = 0.7;
-  const backQ = (p, k) => k === 0 ? clamp01(p * BACK_HALF / FLIP_FIRST) : clamp01((p - commitAt(k)) / BACK_SPAN + BACK_HALF);
+  const BACK_HALF = 0.22;
+  const backQ = (p, k) => clamp01((p - commitAt(k) + FLIP_FIRST) * BACK_HALF / FLIP_FIRST);   // same speed for all, each one a step later
   const backAngle = (p, k) => { const q = backQ(p, k); return q <= 0 ? 91 : 90 * (1 - q); };
   const backCover = (p, k) => { const a = backAngle(p, k); return a > 90 ? 0 : coverWidth(a); };
   // The angle of every turning sheet. A sheet never overtakes the one that started before it:
