@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_77</title>
+<title>RRnotes_78</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -1520,7 +1520,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_77';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_78';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5711,8 +5711,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // Spreading/closing the fingers = zoom around the point between them (nothing moves sideways).
   // Moving both fingers together = move the page (the zoom stays exactly as it is).
   const GESTURE_SLOP = 18;         // px of movement before the gesture is decided
-  // Two fingers held still for a moment: temporary zoom. Pinch and move freely (also when the zoom is locked,
-  // and the pen can write meanwhile); lifting a finger brings back the view from before.
+  // Temporary zoom: with the zoom locked a pinch starts it right away; unlocked, hold two fingers still for a moment.
+  // Pinch and move freely (the pen can write meanwhile); lifting a finger brings back the view from before.
   const TEMP_ZOOM_MS = 450;
   function startPinch() {
     const t = touchPair();
@@ -5754,6 +5754,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (!pinch || touches.size < 2) return;
       const t = touchPair();
       if (pinch.mode === 'temp') {
+        if (pinch.locked && !active && pinch.ds + (t.d - pinch.ds) * 0.6 < pinch.d0 * 0.6 && view.zoom <= pinch.back.zoom * 1.01) {
+          const b = pinch.back; pinch = null; $('tzoom').hidden = true;     // closing the fingers firmly: the page overview
+          view.zoom = b.zoom; view.tx = b.tx; view.ty = b.ty; applyView(); openOverview(); return;
+        }
         if (active) { pinch.rebase = true; return; }         // the pen is writing: the view holds still
         if (pinch.rebase) { Object.assign(pinch, { d0: t.d, ds: t.d, mx0: t.mx, my0: t.my, zoom0: view.zoom, tx0: view.tx, ty0: view.ty, rebase: false }); return; }
         pinch.ds += (t.d - pinch.ds) * 0.6;
@@ -5767,6 +5771,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const spread = Math.abs(pinch.ds - pinch.d0), shift = Math.hypot(t.mx - pinch.mx0, t.my - pinch.my0);
         if (spread < GESTURE_SLOP && shift < GESTURE_SLOP) return;
         pinch.mode = spread > shift ? 'zoom' : 'pan';
+        if (pinch.mode === 'zoom' && zoomLocked) {           // zoom locked: pinching zooms only until the fingers lift
+          clearTimeout(pinch.holdT);
+          Object.assign(pinch, { mode: 'temp', locked: true, back: { zoom: pinch.zoom0, tx: pinch.tx0, ty: pinch.ty0 } });
+          showTempZoom();
+          updatePinch();
+          return;
+        }
       }
       if (pinch.mode === 'zoom') {
         if (zoomLocked) {
