@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_78</title>
+<title>RRnotes_79</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -1199,6 +1199,15 @@
   <div class="menu">
     <label for="scribbleToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l4-6 3 7 3-8 3 8 3-6 2 4"/></svg><span>Scribble to erase<span class="sub">Scribble over ink to delete it</span></span><span class="switch"><input type="checkbox" id="scribbleToggle"><i></i></span></label>
   </div>
+  <h3>Gestures</h3>
+  <div class="menu">
+    <div class="imgsizebox">
+      <span>Double tap with two fingers<span class="sub" id="tap2Sub"></span></span>
+      <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
+        <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
+      </select>
+    </div>
+  </div>
   <h3>Handles</h3>
   <div class="menu">
     <div class="imgsizebox">
@@ -1520,7 +1529,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_78';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_79';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1560,11 +1569,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   };
   const vibrate = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
   let toastTimer = 0;
-  function toast(msg) {
+  function toast(msg, ms = 3200) {
     const t = $('toast');
     t.textContent = msg; t.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+    toastTimer = setTimeout(() => { t.hidden = true; }, ms);
   }
 
   // ---- Colour on dark paper ----
@@ -3659,6 +3668,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, style: flipStyle, zoomOut: flipZoom, riffle: riffleOn },
       paper: paperPref,
@@ -3694,6 +3704,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (o.eraserMode === 'part' || o.eraserMode === 'whole') { eraserMode = o.eraserMode; store.set('eraserMode', eraserMode); }
     if (ERASER_SIZES.includes(+o.eraserSizeMm)) { eraserSize = +o.eraserSizeMm; store.set('eraserSize', eraserSize); }
     if (typeof o.zoomLocked === 'boolean') setLocked(o.zoomLocked);
+    if (['always', 'quiet', 'hidden', 'select'].includes(o.handles)) { handleMode = o.handles; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode(); }
+    if ([0, 1200, 2000, 3000].includes(o.imageMaxPx)) { imgMax = o.imageMaxPx; store.set('imgMax', imgMax); renderImgSize(); }
+    if (o.stylusButton === 'grab' || o.stylusButton === 'erase') { penBtn = o.stylusButton; store.set('penBtn', penBtn); renderPenBtn(); }
+    if (TAP2[o.twoFingerDoubleTap]) { tap2Act = o.twoFingerDoubleTap; store.set('tap2', tap2Act); $('tap2Act').value = tap2Act; $('tap2Sub').textContent = TAP2[tap2Act]; }
     if (typeof o.scribbleErase === 'boolean') { scribbleOn = o.scribbleErase; store.set('scribble', scribbleOn); $('scribbleToggle').checked = scribbleOn; }
     if (o.paper && (o.paper === 'auto' || PAPERS[o.paper])) setPaper(o.paper);
     if (+o.scrollMarginMm >= 0 && +o.scrollMarginMm <= 50) setScrollMargin(+o.scrollMarginMm);
@@ -5806,6 +5820,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (wasZoom && !zoomLocked && view.zoom < 0.82) { resetZoom(); openOverview(); }
   }
 
+  // ---- Double tap with two fingers (Undo by default; see Settings → Gestures) ----
+  const TAP2 = { undo: 'Undo', redo: 'Redo', overview: 'Opens the page overview', lock: 'Locks or unlocks the zoom', off: 'Does nothing' };
+  let tap2Act = (v => TAP2[v] ? v : 'undo')(store.get('tap2', 'undo'));
+  let tap2 = null, tap2Last = 0;
+  function tapDown(e) {
+    const now = performance.now();
+    if (touches.size === 1) tap2 = { t: now, start: new Map([[e.pointerId, { x: e.clientX, y: e.clientY }]]), n: 1, moved: false };
+    else if (touches.size === 2 && tap2 && tap2.n === 1 && now - tap2.t < 220) { tap2.start.set(e.pointerId, { x: e.clientX, y: e.clientY }); tap2.n = 2; }
+    else tap2 = null;
+  }
+  function tapUp() {
+    const t = tap2, now = performance.now();
+    tap2 = null;
+    if (!t || t.n !== 2 || t.moved || now - t.t > 350) { tap2Last = 0; return; }
+    if (now - tap2Last > 450) { tap2Last = now; return; }      // the first tap: wait for the second one
+    tap2Last = 0;
+    runTap2();
+  }
+  function runTap2() {
+    if (active || tap2Act === 'off') return;
+    if (tap2Act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
+    else if (tap2Act === 'redo') { if (redoStack.length) { redo(); toast('Redo', 1000); } else toast('Nothing to redo', 1200); }
+    else if (tap2Act === 'overview') openOverview();
+    else if (tap2Act === 'lock') { setLocked(!zoomLocked); toast(zoomLocked ? 'Zoom locked' : 'Zoom unlocked', 1200); }
+  }
+  $('tap2Act').value = tap2Act;
+  $('tap2Sub').textContent = TAP2[tap2Act];
+  $('tap2Act').addEventListener('change', e => { tap2Act = e.target.value; store.set('tap2', tap2Act); $('tap2Sub').textContent = TAP2[tap2Act]; });
+
   // ---- Pointer routing on the desk ----
   stage.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
@@ -5838,6 +5881,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (e.pointerType === 'touch') {
       if (Math.max(e.width || 0, e.height || 0) > 40) return;
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      tapDown(e);
       if (touches.size === 2) {
         if (active && active.type === 'touch') finishStroke(null, false);
         if (!active) startPinch();
@@ -5905,6 +5949,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (mapDrag && e.pointerId === mapDrag.id) { moveMapDrag(e); return; }
     if (touches.has(e.pointerId)) {
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (tap2) { const o = tap2.start.get(e.pointerId); if (o && Math.hypot(e.clientX - o.x, e.clientY - o.y) > 14) tap2.moved = true; }
       if (pinch) { updatePinch(); return; }
     }
     if (nav && e.pointerId === nav.id) { navMove(e); return; }
@@ -5929,7 +5974,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   function onUp(e) {
     if (mapDrag && e.pointerId === mapDrag.id) { endMapDrag(); return; }
-    if (touches.delete(e.pointerId) && pinch && touches.size < 2) releasePinch();
+    const wasTouch = touches.delete(e.pointerId);
+    if (wasTouch && pinch && touches.size < 2) releasePinch();
+    if (wasTouch && !touches.size) tapUp();
     if (nav && e.pointerId === nav.id) { navEnd(); return; }
     if (active && e.pointerId === active.id) {
       if (active.noteDrag) endNoteDrag();
