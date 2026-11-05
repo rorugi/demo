@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_76</title>
+<title>RRnotes_77</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -873,6 +873,9 @@
   .riffle b { display: block; font: 600 38px/1.1 var(--ui); font-variant-numeric: tabular-nums; color: var(--bar-fg); }
   .riffle span { font-size: 11.5px; opacity: .6; }
 
+  .tzoom { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px); transform: translateX(-50%); z-index: 50; pointer-events: none;
+    padding: 7px 14px; border-radius: 99px; background: var(--brand); color: var(--brand-fg); font: 600 13px/1.2 var(--ui); font-variant-numeric: tabular-nums;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
   .toast {
     position: fixed;
     left: 50%;
@@ -1268,6 +1271,7 @@
 </div>
 <div class="riffle" id="riffle" hidden><b id="riffleNum">1 / 1</b><span id="riffleHint"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
+<div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
 
 <div class="overview" id="overview" hidden>
   <header>
@@ -1516,7 +1520,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_76';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_77';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5707,9 +5711,37 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // Spreading/closing the fingers = zoom around the point between them (nothing moves sideways).
   // Moving both fingers together = move the page (the zoom stays exactly as it is).
   const GESTURE_SLOP = 18;         // px of movement before the gesture is decided
+  // Two fingers held still for a moment: temporary zoom. Pinch and move freely (also when the zoom is locked,
+  // and the pen can write meanwhile); lifting a finger brings back the view from before.
+  const TEMP_ZOOM_MS = 450;
   function startPinch() {
     const t = touchPair();
     pinch = { d0: t.d, mx0: t.mx, my0: t.my, zoom0: view.zoom, tx0: view.tx, ty0: view.ty, mode: null, ds: t.d };
+    const p = pinch;
+    p.holdT = setTimeout(() => {
+      if (pinch !== p || p.mode || touches.size !== 2) return;
+      p.mode = 'temp'; p.back = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+      try { navigator.vibrate && navigator.vibrate(12); } catch (_) {}
+      showTempZoom();
+    }, TEMP_ZOOM_MS);
+  }
+  function showTempZoom() {
+    const el = $('tzoom');
+    el.hidden = false;
+    el.textContent = `Temporary zoom · ${Math.round(view.zoom * 100)}%`;
+  }
+  let backAnim = 0, backLater = null;
+  function zoomBack(b) {                         // glide back to the view from before the temporary zoom
+    cancelAnimationFrame(backAnim);
+    const a = { zoom: view.zoom, tx: view.tx, ty: view.ty }, t0 = performance.now(), D = 220;
+    const step = now => {
+      const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3);
+      view.zoom = a.zoom + (b.zoom - a.zoom) * e; view.tx = a.tx + (b.tx - a.tx) * e; view.ty = a.ty + (b.ty - a.ty) * e;
+      if (k >= 1) { view.zoom = b.zoom; view.tx = b.tx; view.ty = b.ty; clampView(); }
+      applyView();
+      if (k < 1) backAnim = requestAnimationFrame(step);
+    };
+    backAnim = requestAnimationFrame(step);
   }
   function snapZoom(z) {
     for (const c of [1, realZoom()]) if (c && Math.abs(z / c - 1) < 0.04) return c;   // fit page and 1:1 snap
@@ -5721,6 +5753,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       pinchFrame = 0;
       if (!pinch || touches.size < 2) return;
       const t = touchPair();
+      if (pinch.mode === 'temp') {
+        if (active) { pinch.rebase = true; return; }         // the pen is writing: the view holds still
+        if (pinch.rebase) { Object.assign(pinch, { d0: t.d, ds: t.d, mx0: t.mx, my0: t.my, zoom0: view.zoom, tx0: view.tx, ty0: view.ty, rebase: false }); return; }
+        pinch.ds += (t.d - pinch.ds) * 0.6;
+        zoomAt(snapZoom(pinch.zoom0 * pinch.ds / pinch.d0), pinch.mx0, pinch.my0, pinch.zoom0, pinch.tx0, pinch.ty0, t.mx, t.my);
+        applyView(); showTempZoom();
+        return;
+      }
       pinch.ds += (t.d - pinch.ds) * 0.6;      // light smoothing of the finger distance
       if (!pinch.mode) {
         // decided on the smoothed distance, so finger wobble while moving doesn't count as zoom
@@ -5744,6 +5784,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function releasePinch() {
     if (!pinch) return;
+    clearTimeout(pinch.holdT);
+    if (pinch.mode === 'temp') {
+      const b = pinch.back; pinch = null; $('tzoom').hidden = true;
+      if (active) backLater = b; else zoomBack(b);           // not under a stroke being written
+      return;
+    }
     const wasZoom = pinch.mode === 'zoom';
     pinch = null;
     if (wasZoom && !zoomLocked && view.zoom < 0.82) { resetZoom(); openOverview(); }
@@ -5769,7 +5815,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       penSeen = true; lastPen = performance.now();
       if (active && active.loose && e.pointerId === active.id) finishStroke(e, true);   // a fresh touch ends a "button held" stroke
       if (active) return;
-      pinch = null;
+      if (pinch && pinch.mode !== 'temp') { clearTimeout(pinch.holdT); pinch = null; }   // temporary zoom stays while the pen writes
       if (tool === 'lasso' && !isBtn(e)) { startLasso(e); return; }
       if (tool === 'magnifier') { startMagSel(e); return; }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -5883,6 +5929,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       else if (active.move) endSelMove();
       else finishStroke(e, true);
     }
+    if (backLater && !active) { const b = backLater; backLater = null; zoomBack(b); }
   }
   stage.addEventListener('pointerup', onUp);
   stage.addEventListener('pointerleave', e => {
