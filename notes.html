@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_88</title>
+<title>RRnotes_89</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -886,6 +886,15 @@
   .smslide .trk { position: relative; width: 240px; height: 6px; border-radius: 3px; background: var(--bar-line); }
   .smslide .trk i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--bar-fg); opacity: .5; }
   .smslide .trk b { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--panel); border: 2px solid var(--bar-fg); box-sizing: border-box; }
+  /* flat page slider: all pages side by side */
+  .strip { position: fixed; inset: 0; z-index: 30; background: var(--desk); overflow: hidden; pointer-events: none; }
+  .strip-in { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 0 0; }
+  .stile { position: absolute; top: 0; left: 0; background: var(--paper); box-shadow: inset 0 0 0 1px var(--sheet-shine), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .stile > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stile.cover { background: linear-gradient(135deg, #979892, #82837d); }
+  .stile.target { box-shadow: inset 0 0 0 3px #1f6fd1, 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .stile .snum { position: absolute; left: 0; right: 0; top: 100%; margin-top: 10px; text-align: center; font: 600 13px/1 var(--ui); color: var(--bar-fg); opacity: .6; font-variant-numeric: tabular-nums; }
+  .stile.target .snum { color: #1f6fd1; opacity: 1; }
   .tzoom { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px); transform: translateX(-50%); z-index: 50; pointer-events: none;
     padding: 7px 14px; border-radius: 99px; background: var(--brand); color: var(--brand-fg); font: 600 13px/1.2 var(--ui); font-variant-numeric: tabular-nums;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
@@ -1307,6 +1316,7 @@
 <div class="riffle" id="riffle" hidden><b id="riffleNum">1 / 1</b><span id="riffleHint"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
+<div class="strip" id="strip" hidden><div class="strip-in" id="stripIn"></div></div>
 <div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
 <div class="overview" id="overview" hidden>
@@ -1369,6 +1379,13 @@
   <div class="field">
     <label class="toggle" for="flipZoomToggle"><span>Zoom out while flipping<span class="sub">Shows the whole sheet, then returns to your spot</span></span><span class="switch"><input type="checkbox" id="flipZoomToggle"><i></i></span></label>
     <label class="toggle" for="riffleToggle"><span>Page slider beside the page<span class="sub">Touch the desk next to the page and move: right or down for later pages, left or up for earlier ones</span></span><span class="switch"><input type="checkbox" id="riffleToggle"><i></i></span></label>
+  </div>
+  <div class="field">
+    <span>Slider style</span>
+    <div class="seg" id="slideStyle">
+      <button type="button" data-v="book">Notebook</button>
+      <button type="button" data-v="flat">Flat</button>
+    </div>
   </div>
   <div class="row"><button type="button" class="primary" id="flipDone">Done</button></div>
 </dialog>
@@ -1556,7 +1573,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_88';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_89';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -2830,16 +2847,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let flipOn = store.get('flipOn', true) !== false;
   let flipZoom = store.get('flipZoom', true) !== false;
   let riffleOn = store.get('riffleOn', true) !== false;
+  let sliderStyle = store.get('sliderStyle', 'book') === 'flat' ? 'flat' : 'book';   // notebook: pages turn · flat: a strip of pages
   function renderFlipCfg() {
     $('flipStyle').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === flipStyle)));
     $('flipToggle').checked = flipOn;
     $('flipZoomToggle').checked = flipZoom;
     $('riffleToggle').checked = riffleOn;
+    $('slideStyle').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === sliderStyle)); b.disabled = !riffleOn; });
     $('flipOpen').disabled = !flipOn;
-    $('flipSum').textContent = flipOn ? `${flipStyle === 'fan' ? 'Fan' : 'Quick'}${flipZoom ? ' · zoom out' : ''}${riffleOn ? ' · slider' : ''}` : 'Off: swiping the edges does nothing';
+    $('flipSum').textContent = flipOn ? `${flipStyle === 'fan' ? 'Fan' : 'Quick'}${flipZoom ? ' · zoom out' : ''}${riffleOn ? (sliderStyle === 'flat' ? ' · flat slider' : ' · slider') : ''}` : 'Off: swiping the edges does nothing';
+    store.set('sliderStyle', sliderStyle);
     store.set('flipStyle', flipStyle); store.set('flipOn', flipOn); store.set('flipZoom', flipZoom); store.set('riffleOn', riffleOn);
   }
   function setFlipStyle(f) { flipStyle = f; renderFlipCfg(); }
+  $('slideStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { sliderStyle = b.dataset.v; renderFlipCfg(); }));
   $('flipStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setFlipStyle(b.dataset.f)));
   $('flipToggle').addEventListener('change', e => { flipOn = e.target.checked; renderFlipCfg(); });
   $('flipZoomToggle').addEventListener('change', e => { flipZoom = e.target.checked; renderFlipCfg(); });
@@ -3701,7 +3722,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       scribbleErase: scribbleOn,
       handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
-      pageFlip: { enabled: flipOn, style: flipStyle, zoomOut: flipZoom, riffle: riffleOn },
+      pageFlip: { enabled: flipOn, style: flipStyle, zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
       scrollMarginMm,
       calibration: pxPerMm ? { pxPerMm: +pxPerMm.toFixed(4), screen: screenSig() } : null,
@@ -3750,6 +3771,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (pf.style === 'fan' || pf.style === 'quick') flipStyle = pf.style;
       if (typeof pf.zoomOut === 'boolean') flipZoom = pf.zoomOut;
       if (typeof pf.riffle === 'boolean') riffleOn = pf.riffle;
+      if (pf.slider === 'flat' || pf.slider === 'notebook') sliderStyle = pf.slider === 'flat' ? 'flat' : 'book';
     }
     renderFlipCfg();
     if (o.pageMap && typeof o.pageMap === 'object') {
@@ -5678,6 +5700,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!nav) return;
     clearTimeout(nav.timer);
     if (nav.mode === 'flip') endFlip();
+    else if (nav.mode === 'flat') flatEnd();
     else if (nav.mode === 'riffle') endRiffle();
     nav = null;
   }
@@ -5913,6 +5936,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nav.vx = 0;
     if (nav.mode === 'slidewait' && Math.abs(raw) < 12) return;
     const x = Math.max(0, Math.abs(raw) - 12), dir = raw > 0 ? 1 : -1;
+    if (sliderStyle === 'flat') {                  // a strip of pages: the one in the middle is where you land
+      if (!sl.strip) flatStart(sl);
+      nav.mode = 'flat';
+      flatMove(Math.max(-1, Math.min(pages.length, sl.start + dir * (x / slidePx() + Math.pow(x / 260, 2)))));
+      return;
+    }
     const maxT = dir > 0 ? pages.length - 1 - sl.start : sl.start;      // existing pages only (a swipe adds new ones)
     const T = Math.min(maxT + 1, x / slidePx() + Math.pow(x / 260, 2));  // one more: the cover, which only peeks
     const bo = Math.max(0, Math.min(Math.floor(T) - 1, maxT - 1));
@@ -5939,9 +5968,84 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function slideCancel() {
     const sl = nav.slide;
+    if (sl.strip) { $('strip').hidden = true; nav = null; return; }
     slideTeardown(); stage.style.transform = '';
     cur = sl.start; renderPage();
     nav = null;
+  }
+
+  // ---- Flat page slider: the view zooms out to a row of whole pages, from the title page on the left to a grey
+  // page with a plus on the right; the page in the middle is where you land (on the plus: a new page) ----
+  function flatGeom() {
+    let ph = vh * 0.6, pw = ph * W / H;
+    if (pw > vw * 0.46) { pw = vw * 0.46; ph = pw * H / W; }
+    return { pw, ph, step: pw * 1.1, top: (vh - ph) / 2 - 10 };
+  }
+  function tileMarkup(i) {
+    const vb = `viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"`;
+    if (i < 0) return `<svg ${vb}>${frontCover()}</svg>`;
+    if (i >= pages.length) {                     // the back cover: turning it adds a page
+      const u = Math.min(W, H) * 0.14, cx = W / 2, cy = H / 2;
+      return `<svg ${vb}><path d="M${cx - u} ${cy}H${cx + u}M${cx} ${cy - u}V${cy + u}" stroke="#f4f2ec" stroke-opacity=".85" stroke-width="${u * 0.22}" stroke-linecap="round"/></svg>`;
+    }
+    const p = pages[i];
+    return `<svg ${vb}><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}</g>${imagesMarkup(p, undefined, true)}${notesMarkup(p)}</svg>`;
+  }
+  function flatStart(sl) {
+    const g = flatGeom(), el = $('strip'), inner = $('stripIn'), k = W * S() / g.pw;
+    sl.strip = { tiles: new Map(), c: sl.start, tgt: sl.start, g };
+    inner.innerHTML = '';
+    el.hidden = false;
+    // start exactly where the page is on screen, then zoom out to the row
+    inner.style.transition = 'none';
+    inner.style.transform = `translate(${view.tx - (vw / 2 - g.pw / 2) * k}px, ${view.ty - g.top * k}px) scale(${k})`;
+    flatMove(sl.start);
+    inner.getBoundingClientRect();
+    inner.style.transition = 'transform .26s cubic-bezier(.3,.1,.3,1)';
+    inner.style.transform = 'none';
+    vibrate(8);
+  }
+  function flatMove(c) {
+    const st = nav.slide.strip, g = st.g, lo = Math.max(-1, Math.floor(c) - 3), hi = Math.min(pages.length, Math.ceil(c) + 3);
+    st.c = c;
+    for (const [i, el] of st.tiles) if (i < lo || i > hi) { el.remove(); st.tiles.delete(i); }
+    for (let i = lo; i <= hi; i++) {
+      let el = st.tiles.get(i);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'stile' + (i < 0 || i >= pages.length ? ' cover' : '');
+        el.style.width = g.pw + 'px'; el.style.height = g.ph + 'px';
+        el.innerHTML = tileMarkup(i) + `<span class="snum">${i < 0 ? '' : i >= pages.length ? 'New page' : i + 1}</span>`;
+        $('stripIn').appendChild(el); st.tiles.set(i, el);
+      }
+      el.style.transform = `translate(${vw / 2 + (i - c) * g.step - g.pw / 2}px, ${g.top}px)`;
+    }
+    const t = Math.max(-1, Math.min(pages.length, Math.round(c)));
+    if (t !== st.tgt || !st.marked) {
+      const o = st.tiles.get(st.tgt); if (o) o.classList.remove('target');
+      const n = st.tiles.get(t); if (n) n.classList.add('target');
+      if (st.marked && t !== st.tgt) vibrate(6);
+      st.tgt = t; st.marked = true;
+    }
+  }
+  function flatEnd() {
+    const sl = nav.slide, st = sl.strip, g = st.g;
+    const t = Math.max(-1, Math.min(pages.length, Math.round(st.c)));
+    const land = Math.max(0, t);                  // the title page leads to page 1
+    if (land >= pages.length) {                   // the plus: a new page
+      pages.push({ strokes: [] }); scheduleSave();
+      const el = st.tiles.get(t);
+      if (el) { el.className = 'stile target'; el.innerHTML = tileMarkup(land); }
+    }
+    // zoom back into the page you land on, to the very spot it will have on screen
+    const k = W * S() / g.pw, x = vw / 2 + (land - st.c) * g.step - g.pw / 2, inner = $('stripIn');
+    inner.style.transition = 'transform .26s cubic-bezier(.3,.1,.3,1)';
+    inner.style.transform = `translate(${view.tx - x * k}px, ${view.ty - g.top * k}px) scale(${k})`;
+    animating = true;
+    setTimeout(() => {
+      if (land !== cur) { cur = land; renderPage(); scheduleSave(); }
+      requestAnimationFrame(() => requestAnimationFrame(() => { $('strip').hidden = true; inner.innerHTML = ''; animating = false; }));
+    }, 280);
   }
 
   // Riffle (bottom edge): slide right to go forward, left to go back; further = faster.
