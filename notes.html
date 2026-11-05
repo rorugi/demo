@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_85</title>
+<title>RRnotes_86</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -1563,7 +1563,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_85';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_86';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5701,9 +5701,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('riffle').hidden = false;
   }
 
-  // Turning back mirrors turning forward (the current page lifts at the left and turns over to the right,
-  // so the page underneath is seen while swiping). true: the previous pages swing back over the binding instead.
-  const BACK_OVER_BINDING = false;
+  // true: turning back brings the previous pages back over the binding on the left (the forward turn played
+  // backwards). false: a mirror image of turning forward (the page lifts at the left and turns over to the right).
+  const BACK_OVER_BINDING = true;
   // Flip: the pages are bound on the left. Forward, sheets lift from the right and turn over the binding;
   // back, the previous sheets swing back from the binding and open to the right. Several can move at once.
   function sheetAt(i) {
@@ -5767,12 +5767,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // strip between its own edge and the edge of the sheet lying on top of it.
   const PERSP = 2.6;                          // same factor as the perspective in paintSheet
   const coverWidth = a => a >= 90 ? 0 : Math.min(1, Math.cos(a * Math.PI / 180) * PERSP / (PERSP - Math.sin(a * Math.PI / 180)));
-  // Back: sheet k turns down steadily from upright (90°) to flat; it covers half the page at its commit point
-  // (about 70°: with the perspective a sheet covers the whole page well before it lies flat)
-  const BACK_HALF = 0.22;
-  const backQ = (p, k) => clamp01((p - commitAt(k) + FLIP_FIRST) * BACK_HALF / FLIP_FIRST);   // same speed for all, each one a step later
-  const backAngle = (p, k) => { const q = backQ(p, k); return q <= 0 ? 91 : 90 * (1 - q); };
-  const backCover = (p, k) => { const a = backAngle(p, k); return a > 90 ? 0 : coverWidth(a); };
+  // Back is the forward turn played backwards: the previous page comes over the binding (edge-on first) and
+  // turns down at the same speed a page lifts going forward (90° per FLIP_FIRST), each one a step later.
+  // A page counts once it lies flat, which happens at the same swipe lengths as a forward page counts (30 %, 46 %, …).
+  const backAngle = (p, k) => { const q = clamp01((p - FLIP_NEXT * k) / FLIP_FIRST); return q <= 0 ? 91 : 90 * (1 - q); };
+  const BACK_COUNT_AT = 0.5;
   // The angle of every turning sheet. A sheet never overtakes the one that started before it:
   // forward, a lower sheet is never further turned than the one above; back, a later page never lies flatter.
   function flipAngles(p) {
@@ -5785,16 +5784,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function flipCount(p) {
     const ang = flipAngles(p);
-    if (nav.back) {                             // the sheet of the page furthest back lies on top
-      let best = 0, bestShare = -1, above = 0;
-      for (let k = nav.maxN - 1; k >= 0; k--) {
-        const w = ang[k] > 90 ? 0 : coverWidth(ang[k]);
-        const share = Math.max(0, w - above);
-        if (share > bestShare + 1e-6) { best = k + 1; bestShare = share; }
-        above = Math.max(above, w);
-      }
-      return 1 - above > bestShare + 1e-6 ? 0 : best;
-    }
+    if (nav.back) { let n = 0; while (n < nav.maxN && ang[n] <= BACK_COUNT_AT) n++; return n; }
     let best = 0, bestShare = -1, above = 0;    // above = width covered by the sheets on top
     for (let k = 0; k <= nav.maxN; k++) {
       const w = k < nav.maxN ? coverWidth(ang[k]) : 1;   // the last page lies flat
