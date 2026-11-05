@@ -1193,6 +1193,7 @@
   <h3>Notebook</h3>
   <div class="menu">
     <button type="button" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>Save…<small id="saveSum"></small></button>
+    <button type="button" id="openBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5V18a1.5 1.5 0 0 0 1.5 1.5h13.2a1.5 1.5 0 0 0 1.45-1.1l1.8-6.4H7.4L5.5 19"/><path d="M3.5 7.5V6A1.5 1.5 0 0 1 5 4.5h4l2 2h6A1.5 1.5 0 0 1 18.5 8v4"/></svg>Open…</button>
     <button type="button" id="nbBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11z"/><path d="M6.5 3.5v17M4.5 7.5h4M4.5 12h4M4.5 16.5h4"/></svg>Notebooks…<small id="nbSum"></small></button>
     <button type="button" id="pdfMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M8.5 17.5v-4h1.4a1.3 1.3 0 0 1 0 2.6H8.5M12.5 17.5v-4h1a2 2 0 0 1 0 4zM16.5 13.5h-1.6v4M14.9 15.5h1.3"/></svg>Export PDF…</button>
     <button type="button" id="installBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M12 7.5v7M9 11.5l3 3 3-3M10.5 18.5h3"/></svg>Install app</button>
@@ -1391,12 +1392,12 @@
 
 <dialog class="dlg" id="flipDlg" aria-labelledby="flipTitle">
   <h2 id="flipTitle">Page flip</h2>
-  <p>Swipe from the right edge to turn forward, from the left edge to turn back.</p>
+  <p>Swipe from the right edge to turn forward, from the left edge to turn back. Along either edge, slide up or down to run through the pages.</p>
   <div class="field">
     <span>Style</span>
     <div class="seg" id="flipStyle">
-      <button type="button" data-f="fan">Fan</button>
-      <button type="button" data-f="quick">Quick</button>
+      <button type="button" data-f="book">Notebook</button>
+      <button type="button" data-f="flat">Flat</button>
     </div>
   </div>
   <div class="field">
@@ -1459,7 +1460,6 @@
   </div>
   <div class="row">
     <button type="button" class="left" id="nbNew">New</button>
-    <button type="button" id="nbOpenFile">Open file…</button>
     <button type="button" class="primary" id="nbDone">Done</button>
   </div>
 </dialog>
@@ -1614,8 +1614,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_94';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.2';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_95';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.3';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2899,7 +2899,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     darkQuery.addEventListener ? darkQuery.addEventListener('change', onScheme) : darkQuery.addListener(onScheme);
   }
   // ---- Page flip settings ----
-  let flipStyle = store.get('flipStyle', 'fan') === 'quick' ? 'quick' : 'fan';
+  let flipStyle = store.get('flipStyle', 'book') === 'flat' ? 'flat' : 'book';   // edge swipes: pages turn (notebook) or slide by (flat)
   let flipOn = store.get('flipOn', true) !== false;
   let flipZoom = store.get('flipZoom', true) !== false;
   let riffleOn = store.get('riffleOn', true) !== false;
@@ -2911,7 +2911,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('riffleToggle').checked = riffleOn;
     $('slideStyle').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === sliderStyle)); b.disabled = !riffleOn; });
     $('flipOpen').disabled = !flipOn;
-    $('flipSum').textContent = flipOn ? `${flipStyle === 'fan' ? 'Fan' : 'Quick'}${flipZoom ? ' · zoom out' : ''}${riffleOn ? (sliderStyle === 'flat' ? ' · flat slider' : ' · slider') : ''}` : 'Off: swiping the edges does nothing';
+    $('flipSum').textContent = flipOn ? `${flipStyle === 'flat' ? 'Flat' : 'Notebook'}${flipZoom && flipStyle !== 'flat' ? ' · zoom out' : ''}${riffleOn ? (sliderStyle === 'flat' ? ' · flat slider' : ' · slider') : ''}` : 'Off: swiping the edges does nothing';
     store.set('sliderStyle', sliderStyle);
     store.set('flipStyle', flipStyle); store.set('flipOn', flipOn); store.set('flipZoom', flipZoom); store.set('riffleOn', riffleOn);
   }
@@ -3609,7 +3609,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     await addNotebook(newMeta(), null);
     renderNbDlg();
   });
-  $('nbOpenFile').addEventListener('click', () => $('fileIn').click());
+  $('openBtn').addEventListener('click', () => { closePops(); $('fileIn').click(); });   // a notebook, a web page with notebooks or a ZIP
   async function closeNotebook(id) {
     const m = nbMeta(id);
     if (!m) return;
@@ -3882,7 +3882,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       scribbleErase: scribbleOn,
       handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, selectionColor: selColor,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
-      pageFlip: { enabled: flipOn, style: flipStyle, zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
+      pageFlip: { enabled: flipOn, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
       scrollMarginMm,
       calibration: pxPerMm ? { pxPerMm: +pxPerMm.toFixed(4), screen: screenSig() } : null,
@@ -3929,7 +3929,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pf = o.pageFlip;
     if (pf && typeof pf === 'object') {
       if (typeof pf.enabled === 'boolean') flipOn = pf.enabled;
-      if (pf.style === 'fan' || pf.style === 'quick') flipStyle = pf.style;
+      if (pf.style === 'flat' || pf.style === 'notebook') flipStyle = pf.style === 'flat' ? 'flat' : 'book';
       if (typeof pf.zoomOut === 'boolean') flipZoom = pf.zoomOut;
       if (typeof pf.riffle === 'boolean') riffleOn = pf.riffle;
       if (pf.slider === 'flat' || pf.slider === 'notebook') sliderStyle = pf.slider === 'flat' ? 'flat' : 'book';
@@ -4211,7 +4211,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const f = v => +(+v).toFixed(3), sw = f(0.8 / S()), sh = f(r * 0.12);
     if (handleMode === 'hidden' && box) {        // invisible, inside the corner, big enough for a finger
       const k = Math.max(0.5, Math.min(Math.max(11, 44 / S()), box.w / 3, box.h / 2.2));
-      const x = act === 'move' ? box.x : box.x + box.w - k, y = act === 'move' || act === 'gear' ? box.y : box.y + box.h - k;
+      const x = act === 'gear' || act === 'move' ? box.x : box.x + box.w - k, y = act === 'gear' || act === 'move' ? box.y : box.y + box.h - k;
       return `<g ${attr}="${act}" class="hnd"><rect x="${f(x)}" y="${f(y)}" width="${f(k)}" height="${f(k)}" fill="transparent"/></g>`;
     }
     return `<g ${attr}="${act}" class="hnd"><circle cx="${f(cx)}" cy="${f(cy + sh)}" r="${f(r * 0.9)}" fill="rgba(0,0,0,.18)"/>` +
@@ -4266,7 +4266,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Sticky notes ----
   const noteLayer = $('noteLayer');
   let noteH = 0;                             // size of the handles on a sticky note (mm), grows when zoomed out
-  const noteHandle = () => Math.max(4.5, 24 / S());
+  const noteHandle = () => Math.max(4.5, 44 / S());     // finger-sized
   const dotR = () => Math.max(DOT_R, 10 / S());
   // static: thumbnails, page map, magnifier, flipping, print; ui: the page with handles; file: data to reopen it
   function noteMarkup(n, mode) {
@@ -4289,7 +4289,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (ui && (handleMode !== 'selected' || isSel)) {   // round handles on the corners, tinted with the note's colour: move, options, fold away
       const r = Math.min(noteH, z / 3, zh / 2.2) / 2, t = shade(c, 0.86);
       const bx = isSel ? null : { x: n.x, y: n.y, w: z, h: zh };   // selected: always visible, also in Hidden mode
-      out += handleChip('data-nact', 'move', n.x, n.y, r, t, bx) + handleChip('data-nact', 'gear', n.x + z, n.y, r, t, bx) + handleChip('data-nact', 'fold', n.x + z, n.y + zh, r, t, bx);
+      out += handleChip('data-nact', 'gear', n.x, n.y, r, null, bx) + handleChip('data-nact', 'fold', n.x + z, n.y + zh, r, null, bx);   // options top left (top right often means close); moving: just drag
     }
     return out + '</g>';
   }
@@ -4331,7 +4331,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // Peek: a finger held on a sticky note fades it to 10 % until the finger lifts
   function fadeNote(n, on) {
-    const els = n.src ? [imgEl(n.id), imgUi.querySelector(`[data-iid="${n.id}"]`)] : [noteLayer.querySelector(`[data-nid="${n.id}"]`)];
+    // the picture or the note itself fades; its corner buttons stay fully visible
+    const g = n.src ? null : noteLayer.querySelector(`[data-nid="${n.id}"]`);
+    const els = n.src ? [imgEl(n.id)] : g ? [...g.querySelectorAll(':scope > svg, :scope > rect:not(.objsel), :scope > circle')] : [];
     els.forEach(el => { if (el) { el.style.transition = 'opacity .15s'; el.style.opacity = on ? 0.25 : ''; } });
   }
   // sticky notes and images: size for moving
@@ -4342,7 +4344,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function startPeek(e, n, delay, at, hold = delay > 0) {
     revealHandles(n.id);
     const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold };
-    a.timer = setTimeout(() => { if (active === a && !a.dead) { a.on = true; fadeNote(n, true); if (a.hold) vibrate(8); } }, delay);
+    a.timer = setTimeout(() => {
+      if (active !== a || a.dead) return;
+      a.on = true;
+      if (a.type === 'touch') selectObj(n);          // a long finger hold selects: its corner buttons show right away
+      fadeNote(n, true);
+      if (a.hold) vibrate(8);
+    }, delay);
     active = a;
   }
   function peekMove(e) {
@@ -4654,7 +4662,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     imgLayer.innerHTML = list.filter(m => !m.over).map(one).join('');
     imgOver.innerHTML = list.filter(m => m.over).map(one).join('');
     // handles: move (top left), options (top right), size (bottom right)
-    const h = Math.max(4.5, 24 / S()), r = h / 2, f = v => +(+v).toFixed(3), sw = f(1.3 / S());
+    const h = Math.max(4.5, 44 / S()), r = h / 2, f = v => +(+v).toFixed(3), sw = f(1.3 / S());
     let box = null;
     const chip = (cx, cy, act) => handleChip('data-iact', act, cx, cy, r, null, box);
     imgUi.innerHTML = list.map(m => {
@@ -4670,10 +4678,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             `<g data-iact="crop-${c}"><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 1.6)}" fill="transparent"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 0.55)}" fill="#fff" stroke="#1e2a44" stroke-width="${sw}"/></g>`).join('') + '</g>';
       }
       if (handleMode === 'selected' && !isSel) return '';
-      if (m.lock) return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect + chip(m.x + m.w - m0, m.y + m0, 'gear') + '</g>';   // locked: options only
+      if (m.lock) return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect + chip(m.x + m0, m.y + m0, 'gear') + '</g>';   // locked: options only
       return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect +
-        chip(m.x + m0, m.y + m0, 'move') +
-        chip(m.x + m.w - m0, m.y + m0, 'gear') +
+        chip(m.x + m0, m.y + m0, 'gear') +
         chip(m.x + m.w - m0, m.y + m.h - m0, 'size') + '</g>';
     }).join('');
     applyNear();
@@ -4855,7 +4862,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   $('imgSizes').addEventListener('change', e => { imgMax = +e.target.value; store.set('imgMax', imgMax); renderImgSize(); });
   renderImgSize();
-  const HND_SUB = { selected: 'Shown on a sticky note or image after a finger tap selects it; tap or write elsewhere to deselect', always: 'Always shown at full strength', quiet: 'Faint until the stylus comes near or a finger taps; hidden while writing', hidden: 'Not shown. Use the corners: top left moves, top right opens the options, bottom right folds or resizes', select: 'Only shown while the Select tool is on' };
+  const HND_SUB = { selected: 'Shown on a sticky note or image after a finger tap selects it; tap or write elsewhere to deselect', always: 'Always shown at full strength', quiet: 'Faint until the stylus comes near or a finger taps; hidden while writing', hidden: 'Not shown. With a finger, the top left corner opens the options, bottom right folds or resizes; the pen writes everywhere', select: 'Only shown while the Select tool is on' };
   $('hndModes').addEventListener('change', e => {
     handleMode = e.target.value; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode();
   });
@@ -5931,11 +5938,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nav.moved = Math.max(nav.moved, Math.hypot(dx, dy));
     if (nav.mode === 'pending') {
       if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+        if (flipStyle === 'flat' && nav.side && (nav.side === 'right' ? dx < 0 : dx > 0)) { edgeToSlide('h'); slideMove(e); return; }
         if (nav.side === 'right' && dx < 0) startFlip(1);
         else if (nav.side === 'left' && dx > 0) startFlip(-1);
         else if (nav.bottom) startRiffle();
         else cancelNav();
-      } else if (Math.abs(dy) > 30) cancelNav();
+      } else if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx) && nav.side) { edgeToSlide('v'); slideMove(e); return; }   // up or down along the edge: through the pages
+      else if (Math.abs(dy) > 30) cancelNav();
       if (!nav) return;
     }
     if (nav.mode === 'flip') flipTo(e.clientX);
@@ -6032,7 +6041,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const clamp01 = v => Math.max(0, Math.min(1, v));
   const sheetProgress = (p, k) => {
     const c = commitAt(k);
-    if (flipStyle === 'fan') {
+    {                                            // (one style left: each sheet rises, then drops quickly)
       const start = c - FAN_RISE;
       if (p <= c) return clamp01((p - start) / FAN_RISE) * 0.5;
       return 0.5 + clamp01((p - c) / FAN_FALL) * 0.5;
@@ -6124,13 +6133,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!n0.forceCancel && n === 0 && fast && n0.p > 0.03) n = Math.min(1, n0.realN);
     $('riffle').hidden = true;
     animating = true;
-    const settle = flipStyle === 'fan' ? 360 : 300;
+    const settle = 360;
     if (n0.lift) {                           // zoom back in while the sheets land
       stage.style.transition = `transform ${settle / 1000}s cubic-bezier(.3,.1,.3,1)`;
       requestAnimationFrame(() => { stage.style.transform = ''; });
     }
     n0.sheets.forEach((sh, k) => {
-      sh.style.transition = `transform ${flipStyle === 'fan' ? .36 : .3}s cubic-bezier(.2,.7,.3,1)`;
+      sh.style.transition = 'transform .36s cubic-bezier(.2,.7,.3,1)';
       const done = k < n;
       if (n0.back) requestAnimationFrame(() => paintSheet(sh, done ? 0 : 90, 1));   // lands flat, or swings back to the binding
       else requestAnimationFrame(() => paintSheet(sh, done ? 180 : 0, n0.dir));
@@ -6170,20 +6179,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const L = view.tx, R = view.tx + W * S(), T = view.ty, B = view.ty + H * S();
     return x < L || x > R || y < T || y > B;
   }
+  // src: 'desk' (beside the page: right/down forward), 'v' (up/down along a page edge), 'h' (flat style: swipe from an edge)
   function startSlide(e) {
     nav = { mode: 'slidewait', id: e.pointerId, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), vx: 0, moved: 0,
-            slide: { start: cur, dir: 0, bo: -1, abs: cur, warned: false } };
+            slide: { start: cur, dir: 0, bo: -1, abs: cur, warned: false, src: 'desk', style: sliderStyle } };
+  }
+  function edgeToSlide(src) {                     // an edge gesture continues as a slide
+    clearTimeout(nav.timer);
+    nav.mode = 'slidewait';
+    nav.slide = { start: cur, dir: 0, bo: -1, abs: cur, warned: false, src, style: flipStyle === 'flat' ? 'flat' : 'book' };
   }
   const slidePx = () => Math.max(30, Math.min(60, Math.min(vw, vh) / 16));   // first pages: one per this many px
   function slideMove(e) {
-    const sl = nav.slide, raw = (e.clientX - nav.x0) + (e.clientY - nav.y0);   // right and down count forward
+    const sl = nav.slide, dx = e.clientX - nav.x0, dy = e.clientY - nav.y0;
+    const raw = sl.src === 'v' ? dy : sl.src === 'h' ? -dx : dx + dy;   // down (and right beside the page) forward; a swipe pulls the pages
     nav.vx = 0;
     if (nav.mode === 'slidewait' && Math.abs(raw) < 12) return;
     const x = Math.max(0, Math.abs(raw) - 12), dir = raw > 0 ? 1 : -1;
-    if (sliderStyle === 'flat') {                  // a strip of pages: the one in the middle is where you land
+    if (sl.style === 'flat') {                     // a strip of pages: the one in the middle is where you land
       if (!sl.strip) flatStart(sl);
       nav.mode = 'flat';
-      flatMove(Math.max(-1, Math.min(pages.length, sl.start + dir * (x / slidePx() + Math.pow(x / 260, 2)))));
+      const T = sl.src === 'h' ? Math.abs(raw) / flatGeom().step : x / slidePx() + Math.pow(x / 260, 2);   // a swipe moves the strip with the finger
+      flatMove(Math.max(-1, Math.min(pages.length, sl.start + dir * T)));
       return;
     }
     const maxT = dir > 0 ? pages.length - 1 - sl.start : sl.start;      // existing pages only (a swipe adds new ones)
