@@ -482,6 +482,13 @@
   .menu button:hover, .menu label:hover { background: var(--active); }
   .menu svg { width: 18px; height: 18px; flex: none; opacity: .8; }
   .menu small { margin-left: auto; font-size: 11px; opacity: .55; }
+  .ptpop { width: 236px; }
+  .ptpop .menu button[aria-pressed="true"] { background: var(--active); font-weight: 600; }
+  .ptpop .menu button svg { width: 22px; height: 22px; }
+  .ptpop .menu .sub { display: block; }
+  .pthint { margin: 6px 8px 2px; font: 400 11.5px/1.35 var(--ui); opacity: .6; }
+  .pthint:empty { display: none; }
+  .ptbtn svg { width: 22px; height: 22px; }
   /* switch */
   .switch { margin-left: auto; position: relative; width: 38px; height: 22px; flex: none; }
   .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
@@ -719,6 +726,8 @@
   .page.turning.from-left .pnum { right: auto; left: 12px; }
   .grid { stroke: var(--grid); }
   .livewrap { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+  .ripple { position: absolute; z-index: 41; overflow: hidden; pointer-events: none; transform-origin: 50% 50%; }
+  .ripple i { position: absolute; border-radius: 50%; background: var(--sel); opacity: 0; will-change: transform, opacity; }
   .livewrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   .stage.drawing { cursor: crosshair; }
 
@@ -1172,6 +1181,11 @@
 </div>
 
 <!-- eraser menu -->
+<div class="pop ptpop" id="ptPop" role="dialog" aria-label="Pen type" hidden>
+  <h3>Pen type</h3>
+  <div class="menu" id="ptList"></div>
+  <p class="pthint" id="ptHint"></p>
+</div>
 <div class="pop" id="eraserPop" role="dialog" aria-label="Eraser settings" hidden>
   <h3>Erases</h3>
   <div class="seg" id="eraseMode">
@@ -1348,6 +1362,7 @@
 <div class="riffle" id="riffle" hidden><b id="riffleNum">1 / 1</b><span id="riffleHint"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="appDefs"></defs></svg>
 <div class="strip" id="strip" hidden><div class="strip-in" id="stripIn"></div></div>
 <div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
@@ -1632,8 +1647,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_97';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.5';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_98';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.6';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1763,12 +1778,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pages: svg('<rect x="7" y="3.5" width="12" height="15" rx="1.5"/><path d="M5 7v12.5a1 1 0 0 0 1 1h10"/>'),
     zoom: svg('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M8.5 11h5"/>'),
     handle: svg('<circle cx="9" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.4" fill="currentColor" stroke="none"/>'),
-    trash: svg('<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5"/>')
+    trash: svg('<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5"/>'),
+    // pen types
+    kpen: svg('<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1"/><circle cx="5.2" cy="18.8" r=".6" fill="currentColor" stroke="none"/>'),
+    kfountain: svg('<g transform="rotate(45 12 12)"><path d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>'),
+    kpencil: svg('<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1M4.5 15.4l4.1 4.1"/><path d="M4 20l.25-2.3 2.05 2.05z" fill="currentColor"/>'),
+    pentype: svg('<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1"/><path d="M15 19.5h6M18 16.5v6" stroke-width="1.6"/>')
   };
+  const KINDS = { pen: 'Pen', fountain: 'Fountain pen', pencil: 'Pencil' };
 
   // ---- Toolbar model ----
   const ITEM_TYPES = {
     pen:    { label: 'Pen', multi: true },
+    pentype: { label: 'Pen type' },
     space:  { label: 'Empty space', multi: true },
     preset: { label: 'Preset', multi: true },
     sticky: { label: 'Sticky notes' },
@@ -1799,7 +1821,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     width: b && +b.width > 0 && +b.width <= MAX_W ? +b.width : 0.45,
     opacity: b && okO(b.opacity) ? +b.opacity : 1,
     highlighter: !!(b && b.highlighter),
-    pickedOnDark: !!(b && b.pickedOnDark)
+    pickedOnDark: !!(b && b.pickedOnDark),
+    kind: b && (b.kind === 'fountain' || b.kind === 'pencil') ? b.kind : 'pen'   // pen type (highlighters always draw evenly)
   });
   // stroke size and colour buttons: each applies its part to the current pen
   const cleanWidth = w => +w > 0 && +w <= MAX_W ? +w : 0.45;
@@ -1820,7 +1843,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const DEFAULT_PRESETS = [{ color: '#121315' }, { color: '#d92b1e' }, { color: '#1f6fd1' }, { color: '#f0bf12', width: 5, opacity: 0.4, highlighter: true }];
   const defaultItems = () => {
     return [
-      { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) },
+      { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) }, { id: uid(), type: 'pentype' },
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b) })),
       { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
@@ -1874,6 +1897,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const saved = store.get('toolbars', null);
     if (Array.isArray(saved) && saved.length) bars = saved.map((b, i) => cleanBar(b, i === 0));
     else bars = [cleanBar(null, true)];
+  }
+  if (!store.get('ptAdded', false)) {          // the pen type button arrives once, right after the first pen
+    store.set('ptAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'pentype'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'pen');
+      m.splice(k + 1, 0, { id: uid(), type: 'pentype' });
+      store.set('toolbars', bars);
+    }
   }
   const allItems = () => bars.flatMap(b => b.items);
   { const ids = new Set(); allItems().forEach(i => { while (ids.has(i.id)) i.id = uid(); ids.add(i.id); }); }
@@ -1940,22 +1971,98 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const o = { d: s.d, c: okC(s.c) ? s.c : '#121315', w: (+s.w > 0 && +s.w <= MAX_W) ? +s.w : 0.45, o: okO(s.o) ? +s.o : 1 };
     if (s.h) o.h = 1;
     if (s.k) o.k = 1;
+    if (!s.h && s.t === 'p') o.t = 'p';                          // pencil: grainy
+    if (!s.h && s.t === 'f' && Array.isArray(s.v) && s.v.length) { // fountain pen: a width factor per point
+      o.t = 'f'; o.v = s.v.map(x => Math.max(0.05, Math.min(3, Math.round((+x || 1) * 100) / 100)));
+    }
     return o;
   };
   // forFile: colours for white paper plus the data needed to reopen the stroke exactly
   const pathMarkup = (s, forFile, idx) => {
     const col = forFile ? fileColor(s.c, s.k) : displayColor(s.c, s.k);
-    let extra = s.o < 1 ? ` stroke-opacity="${s.o}"` : '';
+    let extra = '';
     if (idx !== undefined) extra += ` data-i="${idx}"`;
     if (forFile && s.h) extra += ' data-hl="1"';
     if (forFile && s.k) extra += ` data-k="dark" data-c="${s.c}"`;
-    return `<path d="${s.d}" stroke="${col}" stroke-width="${s.w}"${extra}/>`;
+    if (s.t === 'f') {                 // fountain pen: the filled outline; files also keep the centre line and widths
+      const file = forFile ? ` data-t="f" data-cd="${s.d}" data-w="${s.w}" data-v="${s.v.join(' ')}"` : '';
+      return `<path d="${fountainD(s)}" fill="${col}" stroke="none"${s.o < 1 ? ` fill-opacity="${s.o}"` : ''}${extra}${file}/>`;
+    }
+    if (forFile && s.t === 'p') extra += ' data-t="p"';
+    return `<path d="${s.d}" stroke="${col}" stroke-width="${s.w}"${s.o < 1 ? ` stroke-opacity="${s.o}"` : ''}${extra}/>`;
   };
   // highlighter strokes go into a group underneath all other ink
+  // pencil strokes share one group with the paper grain
   const inkMarkup = (strokes, forFile, withIdx) => {
     const one = (s, i) => pathMarkup(s, forFile, withIdx ? i : undefined);
+    const pcl = strokes.some(s => s.t === 'p') ? `<g class="pcl" mask="url(#rrGrain)">${strokes.map((s, i) => s.t === 'p' ? one(s, i) : '').join('')}</g>` : '';
     return `<g class="hlg">${strokes.map((s, i) => s.h ? one(s, i) : '').join('')}</g>` +
-      strokes.map((s, i) => s.h ? '' : one(s, i)).join('');
+      strokes.map((s, i) => s.h || s.t === 'p' ? '' : one(s, i)).join('') + pcl;
+  };
+  // ---- Fountain pen: the outline of a line whose width changes from point to point ----
+  // pencil grain: a little noise texture; strokes in the grain group show through it unevenly
+  const GRAIN_URL = (() => {
+    try {
+      const c = document.createElement('canvas'); c.width = c.height = 48;
+      const g = c.getContext('2d'), im = g.createImageData(48, 48);
+      for (let i = 0; i < im.data.length; i += 4) { const r = Math.random(), v = Math.round(255 * (r < 0.18 ? 0.15 + r : 0.55 + 0.45 * Math.random())); im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+      g.putImageData(im, 0, 0); return c.toDataURL('image/png');
+    } catch (_) { return ''; }
+  })();
+  const GRAIN_DEFS = GRAIN_URL ? `<pattern id="rrGrainPat" patternUnits="userSpaceOnUse" width="4.8" height="4.8"><image href="${GRAIN_URL}" width="4.8" height="4.8" preserveAspectRatio="none"/></pattern>` +
+    `<mask id="rrGrain" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000"><rect x="-100000" y="-100000" width="200000" height="200000" fill="url(#rrGrainPat)"/></mask>` : '';
+  document.getElementById('appDefs').innerHTML = GRAIN_DEFS;
+  const fountainCache = new WeakMap();
+  function fountainPts(st) {
+    let o = fountainCache.get(st);
+    if (o) return o;
+    const p = parsePoints(st.d) || [], v = st.v || [], n = p.length, wAt = i => st.w * (v.length === n ? v[i] : v[Math.round(i * (v.length - 1) / Math.max(1, n - 1))] || 1) / 2;
+    // the centre line exactly as drawn (quadratic pieces through the midpoints), sampled finely, with its width
+    const smp = [];
+    const add = (x, y, r) => { const l = smp[smp.length - 1]; if (!l || Math.hypot(x - l[0], y - l[1]) > 0.04) smp.push([x, y, r]); };
+    if (n === 1) add(p[0][0], p[0][1], wAt(0));
+    for (let i = 0; i < n - 1; i++) {
+      const a = i ? [(p[i - 1][0] + p[i][0]) / 2, (p[i - 1][1] + p[i][1]) / 2] : p[0], b = i < n - 2 ? [(p[i][0] + p[i + 1][0]) / 2, (p[i][1] + p[i + 1][1]) / 2] : p[n - 1];
+      const ra = i ? (wAt(i - 1) + wAt(i)) / 2 : wAt(0), rb = i < n - 2 ? (wAt(i) + wAt(i + 1)) / 2 : wAt(n - 1), c = p[i], K = 6;
+      for (let k = 0; k <= K; k++) {
+        const t = k / K, u = 1 - t;
+        const x = i ? u * u * a[0] + 2 * u * t * c[0] + t * t * b[0] : a[0] + (b[0] - a[0]) * t, y = i ? u * u * a[1] + 2 * u * t * c[1] + t * t * b[1] : a[1] + (b[1] - a[1]) * t;
+        add(x, y, ra + (rb - ra) * t);
+      }
+    }
+    const L = [], R = [], m = smp.length;
+    for (let i = 0; i < m; i++) {
+      const q0 = smp[Math.max(0, i - 1)], q1 = smp[Math.min(m - 1, i + 1)];
+      let dx = q1[0] - q0[0], dy = q1[1] - q0[1]; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+      const r = smp[i][2];
+      L.push([smp[i][0] - dy * r, smp[i][1] + dx * r]); R.push([smp[i][0] + dy * r, smp[i][1] - dx * r]);
+    }
+    const cap = (c, from, r, dir) => {        // a round end: half a circle around the end point
+      const out = [], a0 = Math.atan2(from[1] - c[1], from[0] - c[0]);
+      for (let k = 1; k < 8; k++) { const a = a0 + dir * Math.PI * k / 8; out.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]); }
+      return out;
+    };
+    if (!m) o = [];
+    else if (m === 1) { const [x, y, r] = smp[0]; o = Array.from({ length: 16 }, (_, k) => [x + Math.cos(k * Math.PI / 8) * r, y + Math.sin(k * Math.PI / 8) * r]); }
+    else {
+      const e = smp[m - 1], b0 = smp[0];
+      o = [...L, ...cap(e, L[m - 1], e[2], -1), ...R.reverse(), ...cap(b0, R[R.length - 1], b0[2], -1)];
+    }
+    fountainCache.set(st, o);
+    return o;
+  }
+  // the outline as a compact path: points that add nothing are left out, then short relative steps in 0.01 mm
+  const fountainD = st => {
+    const o = fountainPts(st);
+    if (!o.length) return '';
+    const K = o.length > 3 ? rdpIdx(o, 0.012) : o.map((_, i) => i), h = K.map(i => [Math.round(o[i][0] * 100), Math.round(o[i][1] * 100)]);
+    let out = `M${h[0][0] / 100} ${h[0][1] / 100}l`, last = 'l';
+    for (let i = 1; i < h.length; i++) for (const v of [h[i][0] - h[i - 1][0], h[i][1] - h[i - 1][1]]) {
+      const t = (Math.abs(v) / 100).toString().replace(/^0\./, '.');
+      const sep = v < 0 ? '-' : last === 'l' || (t[0] === '.' && last.includes('.')) ? '' : ' ';
+      out += sep + t; last = t;
+    }
+    return out + 'z';
   };
 
   let pages = [{ strokes: [] }], cur = 0;
@@ -2290,6 +2397,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function itemButton(it) {
     const t = it.type, a = `data-id="${it.id}" data-type="${t}"`;
     switch (t) {
+      case 'pentype': return `<button type="button" class="ptbtn" ${a} aria-label="Pen type">${ICON.kpen}</button>`;
       case 'pen': return `<button type="button" class="pen realpen" ${a} aria-pressed="false" title="Pen · tap again for colour, thickness and opacity">${ICON.nib}<span class="inkinfo"><span class="swatch"></span><small></small></span>${PENLOCK}</button>`;
       case 'space': return `<span class="space" ${a} aria-hidden="true"></span>`;
       case 'eraser': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Eraser" title="Eraser · tap again for size">${ICON.eraser}</button>`;
@@ -2460,7 +2568,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const penLocks = () => itemById(penId).locks || {};
   const modValues = it => it.type === 'size' ? { width: it.width } : it.type === 'color' ? cleanPaint(it.paint) : cleanBrush(it.brush);
   const modKeys = it => (it.type === 'size' ? ['width'] : it.type === 'color' ? ['color', 'opacity'] : ['color', 'width', 'opacity']).filter(k => !penLocks()[k]);
-  const sameVal = (k, a, b) => k === 'color' ? a.color.toLowerCase() === b.color.toLowerCase() && !!a.pickedOnDark === !!b.pickedOnDark : a[k] === b[k];
+  const sameVal = (k, a, b) => k === 'kind' ? (a.kind || 'pen') === (b.kind || 'pen') : k === 'color' ? a.color.toLowerCase() === b.color.toLowerCase() && !!a.pickedOnDark === !!b.pickedOnDark : a[k] === b[k];
   const keepsMode = () => Object.keys(penLocks()).length > 0;    // a pen with locks stays highlighter / normal pen
   const modMatches = it => {
     if (tool !== 'pen') return false;
@@ -2497,6 +2605,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'eraser': el.setAttribute('aria-pressed', String(tool === 'eraser')); break;
+        case 'pentype': {
+          const k = brush().highlighter ? 'pen' : brush().kind || 'pen';
+          if (el.dataset.k !== k) { el.innerHTML = ICON['k' + k]; el.dataset.k = k; }
+          el.setAttribute('aria-label', `Pen type: ${KINDS[k]}${brush().highlighter ? ' (highlighter)' : ''}. Tap to change`);
+          break;
+        }
         case 'lasso': el.setAttribute('aria-pressed', String(tool === 'lasso')); stage.classList.toggle('selecting', tool === 'lasso'); break;
         case 'sticky':
           el.setAttribute('aria-pressed', String(tool === 'sticky'));
@@ -2566,6 +2680,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         break;
       case 'lasso':
         if (tool !== 'lasso') { tool = 'lasso'; closePops(); updateToolbarState(); }
+        break;
+      case 'pentype':
+        if (openPop === ptPop) closePops(); else { renderPtPop(); showPop(ptPop, el); }
         break;
       case 'image':
         openPop === imgAddPop ? closePops() : showPop(imgAddPop, el);
@@ -2819,6 +2936,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     b.innerHTML = `<i style="--s:${Math.min(22, 5 + sz * 1.2)}px"></i><span>${sz} mm</span>`;
     b.addEventListener('click', () => { eraserSize = sz; store.set('eraserSize', sz); renderEraserPop(); });
     esizesEl.appendChild(b);
+  });
+  // ---- Pen type: the active pen writes as a pen, a fountain pen or a pencil ----
+  const ptPop = $('ptPop');
+  const KIND_SUB = { pen: 'Even line', fountain: 'Width follows pressure and speed', pencil: 'Grainy, darker when pressed' };
+  function renderPtPop() {
+    const b = brush(), k = b.kind || 'pen';
+    $('ptList').innerHTML = Object.keys(KINDS).map(t => `<button type="button" data-k="${t}" aria-pressed="${t === k}">${ICON['k' + t]}<span>${KINDS[t]}<span class="sub">${KIND_SUB[t]}</span></span></button>`).join('');
+    $('ptHint').textContent = b.highlighter ? 'This pen is a highlighter right now: it draws an even line. The type applies when it writes normal ink again.' : '';
+  }
+  $('ptList').addEventListener('click', e => {
+    const bt = e.target.closest('[data-k]');
+    if (!bt) return;
+    brush().kind = bt.dataset.k;
+    if (tool !== 'pen') { if (sel) clearSelection(); tool = 'pen'; }
+    saveItems(); updateToolbarState(); closePops();
   });
   function renderEraserPop() {
     esizesEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === eraserSize)));
@@ -3375,7 +3507,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
     let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}">\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
-    if (GRID_D) s += `<defs><path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/></defs>\n`;
+    s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}</defs>\n`;
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridUse}`;
@@ -3483,6 +3615,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return new TextDecoder().decode(buf);
   }
+  // one stroke from a saved file (fountain pen strokes keep their centre line and widths in data attributes)
+  function pathData(p) {
+    const A = n => p.getAttribute(n), f = A('data-t') === 'f';
+    return { d: f ? A('data-cd') : A('d'), c: A('data-c') || (f ? A('fill') : A('stroke')), w: parseFloat(f ? A('data-w') : A('stroke-width')),
+      o: p.hasAttribute(f ? 'fill-opacity' : 'stroke-opacity') ? parseFloat(A(f ? 'fill-opacity' : 'stroke-opacity')) : 1,
+      h: A('data-hl') === '1', k: A('data-k') === 'dark', t: A('data-t') || undefined, v: f ? (A('data-v') || '').split(' ').map(Number) : undefined };
+  }
   // reads a notebook SVG; pictures go into the browser's store
   async function parseNotebook(text) {
     let newPages, newSetup;
@@ -3497,11 +3636,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       } : null);
       const groups = [...doc.querySelectorAll('[data-page]')];
       if (!groups.length) throw new Error('notebook');
-      const readPath = p => cleanStroke({
-        d: p.getAttribute('d'), c: p.getAttribute('data-c') || p.getAttribute('stroke'), w: parseFloat(p.getAttribute('stroke-width')),
-        o: p.hasAttribute('stroke-opacity') ? parseFloat(p.getAttribute('stroke-opacity')) : 1,
-        h: p.getAttribute('data-hl') === '1', k: p.getAttribute('data-k') === 'dark'
-      });
+      const readPath = p => cleanStroke(pathData(p));
       newPages = groups.map(g => ({
         strokes: [...g.querySelectorAll('[class~="ink"] path')].map(readPath).filter(Boolean),
         notes: cleanNotes([...g.querySelectorAll('[data-sticky]')].map(el => ({
@@ -3512,8 +3647,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         images: [...g.querySelectorAll('[data-img]')].map(el => ({
           el, x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), h: parseFloat(el.getAttribute('data-h')), rot: +el.getAttribute('data-rot') || 0,
           crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1', over: el.getAttribute('data-over') === '1',
-          ink: [...el.querySelectorAll('.imgink path')].map(p => ({ d: p.getAttribute('d'), c: p.getAttribute('data-c') || p.getAttribute('stroke'), w: parseFloat(p.getAttribute('stroke-width')),
-            o: p.hasAttribute('stroke-opacity') ? parseFloat(p.getAttribute('stroke-opacity')) : 1, h: p.getAttribute('data-hl') === '1', k: p.getAttribute('data-k') === 'dark' }))
+          ink: [...el.querySelectorAll('.imgink path')].map(pathData)
         }))
       }));
       // embedded pictures go into the browser's store, the pages keep a reference
@@ -4142,7 +4276,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const clip = m.crop ? `${pdfNum(m.x)} ${pdfNum(m.y)} ${pdfNum(m.w)} ${pdfNum(m.h)} re W n ` : '';
       const g = m.op ? `/${gs(m.op, false)} gs ` : '';
       return `q ${g}${clip}${M} cm /${xo.name} Do Q\n` + (m.ink || []).map(st0 => {   // the writing on the image
-        const st = imgStrokeToPage(m, st0), path = st && pdfPath(st);
+        const st = imgStrokeToPage(m, st0);
+        if (st && st.t === 'f') {
+          const ol = fountainPts(st);
+          return ol.length < 3 ? '' : `q ${st.o < 1 ? `/${gs(st.o, false)} gs ` : ''}${hexRgb(fileColor(st.c, st.k))} rg ${ol.map((q, i) => `${pdfNum(q[0])} ${pdfNum(q[1])} ${i ? 'l' : 'm'}`).join(' ')} h f Q\n`;
+        }
+        const path = st && pdfPath(st);
         if (!path) return '';
         return `q ${st.o < 1 || st.h ? `/${gs(st.o, st.h)} gs ` : ''}${hexRgb(fileColor(st.c, st.k))} RG ${pdfNum(st.w)} w ${path} S Q\n`;
       }).join('');
@@ -4153,6 +4292,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const inkOps = strokes => {
         let o = '';
         for (const st of [...strokes.filter(s => s.h), ...strokes.filter(s => !s.h)]) {
+          if (st.t === 'f') {                   // fountain pen: its outline, filled
+            const ol = fountainPts(st);
+            if (ol.length < 3) continue;
+            const g = st.o < 1 ? `/${gs(st.o, false)} gs ` : '';
+            o += `q ${g}${hexRgb(fileColor(st.c, st.k))} rg ${ol.map((q, i) => `${pdfNum(q[0])} ${pdfNum(q[1])} ${i ? 'l' : 'm'}`).join(' ')} h f Q\n`;
+            continue;
+          }
           const path = pdfPath(st);
           if (!path) continue;
           const g = st.o < 1 || st.h ? `/${gs(st.o, st.h)} gs ` : '';
@@ -4367,7 +4513,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // while held (faded) it can also be moved with the same finger
   // a finger has to rest on a sticky note or image for a moment before it can move it (no accidental shifts)
   const PEEK_HOLD = 350;
-  function startPeek(e, n, delay, at, hold = delay > 0) {
+  // a long finger hold was recognised: a circle in the selection colour pops up under the finger and spreads over the whole note or image, fading out
+  function holdRipple(n, at) {
+    try {
+      const k = S(), w = objW(n), h = objH(n), rot = n.src && n.rot ? n.rot * Math.PI / 180 : 0;
+      let dx = at[0] - (n.x + w / 2), dy = at[1] - (n.y + h / 2);
+      if (rot) { const c = Math.cos(-rot), sn = Math.sin(-rot); [dx, dy] = [dx * c - dy * sn, dx * sn + dy * c]; }
+      const fx = (dx + w / 2) * k, fy = (dy + h / 2) * k, W_ = w * k, H_ = h * k;
+      const R = Math.max(...[[0, 0], [W_, 0], [0, H_], [W_, H_]].map(([x, y]) => Math.hypot(x - fx, y - fy)), 30);
+      const box = document.createElement('div');
+      box.className = 'ripple';
+      box.style.cssText = `left:${view.tx + n.x * k}px;top:${view.ty + n.y * k}px;width:${W_}px;height:${H_}px;${rot ? `transform:rotate(${n.rot}deg)` : ''}`;
+      box.innerHTML = `<i style="left:${fx - R}px;top:${fy - R}px;width:${2 * R}px;height:${2 * R}px"></i>`;
+      liveWrap.parentElement.appendChild(box);
+      const r0 = Math.min(1, 22 / R);
+      const an = box.firstChild.animate([
+        { transform: `scale(${r0 * 0.4})`, opacity: 0.7 },
+        { transform: `scale(${r0})`, opacity: 0.6, offset: 0.18 },
+        { transform: 'scale(1)', opacity: 0 }
+      ], { duration: 700, easing: 'cubic-bezier(.2,.6,.3,1)' });
+      an.onfinish = an.oncancel = () => box.remove();
+      setTimeout(() => box.remove(), 1200);
+    } catch (_) {}
+  }
+  function startPeek(e, n, delay, at, hold = delay > 0, ripple = false) {
     revealHandles(n.id);
     const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold };
     a.timer = setTimeout(() => {
@@ -4376,7 +4545,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (a.type === 'touch') selectObj(n);          // a long finger hold selects: its corner buttons show right away
       fadeNote(n, true);
       if (a.hold) vibrate(8);
+      if (a.type === 'touch' && (a.hold || ripple)) holdRipple(n, a.start);
     }, delay);
+    if (e.pointerType === 'touch' && !hold && !ripple)       // already selected: resting on it still answers
+      setTimeout(() => { if (active === a && !a.moved && !a.dead) { holdRipple(n, a.start); vibrate(8); } }, PEEK_HOLD);
     active = a;
   }
   function peekMove(e) {
@@ -4974,6 +5146,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function drawIncrement() {
     const p = active.pts, n = p.length;
     if (n < 2) return;
+    if (active.pr) lctx.lineWidth = active.width * (active.pr[n - 2] || 1);   // fountain pen: this piece's width
     lctx.beginPath();
     if (n === 2) { const m = mid(p[0], p[1]); lctx.moveTo(p[0][0], p[0][1]); lctx.lineTo(m[0], m[1]); }
     else {
@@ -4992,6 +5165,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearCtx(tctx);
     const p = active.pts, n = p.length;
     if (!n) return;
+    if (active.pr) tctx.lineWidth = active.width * (active.pr[n - 1] || 1);
     const start = n >= 2 ? mid(p[n - 2], p[n - 1]) : p[0];
     tctx.beginPath();
     tctx.moveTo(start[0], start[1]);
@@ -5005,14 +5179,49 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     tctx.stroke();
   }
-  function feed(x, y) {
+  // pressure (pen; mouse and finger count as medium) and speed shape the fountain pen; pressure darkens the pencil
+  function penFactor(a, pr, t, x, y) {
+    const pres = a.type === 'pen' && pr > 0 && pr <= 1 ? pr : 0.5;
+    if (a.kind === 'pencil') { a.ps = (a.ps || 0) + pres; a.pn = (a.pn || 0) + 1; }
+    if (a.kind !== 'fountain') return;
+    const l = a.pts[a.pts.length - 1], dt = a.lt != null && t ? Math.max(1, t - a.lt) : 16;
+    const d = l ? Math.hypot(x - l[0], y - l[1]) : 0, v = d / dt;    // mm per ms
+    // the nib is slanted like an italic nib held by a right hand: thin going up to the right, full going down
+    if (d > 0.05) a.dir = Math.atan2(y - l[1], x - l[0]);
+    const nib = a.dir == null ? 0.85 : 0.5 + 0.62 * Math.abs(Math.sin(a.dir + 0.7));
+    const f = (0.45 + 0.95 * Math.pow(pres, 0.9)) * nib * Math.max(0.6, Math.min(1.1, 1.1 - 0.45 * v));
+    a.f = a.f == null ? f : a.f + (f - a.f) * 0.35;
+    if (t) a.lt = t;
+  }
+  function feed(x, y, pr, t) {
     const a = active, p = a.pts;
     (a.raw || (a.raw = [])).push([x, y]);
-    if (!p.length) { a.sx = x; a.sy = y; p.push([x, y]); return; }
+    penFactor(a, pr, t, x, y);
+    if (!p.length) { a.sx = x; a.sy = y; p.push([x, y]); if (a.kind === 'fountain') a.pr = [a.f || 1]; return; }
     a.sx += (x - a.sx) * SMOOTH; a.sy += (y - a.sy) * SMOOTH;
     const l = p[p.length - 1];
     if (Math.hypot(a.sx - l[0], a.sy - l[1]) < MIN_D) return;
-    p.push([a.sx, a.sy]); drawIncrement();
+    p.push([a.sx, a.sy]);
+    if (a.kind === 'fountain') a.pr.push(a.f || 1);
+    drawIncrement();
+  }
+  // after the points changed (straightened, smoothed): each point takes the width of the nearest old point
+  function resyncPr(a, oldPts, oldPr) {
+    if (!oldPr || !oldPts) return;
+    a.pr = a.pts.map(q => { let bi = 0, bd = Infinity; oldPts.forEach((o, i) => { const d = (o[0] - q[0]) ** 2 + (o[1] - q[1]) ** 2; if (d < bd) { bd = d; bi = i; } }); return oldPr[bi] || 1; });
+  }
+  // the finished stroke as stored: simplified, with the fountain pen's widths (and tapered ends) or the pencil's darkness
+  function strokeFrom(a, map = q => q) {
+    const K = simplifyIdx(a.pts), pts = K.map(i => map(a.pts[i])), kind = a.h ? 'pen' : a.kind;
+    let v;
+    if (kind === 'fountain' && a.pr && a.pr.length === a.pts.length) {
+      const n = a.pts.length, len = [0];
+      for (let i = 1; i < n; i++) len.push(len[i - 1] + Math.hypot(a.pts[i][0] - a.pts[i - 1][0], a.pts[i][1] - a.pts[i - 1][1]));
+      const tot = len[n - 1], tap = (d, L) => L <= 0 || d >= L ? 1 : 0.25 + 0.75 * Math.sin(d / L * Math.PI / 2);
+      v = K.map(i => a.pr[i] * Math.min(tap(len[i], Math.min(1.5, tot / 3)), tap(tot - len[i], Math.min(2.5, tot / 3))));
+    }
+    const o = kind === 'pencil' ? a.opacity * Math.min(1, 0.4 + 0.8 * (a.pn ? a.ps / a.pn : 0.5)) : a.opacity;
+    return cleanStroke({ d: toPath(pts), c: a.color, w: a.width, o: Math.max(0.05, Math.round(o * 100) / 100), h: a.h, k: a.k, t: kind === 'fountain' ? 'f' : kind === 'pencil' ? 'p' : undefined, v });
   }
   // ---- Hold the pen at the end of a line: a slider sets the smoothing, from none (as written) to a straight line ----
   const HOLD = { line: 'What you drew since the start (or the last corner) becomes a straight line; keep drawing from its end, hold again for the next corner',
@@ -5035,6 +5244,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!A || p.length - s0 < 3 || Math.hypot(B[0] - A[0], B[1] - A[1]) < 2) return;
     const L = Math.hypot(B[0] - A[0], B[1] - A[1]), u = [(B[0] - A[0]) / L, (B[1] - A[1]) / L], e = Math.min(0.15, L / 4);
     a.pts = p.slice(0, s0 + 1).concat([[A[0] + u[0] * e, A[1] + u[1] * e], [B[0] - u[0] * e, B[1] - u[1] * e], B]);
+    resyncPr(a, p, a.pr);
     a.seg = a.pts.length - 1;
     a.raw = a.pts.slice();
     redrawActive(); drawTip([]);
@@ -5077,7 +5287,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function startSmooth(a) {
     if (!a.raw || a.raw.length < 3 || pathLen(a.raw) < 3) return;
-    a.sm = { x0: a.hx, y0: a.hy, amt: SM_DEF, orig: a.pts.slice(), raw: a.raw.slice(), live: false };
+    a.sm = { x0: a.hx, y0: a.hy, amt: SM_DEF, orig: a.pts.slice(), origPr: a.pr && a.pr.slice(), raw: a.raw.slice(), live: false };
     clearCtx(tctx);
     const el = $('smSlide');
     el.hidden = false;
@@ -5100,6 +5310,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sm.live = true;
     sm.amt = clamp01((e.clientX - sm.trackX) / SM_W);
     a.pts = smoothLine(sm.raw, sm.amt);
+    resyncPr(a, sm.orig, sm.origPr);
     redrawActive();
     const l = a.pts[a.pts.length - 1]; a.sx = l[0]; a.sy = l[1];
     drawTip([]);                                   // the last piece up to the end
@@ -5108,7 +5319,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function endSmooth(a, resume) {
     $('smSlide').hidden = true;
-    if (resume && a.sm) { a.pts = a.sm.orig; a.hx = undefined; redrawActive(); }
+    if (resume && a.sm) { a.pts = a.sm.orig; if (a.sm.origPr) a.pr = a.sm.origPr; a.hx = undefined; redrawActive(); }
     a.sm = null;
   }
 
@@ -5163,8 +5374,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return best;
   }
-  function simplify(p) {
-    if (p.length < 4) return p.slice();
+  const simplify = p => p.length < 4 ? p.slice() : simplifyIdx(p).map(i => p[i]);
+  function simplifyIdx(p) {
+    if (p.length < 4) return p.map((_, i) => i);
     let K = rdpIdx(p, SIMPLIFY_MM);
     for (let round = 0; round < 12; round++) {
       const add = new Set();
@@ -5185,7 +5397,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       K = [...new Set([...K, ...add])].sort((x, y) => x - y);
       if (K.length === before) break;
     }
-    return K.map(i => p[i]);
+    return K;
   }
   function rdpIdx(p, eps) {
     const keep = new Uint8Array(p.length); keep[0] = keep[p.length - 1] = 1;
@@ -5275,6 +5487,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     geo.set(st, g);
     return g;
   }
+  function widthNear(st, q) {                    // a fountain stroke's width factor at the point nearest to q
+    const p = parsePoints(st.d) || [], v = st.v || [];
+    let bi = 0, bd = Infinity;
+    p.forEach((o, i) => { const d = (o[0] - q[0]) ** 2 + (o[1] - q[1]) ** 2; if (d < bd) { bd = d; bi = i; } });
+    return v.length === p.length ? v[bi] : v[Math.round(bi * (v.length - 1) / Math.max(1, p.length - 1))] || 1;
+  }
   function distToSeg(q, a, b) {
     const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
     const t = l2 ? Math.max(0, Math.min(1, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / l2)) : 0;
@@ -5321,7 +5539,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (keep.every(Boolean)) { out.push(st); continue; }
       changed = true;
       let run = [];
-      const flush = () => { if (run.length >= 2) out.push({ ...st, d: toPath(simplify(run)) }); run = []; };
+      const flush = () => {
+        if (run.length >= 2) {
+          const sp = simplify(run), piece = { ...st, d: toPath(sp) };
+          if (st.v) piece.v = sp.map(q => widthNear(st, q));
+          out.push(piece);
+        }
+        run = [];
+      };
       g.pts.forEach((q, i) => { if (keep[i]) run.push(q); else flush(); });
       flush();
     }
@@ -5658,11 +5883,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       else if (it.type === 'preset') {
         const b = it.brush;
         n.w = b.width; n.c = b.color; n.o = b.opacity;
-        if (b.highlighter) n.h = 1; else delete n.h;
+        if (b.highlighter) { n.h = 1; delete n.t; delete n.v; } else delete n.h;
         if (b.pickedOnDark) n.k = 1; else delete n.k;
       } else {
         n.c = it.paint.color; n.o = it.paint.opacity;
-        if (it.paint.highlighter) n.h = 1; else delete n.h;
+        if (it.paint.highlighter) { n.h = 1; delete n.t; delete n.v; } else delete n.h;
         if (it.paint.pickedOnDark) n.k = 1; else delete n.k;
       }
       map.set(st, n);
@@ -5867,12 +6092,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const q0 = a.pts[0];
         if (a.pts.some(q => Math.hypot(q[0] - q0[0], q[1] - q0[1]) > 1.5)) return;
         finishStroke(null, false);
-        startPeek({ pointerId: id, pointerType: 'touch' }, held, 0, q0);
+        startPeek({ pointerId: id, pointerType: 'touch' }, held, 0, q0, false, true);
       }, 450);
     }
     // while writing on a sticky note, the live ink is cut at its edge like the finished stroke
     liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + noteW(note)) * S()}px ${vh - view.ty - (note.y + noteHt(note)) * S()}px ${view.tx + note.x * S()}px)` : '';
-    liveWrap.style.opacity = br.opacity;   // whole stroke at one opacity, no darker overlaps
+    active.kind = br.highlighter ? 'pen' : br.kind || 'pen';
+    liveWrap.style.opacity = br.opacity * (active.kind === 'pencil' ? 0.8 : 1);   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
     liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
     styleCtx(); stage.classList.add('drawing'); handlesWhileWriting(true);
@@ -5901,14 +6127,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (a.sm) endSmooth(a, !a.sm.live);
     if (commit && e && e.type === 'pointerup' && !smoothed) {
       const [x, y] = toMM(e), l = a.pts[a.pts.length - 1];
-      if (Math.hypot(x - l[0], y - l[1]) >= MIN_D) { a.pts.push([x, y]); drawIncrement(); }
+      if (Math.hypot(x - l[0], y - l[1]) >= MIN_D) { a.pts.push([x, y]); if (a.pr) a.pr.push(a.pr[a.pr.length - 1] || 1); drawIncrement(); }
     }
     active = null;
     stage.classList.remove('drawing'); handlesWhileWriting(false);
     if (!commit) { clearCtx(lctx); clearCtx(tctx); return; }
     if (a.img) {                             // on the selected image: stored in the image's units, moves with it
       const m = a.img;
-      const st = imagesOf(pages[cur]).includes(m) && cleanStroke({ d: toPath(simplify(a.pts)), c: a.color, w: a.width, o: a.opacity, h: a.h, k: a.k });
+      const st = imagesOf(pages[cur]).includes(m) && strokeFrom(a);
       const pts = st && parsePoints(st.d);
       if (pts) {
         remember();
@@ -5922,7 +6148,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (a.note) {                            // on a sticky note: stored in its own coordinates
       remember();
-      const st = cleanStroke({ d: toPath(simplify(a.pts.map(q => [q[0] - a.note.x, q[1] - a.note.y]))), c: a.color, w: a.width, o: a.opacity, h: a.h, k: a.k });
+      const st = strokeFrom(a, q => [q[0] - a.note.x, q[1] - a.note.y]);
       if (st) a.note.strokes.push(st);
       renderNotes(); mapInkChanged(); scheduleSave();
       const serial = ++strokeSerial;
@@ -5938,10 +6164,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
     }
     remember();
-    const st = cleanStroke({ d: toPath(simplify(a.pts)), c: a.color, w: a.width, o: a.opacity, h: a.h, k: a.k });
+    const st = strokeFrom(a);
     pages[cur].strokes.push(st);
     let target = pageInk;
     if (st.h) target = pageInk.querySelector('.hlg') || pageInk;
+    else if (st.t === 'p') {                   // pencil: into the grain group
+      target = pageInk.querySelector('.pcl');
+      if (!target) { pageInk.insertAdjacentHTML('beforeend', '<g class="pcl" mask="url(#rrGrain)"></g>'); target = pageInk.lastElementChild; }
+    }
     target.insertAdjacentHTML('beforeend', pathMarkup(st, false, pages[cur].strokes.length - 1));
     mapInkChanged();
     scheduleSave();
@@ -6672,7 +6902,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active.move) { selMove(e); return; }
     if (active.sm && smoothMove(e)) return;
     holdWatch(e);
-    for (const s of (list.length ? list : [e])) { const [x, y] = toMM(s); feed(x, y); }
+    for (const s of (list.length ? list : [e])) { const [x, y] = toMM(s); feed(x, y, s.pressure, s.timeStamp); }
     drawTip((e.getPredictedEvents && e.getPredictedEvents()) || []);
   });
 
@@ -6966,6 +7196,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'size': return `Stroke size · ${it.width} mm${el.disabled ? ' · choose a pen first' : ''}`;
       case 'color': return `Colour · ${it.paint.color.toUpperCase()}${it.paint.highlighter ? ', highlighter' : ''}${el.disabled ? ' · choose a pen first' : ''}`;
       case 'eraser': return 'Eraser';
+      case 'pentype': return `Pen type · ${KINDS[brush().highlighter ? 'pen' : brush().kind || 'pen']}`;
       case 'lasso': return 'Select';
       case 'sticky': return `Sticky notes · ${notesShown ? 'shown' : 'hidden'}`;
       case 'image': return 'Image · camera, gallery or paste';
