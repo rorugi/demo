@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_67</title>
+<title>RRnotes_68</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -250,6 +250,10 @@
   .imgui [data-iact="move"] { cursor: grab; }
   .imgui [data-iact="size"] { cursor: nwse-resize; }
   .imgpop { width: 252px; }
+  .imgpop h3 output { float: right; font-weight: 600; opacity: 1; }
+  .croppop { width: 268px; }
+  .seg.crop3 { grid-template-columns: repeat(3, 1fr); }
+  .seg.crop3 .on { background: var(--brand); color: var(--brand-fg); font-weight: 600; }
   .imgrot button { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; }
   .imgrot button svg { width: 16px; height: 16px; }
   .imgsizebox { display: grid; gap: 8px; padding: 6px 4px; font-size: 14px; }
@@ -957,7 +961,7 @@
   .noteghost { position: fixed; z-index: 41; pointer-events: none; box-shadow: 0 10px 24px rgba(0, 0, 0, .3); transform: scale(1.12); transform-origin: var(--ox) var(--oy); }
   .noteghost svg { display: block; width: 100%; height: 100%; }
   .thumb.droptarget .paper { outline: 3px dashed var(--brand); outline-offset: 4px; }
-  .thumb [data-ovnote].lifted { opacity: .25; }
+  .thumb [data-ovnote].lifted, .thumb [data-ovimg].lifted { opacity: .25; }
 
   #printArea { display: none; }
 
@@ -1067,7 +1071,21 @@
     <button type="button" id="imgFront">Bring to front</button>
     <button type="button" id="imgBack">Send to back</button>
   </div>
+  <button type="button" class="wide-btn subtle" id="imgCrop">Crop…</button>
+  <h3>Opacity <output id="imgOpVal">100%</output></h3>
+  <input type="range" class="opacity" id="imgOp" min="10" max="100" step="5" value="100" aria-label="Image opacity">
+  <label class="hlrow" for="imgLock"><span>Lock image<span class="sub">It can't be moved or resized by accident</span></span><span class="switch"><input type="checkbox" id="imgLock"><i></i></span></label>
+  <button type="button" class="wide-btn subtle" id="imgMove">Move to page…</button>
   <button type="button" class="wide-btn" id="imgDelete">Delete image</button>
+</div>
+<!-- cropping an image -->
+<div class="pop croppop" id="cropPop" role="dialog" aria-label="Crop image" hidden>
+  <div class="poptitle">Crop · drag the corners</div>
+  <div class="seg crop3">
+    <button type="button" id="cropReset">Full image</button>
+    <button type="button" id="cropCancel">Cancel</button>
+    <button type="button" id="cropDone" class="on">Done</button>
+  </div>
 </div>
 
 <!-- additional toolbar: tap its handle -->
@@ -1442,7 +1460,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_67';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_68';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1778,8 +1796,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function cleanImage(m) {
     if (!m || typeof m !== 'object' || typeof m.src !== 'string' || !m.src) return null;
     const w = +m.w > 1 && +m.w < 2000 ? +m.w : 50, h = +m.h > 1 && +m.h < 2000 ? +m.h : 50;
-    return { id: typeof m.id === 'string' && m.id ? m.id : Math.random().toString(36).slice(2, 9), src: m.src,
+    const o = { id: typeof m.id === 'string' && m.id ? m.id : Math.random().toString(36).slice(2, 9), src: m.src,
       x: isFinite(m.x) ? +m.x : 10, y: isFinite(m.y) ? +m.y : 10, w, h, rot: [0, 90, 180, 270].includes(+m.rot) ? +m.rot : 0 };
+    // crop: the visible part of the picture, as fractions of the (unturned) picture; opacity; lock
+    const c = Array.isArray(m.crop) && m.crop.length === 4 ? m.crop.map(Number) : null;
+    if (c && c.every(v => v >= 0 && v <= 1) && c[2] - c[0] > 0.01 && c[3] - c[1] > 0.01 && !(c[0] === 0 && c[1] === 0 && c[2] === 1 && c[3] === 1)) o.crop = c;
+    if (+m.op >= 0.1 && +m.op < 1) o.op = +m.op;
+    if (m.lock) o.lock = true;
+    return o;
   }
   const cleanImages = list => (Array.isArray(list) ? list : []).map(cleanImage).filter(Boolean);
   function cleanNote(n) {
@@ -1931,7 +1955,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // a snapshot also remembers which strokes were selected, so undo/redo keep the selection
   // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
   const copyNotes = list => (list || []).map(n => ({ ...n, strokes: n.strokes.slice() }));
-  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m })) })), cur,
+  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })) })), cur,
     selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
     markChanged();
@@ -1941,7 +1965,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
   }
   function restore(s) {
-    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m })); return e.page; });
+    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); return e.page; });
     if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
     const again = s.selIdx && s.selIdx.length ? s.selIdx.map(i => pages[cur].strokes[i]).filter(Boolean) : null;
@@ -2407,6 +2431,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pop.hidden = false; placePop();
   }
   function closePops() {
+    if (openPop && openPop.id === 'cropPop' && typeof endCrop === 'function') { const p = openPop; openPop = null; p.hidden = true; endCrop(true); popAnchor = null; return; }
     if (openPop) openPop.hidden = true;
     if (openPop === penPop) { penEdit = { kind: 'pen' }; pk.open = false; }
     openPop = popAnchor = null;
@@ -3254,7 +3279,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           strokes: [...el.querySelectorAll('.nink path')].map(readPath).filter(Boolean)
         }))),
         images: [...g.querySelectorAll('[data-img]')].map(el => ({
-          el, x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), h: parseFloat(el.getAttribute('data-h')), rot: +el.getAttribute('data-rot') || 0
+          el, x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), h: parseFloat(el.getAttribute('data-h')), rot: +el.getAttribute('data-rot') || 0,
+          crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1'
         }))
       }));
       // embedded pictures go into the browser's store, the pages keep a reference
@@ -3598,10 +3624,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const imageOps = pg => (pg.images || []).map(m => {
       const xo = xobj.get(m.src);
       if (!xo) return '';
-      const r = m.rot % 180 !== 0, iw = r ? m.h : m.w, ih = r ? m.w : m.h, t = m.rot * Math.PI / 180, co = Math.cos(t), si = Math.sin(t);
-      const cx = m.x + m.w / 2, cy = m.y + m.h / 2;
+      const F = fullBox(m), r = m.rot % 180 !== 0, iw = r ? F.h : F.w, ih = r ? F.w : F.h, t = m.rot * Math.PI / 180, co = Math.cos(t), si = Math.sin(t);
+      const cx = F.x + F.w / 2, cy = F.y + F.h / 2;
       const M = [iw * co, iw * si, ih * si, -ih * co, cx - iw / 2 * co - ih / 2 * si, cy - iw / 2 * si + ih / 2 * co].map(pdfNum).join(' ');
-      return `q ${M} cm /${xo.name} Do Q\n`;
+      const clip = m.crop ? `${pdfNum(m.x)} ${pdfNum(m.y)} ${pdfNum(m.w)} ${pdfNum(m.h)} re W n ` : '';
+      const g = m.op ? `/${gs(m.op, false)} gs ` : '';
+      return `q ${g}${clip}${M} cm /${xo.name} Do Q\n`;
     }).join('');
     const streams = list.map(pg => {
       let c = `q ${pdfNum(k)} 0 0 ${pdfNum(-k)} 0 ${hPt} cm 1 J 1 j\n` + gridOps + imageOps(pg);
@@ -3763,10 +3791,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function peekMove(e) {
     const a = active, n = a.note, [x, y] = toMM(e);
+    if (n.lock) return;
     if (!a.moved && Math.hypot(x - a.start[0], y - a.start[1]) < 1.5) return;
     if (!a.on) { clearTimeout(a.timer); a.on = true; }
     a.moved = true;
-    n.x = Math.max(0, Math.min(W - objW(n), x - a.off[0])); n.y = Math.max(0, Math.min(H - objH(n), y - a.off[1]));
+    if (n.src) { n.x = Math.max(-n.w + 5, Math.min(W - 5, x - a.off[0])); n.y = Math.max(-n.h + 5, Math.min(H - 5, y - a.off[1])); }
+    else { n.x = Math.max(0, Math.min(W - objW(n), x - a.off[0])); n.y = Math.max(0, Math.min(H - objH(n), y - a.off[1])); }
     if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; n.src ? renderImages() : renderNotes(); if (active === a) fadeNote(n, true); });
   }
   function endPeek() {
@@ -3841,25 +3871,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (openPop) placePop();
   }));
   // move a sticky note to another page: pick the page in the overview
-  let ovPick = null;                             // { note } while choosing a page for it
+  let ovPick = null;                             // { kind: 'note' | 'img', obj } while choosing a page for it
+  // what can be moved between pages
+  const OBJ = {
+    note: { key: 'notes', w: o => noteW(o), h: o => noteHt(o), name: 'sticky note', markup: o => noteMarkup({ ...o, folded: false }, 'static') },
+    img: { key: 'images', w: o => o.w, h: o => o.h, name: 'image', markup: o => imageMarkup(o, 'static') }
+  };
+  const placeOn = (o, kind, x, y) => {           // sticky notes stay on the page, images at least partly
+    const w = OBJ[kind].w(o), h = OBJ[kind].h(o);
+    if (kind === 'note') { o.x = Math.max(0, Math.min(W - w, x)); o.y = Math.max(0, Math.min(H - h, y)); }
+    else { o.x = Math.max(Math.min(0, W - w), Math.min(Math.max(0, W - w), x)); o.y = Math.max(Math.min(0, H - h), Math.min(Math.max(0, H - h), y)); }
+  };
   $('noteMove').addEventListener('click', () => {
     const n = noteEdit.note;
     if (!n || !notesOf(pages[cur]).includes(n)) { closePops(); return; }
     closePops();
-    ovPick = { note: n };
+    ovPick = { kind: 'note', obj: n };
     openOverview();
   });
   function moveNoteTo(i) {
-    const n = ovPick && ovPick.note;
+    const pick = ovPick;
     ovPick = null;
-    const src = pages.find(pg => notesOf(pg).includes(n));
+    const n = pick && pick.obj, d = pick && OBJ[pick.kind], src = n && pages.find(pg => (pg[d.key] || []).includes(n));
     if (!n || !src || i === pages.indexOf(src)) { goTo(i); return; }
     remember();
-    src.notes.splice(src.notes.indexOf(n), 1);
-    n.x = Math.max(0, Math.min(W - noteW(n), n.x)); n.y = Math.max(0, Math.min(H - noteHt(n), n.y));
-    notesOf(pages[i]).push(n);
+    src[d.key].splice(src[d.key].indexOf(n), 1);
+    placeOn(n, pick.kind, n.x, n.y);
+    (pages[i][d.key] || (pages[i][d.key] = [])).push(n);
     goTo(i);
-    toast(`Sticky note moved to page ${i + 1}.`);
+    toast(`${d.name[0].toUpperCase() + d.name.slice(1)} moved to page ${i + 1}.`);
   }
   $('notesShownToggle').addEventListener('change', e => setNotesShown(e.target.checked));
   $('noteDelete').addEventListener('click', async () => {
@@ -3951,30 +3991,68 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const imgFrac = (m, k) => +(+k).toFixed(3);
   // one image: the picture turned by rot inside its box
-  function imageMarkup(m, mode) {
-    const rec = imgStore.get(m.src), r = m.rot % 180 !== 0, iw = r ? m.h : m.w, ih = r ? m.w : m.h;
-    const cx = m.x + m.w / 2, cy = m.y + m.h / 2, f = v => +(+v).toFixed(3);
+  // where a crop rectangle (fractions of the unturned picture) lands in the turned box: [u0, v0, u1, v1]
+  function cropToBox(c, rot) {
+    const map = (s, t) => rot === 90 ? [1 - t, s] : rot === 180 ? [1 - s, 1 - t] : rot === 270 ? [t, 1 - s] : [s, t];
+    const a = map(c[0], c[1]), b = map(c[2], c[3]);
+    return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])];
+  }
+  function boxToCrop(u, rot) {
+    const inv = (x, y) => rot === 90 ? [y, 1 - x] : rot === 180 ? [1 - x, 1 - y] : rot === 270 ? [1 - y, x] : [x, y];
+    const a = inv(u[0], u[1]), b = inv(u[2], u[3]);
+    return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])];
+  }
+  // the box of the whole (uncropped) picture on the page
+  function fullBox(m) {
+    if (!m.crop) return { x: m.x, y: m.y, w: m.w, h: m.h };
+    const u = cropToBox(m.crop, m.rot), w = m.w / (u[2] - u[0]), h = m.h / (u[3] - u[1]);
+    return { x: m.x - u[0] * w, y: m.y - u[1] * h, w, h };
+  }
+  // one image: the whole picture, turned, seen through its (cropped) box
+  function imageMarkup(m, mode, F, op) {
+    const rec = imgStore.get(m.src), f = v => +(+v).toFixed(3);
+    F = F || fullBox(m);
+    const r = m.rot % 180 !== 0, iw = r ? F.h : F.w, ih = r ? F.w : F.h, cx = F.x + F.w / 2, cy = F.y + F.h / 2;
     const tr = `translate(${f(cx)} ${f(cy)})${m.rot ? ` rotate(${m.rot})` : ''}`;
-    const body = rec ? `<image href="${mode === 'file' ? rec.data : rec.url}" x="${f(-iw / 2)}" y="${f(-ih / 2)}" width="${f(iw)}" height="${f(ih)}" preserveAspectRatio="none"/>`
+    const pic = rec ? `<image href="${mode === 'file' ? rec.data : rec.url}" x="${f(-iw / 2)}" y="${f(-ih / 2)}" width="${f(iw)}" height="${f(ih)}" preserveAspectRatio="none"/>`
       : `<rect x="${f(-iw / 2)}" y="${f(-ih / 2)}" width="${f(iw)}" height="${f(ih)}" fill="#ccc" opacity=".5"/>`;
-    const data = mode === 'file' ? ` data-img="1" data-x="${f(m.x)}" data-y="${f(m.y)}" data-w="${f(m.w)}" data-h="${f(m.h)}" data-rot="${m.rot}"` : '';
-    return `<g${mode === 'ui' ? ` data-iid="${m.id}"` : ''}${data} transform="${tr}">${body}</g>`;
+    const body = `<g transform="${tr}">${pic}</g>`;
+    const inner = m.crop || F !== undefined && (F.w !== m.w || F.h !== m.h)
+      ? `<svg x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}" viewBox="${f(m.x)} ${f(m.y)} ${f(m.w)} ${f(m.h)}" overflow="hidden">${body}</svg>` : body;
+    const data = mode === 'file' ? ` data-img="1" data-x="${f(m.x)}" data-y="${f(m.y)}" data-w="${f(m.w)}" data-h="${f(m.h)}" data-rot="${m.rot}"` +
+      (m.crop ? ` data-crop="${m.crop.map(v => +v.toFixed(5)).join(' ')}"` : '') + (m.op ? ` data-op="${m.op}"` : '') + (m.lock ? ' data-lock="1"' : '') : '';
+    const o = op !== undefined ? op : m.op;
+    return `<g${mode === 'ui' ? ` data-iid="${m.id}"` : ''}${data}${o ? ` opacity="${o}"` : ''}>${inner}</g>`;
   }
   const imagesMarkup = (pg, mode) => pg && pg.images && pg.images.length ? pg.images.map(m => imageMarkup(m, mode)).join('') : '';
+  let cropSt = null;                              // { m, F, C, before } while cropping
   function renderImages() {
     const list = imagesOf(pages[cur]);
-    imgLayer.innerHTML = imagesMarkup(pages[cur], 'ui');
+    imgLayer.innerHTML = list.map(m => {
+      if (!cropSt || cropSt.m !== m) return imageMarkup(m, 'ui');
+      const C = cropSt.C, view = { ...m, x: C.x, y: C.y, w: C.w, h: C.h, crop: null };
+      return imageMarkup({ ...m, crop: null }, 'ui', cropSt.F, 0.3) + imageMarkup(view, 'ui', cropSt.F, m.op);
+    }).join('');
     // handles: move (top left), options (top right), size (bottom right)
     const h = Math.max(4.5, 24 / S()), r = h / 2, f = v => +(+v).toFixed(3), sw = f(1.3 / S());
     const chip = (cx, cy, act, inner) => `<g data-iact="${act}"><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * 0.9)}" fill="rgba(255,255,255,.88)" stroke="rgba(0,0,0,.35)" stroke-width="${sw}"/><g transform="translate(${f(cx - r * 0.55)} ${f(cy - r * 0.55)}) scale(${f(r * 1.1 / 24)})" fill="none" stroke="#33352f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${inner}</g></g>`;
     imgUi.innerHTML = list.map(m => {
       const m0 = Math.min(r, m.w / 4, m.h / 4) + 0.3;
+      if (cropSt && cropSt.m === m) {             // crop: a frame and four corner handles
+        const C = cropSt.C, k = r * 0.9;
+        return `<g data-iid="${m.id}" class="cropui"><rect x="${f(C.x)}" y="${f(C.y)}" width="${f(C.w)}" height="${f(C.h)}" fill="none" stroke="#fff" stroke-width="${f(2.2 / S())}"/>` +
+          `<rect x="${f(C.x)}" y="${f(C.y)}" width="${f(C.w)}" height="${f(C.h)}" fill="none" stroke="#1e2a44" stroke-width="${f(1 / S())}" stroke-dasharray="${f(4 / S())} ${f(3 / S())}"/>` +
+          [['tl', C.x, C.y], ['tr', C.x + C.w, C.y], ['bl', C.x, C.y + C.h], ['br', C.x + C.w, C.y + C.h]].map(([c, x, y]) =>
+            `<g data-iact="crop-${c}"><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 1.6)}" fill="transparent"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 0.55)}" fill="#fff" stroke="#1e2a44" stroke-width="${sw}"/></g>`).join('') + '</g>';
+      }
+      if (m.lock) return `<g data-iid="${m.id}">` + chip(m.x + m.w - m0, m.y + m0, 'gear', '<path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/>') + '</g>';   // locked: options only
       return `<g data-iid="${m.id}">` +
         chip(m.x + m0, m.y + m0, 'move', '<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>') +
         chip(m.x + m.w - m0, m.y + m0, 'gear', '<path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/>') +
         chip(m.x + m.w - m0, m.y + m.h - m0, 'size', '<path d="M8 20h12V8M20 20L5 5"/>') + '</g>';
     }).join('');
     if (openPop === imgPop && imgEdit) { const g = imgUi.querySelector(`[data-iid="${imgEdit.id}"] [data-iact="gear"]`); if (g) popAnchor = g; }
+    if (openPop === cropPop && cropSt) { const g = imgUi.querySelector(`[data-iid="${cropSt.m.id}"]`); if (g) popAnchor = g; }
   }
   function imageAt(x, y) {
     const list = imagesOf(pages[cur]);
@@ -3990,13 +4068,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (act === 'gear') {
       if (openPop === imgPop && imgEdit === m) closePops();
       else {
-        imgEdit = m; showPop(imgPop, el);
+        imgEdit = m; renderImgPop(); showPop(imgPop, el);
         imgPopGuard = true; clearTimeout(imgGuardTimer);                // the opening tap must not press a button in it
         imgGuardTimer = setTimeout(() => { imgPopGuard = false; }, 2000);
         window.addEventListener('pointerup', () => { clearTimeout(imgGuardTimer); imgGuardTimer = setTimeout(() => { imgPopGuard = false; }, 350); }, { once: true, capture: true });
       }
       return true;
     }
+    if (act.startsWith('crop-')) { active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], c0: { ...cropSt.C }, moved: false }; return true; }
+    if (m.lock) return true;
     active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], m0: { ...m }, before: snapshot(), moved: false };
     return true;
   }
@@ -4004,7 +4084,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const a = active, m = a.img, [x, y] = toMM(e), dx = x - a.start[0], dy = y - a.start[1];
     if (!a.moved && Math.hypot(dx, dy) < 0.5) return;
     a.moved = true;
-    if (a.imgDrag === 'move') {
+    if (a.imgDrag.startsWith('crop-')) {         // a corner of the crop window, inside the whole picture, at least 5 mm
+      const F = cropSt.F, c = a.c0, k = a.imgDrag.slice(5), MIN = 5;
+      let x0 = c.x, y0 = c.y, x1 = c.x + c.w, y1 = c.y + c.h;
+      if (k[1] === 'l') x0 = Math.max(F.x, Math.min(x1 - MIN, c.x + dx)); else x1 = Math.min(F.x + F.w, Math.max(x0 + MIN, c.x + c.w + dx));
+      if (k[0] === 't') y0 = Math.max(F.y, Math.min(y1 - MIN, c.y + dy)); else y1 = Math.min(F.y + F.h, Math.max(y0 + MIN, c.y + c.h + dy));
+      cropSt.C = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+    } else if (a.imgDrag === 'move') {
       m.x = Math.max(-m.w + 5, Math.min(W - 5, a.m0.x + dx)); m.y = Math.max(-m.h + 5, Math.min(H - 5, a.m0.y + dy));
     } else {                                     // keep the proportions, at least 8 mm
       const ar = a.m0.w / a.m0.h;
@@ -4016,16 +4102,74 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function endImgDrag() {
     const a = active;
     active = null;
+    if (a.imgDrag.startsWith('crop-')) { renderImages(); if (openPop) placePop(); return; }
     if (a.moved) { remember(a.before); renderImages(); mapInkChanged(); scheduleSave(); }
   }
   const imgPop = $('imgPop'), imgAddPop = $('imgAddPop');
   imgPop.addEventListener('click', e => { if (imgPopGuard) { e.preventDefault(); e.stopPropagation(); } }, true);
-  const imgChange = fn => { const m = imgEdit; if (!m || !imagesOf(pages[cur]).includes(m)) { closePops(); return; } remember(); fn(m, imagesOf(pages[cur])); renderImages(); mapInkChanged(); scheduleSave(); };
+  const imgChange = fn => { const m = imgEdit; if (!m || !imagesOf(pages[cur]).includes(m)) { closePops(); return; } remember(); fn(m, imagesOf(pages[cur])); renderImages(); renderImgPop(); mapInkChanged(); scheduleSave(); };
   const turn = (m, d) => { const cx = m.x + m.w / 2, cy = m.y + m.h / 2; [m.w, m.h] = [m.h, m.w]; m.x = cx - m.w / 2; m.y = cy - m.h / 2; m.rot = (m.rot + d + 360) % 360; };
   $('imgRotL').addEventListener('click', () => imgChange(m => turn(m, -90)));
   $('imgRotR').addEventListener('click', () => imgChange(m => turn(m, 90)));
   $('imgFront').addEventListener('click', () => imgChange((m, l) => { l.splice(l.indexOf(m), 1); l.push(m); }));
   $('imgBack').addEventListener('click', () => imgChange((m, l) => { l.splice(l.indexOf(m), 1); l.unshift(m); }));
+  // opacity (one undo step per slide), lock
+  let opSnap = null;
+  $('imgOp').addEventListener('pointerdown', () => { opSnap = snapshot(); });
+  $('imgOp').addEventListener('input', e => {
+    const m = imgEdit;
+    if (!m) return;
+    const v = Math.max(0.1, Math.min(1, e.target.value / 100));
+    if (v >= 1) delete m.op; else m.op = v;
+    $('imgOpVal').textContent = Math.round(v * 100) + '%';
+    renderImages(); mapInkChanged();
+  });
+  $('imgOp').addEventListener('change', () => { remember(opSnap || snapshot()); opSnap = null; scheduleSave(); });
+  $('imgLock').addEventListener('change', e => imgChange(m => { if (e.target.checked) m.lock = true; else delete m.lock; }));
+  function renderImgPop() {
+    const m = imgEdit;
+    if (!m) return;
+    const v = Math.round((m.op || 1) * 100);
+    $('imgOp').value = v; $('imgOpVal').textContent = v + '%';
+    $('imgLock').checked = !!m.lock;
+    ['imgRotL', 'imgRotR', 'imgCrop'].forEach(id => { $(id).disabled = !!m.lock; });
+  }
+  // crop: the whole picture appears dimmed, drag the corners of the window; Done keeps it (also any tap elsewhere)
+  const cropPop = $('cropPop');
+  $('imgCrop').addEventListener('click', () => {
+    const m = imgEdit;
+    if (!m || !imagesOf(pages[cur]).includes(m)) { closePops(); return; }
+    closePops();
+    cropSt = { m, F: fullBox(m), C: { x: m.x, y: m.y, w: m.w, h: m.h }, before: snapshot() };
+    renderImages();
+    showPop(cropPop, imgUi.querySelector(`[data-iid="${m.id}"]`));
+  });
+  function endCrop(keep) {
+    const st = cropSt;
+    if (!st) return;
+    cropSt = null;
+    const m = st.m, F = st.F, C = st.C;
+    if (keep && (Math.abs(C.x - m.x) > 0.01 || Math.abs(C.y - m.y) > 0.01 || Math.abs(C.w - m.w) > 0.01 || Math.abs(C.h - m.h) > 0.01)) {
+      remember(st.before);
+      const u = [(C.x - F.x) / F.w, (C.y - F.y) / F.h, (C.x + C.w - F.x) / F.w, (C.y + C.h - F.y) / F.h].map(v => Math.max(0, Math.min(1, v)));
+      const c = boxToCrop(u, m.rot);
+      if (c[0] < 0.001 && c[1] < 0.001 && c[2] > 0.999 && c[3] > 0.999) delete m.crop; else m.crop = c;
+      Object.assign(m, { x: C.x, y: C.y, w: C.w, h: C.h });
+      scheduleSave();
+    }
+    renderImages(); mapInkChanged();
+  }
+  $('cropDone').addEventListener('click', () => closePops());
+  $('cropCancel').addEventListener('click', () => { endCrop(false); closePops(); });
+  $('cropReset').addEventListener('click', () => { if (cropSt) { cropSt.C = { ...cropSt.F }; renderImages(); placePop(); } });
+  // move to another page: pick it in the overview
+  $('imgMove').addEventListener('click', () => {
+    const m = imgEdit;
+    if (!m || !imagesOf(pages[cur]).includes(m)) { closePops(); return; }
+    closePops();
+    ovPick = { kind: 'img', obj: m };
+    openOverview();
+  });
   $('imgDelete').addEventListener('click', async () => {
     const m = imgEdit, list = imagesOf(pages[cur]);
     closePops();
@@ -5334,13 +5478,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${imagesMarkup(p)}${inkMarkup(p.strokes)}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${inkMarkup(p.strokes)}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
     const m = typeof nbMeta === 'function' && nbMeta();
-    $('ovTitle').textContent = ovPick ? 'Move sticky note to a page' : (m ? m.name : 'Pages');
-    $('ovSub').textContent = ovPick ? 'Tap the page it should go to' : `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · tap to open · hold a page to reorder, a sticky note to move it`;
+    $('ovTitle').textContent = ovPick ? `Move ${OBJ[ovPick.kind].name} to a page` : (m ? m.name : 'Pages');
+    $('ovSub').textContent = ovPick ? 'Tap the page it should go to' : `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · tap to open · hold a page to reorder, a sticky note or image to move it`;
     $('ovDone').textContent = ovPick ? 'Cancel' : 'Done';
     $('ovNotesBtn').setAttribute('aria-pressed', String(ovNotes));
   }
@@ -5376,8 +5520,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const thumb = e.target.closest('.thumb');
     og = { id: e.pointerId, x0: e.clientX, y0: e.clientY, ly: e.clientY, lt: performance.now(), v: 0, thumb, mode: 'pending', s0: ovGrid.scrollTop };
     ovGrid.setPointerCapture(e.pointerId);
-    const ni = ovPick ? -1 : ovNoteAt(thumb, e.clientX, e.clientY);
-    if (ni >= 0) og.timer = setTimeout(() => startNoteLift(+thumb.dataset.i, ni, thumb), 380);
+    const hit = ovPick ? null : ovObjAt(thumb, e.clientX, e.clientY);
+    if (hit) og.timer = setTimeout(() => startNoteLift(+thumb.dataset.i, hit, thumb), 380);
     else if (thumb && !thumb.classList.contains('add') && !ovPick) og.timer = setTimeout(() => startLift(), 380);
   });
   ovGrid.addEventListener('pointermove', e => {
@@ -5456,35 +5600,39 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.insertBefore(og.thumb, x > r.left + r.width / 2 ? el.nextSibling : el);
   }
   // ---- Overview: hold a sticky note to drag only it onto any page (where it is dropped) ----
-  // the sticky note under a point in a thumbnail (topmost first), with a few pixels to spare
-  function ovNoteAt(thumb, x, y) {
-    if (!ovNotes || !thumb || thumb.classList.contains('add')) return -1;
+  // the sticky note or image under a point in a thumbnail (sticky notes are on top), with a few pixels to spare
+  function ovObjAt(thumb, x, y) {
+    if (!thumb || thumb.classList.contains('add')) return null;
     const pg = pages[+thumb.dataset.i], paper = thumb.querySelector('.paper');
-    if (!pg || !pg.notes || !pg.notes.length || !paper) return -1;
+    if (!pg || !paper) return null;
     const pr = paper.getBoundingClientRect(), k = pr.width / W, mx = (x - pr.left) / k, my = (y - pr.top) / k, m = 8 / k;
-    for (let i = pg.notes.length - 1; i >= 0; i--) {
-      const n = pg.notes[i], z = noteW(n), zh = noteHt(n);       // folded ones are shown opened here
-      if (mx >= n.x - m && my >= n.y - m && mx <= n.x + z + m && my <= n.y + zh + m) return i;
-    }
-    return -1;
+    const hitIn = (kind, list, slack) => {
+      for (let i = list.length - 1; i >= 0; i--) {
+        const o = list[i], w = OBJ[kind].w(o), h = OBJ[kind].h(o);       // folded sticky notes are shown opened here
+        if (kind === 'img' && o.lock) continue;
+        if (mx >= o.x - slack && my >= o.y - slack && mx <= o.x + w + slack && my <= o.y + h + slack) return { kind, i };
+      }
+      return null;
+    };
+    return (ovNotes && pg.notes && hitIn('note', pg.notes, m)) || (pg.images && hitIn('img', pg.images, 0)) || null;
   }
-  function startNoteLift(pi, ni, thumb) {
+  function startNoteLift(pi, hit, thumb) {
     if (!og || og.mode !== 'pending') return;
-    const n = pages[pi] && pages[pi].notes && pages[pi].notes[ni];
+    const d = OBJ[hit.kind], n = pages[pi] && pages[pi][d.key] && pages[pi][d.key][hit.i];
     if (!n) return;
     og.mode = 'nlift';
     const paper = thumb.querySelector('.paper'), pr = paper.getBoundingClientRect(), k = pr.width / W;    // px per mm in the thumbnail
-    const el = paper.querySelector(`[data-ovnote="${ni}"]`);
-    const size = noteW(n), sizeH = noteHt(n);
+    const el = paper.querySelector(hit.kind === 'note' ? `[data-ovnote="${hit.i}"]` : `[data-ovimg="${hit.i}"]`);
+    const size = d.w(n), sizeH = d.h(n);
     const left = pr.left + n.x * k, top = pr.top + n.y * k;
     const ghost = document.createElement('div');
     ghost.className = 'noteghost';
-    ghost.innerHTML = `<svg viewBox="${n.x} ${n.y} ${size} ${sizeH}" xmlns="${NS}">${noteMarkup({ ...n, folded: false }, 'static')}</svg>`;
+    ghost.innerHTML = `<svg viewBox="${n.x} ${n.y} ${size} ${sizeH}" xmlns="${NS}">${d.markup(n)}</svg>`;
     Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: size * k + 'px', height: sizeH * k + 'px' });
     ghost.style.setProperty('--ox', (og.x0 - left) + 'px'); ghost.style.setProperty('--oy', (og.y0 - top) + 'px');
     document.body.appendChild(ghost);
     if (el) el.classList.add('lifted');
-    Object.assign(og, { ghost, note: n, from: pi, offMm: [(og.x0 - left) / k, (og.y0 - top) / k], left, top });
+    Object.assign(og, { ghost, note: n, kind: hit.kind, from: pi, offMm: [(og.x0 - left) / k, (og.y0 - top) / k], left, top });
     vibrate(12);
   }
   function moveNoteLift(x, y) {
@@ -5499,21 +5647,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     g.ghost.remove();
     const t = ovGrid.querySelector('.droptarget');
     if (t) t.classList.remove('droptarget');
-    const n = g.note, src = pages[g.from];
-    if (!dropped || !t || !src || !src.notes.includes(n)) { buildOverview(); return; }
+    const n = g.note, d = OBJ[g.kind], src = pages[g.from];
+    if (!dropped || !t || !src || !(src[d.key] || []).includes(n)) { buildOverview(); return; }
     let i;
     if (t.classList.contains('add')) { remember(); pages.push({ strokes: [] }); i = pages.length - 1; }
     else { i = +t.dataset.i; remember(); }
     // where it was let go: same grip point on the target page
-    const pr = t.querySelector('.paper').getBoundingClientRect(), k = pr.width / W, size = noteW(n), sizeH = noteHt(n);
+    const pr = t.querySelector('.paper').getBoundingClientRect(), k = pr.width / W;
     const nx = (g.lastX - pr.left) / k - g.offMm[0], ny = (g.lastY - pr.top) / k - g.offMm[1];
-    src.notes.splice(src.notes.indexOf(n), 1);
-    n.x = Math.max(0, Math.min(W - size, nx)); n.y = Math.max(0, Math.min(H - sizeH, ny));
-    notesOf(pages[i]).push(n);
+    src[d.key].splice(src[d.key].indexOf(n), 1);
+    placeOn(n, g.kind, nx, ny);
+    (pages[i][d.key] || (pages[i][d.key] = [])).push(n);
     if (i === cur || g.from === cur) renderPage();
     scheduleSave();
     buildOverview();
-    if (i !== g.from) toast(`Sticky note moved to page ${i + 1}.`);
+    if (i !== g.from) toast(`${d.name[0].toUpperCase() + d.name.slice(1)} moved to page ${i + 1}.`);
   }
   function dropLift(g) {
     g.ghost.remove();
