@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_75</title>
+<title>RRnotes_76</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -573,6 +573,13 @@
   .nblist .nbname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nblist small { font-size: 11.5px; opacity: .6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nblist small.unsaved { color: var(--warn); opacity: 1; }
+  .nbmem { font-size: 12.5px; opacity: .7; margin-top: -4px; }
+  .nbmem:empty { display: none; }
+  .dlg .row.nball { justify-content: stretch; margin: 14px 0 8px; }
+  .dlg .row.nball button { flex: 1; }
+  .dlg .row.nball small { font-size: 11px; opacity: .6; margin-left: 4px; font-weight: 500; }
+  .nblist .nbname .pen { width: 13px; height: 13px; margin-left: 6px; vertical-align: -1px; opacity: .55; }
+  .nblist .nbedit { font: 600 14px/1.25 var(--ui); color: var(--bar-fg); background: var(--panel); border: 1px solid var(--bar-fg); border-radius: 6px; padding: 3px 6px; margin: -4px 0 -3px -7px; width: calc(100% + 7px); }
   .nblist .nbwarn { flex: none; width: 20px; height: 20px; color: var(--warn); }
   .nblist .nbact { flex: none; height: 32px; min-width: 32px; padding: 0 9px; border-radius: 8px; border: 0; background: transparent; color: var(--bar-fg); font: 600 12.5px/1 var(--ui); cursor: pointer; display: grid; place-items: center; }
   .nblist .nbact:hover { background: var(--active); }
@@ -1225,6 +1232,7 @@
 <!-- No image type in "accept": with one, Chrome on Android opens the photo picker, which can't reach Downloads.
      The content is checked after choosing, so any file can be picked. -->
 <input type="file" id="fileIn" hidden>
+<input type="file" id="zipIn" accept=".zip,application/zip" hidden>
 <!-- images: with an image type Chrome on Android offers the camera and the photo gallery -->
 <input type="file" id="imgIn" accept="image/*" hidden>
 <input type="file" id="optIn" hidden>
@@ -1357,12 +1365,17 @@
 <dialog class="dlg nbdlg" id="nbDlg" aria-labelledby="nbTitle">
   <h2 id="nbTitle">Notebooks</h2>
   <p>Open notebooks stay in this browser, which is not a safe place. Only Save writes a notebook to a file.</p>
+  <p class="nbmem" id="nbMem"></p>
   <h3>Current</h3>
   <ul class="nblist" id="nbCur"></ul>
   <h3 id="nbOpenH">Open</h3>
   <ul class="nblist" id="nbOpen"></ul>
   <h3 id="nbRecentH">Recently opened files</h3>
   <ul class="nblist" id="nbRecent"></ul>
+  <div class="row nball">
+    <button type="button" id="nbSaveAll">Save all…<small>.zip</small></button>
+    <button type="button" id="nbLoadAll">Load all…<small>.zip</small></button>
+  </div>
   <div class="row">
     <button type="button" class="left" id="nbNew">New</button>
     <button type="button" id="nbOpenFile">Open file…</button>
@@ -1503,7 +1516,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_75';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_76';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -1783,7 +1796,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const r3 = v => Math.round(v * 1000) / 1000;
   // whole cells inside the empty border, centred on the page
-  function buildGrid(st) {
+  function buildGrid(st, W = setupDims(st)[0], H = setupDims(st)[1]) {
     if (st.grid === 'none') return '';
     const c = st.gridMm;
     const cols = Math.floor((W - 2 * BORDER) / c + 1e-9), rows = Math.floor((H - 2 * BORDER) / c + 1e-9);
@@ -3209,7 +3222,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
   // ---- Save / open the notebook: one SVG, one <g data-page> per page ----
-  async function notebookSVG() {
+  async function notebookSVG(pages = null, setup = null) {
+    if (!pages) pages = curPages();
+    if (!setup) setup = curSetup();
+    const [W, H] = setupDims(setup), GRID_D = buildGrid(setup, W, H);
+    await ensureImages(pages);
     await ensureImageData(pages);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
     let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}">\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
@@ -3248,6 +3265,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const d = new Date(), pad = v => String(v).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
   };
+  const curPages = () => pages, curSetup = () => setup;
   // ---- Save dialog: file name and format (plain or compressed SVG); the last format is remembered ----
   const saveDlg = $('saveDlg');
   const saveFmt = () => $('fmtSvgz').checked ? 'svgz' : 'svg';
@@ -3258,7 +3276,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('fmtSvgz').disabled = !window.CompressionStream;
     $('saveExt').textContent = '.' + fmt;
     const m = nbMeta();
-    $('saveName').value = m && m.savedName ? fileBase(m.savedName) : m && !/^Notebook \d+$/.test(m.name) ? m.name : `RRnotes_${stamp()}`;
+    $('saveName').value = m && !/^Notebook \d+$/.test(m.name) ? m.name : m && m.savedName ? fileBase(m.savedName) : `RRnotes_${stamp()}`;
     const strokes = pages.reduce((n, p) => n + p.strokes.length, 0);
     $('saveInfo').textContent = `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · ${strokes} ${strokes === 1 ? 'stroke' : 'strokes'} · ${setupLabel(setup)}`;
     saveDlg.showModal();
@@ -3281,7 +3299,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       saved = await saveBlob(new Blob([await notebookSVG()], { type: 'image/svg+xml' }), name + '.svg', 'RRnotes notebook (SVG)', 'image/svg+xml', '.svg');
     }
     if (!saved || !nbMeta(m.id)) return;
-    Object.assign(m, { savedRev: rev, savedName: saved, savedAt: Date.now(), name: fileBase(saved) });
+    Object.assign(m, { savedRev: rev, savedName: saved, savedAt: Date.now(), savedZip: '', name: fileBase(saved) });
     addRecent(saved);
     if (nbDlg.open) renderNbDlg();
   });
@@ -3296,13 +3314,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return new TextDecoder().decode(buf);
   }
-  $('fileIn').addEventListener('change', async e => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
+  // reads a notebook SVG; pictures go into the browser's store
+  async function parseNotebook(text) {
     let newPages, newSetup;
-    try {
-      const doc = new DOMParser().parseFromString(await readNotebookText(file), 'image/svg+xml');
+    {
+      const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
       if (doc.querySelector('parsererror')) throw new Error('parse');
       const rootEl = doc.documentElement, A = n => rootEl.getAttribute(n);
       newSetup = cleanSetup(A('data-page-width') ? {      // files before v18 are A4 with 5 mm squares
@@ -3339,13 +3355,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
         pg.images = out.filter(Boolean);
       }
+    }
+    return { pages: newPages, cur: 0, setup: newSetup };
+  }
+  const isZip = buf => buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 3 && buf[3] === 4;
+  // an empty, unchanged notebook on screen is simply replaced
+  function dropBlank() {
+    const m = nbMeta(), blank = m && m.rev === 0 && !m.savedName && !hasInk();
+    if (blank) { nbIdx.loaded = nbIdx.loaded.filter(x => x !== m); idb.del('nb:' + m.id).catch(() => {}); }
+    return blank;
+  }
+  $('fileIn').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (isZip(new Uint8Array(await file.slice(0, 4).arrayBuffer()))) { loadAll(file); return; }
+    let newPages, newSetup;
+    try {
+      ({ pages: newPages, setup: newSetup } = await parseNotebook(await readNotebookText(file)));
     } catch (err) {
       toast(`${file.name} isn't an RRnotes notebook. Choose an SVG saved from RRnotes.`);
       return;
     }
-    // an empty, unchanged notebook on screen is simply replaced
-    const m = nbMeta(), blank = m && m.rev === 0 && !m.savedName && !hasInk();
-    if (blank) { nbIdx.loaded = nbIdx.loaded.filter(x => x !== m); idb.del('nb:' + m.id).catch(() => {}); }
+    dropBlank();
     const meta = newMeta(fileBase(file.name));
     Object.assign(meta, { savedName: file.name, savedAt: Date.now(), pages: newPages.length });
     await addNotebook(meta, { pages: newPages, cur: 0, setup: newSetup });
@@ -3365,14 +3397,47 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function nbRow(m, isCur) {
     const state = unsaved(m)
       ? `<small class="unsaved">${m.savedName ? 'Changes not saved to ' + esc(m.savedName) : 'Not saved to a file'}</small>`
-      : `<small>${m.savedName ? `Saved ${when(m.savedAt)} · ${esc(m.savedName)}` : 'Empty, nothing to save'}</small>`;
-    return `<li data-id="${m.id}"${isCur ? ' class="cur"' : ''}><button type="button" class="nbmain"${isCur ? ' aria-current="true"' : ` aria-label="Switch to ${esc(m.name)}"`}>` +
-      `<span class="nbname">${esc(m.name)}</span><small>${m.pages} ${m.pages === 1 ? 'page' : 'pages'} · edited ${when(m.modAt)}</small>${state}</button>` +
+      : `<small>${m.savedName ? `Saved ${when(m.savedAt)} · ${esc(m.savedName)}${m.savedZip ? ` in ${esc(m.savedZip)}` : ''}` : 'Empty, nothing to save'}</small>`;
+    const mem = nbMem.has(m.id) ? ` · ${fmtBytes(nbMem.get(m.id))}` : '';
+    return `<li data-id="${m.id}"${isCur ? ' class="cur"' : ''}><button type="button" class="nbmain"${isCur ? ` aria-current="true" title="Tap to rename"` : ` aria-label="Switch to ${esc(m.name)}"`}>` +
+      `<span class="nbname">${esc(m.name)}${isCur ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/>').replace('<svg ', '<svg class="pen" ') : ''}</span><small>${m.pages} ${m.pages === 1 ? 'page' : 'pages'}${mem} · edited ${when(m.modAt)}</small>${state}</button>` +
       (unsaved(m) ? `<span role="img" aria-label="Not saved to a file" title="Not saved to a file">${ICON_WARN}</span>` : '') +
       (isCur && unsaved(m) ? '<button type="button" class="nbact save" data-act="save">Save…</button>' : '') +
       `<button type="button" class="nbact" data-act="close" aria-label="Close ${esc(m.name)}" title="Close">${svg('<path d="M6 6l12 12M18 6L6 18"/>')}</button></li>`;
   }
-  function renderNbDlg() {
+  // ---- How much room each notebook takes in the browser (its record plus its pictures) ----
+  const nbMem = new Map(), imgSize = new Map();
+  async function measureNotebooks() {
+    let total = 0;
+    const all = new Set();
+    for (const m of nbIdx.loaded) {
+      const rec = m.id === nbIdx.current ? { v: 3, pages, cur, setup } : await readNotebook(m.id);
+      if (!rec) continue;
+      let n = new Blob([JSON.stringify(rec)]).size;
+      const srcs = new Set();
+      (rec.pages || []).forEach(pg => (pg.images || []).forEach(x => srcs.add(x.src)));
+      for (const src of srcs) {
+        if (!imgSize.has(src)) {
+          const r = imgStore.get(src);
+          let b = r && r.blob;
+          if (!b) { try { const v = await idb.get('img:' + src); b = v && v.blob; } catch (_) {} }
+          imgSize.set(src, b ? b.size : 0);
+        }
+        n += imgSize.get(src); all.add(src);
+      }
+      nbMem.set(m.id, n);
+      total += new Blob([JSON.stringify(rec)]).size;
+    }
+    for (const src of all) total += imgSize.get(src) || 0;     // a picture used twice is stored once
+    return total;
+  }
+  async function refreshNbMem() {
+    const total = await measureNotebooks();
+    $('nbMem').textContent = `${nbIdx.loaded.length} ${nbIdx.loaded.length === 1 ? 'notebook uses' : 'notebooks use'} ${fmtBytes(total)} in this browser.`;
+    if (nbDlg.open && !nbDlg.querySelector('.nbedit')) renderNbDlg(true);
+  }
+  function renderNbDlg(noMeasure) {
+    if (!noMeasure) refreshNbMem();
     const curM = nbMeta(), others = nbIdx.loaded.filter(m => m !== curM);
     $('nbCur').innerHTML = curM ? nbRow(curM, true) : '';
     $('nbOpen').innerHTML = others.map(m => nbRow(m, false)).join('');
@@ -3426,8 +3491,147 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (li.dataset.file) { toast(`Choose ${li.dataset.file} to open it again.`); $('fileIn').click(); return; }
     if (act && act.dataset.act === 'close') { closeNotebook(li.dataset.id); return; }
     if (act && act.dataset.act === 'save') { nbDlg.close(); saveNotebook(); return; }
+    if (e.target.closest('.nbmain') && li.dataset.id === nbIdx.current) { renameCurrent(li); return; }
     if (e.target.closest('.nbmain') && li.dataset.id !== nbIdx.current) { await switchNotebook(li.dataset.id); renderNbDlg(); }
   });
+  // tap the current notebook to rename it (the next Save suggests the new name)
+  function renameCurrent(li) {
+    const m = nbMeta(), nameEl = li.querySelector('.nbname');
+    if (!m || !nameEl || li.querySelector('.nbedit')) return;
+    const inp = document.createElement('input');
+    inp.className = 'nbedit'; inp.value = m.name; inp.maxLength = 80; inp.setAttribute('aria-label', 'Notebook name');
+    nameEl.replaceWith(inp);
+    inp.focus(); inp.select();
+    let done = false;
+    const finish = keep => {
+      if (done) return;
+      done = true;
+      const v = inp.value.trim().replace(/[\\/:*?"<>|]+/g, '-');
+      if (keep && v && v !== m.name) { m.name = v; saveIdx(); }
+      renderNbDlg(true);
+    };
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setTimeout(() => finish(false)); }   // after the dialog's own Escape
+    });
+    inp.addEventListener('blur', () => finish(true));
+    inp.addEventListener('click', e => e.stopPropagation());
+  }
+  nbDlg.addEventListener('cancel', e => { if (nbDlg.querySelector('.nbedit')) e.preventDefault(); });
+
+  // ---- Save all / load all: every open notebook as an SVG in one ZIP file ----
+  const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = b => { let c = ~0; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return ~c >>> 0; };
+  const streamBytes = async (b, ts) => new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(ts)).arrayBuffer());
+  async function makeZip(files) {                    // [{ name, data: Uint8Array }] → Blob
+    const parts = [], central = [], d = new Date(), enc = new TextEncoder();
+    const dosT = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dosD = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    let off = 0;
+    for (const f of files) {
+      const name = enc.encode(f.name), crc = crc32(f.data);
+      let z = null;
+      if (window.CompressionStream) { try { z = await streamBytes(f.data, new CompressionStream('deflate-raw')); } catch (_) {} }
+      const method = z ? 8 : 0, body = z || f.data;
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, method, true);
+      h.setUint16(10, dosT, true); h.setUint16(12, dosD, true); h.setUint32(14, crc, true); h.setUint32(18, body.length, true);
+      h.setUint32(22, f.data.length, true); h.setUint16(26, name.length, true);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, method, true);
+      c.setUint16(12, dosT, true); c.setUint16(14, dosD, true); c.setUint32(16, crc, true); c.setUint32(20, body.length, true);
+      c.setUint32(24, f.data.length, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+      parts.push(h.buffer, name, body); central.push(c.buffer, name);
+      off += 30 + name.length + body.length;
+    }
+    const size = central.reduce((n, b) => n + b.byteLength, 0), e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+    return new Blob([...parts, ...central, e.buffer], { type: 'application/zip' });
+  }
+  async function readZip(buf) {                      // → [{ name, data: Uint8Array }]
+    const v = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), out = [];
+    let e = -1;
+    for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (v.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) throw new Error('zip');
+    let p = v.getUint32(e + 16, true);
+    const n = v.getUint16(e + 10, true), dec = new TextDecoder();
+    for (let k = 0; k < n; k++) {
+      if (v.getUint32(p, true) !== 0x02014b50) throw new Error('zip');
+      const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+      const name = dec.decode(buf.subarray(p + 46, p + 46 + nl));
+      p += 46 + nl + xl + cl;
+      const start = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true), raw = buf.subarray(start, start + csize);
+      if (name.endsWith('/')) continue;
+      let data;
+      if (method === 0) data = raw;
+      else if (method === 8 && window.DecompressionStream) data = await streamBytes(raw, new DecompressionStream('deflate-raw'));
+      else continue;
+      out.push({ name: name.split('/').pop(), data });
+    }
+    return out;
+  }
+  const hasContent = pgs => pgs.some(p => (p.strokes && p.strokes.length) || (p.notes && p.notes.length) || (p.images && p.images.length));
+  async function saveAll() {
+    await flushSave();
+    const files = [], names = new Set(), enc = new TextEncoder();
+    for (const m of nbIdx.loaded) {
+      const isCur = m.id === nbIdx.current, rec = isCur ? { pages, setup } : await readNotebook(m.id);
+      if (!rec || !Array.isArray(rec.pages)) continue;
+      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images) }));
+      if (!hasContent(pgs) && !m.savedName) continue;            // empty and never saved: nothing to keep
+      let base = (m.name || 'Notebook').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Notebook', name = base + '.svg', i = 2;
+      while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
+      names.add(name.toLowerCase());
+      files.push({ name, m, rev: m.rev, data: enc.encode(await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup))) });
+    }
+    if (!files.length) { toast('Nothing to save yet'); return; }
+    const zip = await makeZip(files.map(f => ({ name: f.name, data: f.data })));
+    const saved = await saveBlob(zip, `RRnotes_${stamp()}.zip`, 'RRnotes notebooks (ZIP)', 'application/zip', '.zip');
+    if (!saved) return;
+    const now = Date.now();
+    for (const f of files) if (nbMeta(f.m.id)) Object.assign(f.m, { savedRev: f.rev, savedName: f.name, savedAt: now, savedZip: saved });
+    addRecent(saved);
+    if (nbDlg.open) renderNbDlg();
+    toast(`Saved ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'} in ${saved}`);
+  }
+  async function loadAll(file) {
+    let entries;
+    try { entries = (await readZip(new Uint8Array(await file.arrayBuffer()))).filter(f => /\.svgz?$/i.test(f.name)); }
+    catch (_) { toast(`${file.name} can't be read as a ZIP file.`); return; }
+    await flushSave();
+    let added = 0, renewed = 0, firstNew = null;
+    const now = Date.now();
+    for (const f of entries) {
+      let nb;
+      try {
+        const text = f.data[0] === 0x1f && f.data[1] === 0x8b ? new TextDecoder().decode(await streamBytes(f.data, new DecompressionStream('gzip'))) : new TextDecoder().decode(f.data);
+        nb = await parseNotebook(text);
+      } catch (_) { continue; }
+      const same = nbIdx.loaded.find(m => m.savedName === f.name && !unsaved(m));
+      if (same) {                                    // open and unchanged: take the version from the ZIP
+        Object.assign(same, { pages: nb.pages.length, savedAt: now, savedZip: file.name, modAt: now });
+        if (same.id === nbIdx.current) { showNotebook(nb); await writeCurrent(); }
+        else await idb.set('nb:' + same.id, { v: 3, ...nb });
+        renewed++;
+        continue;
+      }
+      const meta = newMeta(fileBase(f.name));
+      Object.assign(meta, { savedName: f.name, savedAt: now, savedZip: file.name, pages: nb.pages.length });
+      try { await idb.set('nb:' + meta.id, { v: 3, ...nb }); } catch (_) { store.set('nb:' + meta.id, { v: 3, ...nb }); }
+      nbIdx.loaded.push(meta);
+      firstNew = firstNew || meta;
+      added++;
+    }
+    if (!added && !renewed) { toast(`No RRnotes notebooks found in ${file.name}`); return; }
+    const old = nbMeta();
+    if (dropBlank() || !old) { nbIdx.current = null; const to = firstNew || nbIdx.loaded[0]; if (to) await switchNotebook(to.id); }
+    saveIdx();
+    addRecent(file.name);
+    if (nbDlg.open) renderNbDlg();
+    toast(`${file.name}: ${[added && `${added} opened`, renewed && `${renewed} updated`].filter(Boolean).join(', ')}`);
+  }
+  $('nbSaveAll').addEventListener('click', saveAll);
+  $('nbLoadAll').addEventListener('click', () => $('zipIn').click());
+  $('zipIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) loadAll(f); });
 
   // ---- Options file ----
   function optionsJSON() {
