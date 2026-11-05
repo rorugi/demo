@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_81</title>
+<title>RRnotes_82</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -699,6 +699,8 @@
   .page.turning.from-left { transform-origin: 100% 50%; }
   /* while turning: a fine edge and the page number, so sheets in the fan can be told apart */
   .page.turning { box-shadow: inset 0 0 0 1px var(--sheet-edge), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .page.target { box-shadow: inset 0 0 0 3px #1f6fd1, 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow) !important; }
+  .page.target .pnum { color: #1f6fd1; font-weight: 700; opacity: 1; }
   .pnum {
     position: absolute; bottom: 7px; right: 12px; z-index: 2;
     font: 500 11px/1 var(--ui); font-variant-numeric: tabular-nums;
@@ -1166,9 +1168,39 @@
     <button type="button" id="printMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>Print…</button>
   </div>
   <div class="menu advrow">
+    <button type="button" id="gestBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5c0 3.6-2.4 6-6 6s-4.7-1.5-6.4-4.2L4.4 13.4a1.4 1.4 0 0 1 2.3-1.6L9 14"/></svg>Gestures<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     <button type="button" id="advBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Advanced<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     <button type="button" id="supportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.6"/><path d="M6 6l3.4 3.4M18 6l-3.4 3.4M6 18l3.4-3.4M18 18l-3.4-3.4"/></svg>Support</button>
     <button type="button" id="aboutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/></svg>About</button>
+  </div>
+</div>
+<div class="pop" id="gestPop" role="dialog" aria-label="Gestures" hidden>
+  <button type="button" class="back" id="gestBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Settings</button>
+  <h3>Fingers</h3>
+  <div class="menu">
+    <div class="imgsizebox">
+      <span>Double tap with two fingers<span class="sub" id="tap2Sub"></span></span>
+      <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
+        <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
+      </select>
+      <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
+      <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
+        <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
+      </select>
+    </div>
+  </div>
+  <h3>Pen</h3>
+  <div class="menu">
+    <div class="imgsizebox">
+      <span>Hold the pen at the end of a line<span class="sub" id="holdSub"></span></span>
+      <select class="dd" id="holdAct" aria-label="Hold the pen at the end of a line">
+        <option value="line">Straight line, keep drawing</option><option value="smooth">Adjust the smoothing</option><option value="off">Nothing</option>
+      </select>
+      <span>Button on the side of the stylus<span class="sub" id="penBtnSub"></span></span>
+      <div class="seg" id="penBtnModes">
+        <button type="button" data-v="grab">Move &amp; erase</button><button type="button" data-v="erase">Erase only</button>
+      </div>
+    </div>
   </div>
 </div>
 <div class="pop" id="advPop" role="dialog" aria-label="Advanced settings" hidden>
@@ -1205,23 +1237,6 @@
   <div class="menu">
     <label for="scribbleToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l4-6 3 7 3-8 3 8 3-6 2 4"/></svg><span>Scribble to erase<span class="sub">Scribble over ink to delete it</span></span><span class="switch"><input type="checkbox" id="scribbleToggle"><i></i></span></label>
   </div>
-  <h3>Gestures</h3>
-  <div class="menu">
-    <div class="imgsizebox">
-      <span>Double tap with two fingers<span class="sub" id="tap2Sub"></span></span>
-      <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
-        <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
-      </select>
-      <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
-      <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
-        <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
-      </select>
-      <span>Hold the pen at the end of a line<span class="sub" id="holdSub"></span></span>
-      <select class="dd" id="holdAct" aria-label="Hold the pen at the end of a line">
-        <option value="smooth">Adjust the smoothing</option><option value="off">Nothing</option>
-      </select>
-    </div>
-  </div>
   <h3>Handles</h3>
   <div class="menu">
     <div class="imgsizebox">
@@ -1229,15 +1244,6 @@
       <select class="dd" id="hndModes" aria-label="Handles on sticky notes and images">
         <option value="always">Always</option><option value="quiet">Quiet</option><option value="hidden">Hidden</option><option value="select">With Select</option>
       </select>
-    </div>
-  </div>
-  <h3>Stylus button</h3>
-  <div class="menu">
-    <div class="imgsizebox">
-      <span>Button on the side of the stylus<span class="sub" id="penBtnSub"></span></span>
-      <div class="seg" id="penBtnModes">
-        <button type="button" data-v="grab">Move &amp; erase</button><button type="button" data-v="erase">Erase only</button>
-      </div>
     </div>
   </div>
   <h3>Images</h3>
@@ -1544,14 +1550,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_81';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_82';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
   const BORDER = 5;                  // empty print border without grid
   const SMOOTH = 0.62, MIN_D = 0.06;
   const MARGIN = 12;
-  const ZOOM_MIN = 0.6, ZOOM_MAX = 6;
+  const ZOOM_MIN = 0.6, ZOOM_MAX = 10;
   const EDGE = 44;                 // px: finger zone along the page edges
   const PEN_QUIET_MS = 700;        // ignore edge gestures right after stylus activity (palm)
   const MAX_W = 20;                // thickest pen, mm
@@ -1576,7 +1582,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pageInk = pageEl.querySelector('.ink');
   const live = $('live'), tip = $('tip'), liveWrap = $('liveWrap');
   const toolbar = $('toolbar');
-  const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), eraserPop = $('eraserPop');
+  const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), gestPop = $('gestPop'), eraserPop = $('eraserPop');
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('notizblock.' + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
@@ -1811,8 +1817,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!o || typeof o !== 'object') return st;
     if (['a4', 'letter', 'custom'].includes(o.size)) st.size = o.size;
     if (['portrait', 'landscape'].includes(o.orient)) st.orient = o.orient;
-    if (+o.cw >= 50 && +o.cw <= 1000) st.cw = +o.cw;
-    if (+o.ch >= 50 && +o.ch <= 1000) st.ch = +o.ch;
+    if (+o.cw >= 50 && +o.cw <= 10000) st.cw = +o.cw;
+    if (+o.ch >= 50 && +o.ch <= 10000) st.ch = +o.ch;
     if (['none', 'lines', 'squares'].includes(o.grid)) st.grid = o.grid;
     if (+o.gridMm >= 2 && +o.gridMm <= 30) st.gridMm = +o.gridMm;
     return st;
@@ -2786,9 +2792,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     b.orient = x.dataset.o;                   // the toolbar stays where it is, only its layout turns
     saveItems(); renderToolbar();
   }));
-  attachDrag($('app'), bars[0], () => { openPop === setPop || openPop === advPop ? closePops() : showPop(setPop, $('app')); });
+  attachDrag($('app'), bars[0], () => { openPop === setPop || openPop === advPop || openPop === gestPop ? closePops() : showPop(setPop, $('app')); });
   $('advBtn').addEventListener('click', () => showPop(advPop, $('app')));
   $('advBack').addEventListener('click', () => showPop(setPop, $('app')));
+  $('gestBtn').addEventListener('click', () => showPop(gestPop, $('app')));
+  $('gestBack').addEventListener('click', () => showPop(setPop, $('app')));
   $('app').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showPop(setPop, $('app')); } });
 
   // ---- Settings ----
@@ -2984,7 +2992,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const num = id => parseFloat($(id).value.replace(',', '.'));
     if (draft.size === 'custom') {
       const w = num('psW'), h = num('psH');
-      if (!(w >= 50 && w <= 1000 && h >= 50 && h <= 1000)) { toast('Enter a page width and height between 50 and 1000 mm.'); return; }
+      if (!(w >= 50 && w <= 10000 && h >= 50 && h <= 10000)) { toast('Enter a page width and height between 50 and 10000 mm.'); return; }
       draft.cw = w; draft.ch = h;
     }
     if (draft.grid !== 'none') {
@@ -3683,7 +3691,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
-      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, style: flipStyle, zoomOut: flipZoom, riffle: riffleOn },
       paper: paperPref,
@@ -3722,6 +3730,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (['always', 'quiet', 'hidden', 'select'].includes(o.handles)) { handleMode = o.handles; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode(); }
     if ([0, 1200, 2000, 3000].includes(o.imageMaxPx)) { imgMax = o.imageMaxPx; store.set('imgMax', imgMax); renderImgSize(); }
     if (o.stylusButton === 'grab' || o.stylusButton === 'erase') { penBtn = o.stylusButton; store.set('penBtn', penBtn); renderPenBtn(); }
+    if (TAP1[o.oneFingerDoubleTap]) { tap1Act = o.oneFingerDoubleTap; store.set('tap1', tap1Act); $('tap1Act').value = tap1Act; $('tap1Sub').textContent = TAP1[tap1Act]; }
+    if (HOLD[o.holdPenAtEnd]) { holdAct = o.holdPenAtEnd; store.set('penHold', holdAct); $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct]; }
     if (TAP2[o.twoFingerDoubleTap]) { tap2Act = o.twoFingerDoubleTap; store.set('tap2', tap2Act); $('tap2Act').value = tap2Act; $('tap2Sub').textContent = TAP2[tap2Act]; }
     if (typeof o.scribbleErase === 'boolean') { scribbleOn = o.scribbleErase; store.set('scribble', scribbleOn); $('scribbleToggle').checked = scribbleOn; }
     if (o.paper && (o.paper === 'auto' || PAPERS[o.paper])) setPaper(o.paper);
@@ -4702,18 +4712,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     p.push([a.sx, a.sy]); drawIncrement();
   }
   // ---- Hold the pen at the end of a line: a slider sets the smoothing, from none (as written) to a straight line ----
-  const HOLD = { smooth: 'A slider appears: slide left for the line exactly as written, right for smoother, all the way to a straight line', off: 'Does nothing' };
-  let holdAct = (v => HOLD[v] ? v : 'smooth')(store.get('penHold', 'smooth'));
+  const HOLD = { line: 'What you drew since the start (or the last corner) becomes a straight line; keep drawing from its end, hold again for the next corner',
+    smooth: 'A slider appears: slide left for the line exactly as written, right for smoother, all the way to a straight line', off: 'Does nothing' };
+  let holdAct = (v => HOLD[v] ? v : 'line')(store.get('penHold', 'line'));
   const HOLD_MS = 600, HOLD_SLOP = 6, SM_W = 240, SM_DEF = 0.15;
   $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct];
   $('holdAct').addEventListener('change', e => { holdAct = e.target.value; store.set('penHold', holdAct); $('holdSub').textContent = HOLD[holdAct]; });
   function holdWatch(e) {                       // (re)start the timer whenever the pen really moves
     const a = active;
-    if (holdAct !== 'smooth' || !a || a.type !== 'pen' || a.sm) return;
+    if (holdAct === 'off' || !a || a.type !== 'pen' || a.sm) return;
     if (a.hx !== undefined && Math.hypot(e.clientX - a.hx, e.clientY - a.hy) < HOLD_SLOP) return;
     a.hx = e.clientX; a.hy = e.clientY;
     clearTimeout(a.holdT);
-    a.holdT = setTimeout(() => { if (active === a && !a.sm) startSmooth(a); }, HOLD_MS);
+    a.holdT = setTimeout(() => { if (active === a && !a.sm) holdAct === 'line' ? straighten(a) : startSmooth(a); }, HOLD_MS);
+  }
+  // the part since the last corner becomes a straight line (with a crisp corner); the stroke goes on from its end
+  function straighten(a) {
+    const p = a.pts, s0 = a.seg || 0, A = p[s0], B = [a.sx, a.sy];
+    if (!A || p.length - s0 < 3 || Math.hypot(B[0] - A[0], B[1] - A[1]) < 2) return;
+    const L = Math.hypot(B[0] - A[0], B[1] - A[1]), u = [(B[0] - A[0]) / L, (B[1] - A[1]) / L], e = Math.min(0.15, L / 4);
+    a.pts = p.slice(0, s0 + 1).concat([[A[0] + u[0] * e, A[1] + u[1] * e], [B[0] - u[0] * e, B[1] - u[1] * e], B]);
+    a.seg = a.pts.length - 1;
+    a.raw = a.pts.slice();
+    redrawActive(); drawTip([]);
+    vibrate(10);
   }
   const pathLen = p => { let L = 0; for (let i = 1; i < p.length; i++) L += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return L; };
   function resample(p, step) {
@@ -5722,15 +5744,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // strip between its own edge and the edge of the sheet lying on top of it.
   const PERSP = 2.6;                          // same factor as the perspective in paintSheet
   const coverWidth = a => a >= 90 ? 0 : Math.min(1, Math.cos(a * Math.PI / 180) * PERSP / (PERSP - Math.sin(a * Math.PI / 180)));
-  // Back: how much of the page sheet k covers (0…1, linear with the swipe), and the turn angle that gives it
-  const backCover = (p, k) => k === 0 ? clamp01(p / (2 * FLIP_FIRST)) : clamp01((p - commitAt(k) + FLIP_NEXT) / (2 * FLIP_NEXT));
-  function angleFor(w) {
-    if (w <= 0) return 91;                      // still behind the binding: not shown
-    if (w >= 1) return 0;
-    let lo = 0, hi = 90;
-    for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; if (coverWidth(m) > w) lo = m; else hi = m; }
-    return (lo + hi) / 2;
-  }
+  // Back: sheet k turns down steadily from upright (90°) to flat; it covers half the page at its commit point
+  // (about 70°: with the perspective a sheet covers the whole page well before it lies flat)
+  const BACK_HALF = 0.22, BACK_SPAN = 0.7;
+  const backQ = (p, k) => k === 0 ? clamp01(p * BACK_HALF / FLIP_FIRST) : clamp01((p - commitAt(k)) / BACK_SPAN + BACK_HALF);
+  const backAngle = (p, k) => { const q = backQ(p, k); return q <= 0 ? 91 : 90 * (1 - q); };
+  const backCover = (p, k) => { const a = backAngle(p, k); return a > 90 ? 0 : coverWidth(a); };
   function flipCount(p) {
     if (nav.back) {                             // the sheet of the page furthest back lies on top
       let best = 0, bestShare = -1, above = 0;
@@ -5768,9 +5787,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function setFlip(p) {
     nav.p = p;
     setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
-    if (nav.back) nav.sheets.forEach((sh, k) => paintSheet(sh, angleFor(backCover(p, k)), 1));
+    if (nav.back) nav.sheets.forEach((sh, k) => paintSheet(sh, backAngle(p, k), 1));
     else nav.sheets.forEach((sh, k) => paintSheet(sh, sheetProgress(p, k) * 180, nav.dir));
     const n = flipCount(p);
+    // the page you land on when letting go gets a coloured edge; a short buzz each time it changes
+    const tgt = n === 0 ? pageEl : nav.back ? nav.sheets[n - 1] : n < nav.maxN ? nav.sheets[n] : pool[nav.maxN - 1];
+    if (nav.tgt !== tgt) {
+      if (nav.tgt) nav.tgt.classList.remove('target');
+      tgt.classList.add('target');
+      if (nav.tgt !== undefined) vibrate(6);
+      nav.tgt = tgt;
+    }
     if (n >= 2) bubble(`${cur + 1 + nav.dir * n} / ${pages.length + (nav.dir > 0 && cur + n >= pages.length ? 1 : 0)}`, `Release to turn ${n} pages`);
     else $('riffle').hidden = true;
   }
@@ -5787,6 +5814,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function endFlip() {
     const n0 = nav;
+    if (n0.tgt) n0.tgt.classList.remove('target');
     const fast = n0.dir > 0 ? n0.vx < -0.5 : n0.vx > 0.5;
     let n = n0.forceCancel ? 0 : flipCount(n0.p);
     if (!n0.forceCancel && n === 0 && fast && n0.p > 0.03) n = 1;
@@ -5807,7 +5835,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       // The sheet showing the target page stays on top while the real page gets its new ink,
       // and is only removed two frames later, so there is never a frame with missing content.
       const cover = !n ? null : n0.back ? n0.sheets[n - 1] : n < n0.maxN ? n0.sheets[n] : pool[n0.maxN - 1];
-      if (cover) { cover.style.zIndex = 30; cover.style.transition = ''; cover.style.transform = ''; cover.style.visibility = ''; cover.classList.remove('turning', 'from-left'); cover.querySelector('.shade').style.opacity = 0; }
+      if (cover) { cover.style.zIndex = 30; cover.style.transition = ''; cover.style.transform = ''; cover.style.visibility = ''; cover.classList.remove('turning', 'from-left', 'target'); cover.querySelector('.shade').style.opacity = 0; }
       if (n) {
         const target = cur + n0.dir * n;
         if (target >= pages.length) pages.push({ strokes: [] });
@@ -5818,7 +5846,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       for (const el of [pageEl, ...pool]) {
         if (el === cover) continue;
         el.style.transition = ''; el.style.transform = ''; el.style.zIndex = ''; el.style.visibility = '';
-        el.classList.remove('turning', 'from-left');
+        el.classList.remove('turning', 'from-left', 'target');
         el.querySelector('.shade').style.opacity = 0;
         if (el !== pageEl) el.hidden = true;
       }
