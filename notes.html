@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_89</title>
+<title>RRnotes_90</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -1573,7 +1573,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_89';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_90';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5776,7 +5776,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (let k = 1; k < maxN; k++) { const sh = sheetAt(k - 1); fillSheet(sh, cur + dir * k, 10 + maxN - k); sheets.push(sh); }
     fillSheet(sheetAt(maxN - 1), cur + dir * maxN, 10, cover ? 'back' : null);
     sheets.forEach(sh => { sh.classList.add('turning'); sh.classList.toggle('from-left', dir < 0); });
-    Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: liftTarget(),
+    Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: liftTarget(), back: false,   // (the slider reuses nav)
       pMax: cover ? commitAt(realN) - 0.001 : 1 });                  // the last page lifts up to upright at most
     setFlip(0);
   }
