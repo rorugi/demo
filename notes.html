@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_87</title>
+<title>RRnotes_88</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -694,6 +694,11 @@
   /* the page you land on: its light band takes the colour of its border */
   .page.target { --sheen: rgba(31, 111, 209, .85); --sheen-out: rgba(31, 111, 209, .5); --sheet-shine: rgba(31, 111, 209, .35); }
   .page { will-change: transform; }
+  /* the notebook's covers (seen only while turning past the first or last page): grey cardboard */
+  .page.cover { background: linear-gradient(135deg, #979892, #82837d); }
+  .page.cover::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 3px), repeating-linear-gradient(0deg, rgba(0, 0, 0, .03) 0 1px, transparent 1px 4px); }
+  .page.cover .grid { display: none; }
   .page.turning { transform-origin: 0 50%; }
   /* turning back: the sheet lifts from the left and swings away over its right edge */
   .page.turning.from-left { transform-origin: 100% 50%; }
@@ -1551,7 +1556,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_87';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_88';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5706,24 +5711,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return pool[i];
   }
-  function fillSheet(sh, i, z) {
-    sh.querySelector('.ink').innerHTML = i < pages.length ? imagesMarkup(pages[i]) + inkMarkup(pages[i].strokes) + imagesMarkup(pages[i], undefined, true) + notesMarkup(pages[i]) : '';
-    sh.querySelector('.pnum').textContent = i < pages.length ? i + 1 : 'new';
+  // kind: 'front' (the notebook's front cover: logo, name, version) or 'back' (grey cardboard); otherwise page i
+  function fillSheet(sh, i, z, kind) {
+    sh.classList.toggle('cover', !!kind);
+    sh.querySelector('.ink').innerHTML = kind === 'front' ? frontCover() : kind ? '' : i < pages.length ? imagesMarkup(pages[i]) + inkMarkup(pages[i].strokes) + imagesMarkup(pages[i], undefined, true) + notesMarkup(pages[i]) : '';
+    sh.querySelector('.pnum').textContent = kind ? '' : i < pages.length ? i + 1 : 'new';
     sh.style.zIndex = z;
     sh.hidden = false;
   }
+  function frontCover() {
+    const f = v => +v.toFixed(2), u = Math.min(W, H), cx = W / 2, cy = H / 2;
+    const tw = u * 0.3, th = tw * 65 / 72, tx = cx - tw / 2, ty = cy - th - u * 0.06, lw = tw * 0.72, lh = lw * 36 / 40;
+    const n = VERSION.match(/_(\d+)$/);
+    return `<rect x="${f(tx)}" y="${f(ty)}" width="${f(tw)}" height="${f(th)}" rx="${f(tw * 0.22)}" fill="#1e2a44"/>` +
+      LOGO.replace('<svg class="logo"', `<svg x="${f(cx - lw / 2)}" y="${f(ty + (th - lh) / 2)}" width="${f(lw)}" height="${f(lh)}" color="#e9e4d4"`) +
+      `<text x="${f(cx)}" y="${f(cy + u * 0.07)}" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="${f(u * 0.085)}" fill="#f4f2ec">RRnotes</text>` +
+      `<text x="${f(cx)}" y="${f(cy + u * 0.13)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${f(u * 0.04)}" fill="#f4f2ec" fill-opacity=".8">${n ? `Version ${+n[1]}` : esc(VERSION)}</text>`;
+  }
   const lastHasContent = () => { const l = pages[pages.length - 1]; return !!(l.strokes.length || notesOf(l).length || imagesOf(l).length); };
-  function startFlip(dir, limit = FLIP_MAX) {
+  // At either end the notebook's cover follows the last page: it can be peeked at (half a turn), never landed on.
+  function startFlip(dir, limit = FLIP_MAX, noNew = false) {
     clearTimeout(nav.timer);
-    const avail = dir > 0 ? pages.length - 1 - cur + (lastHasContent() ? 1 : 0) : cur;
-    const maxN = Math.min(limit, avail);
-    if (maxN <= 0) { const first = dir < 0; cancelNav(); if (first) toast('This is the first page.'); return; }
+    const avail = dir > 0 ? pages.length - 1 - cur + (!noNew && lastHasContent() ? 1 : 0) : cur;
+    const realN = Math.min(limit, avail), cover = realN < limit && (dir > 0 || BACK_OVER_BINDING);
+    const maxN = realN + (cover ? 1 : 0);
+    if (maxN <= 0) { cancelNav(); return; }
     if (dir < 0 && BACK_OVER_BINDING) {
       // Back: the pages are bound on the left, so the previous pages swing back over the binding.
       // Each starts edge-on (a thin sliver at the left edge) and opens to the right over the current page.
       const sheets = [];
-      for (let k = 0; k < maxN; k++) { const sh = sheetAt(k); fillSheet(sh, cur - 1 - k, 11 + k); sh.classList.add('turning'); sh.classList.remove('from-left'); sheets.push(sh); }
-      Object.assign(nav, { mode: 'flip', dir, maxN, sheets, p: 0, lift: liftTarget(), back: true });
+      for (let k = 0; k < maxN; k++) { const sh = sheetAt(k); fillSheet(sh, cur - 1 - k, 11 + k, cover && k === realN ? 'front' : null); sh.classList.add('turning'); sh.classList.remove('from-left'); sheets.push(sh); }
+      Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: liftTarget(), back: true,
+        pMax: cover ? FLIP_NEXT * realN + FLIP_FIRST / 2 : 1 });     // the front cover comes half-way down at most
       setFlip(0);
       return;
     }
@@ -5732,9 +5751,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pageEl.style.zIndex = 10 + maxN;
     pageEl.querySelector('.pnum').textContent = cur + 1;
     for (let k = 1; k < maxN; k++) { const sh = sheetAt(k - 1); fillSheet(sh, cur + dir * k, 10 + maxN - k); sheets.push(sh); }
-    fillSheet(sheetAt(maxN - 1), cur + dir * maxN, 10);
+    fillSheet(sheetAt(maxN - 1), cur + dir * maxN, 10, cover ? 'back' : null);
     sheets.forEach(sh => { sh.classList.add('turning'); sh.classList.toggle('from-left', dir < 0); });
-    Object.assign(nav, { mode: 'flip', dir, maxN, sheets, p: 0, lift: liftTarget() });
+    Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: liftTarget(),
+      pMax: cover ? commitAt(realN) - 0.001 : 1 });                  // the last page lifts up to upright at most
     setFlip(0);
   }
   // Sheet k is upright (90°) and counts at 30 %, 46 %, 62 %, 78 %, 94 % of the swipe, in both styles.
@@ -5772,7 +5792,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return a;
   }
-  function flipCount(p) {
+  function flipCount(p) { return Math.min(flipCountRaw(p), nav.realN === undefined ? Infinity : nav.realN); }   // never the cover
+  function flipCountRaw(p) {
     const ang = flipAngles(p);
     if (nav.back) { let n = 0; while (n < nav.maxN && ang[n] <= BACK_COUNT_AT) n++; return n; }
     let best = 0, bestShare = -1, above = 0;    // above = width covered by the sheets on top
@@ -5800,6 +5821,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     stage.style.transform = `translate(${L.dx * k}px, ${L.dy * k}px) scale(${1 + (L.f - 1) * k})`;
   }
   function setFlip(p) {
+    p = Math.min(p, nav.pMax === undefined ? 1 : nav.pMax);
     nav.p = p;
     if (nav.slide) { nav.slide.lp = Math.max(nav.slide.lp || 0, Math.min(1, p / 0.1)); setLift(nav.slide.lp); }   // stays out while sliding
     else setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
@@ -5832,7 +5854,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (n0.tgt) n0.tgt.classList.remove('target');
     const fast = n0.dir > 0 ? n0.vx < -0.5 : n0.vx > 0.5;
     let n = n0.forceCancel ? 0 : flipCount(n0.p);
-    if (!n0.forceCancel && n === 0 && fast && n0.p > 0.03) n = 1;
+    if (!n0.forceCancel && n === 0 && fast && n0.p > 0.03) n = Math.min(1, n0.realN);
     $('riffle').hidden = true;
     animating = true;
     const settle = flipStyle === 'fan' ? 360 : 300;
@@ -5892,20 +5914,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (nav.mode === 'slidewait' && Math.abs(raw) < 12) return;
     const x = Math.max(0, Math.abs(raw) - 12), dir = raw > 0 ? 1 : -1;
     const maxT = dir > 0 ? pages.length - 1 - sl.start : sl.start;      // existing pages only (a swipe adds new ones)
-    if (maxT <= 0) {                              // nothing that way
-      if (sl.built) { slideTeardown(); sl.built = false; cur = sl.start; renderPage(); sl.bo = -1; }
-      nav.mode = 'slidewait';
-      if (!sl.warned) { sl.warned = true; toast(dir < 0 ? 'This is the first page.' : 'This is the last page.', 1500); }
-      return;
-    }
-    const T = Math.min(maxT, x / slidePx() + Math.pow(x / 260, 2));
+    const T = Math.min(maxT + 1, x / slidePx() + Math.pow(x / 260, 2));  // one more: the cover, which only peeks
     const bo = Math.max(0, Math.min(Math.floor(T) - 1, maxT - 1));
     if (!sl.built || dir !== sl.dir || bo !== sl.bo) {        // (re)lay the sheets from a new starting page
       if (sl.built) slideTeardown();
       cur = sl.start + dir * bo; renderPage();
       sl.dir = dir; sl.bo = bo; sl.built = true;
       nav.tgt = undefined;
-      startFlip(dir, Math.min(SLIDE_WIN, maxT - bo));
+      startFlip(dir, Math.min(SLIDE_WIN, maxT - bo + 1), true);
     }
     nav.mode = 'flip';
     const rel = T - bo, p = Math.min(1, rel <= 1 ? rel * FLIP_FIRST : FLIP_FIRST + (rel - 1) * FLIP_NEXT);
