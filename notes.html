@@ -33,7 +33,8 @@
     --ph: 297;
     --sheet-edge: rgba(0, 0, 0, .14);
     --sheet-shine: rgba(255, 255, 255, .8);      /* the light catching the paper's edge */
-    --sel: #1f6fd1;                               /* selection colour (setting): selections, the page you land on */
+    --sel: #f08a10;                               /* selection colour (setting): selections, the page you land on */
+    --sel-glow: 8px;                              /* its coloured glow */
     --sheet-inner: rgba(0, 0, 0, .07);
     --mag: #6b40b8;                  /* magnifier frame */
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -705,7 +706,7 @@
   .page.turning.from-left { transform-origin: 100% 50%; }
   /* while turning: a fine edge and the page number, so sheets in the fan can be told apart */
   .page.turning { box-shadow: inset 0 0 0 1px var(--sheet-edge), inset 0 0 0 2px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
-  .page.target { box-shadow: inset 0 0 0 3px var(--sel), inset 0 0 0 4px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow) !important; }
+  .page.target { box-shadow: inset 0 0 0 3px var(--sel), inset 0 0 0 4px var(--sheet-shine), inset 0 0 14px var(--sheet-inner), 0 0 var(--sel-glow) var(--sel), 0 8px 28px var(--sheet-shadow) !important; }
   .page.target .pnum { color: var(--sel); font-weight: 700; opacity: 1; }
   .pnum {
     position: absolute; bottom: 7px; right: 12px; z-index: 2;
@@ -863,7 +864,8 @@
   .selbar button:hover { background: var(--active); }
   .selbar #selDel { color: var(--danger); }
   /* a selected sticky note or image: border and a light tint in the selection colour */
-  .objsel { fill: color-mix(in srgb, var(--sel) 9%, transparent); stroke: var(--sel); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .objsel { fill: color-mix(in srgb, var(--sel) 9%, transparent); stroke: var(--sel); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none;
+    filter: drop-shadow(0 0 calc(var(--sel-glow) / 2) var(--sel)); }
   .selobj .hnd { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
   .selbar svg { width: 17px; height: 17px; }
 
@@ -887,8 +889,14 @@
   /* explanations in the settings are hidden; a small (i) next to the option shows them */
   .sub.hint:not(.show) { display: none !important; }
   .selcols { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 2px 2px 4px; }
-  .menu .selcols button { display: block; width: 100%; height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 50%; border: 0; padding: 0; margin: 0; background: var(--c) !important; cursor: pointer; }
-  .menu .selcols button[aria-checked="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--c); }
+  .selcur { display: flex !important; align-items: center; gap: 12px; width: 100%; padding: 6px 4px !important; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+  .selcur i, .selprev div { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--sel); box-shadow: 0 0 var(--sel-glow) var(--sel); }
+  .selprev { display: grid; place-items: center; height: 84px; margin: 6px 0 12px; }
+  .selprev div { width: 110px; height: 56px; border-radius: 4px; background: color-mix(in srgb, var(--sel) 9%, var(--panel)); box-shadow: inset 0 0 0 2.5px var(--sel), 0 0 var(--sel-glow) var(--sel); }
+  #selDlg .selcols { margin-bottom: 14px; }
+  #selDlg h3 output { float: right; font-weight: 600; opacity: 1; }
+  .selcols button, .menu .selcols button { display: block; width: 100%; height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 50%; border: 0; padding: 0; margin: 0; background: var(--c) !important; cursor: pointer; }
+  .selcols button[aria-checked="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--c); }
   .lbl1 { display: block; }
   .infobtn, .menu .infobtn, .dlg .infobtn { display: inline-flex !important; align-items: center; justify-content: center; width: 26px !important; min-width: 0; height: 24px !important;
     margin: -4px -4px -4px 0 !important; padding: 0 !important; border: 0 !important; border-radius: 50%; background: none !important; color: inherit; font: inherit;
@@ -905,10 +913,10 @@
   /* flat page slider: all pages side by side */
   .strip { position: fixed; inset: 0; z-index: 30; background: var(--desk); overflow: hidden; pointer-events: none; }
   .strip-in { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 0 0; }
-  .stile { position: absolute; top: 0; left: 0; background: var(--paper); box-shadow: inset 0 0 0 1px var(--sheet-shine), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .stile { position: absolute; top: 0; left: 0; transform-origin: 50% 50%; background: var(--paper); box-shadow: inset 0 0 0 1px var(--sheet-shine), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
   .stile > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .stile.cover { background: linear-gradient(135deg, #979892, #82837d); }
-  .stile.target { box-shadow: inset 0 0 0 3px var(--sel), 0 1px 2px var(--sheet-shadow), 0 8px 28px var(--sheet-shadow); }
+  .stile.target { box-shadow: inset 0 0 0 3px var(--sel), 0 0 var(--sel-glow) var(--sel), 0 8px 28px var(--sheet-shadow); }
   .stile .snum { position: absolute; left: 0; right: 0; top: 100%; margin-top: 10px; text-align: center; font: 600 13px/1 var(--ui); color: var(--bar-fg); opacity: .6; font-variant-numeric: tabular-nums; }
   .stile.target .snum { color: var(--sel); opacity: 1; }
   .tzoom { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px); transform: translateX(-50%); z-index: 50; pointer-events: none;
@@ -1274,7 +1282,7 @@
     <div class="imgsizebox">
       <span>Handles on sticky notes and images<span class="sub" id="hndSub"></span></span>
       <select class="dd" id="hndModes" aria-label="Handles on sticky notes and images">
-        <option value="selected">When selected</option><option value="always">Always</option><option value="quiet">Quiet</option><option value="hidden">Hidden</option><option value="select">With Select</option>
+        <option value="selected">When selected</option><option value="quiet">Quiet</option><option value="always">Always</option>
       </select>
     </div>
   </div>
@@ -1282,7 +1290,7 @@
   <div class="menu">
     <div class="imgsizebox">
       <span>Selection colour<span class="sub">Marks selected sticky notes, images and writing, and the page you land on when turning or sliding</span></span>
-      <div class="selcols" id="selCols" role="radiogroup" aria-label="Selection colour"></div>
+      <button type="button" class="selcur" id="selColBtn"><i></i><span id="selColName"></span></button>
     </div>
   </div>
   <h3>Images</h3>
@@ -1388,6 +1396,16 @@
     <button type="button" id="psCancel">Cancel</button>
     <button type="button" class="primary" id="psApply">Apply</button>
   </div>
+</dialog>
+
+<dialog class="dlg" id="selDlg" aria-labelledby="selDlgTitle">
+  <h2 id="selDlgTitle">Selection colour</h2>
+  <p>Marks selected sticky notes, images and writing, and the page you land on.</p>
+  <div class="selprev"><div></div></div>
+  <div class="selcols" id="selCols" role="radiogroup" aria-label="Selection colour"></div>
+  <h3>Glow <output id="selGlowVal"></output></h3>
+  <input type="range" class="opacity" id="selGlow" min="0" max="24" step="2" aria-label="Glow around a selection">
+  <div class="row"><button type="button" class="primary" id="selDlgDone">Done</button></div>
 </dialog>
 
 <dialog class="dlg" id="flipDlg" aria-labelledby="flipTitle">
@@ -1614,8 +1632,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_95';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.3';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_96';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.4';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2172,11 +2190,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- View: fit scale × zoom, plus pan offset in CSS px ----
   // selection colour: selected sticky notes, images, writing, and the page you land on while turning or sliding
   const SEL_COLORS = { Blue: '#1f6fd1', Teal: '#0e9bb8', Green: '#2f9e41', Orange: '#f08a10', Red: '#d92b1e', Purple: '#a92fb4', Pink: '#d6336c', Graphite: '#4b5059' };
-  let selColor = (v => Object.values(SEL_COLORS).includes(v) ? v : SEL_COLORS.Blue)(store.get('selColor', SEL_COLORS.Blue));
+  let selColor = (v => Object.values(SEL_COLORS).includes(v) ? v : SEL_COLORS.Orange)(store.get('selColor', SEL_COLORS.Orange));
+  let selGlow = (v => v >= 0 && v <= 24 ? v : 8)(+store.get('selGlow', 8));   // the coloured light around a selection, in px
   function applySelColor() {
     document.documentElement.style.setProperty('--sel', selColor);
+    document.documentElement.style.setProperty('--sel-glow', selGlow + 'px');
     const box = document.getElementById('selCols');
     if (box) box.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.c === selColor)));
+    const name = Object.keys(SEL_COLORS).find(k => SEL_COLORS[k] === selColor) || '';
+    const lbl = document.getElementById('selColName'); if (lbl) lbl.textContent = selGlow ? `${name} · glow ${selGlow}` : `${name} · no glow`;
+    const gv = document.getElementById('selGlowVal'); if (gv) gv.textContent = selGlow ? `${selGlow} px` : 'off';
+    const gr = document.getElementById('selGlow'); if (gr) gr.value = selGlow;
   }
   const view = { fit: 1, zoom: 1, tx: 0, ty: 0 };
   let objSel = null;               // the sticky note or image selected with a finger tap
@@ -3880,7 +3904,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
-      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, selectionColor: selColor,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, selectionColor: selColor, selectionGlowPx: selGlow,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
@@ -3920,6 +3944,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if ([0, 1200, 2000, 3000].includes(o.imageMaxPx)) { imgMax = o.imageMaxPx; store.set('imgMax', imgMax); renderImgSize(); }
     if (o.stylusButton === 'grab' || o.stylusButton === 'erase') { penBtn = o.stylusButton; store.set('penBtn', penBtn); renderPenBtn(); }
     if (Object.values(SEL_COLORS).includes(o.selectionColor)) { selColor = o.selectionColor; store.set('selColor', selColor); applySelColor(); }
+    if (+o.selectionGlowPx >= 0 && +o.selectionGlowPx <= 24) { selGlow = +o.selectionGlowPx; store.set('selGlow', selGlow); applySelColor(); }
     if (TAP1[o.oneFingerDoubleTap]) { tap1Act = o.oneFingerDoubleTap; store.set('tap1', tap1Act); $('tap1Act').value = tap1Act; $('tap1Sub').textContent = TAP1[tap1Act]; }
     if (HOLD[o.holdPenAtEnd]) { holdAct = o.holdPenAtEnd; store.set('penHold', holdAct); $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct]; }
     if (TAP2[o.twoFingerDoubleTap]) { tap2Act = o.twoFingerDoubleTap; store.set('tap2', tap2Act); $('tap2Act').value = tap2Act; $('tap2Sub').textContent = TAP2[tap2Act]; }
@@ -4203,7 +4228,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     move: '<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
     gear: '<path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/>',
     size: '<path d="M5 5l14 14M5 5h6M5 5v6M19 19h-6M19 19v-6"/>',          // double arrow: resize
-    fold: '<path d="M20 4l-6 6M14 10V5.5M14 10h4.5M4 20l6-6M10 14v4.5M10 14H5.5"/>'   // arrows inward: fold away
+    fold: '<path d="M20 4l-6 6M14 10V5.5M14 10h4.5M4 20l6-6M10 14v4.5M10 14H5.5"/>',   // arrows inward: fold away
+    unlock: '<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'   // locked: tap to unlock
   };
   // a soft button: tinted (sticky notes: their own colour, a little darker) or white, thin edge, light shadow
   const shade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
@@ -4219,7 +4245,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<g transform="translate(${f(cx - r * 0.55)} ${f(cy - r * 0.55)}) scale(${f(r * 1.1 / 24)})" fill="none" stroke="${tint ? 'rgba(30,28,20,.72)' : '#4a4d45'}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${HANDLE_ICON[act]}</g></g>`;
   }
   // which objects show their handles fully (Quiet): near the hovering stylus, or tapped with a finger
-  const HND_MODES = ['selected', 'always', 'quiet', 'hidden', 'select'];
+  const HND_MODES = ['selected', 'quiet', 'always'];
   let handleMode = (v => HND_MODES.includes(v) ? v : 'selected')(store.get('handleMode', 'selected'));
   if (!store.get('hndV2', false)) { handleMode = 'selected'; store.set('handleMode', handleMode); store.set('hndV2', true); }   // new default once
   const nearIds = new Set(), nearUntil = new Map();
@@ -4678,7 +4704,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             `<g data-iact="crop-${c}"><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 1.6)}" fill="transparent"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(k * 0.55)}" fill="#fff" stroke="#1e2a44" stroke-width="${sw}"/></g>`).join('') + '</g>';
       }
       if (handleMode === 'selected' && !isSel) return '';
-      if (m.lock) return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect + chip(m.x + m0, m.y + m0, 'gear') + '</g>';   // locked: options only
+      if (m.lock) return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect + chip(m.x + m0, m.y + m0, 'gear') + chip(m.x + m.w - m0, m.y + m.h - m0, 'unlock') + '</g>';   // locked: options, and the lock
       return `<g data-iid="${m.id}"${isSel ? ' class="selobj"' : ''}>` + selRect +
         chip(m.x + m0, m.y + m0, 'gear') +
         chip(m.x + m.w - m0, m.y + m.h - m0, 'size') + '</g>';
@@ -4708,10 +4734,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
       return true;
     }
+    if (act === 'unlock') {                          // the lock on a locked image: tap to unlock it
+      remember(); delete m.lock; renderImages(); scheduleSave();
+      if (openPop === imgPop && imgEdit === m) renderImgPop();
+      toast('Image unlocked: it can be moved and resized again.', 2000);
+      return true;
+    }
     if (act.startsWith('crop-')) { active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], c0: { ...cropSt.C }, moved: false }; return true; }
     if (m.lock) return true;
     const a = active = { id: e.pointerId, type: e.pointerType, imgDrag: act, img: m, start: [x, y], m0: { ...m }, before: snapshot(), moved: false };
-    if (e.pointerType === 'touch') {                // a finger moves or resizes only after resting on the handle
+    if (e.pointerType === 'touch' && m !== objSel) {   // a finger resizes an unselected image only after resting on the handle
       a.wait = true;
       a.timer = setTimeout(() => { if (active === a && !a.dead) { a.wait = false; vibrate(8); } }, PEEK_HOLD);
     }
@@ -4862,7 +4894,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   $('imgSizes').addEventListener('change', e => { imgMax = +e.target.value; store.set('imgMax', imgMax); renderImgSize(); });
   renderImgSize();
-  const HND_SUB = { selected: 'Shown on a sticky note or image after a finger tap selects it; tap or write elsewhere to deselect', always: 'Always shown at full strength', quiet: 'Faint until the stylus comes near or a finger taps; hidden while writing', hidden: 'Not shown. With a finger, the top left corner opens the options, bottom right folds or resizes; the pen writes everywhere', select: 'Only shown while the Select tool is on' };
+  const HND_SUB = { selected: 'Shown on a sticky note or image after a finger tap selects it; tap or write elsewhere to deselect', always: 'Always shown at full strength', quiet: 'Always shown, but faint until the stylus comes near or it is selected; hidden while writing', hidden: 'Not shown. With a finger, the top left corner opens the options, bottom right folds or resizes; the pen writes everywhere', select: 'Only shown while the Select tool is on' };
   $('hndModes').addEventListener('change', e => {
     handleMode = e.target.value; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode();
   });
@@ -6279,7 +6311,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         el.innerHTML = tileMarkup(i) + `<span class="snum">${i < 0 ? '' : i >= pages.length ? 'New page' : i + 1}</span>`;
         $('stripIn').appendChild(el); st.tiles.set(i, el);
       }
-      el.style.transform = `translate(${vw / 2 + (i - c) * g.step - g.pw / 2}px, ${g.top}px)`;
+      const d = Math.abs(i - c), sc = 1 + 0.1 * Math.max(0, 1 - d);      // the page in the middle grows to 110 %
+      el.style.transform = `translate(${vw / 2 + (i - c) * g.step - g.pw / 2}px, ${g.top}px) scale(${sc.toFixed(4)})`;
+      el.style.zIndex = String(100 - Math.round(d * 10));
     }
     const t = Math.max(-1, Math.min(pages.length, Math.round(c)));
     if (t !== st.tgt || !st.marked) {
@@ -6300,6 +6334,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     // zoom back into the page you land on, to the very spot it will have on screen
     const k = W * S() / g.pw, x = vw / 2 + (land - st.c) * g.step - g.pw / 2, inner = $('stripIn');
+    const lt = st.tiles.get(t);
+    if (lt) { lt.style.transition = 'transform .26s cubic-bezier(.3,.1,.3,1)'; lt.style.transform = `translate(${x}px, ${g.top}px)`; }   // back to its true size while zooming in
     inner.style.transition = 'transform .26s cubic-bezier(.3,.1,.3,1)';
     inner.style.transform = `translate(${view.tx - x * k}px, ${view.ty - g.top * k}px) scale(${k})`;
     animating = true;
@@ -7042,8 +7078,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('selCols').addEventListener('click', e => {
     const b = e.target.closest('[data-c]'); if (!b) return;
     selColor = b.dataset.c; store.set('selColor', selColor); applySelColor();
-    if (typeof renderNotes === 'function') { renderNotes(); renderImages(); }
   });
+  $('selGlow').addEventListener('input', e => { selGlow = +e.target.value; store.set('selGlow', selGlow); applySelColor(); });
+  $('selColBtn').addEventListener('click', () => { closePops(); $('selDlg').showModal(); });
+  $('selDlgDone').addEventListener('click', () => $('selDlg').close());
   applySelColor();
   // settings: explanations behind a small (i), so the menus stay short; summaries of the current choice stay visible
   for (const scope of ['advPop', 'gestPop', 'flipDlg', 'mapDlg']) $(scope).querySelectorAll('.sub').forEach(sub => {
