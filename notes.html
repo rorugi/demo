@@ -1649,8 +1649,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_99';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.7';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_100';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.8';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1782,12 +1782,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     handle: svg('<circle cx="9" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.4" fill="currentColor" stroke="none"/>'),
     trash: svg('<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5"/>'),
     // pen types
+    // the pen buttons show their pen type, the body filled with the ink colour
+    p_pen: svg('<path class="body" d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1"/>', ' class="pen-ico"'),
+    p_ballpoint: svg('<path class="body" d="M17.6 3.4l3 3-10.9 10.9-3-3z"/><path d="M6.7 14.3l-1.4 4.4 4.4-1.4M5.3 18.7L3.6 20.4M15.4 5.6l3 3"/>', ' class="pen-ico"'),
+    p_fountain: svg('<g transform="rotate(45 12 12)"><path class="body" d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>', ' class="pen-ico"'),
+    p_brush: svg('<path d="M20.5 3.5c-3 1.6-7.6 5.7-9.6 8.3l1.3 1.3c2.6-2 6.7-6.6 8.3-9.6z"/><path class="body" d="M10.4 12.3c-2.6-.2-4.3 1.4-4.6 3.6-.2 1.6-.9 2.9-2.3 3.9 3.3.6 6.6-.4 7.9-2.8.6-1.1.5-2.3-.1-3.1z"/>', ' class="pen-ico"'),
+    p_chisel: svg('<path class="body" d="M14.8 3.8l5.4 5.4-6.7 6.7-5.4-5.4z"/><path d="M8.1 10.5l-3.4 6.2 2.6 2.6 6.2-3.4"/><path d="M4.7 16.7l-1.5 1.5 2.6 2.6 1.5-1.5" stroke-width="2.6"/>', ' class="pen-ico"'),
+    p_pencil: svg('<path class="body" d="M16.3 3.6l4.1 4.1-9.6 9.6-4.1-4.1z"/><path d="M6.7 13.2L4 20l6.8-2.7M14 5.9l4.1 4.1"/><path d="M4 20l.9-2.3 1.4 1.4z" fill="currentColor"/>', ' class="pen-ico"'),
     kpen: svg('<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1"/><circle cx="5.2" cy="18.8" r=".6" fill="currentColor" stroke="none"/>'),
     kfountain: svg('<g transform="rotate(45 12 12)"><path d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>'),
     kballpoint: svg('<path d="M17.6 3.4l3 3-10.9 10.9-3-3z"/><path d="M6.7 14.3l-1.4 4.4 4.4-1.4M5.3 18.7L3.6 20.4"/><path d="M15.4 5.6l3 3"/>'),
     kbrush: svg('<path d="M20.5 3.5c-3 1.6-7.6 5.7-9.6 8.3l1.3 1.3c2.6-2 6.7-6.6 8.3-9.6z"/><path d="M10.4 12.3c-2.6-.2-4.3 1.4-4.6 3.6-.2 1.6-.9 2.9-2.3 3.9 3.3.6 6.6-.4 7.9-2.8.6-1.1.5-2.3-.1-3.1z" fill="currentColor" fill-opacity=".25"/>'),
     kchisel: svg('<path d="M14.8 3.8l5.4 5.4-6.7 6.7-5.4-5.4z"/><path d="M8.1 10.5l-3.4 6.2 2.6 2.6 6.2-3.4"/><path d="M4.7 16.7l-1.5 1.5 2.6 2.6 1.5-1.5" stroke-width="2.6"/>'),
-    kpencil: svg('<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1M4.5 15.4l4.1 4.1"/><path d="M4 20l.25-2.3 2.05 2.05z" fill="currentColor"/>'),
+    kpencil: svg('<path d="M16.3 3.6l4.1 4.1-9.6 9.6-4.1-4.1z"/><path d="M6.7 13.2L4 20l6.8-2.7M14 5.9l4.1 4.1"/><path d="M4 20l.9-2.3 1.4 1.4z" fill="currentColor"/>'),
     pentype: svg('<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1"/><path d="M15 19.5h6M18 16.5v6" stroke-width="1.6"/>')
   };
   // pen types: t is the letter a stroke keeps; types with a width per point are drawn as a filled outline
@@ -2031,6 +2038,50 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     `<mask id="rrGrain" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000"><rect x="-100000" y="-100000" width="200000" height="200000" fill="url(#rrGrainPat)"/></mask>` : '';
   document.getElementById('appDefs').innerHTML = GRAIN_DEFS;
   const fountainCache = new WeakMap();
+  const segX = (a, b, c, d) => {                // where segments ab and cd cross, or null
+    const r = [b[0] - a[0], b[1] - a[1]], q = [d[0] - c[0], d[1] - c[1]], den = r[0] * q[1] - r[1] * q[0];
+    if (Math.abs(den) < 1e-12) return null;
+    const t = ((c[0] - a[0]) * q[1] - (c[1] - a[1]) * q[0]) / den, u = ((c[0] - a[0]) * r[1] - (c[1] - a[1]) * r[0]) / den;
+    return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? [a[0] + r[0] * t, a[1] + r[1] * t] : null;
+  };
+  // edge points that lie inside the round tip at a nearby moment are not on the outside of the ink: leave them out
+  // (the inner side of a tight turn then becomes a clean corner instead of a jagged tooth)
+  function uncover(S, orig, smp, tan, side) {
+    const m = smp.length, W = 90, idx = new Map(orig.map((q, i) => [q, i]));
+    return S.filter((q, k) => {
+      const j = idx.has(q) ? idx.get(q) : -1;
+      if (j < 0) return true;                       // a joining point made by unfold
+      // only the inside of a turn (the outside stays the smooth round edge)
+      const a = tan[Math.max(0, j - 3)], b = tan[Math.min(m - 1, j + 3)], n = [-tan[j][1] * side, tan[j][0] * side];
+      if (n[0] * (b[0] - a[0]) + n[1] * (b[1] - a[1]) <= 0) return true;
+      for (let i = Math.max(0, j - W); i <= Math.min(m - 1, j + W); i++) {
+        if (Math.abs(i - j) <= 2) continue;
+        const c = smp[i], r = c[2] * 0.96 - 0.002;
+        if (r > 0 && (q[0] - c[0]) ** 2 + (q[1] - c[1]) ** 2 < r * r) return false;
+      }
+      return true;
+    });
+  }
+  // an offset edge that runs backwards against the centre line has folded: join it where it crosses itself
+  function unfold(S, tan) {
+    const W = 48;
+    let P = S.map((q, i) => ({ q, t: tan[i] }));
+    for (let i = 0; i < P.length - 1; i++) {
+      const st = [P[i + 1].q[0] - P[i].q[0], P[i + 1].q[1] - P[i].q[1]];
+      if (st[0] * P[i].t[0] + st[1] * P[i].t[1] >= 0) continue;          // runs forward: fine
+      let cut = null;
+      for (let span = 2; span <= 2 * W && !cut; span++) {
+        for (let a = Math.max(0, i - span + 1); a <= i && !cut; a++) {
+          const b = a + span;
+          if (b < i + 1 || b >= P.length - 1) continue;
+          const x = segX(P[a].q, P[a + 1].q, P[b].q, P[b + 1].q);
+          if (x) cut = { a, b, x };
+        }
+      }
+      if (cut) { P.splice(cut.a + 1, cut.b - cut.a, { q: cut.x, t: P[cut.a].t }); i = cut.a; }
+    }
+    return P.map(o => o.q);
+  }
   function fountainPts(st) {
     let o = fountainCache.get(st);
     if (o) return o;
@@ -2048,23 +2099,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         add(x, y, ra + (rb - ra) * t);
       }
     }
-    const L = [], R = [], m = smp.length;
+    let L = [], R = [];
+    const m = smp.length, tan = [];
     for (let i = 0; i < m; i++) {
       const q0 = smp[Math.max(0, i - 1)], q1 = smp[Math.min(m - 1, i + 1)];
       let dx = q1[0] - q0[0], dy = q1[1] - q0[1]; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
       const r = smp[i][2];
+      tan.push([dx, dy]);
       L.push([smp[i][0] - dy * r, smp[i][1] + dx * r]); R.push([smp[i][0] + dy * r, smp[i][1] - dx * r]);
     }
+    // in a tight turn the inner edge folds back over itself; that little loop would show as a hole: cut it out
+    L = uncover(unfold(L, tan), L, smp, tan, 1); R = uncover(unfold(R, tan), R, smp, tan, -1);
     const cap = (c, from, r, dir) => {        // a round end: half a circle around the end point
       const out = [], a0 = Math.atan2(from[1] - c[1], from[0] - c[0]);
-      for (let k = 1; k < 8; k++) { const a = a0 + dir * Math.PI * k / 8; out.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]); }
+      for (let k = 1; k < 12; k++) { const a = a0 + dir * Math.PI * k / 12; out.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]); }
       return out;
     };
     if (!m) o = [];
     else if (m === 1) { const [x, y, r] = smp[0]; o = Array.from({ length: 16 }, (_, k) => [x + Math.cos(k * Math.PI / 8) * r, y + Math.sin(k * Math.PI / 8) * r]); }
     else {
       const e = smp[m - 1], b0 = smp[0];
-      o = [...L, ...cap(e, L[m - 1], e[2], -1), ...R.reverse(), ...cap(b0, R[R.length - 1], b0[2], -1)];
+      o = [...L, ...cap(e, L[L.length - 1], e[2], -1), ...R.reverse(), ...cap(b0, R[R.length - 1], b0[2], -1)];
     }
     fountainCache.set(st, o);
     return o;
@@ -2549,8 +2604,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function setSwatch(sw, b) {
     const col = displayColor(b.color, b.pickedOnDark);
-    // the pen you draw with is a nib, presets are pencils; highlighter ink shows the marker on both
-    const host = sw.closest('.pen'), want = b.highlighter ? 'marker' : host.classList.contains('realpen') ? 'nib' : 'pen';
+    // a pen shows its pen type; a preset shows the type it sets (or the plain preset pen when it keeps the pen's); highlighters a marker
+    const host = sw.closest('.pen'), want = b.highlighter ? 'marker' : PEN_KINDS[b.kind] ? 'p_' + b.kind : host.classList.contains('realpen') ? 'p_pen' : 'pen';
     if (host.dataset.ico !== want) {
       const old = host.querySelector('.pen-ico');
       if (old) old.outerHTML = ICON[want];
@@ -3436,7 +3491,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.nib : t === 'preset' ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1) scale(.42)" stroke-width="3.6"><path fill="var(--panel)" d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'preset' ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1) scale(.42)" stroke-width="3.6"><path fill="var(--panel)" d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
@@ -5226,11 +5281,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const KIND_FEEL = {
     ballpoint: { ease: 0.3, ts: 0.4, te: 0.6, floor: 0.6, f: (p) => 0.78 + 0.38 * p },
     fountain:  { ease: 0.35, ts: 1.5, te: 2.5, floor: 0.25, f: (p, v, dir) => (0.45 + 0.95 * Math.pow(p, 0.9)) * (dir == null ? 0.85 : 0.5 + 0.62 * Math.abs(Math.sin(dir + 0.7))) * Math.max(0.6, Math.min(1.1, 1.1 - 0.45 * v)) },
-    brush:     { ease: 0.25, ts: 3, te: 5, floor: 0.08, f: (p, v) => (0.12 + 1.9 * Math.pow(p, 1.3)) * Math.max(0.55, Math.min(1.1, 1.1 - 0.6 * v)) },
+    brush:     { ease: 0.22, ts: 2.5, te: 4, floor: 0.1, f: (p, v) => (0.22 + 1.75 * Math.pow(p, 1.3)) * Math.max(0.6, Math.min(1.1, 1.1 - 0.5 * v)) },
     chisel:    { ease: 0.5, ts: 0.25, te: 0.25, floor: 0.7, f: (p, v, dir) => (0.12 + 1.3 * (dir == null ? 0.6 : Math.abs(Math.sin(dir + Math.PI / 4)))) * (0.85 + 0.3 * p) }
   };
   function penFactor(a, pr, t, x, y) {
-    const pres = a.type === 'pen' && pr > 0 && pr <= 1 ? pr : 0.5;
+    // a pen reports 0 when it does not know the pressure (often the very first event): take the last one, or a light touch
+    const pres = a.type === 'pen' ? (pr > 0 && pr <= 1 ? (a.lp = pr) : a.lp != null ? a.lp : 0.25) : 0.5;
     a.ps = (a.ps || 0) + pres; a.pn = (a.pn || 0) + 1;
     const feel = KIND_FEEL[a.kind];
     if (!feel) return;
