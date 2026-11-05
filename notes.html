@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_79</title>
+<title>RRnotes_80</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -1529,7 +1529,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_79';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_80';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -5543,8 +5543,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('riffle').hidden = false;
   }
 
-  // Flip: forward, sheets lift from the right and turn over the left edge; back, the mirror
-  // image: they lift from the left and turn over the right edge. Several can move at once.
+  // Flip: the pages are bound on the left. Forward, sheets lift from the right and turn over the binding;
+  // back, the previous sheets swing back from the binding and open to the right. Several can move at once.
   function sheetAt(i) {
     while (pool.length <= i) {
       const sh = sheetB.cloneNode(true);
@@ -5567,6 +5567,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const avail = dir > 0 ? pages.length - 1 - cur + (pages[pages.length - 1].strokes.length || notesOf(pages[pages.length - 1]).length || imagesOf(pages[pages.length - 1]).length ? 1 : 0) : cur;
     const maxN = Math.min(FLIP_MAX, avail);
     if (maxN <= 0) { const first = dir < 0; cancelNav(); if (first) toast('This is the first page.'); return; }
+    if (dir < 0) {
+      // Back: the pages are bound on the left, so the previous pages swing back over the binding.
+      // Each starts edge-on (a thin sliver at the left edge) and opens to the right over the current page.
+      const sheets = [];
+      for (let k = 0; k < maxN; k++) { const sh = sheetAt(k); fillSheet(sh, cur - 1 - k, 11 + k); sh.classList.add('turning'); sh.classList.remove('from-left'); sheets.push(sh); }
+      Object.assign(nav, { mode: 'flip', dir, maxN, sheets, p: 0, lift: liftTarget(), back: true });
+      setFlip(0);
+      return;
+    }
     // The current page is on top; the pages it will reveal lie underneath in order.
     const sheets = [pageEl];
     pageEl.style.zIndex = 10 + maxN;
@@ -5598,7 +5607,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // strip between its own edge and the edge of the sheet lying on top of it.
   const PERSP = 2.6;                          // same factor as the perspective in paintSheet
   const coverWidth = a => a >= 90 ? 0 : Math.min(1, Math.cos(a * Math.PI / 180) * PERSP / (PERSP - Math.sin(a * Math.PI / 180)));
+  // Back: how much of the page sheet k covers (0…1, linear with the swipe), and the turn angle that gives it
+  const backCover = (p, k) => k === 0 ? clamp01(p / (2 * FLIP_FIRST)) : clamp01((p - commitAt(k) + FLIP_NEXT) / (2 * FLIP_NEXT));
+  function angleFor(w) {
+    if (w <= 0) return 91;                      // still behind the binding: not shown
+    if (w >= 1) return 0;
+    let lo = 0, hi = 90;
+    for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; if (coverWidth(m) > w) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
   function flipCount(p) {
+    if (nav.back) {                             // the sheet of the page furthest back lies on top
+      let best = 0, bestShare = -1, above = 0;
+      for (let k = nav.maxN - 1; k >= 0; k--) {
+        const share = Math.max(0, backCover(p, k) - above);
+        if (share > bestShare + 1e-6) { best = k + 1; bestShare = share; }
+        above = Math.max(above, backCover(p, k));
+      }
+      return 1 - above > bestShare + 1e-6 ? 0 : best;
+    }
     let best = 0, bestShare = -1, above = 0;    // above = width covered by the sheets on top
     for (let k = 0; k <= nav.maxN; k++) {
       const w = k < nav.maxN ? coverWidth(sheetProgress(p, k) * 180) : 1;   // the last page lies flat
@@ -5626,9 +5653,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function setFlip(p) {
     nav.p = p;
     setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
-    nav.sheets.forEach((sh, k) => paintSheet(sh, sheetProgress(p, k) * 180, nav.dir));
+    if (nav.back) nav.sheets.forEach((sh, k) => paintSheet(sh, angleFor(backCover(p, k)), 1));
+    else nav.sheets.forEach((sh, k) => paintSheet(sh, sheetProgress(p, k) * 180, nav.dir));
     const n = flipCount(p);
-    if (n >= 2) bubble(`${cur + 1 + nav.dir * n} / ${pages.length + (cur + n >= pages.length ? 1 : 0)}`, `Release to turn ${n} pages`);
+    if (n >= 2) bubble(`${cur + 1 + nav.dir * n} / ${pages.length + (nav.dir > 0 && cur + n >= pages.length ? 1 : 0)}`, `Release to turn ${n} pages`);
     else $('riffle').hidden = true;
   }
   function paintSheet(sh, a, dir) {
@@ -5657,12 +5685,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     n0.sheets.forEach((sh, k) => {
       sh.style.transition = `transform ${flipStyle === 'fan' ? .36 : .3}s cubic-bezier(.2,.7,.3,1)`;
       const done = k < n;
-      requestAnimationFrame(() => paintSheet(sh, done ? 180 : 0, n0.dir));
+      if (n0.back) requestAnimationFrame(() => paintSheet(sh, done ? 0 : 90, 1));   // lands flat, or swings back to the binding
+      else requestAnimationFrame(() => paintSheet(sh, done ? 180 : 0, n0.dir));
     });
     setTimeout(() => {
       // The sheet showing the target page stays on top while the real page gets its new ink,
       // and is only removed two frames later, so there is never a frame with missing content.
-      const cover = n ? (n < n0.maxN ? n0.sheets[n] : pool[n0.maxN - 1]) : null;
+      const cover = !n ? null : n0.back ? n0.sheets[n - 1] : n < n0.maxN ? n0.sheets[n] : pool[n0.maxN - 1];
       if (cover) { cover.style.zIndex = 30; cover.style.transition = ''; cover.style.transform = ''; cover.style.visibility = ''; cover.classList.remove('turning', 'from-left'); cover.querySelector('.shade').style.opacity = 0; }
       if (n) {
         const target = cur + n0.dir * n;
