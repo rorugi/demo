@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_92</title>
+<title>RRnotes</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -860,7 +860,8 @@
     display: flex; align-items: center; gap: 6px; font: 500 13px/1 var(--ui); cursor: pointer;
   }
   .selbar button:hover { background: var(--active); }
-  .selbar #selDel { color: var(--danger); }
+  .selbar #selDel, .objbar #obDel { color: var(--danger); }
+  .objbar button span { font: inherit; opacity: 1; padding: 0; }
   .selbar svg { width: 17px; height: 17px; }
 
   .riffle {
@@ -1307,6 +1308,13 @@
   <button type="button" id="selDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5"/></svg>Delete</button>
   <button type="button" id="selDone">Done</button>
 </div>
+<!-- a finger tap on a sticky note or image: what can be done with it -->
+<div class="selbar objbar" id="objBar" role="toolbar" aria-label="Sticky note or image" hidden>
+  <button type="button" id="obOpts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Options</button>
+  <button type="button" id="obFold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14v9l-5 5H5z"/><path d="M14 19v-5h5"/></svg><span id="obFoldTxt">Fold</span></button>
+  <button type="button" id="obPage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="11" height="15" rx="1.5"/><path d="M13 13h7M17 10l3 3-3 3"/></svg>To page…</button>
+  <button type="button" id="obDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7h15M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5"/></svg>Delete</button>
+</div>
 <div class="magwin" id="magwin" hidden>
   <div class="magview" id="magView">
     <svg id="magSvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-label="Magnified part of a page">
@@ -1600,7 +1608,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_92';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_93';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.1';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -2139,6 +2149,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   function renderPage() {
+    if (objBarFor && !objOnPage(objBarFor)) hideObjBar();
     pageInk.innerHTML = inkMarkup(pages[cur].strokes, false, true);
     renderImages();
     renderNotes();
@@ -2151,6 +2162,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- View: fit scale × zoom, plus pan offset in CSS px ----
   const view = { fit: 1, zoom: 1, tx: 0, ty: 0 };
+  let objBarFor = null;            // the sticky note or image whose action bar is open
   const pool = [];                 // extra sheets used while several pages turn at once
   const S = () => view.fit * view.zoom;
   let vw = 0, vh = 0, dpr = 1;
@@ -2183,6 +2195,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function applyView() {
     const s = S();
+    if (objBarFor) placeObjBar();
     for (const el of [pageEl, sheetB, ...pool]) positionSheet(el);
     for (const ctx of [lctx, tctx]) {
       ctx.restore(); ctx.save();
@@ -3718,13 +3731,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
   const escAttr = t => esc(t).replace(/\n/g, ' ');
   function collectionBody(files, when) {
-    return `<header><h1>RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}</h1><p>Saved ${esc(when)} with ${esc(VERSION)}</p>` +
+    return `<header><h1>RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}</h1><p>Saved ${esc(when)} with ${esc(VERSION_LABEL)}</p>` +
       `<nav><ol>${files.map((f, i) => `<li><a href="#nb-${i + 1}">${esc(fileBase(f.name))}</a> <span>${f.pages} ${f.pages === 1 ? 'page' : 'pages'}</span></li>`).join('')}</ol></nav></header>\n` +
       files.map((f, i) => `<section class="notebook" id="nb-${i + 1}" data-file="${escAttr(f.name)}"><h2>${esc(fileBase(f.name))} <a href="#top" aria-label="Back to the list">↑</a></h2>\n${f.svg.replace(/^<\?xml[^>]*>\s*/, '').replace(/nb-grid/g, `nb${i + 1}-grid`).replace(/id="page-/g, `id="nb${i + 1}-page-`)}</section>\n`).join('');
   }
   const COLL_CSS = `body{margin:0;background:#e6e6e1;font:15px/1.4 system-ui,sans-serif;color:#1c1d20}header{max-width:820px;margin:0 auto;padding:24px 16px 8px}h1{font-size:22px;margin:0 0 4px}header p{margin:0 0 12px;opacity:.65;font-size:13px}nav ol{margin:0;padding-left:22px}nav li{margin:4px 0}nav span{opacity:.6;font-size:13px}a{color:#1f6fd1}section{max-width:820px;margin:0 auto;padding:16px}h2{font-size:18px;margin:18px 0 10px}h2 a{text-decoration:none;font-size:15px;margin-left:6px}section svg{display:block;width:100%;height:auto;box-shadow:0 2px 12px rgba(0,0,0,.12)}@media print{body{background:#fff}section{page-break-before:always}header nav{display:none}}`;
   function collectionPage(body, title, packed) {
-    const head = `<!DOCTYPE html>\n<html lang="en" id="top"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="${VERSION}"><title>${esc(title)}</title><style>${COLL_CSS}</style></head>\n`;
+    const head = `<!DOCTYPE html>\n<html lang="en" id="top"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="${VERSION_LABEL} (${VERSION})"><title>${esc(title)}</title><style>${COLL_CSS}</style></head>\n`;
     if (!packed) return head + `<body data-rrnotes-collection="1">\n${body}</body></html>\n`;
     return head + `<body data-rrnotes-collection="1" data-packed="1"><header><h1>${esc(title)}</h1><p id="rrmsg">Unpacking…</p><noscript><p>This file is compressed: open it in a web browser with JavaScript to see the notebooks.</p></noscript></header>\n` +
       `<script type="application/octet-stream" id="rrpack" data-encoding="gzip+base64">${packed}<\/script>\n` +
@@ -3830,7 +3843,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Options file ----
   function optionsJSON() {
     return JSON.stringify({
-      app: 'notizblock', kind: 'options', formatVersion: 3, savedBy: VERSION,
+      app: 'notizblock', kind: 'options', formatVersion: 3, savedBy: `${VERSION_LABEL} (${VERSION})`,
       toolbars: bars.map((b, i) => ({
         name: i ? `Toolbar ${i + 1}` : 'Main',
         enabled: b.enabled,
@@ -4154,7 +4167,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     const pdfStr = t => '(' + String(t).replace(/[\\()]/g, m => '\\' + m).replace(/[^\x20-\x7e]/g, '?') + ')';
     const d = new Date(), pad = v => String(v).padStart(2, '0');
-    obj(infoId, () => put(`<< /Title ${pdfStr(title)} /Producer ${pdfStr(VERSION)} /CreationDate (D:${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}) >>`));
+    obj(infoId, () => put(`<< /Title ${pdfStr(title)} /Producer ${pdfStr(VERSION_LABEL)} /CreationDate (D:${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}) >>`));
     const xref = size, n = infoId + 1;
     put(`xref\n0 ${n}\n0000000000 65535 f \n`);
     for (let i = 1; i < n; i++) put(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
@@ -4323,16 +4336,49 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (a.moved) { remember(a.before); a.note.src ? renderImages() : renderNotes(); mapInkChanged(); scheduleSave(); }
     else if (a.on) fadeNote(a.note, false);
     if (a.btnTap && !a.moved) openObjMenu(a.note);   // stylus button tapped on it: its options
+    else if (a.type === 'touch' && !a.moved && !a.dead) showObjBar(a.note);   // a finger tap, or hold and let go
   }
+  // ---- Action bar for a sticky note or image (finger): options, fold, to another page, delete ----
+  const objBar = $('objBar');
+  function showObjBar(o) {
+    objBarFor = o;
+    $('obFold').hidden = !!o.src;
+    $('obFoldTxt').textContent = o.folded ? 'Open' : 'Fold';
+    objBar.hidden = false;
+    placeObjBar();
+  }
+  function hideObjBar() { if (objBarFor) { objBarFor = null; objBar.hidden = true; } }
+  function placeObjBar() {
+    const o = objBarFor;
+    if (!o) return;
+    const s = S(), L = view.tx + o.x * s, T = view.ty + o.y * s, R = L + (o.folded ? 2 * dotR() : objW(o)) * s, B = T + (o.folded ? 2 * dotR() : objH(o)) * s;
+    const w = objBar.offsetWidth, h = objBar.offsetHeight;
+    let y = T - h - 10;
+    if (y < 8) y = B + 10;
+    if (y + h > vh - 8) y = Math.max(8, T + 10);
+    objBar.style.left = Math.max(8, Math.min(vw - w - 8, (L + R) / 2 - w / 2)) + 'px';
+    objBar.style.top = y + 'px';
+  }
+  const objOnPage = o => !!o && (imagesOf(pages[cur]).includes(o) || notesOf(pages[cur]).includes(o));
+  function objBarAct(fn) { const o = objBarFor; hideObjBar(); if (objOnPage(o)) fn(o); }
+  $('obOpts').addEventListener('click', () => objBarAct(o => openObjMenu(o, true)));
+  $('obFold').addEventListener('click', () => objBarAct(n => {
+    remember();
+    n.folded = !n.folded;
+    if (!n.folded) { const list = notesOf(pages[cur]); list.splice(list.indexOf(n), 1); list.push(n); }
+    renderNotes(); mapInkChanged(); scheduleSave();
+  }));
+  $('obPage').addEventListener('click', () => objBarAct(o => { if (o.src) { imgEdit = o; $('imgMove').click(); } else { noteEdit = { kind: 'note', note: o }; $('noteMove').click(); } }));
+  $('obDel').addEventListener('click', () => objBarAct(o => { if (o.src) { imgEdit = o; $('imgDelete').click(); } else { noteEdit = { kind: 'note', note: o }; $('noteDelete').click(); } }));
   // the options of a sticky note or image, as if its gear was tapped
-  function openObjMenu(o) {
+  function openObjMenu(o, anyAnchor) {               // anyAnchor: without a gear (folded, handles off) next to the object itself
     if (o.src) {
-      const g = imgUi.querySelector(`[data-iid="${o.id}"] [data-iact="gear"]`);
+      const g = imgUi.querySelector(`[data-iid="${o.id}"] [data-iact="gear"]`) || (anyAnchor && imgEl(o.id));
       if (!g) return;
       imgEdit = o; renderImgPop(); showPop(imgPop, g);
       imgPopGuard = true; clearTimeout(imgGuardTimer); imgGuardTimer = setTimeout(() => { imgPopGuard = false; }, 350);
     } else {
-      const g = noteLayer.querySelector(`[data-nid="${o.id}"] [data-nact="gear"]`);
+      const g = noteLayer.querySelector(`[data-nid="${o.id}"] [data-nact="gear"]`) || (anyAnchor && noteLayer.querySelector(`[data-nid="${o.id}"]`));
       if (!g) return;
       noteEdit = { kind: 'note', note: o }; renderNotePop(); showPop(notePop, g); guardNotePop();
     }
@@ -4799,7 +4845,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('supportBtn').addEventListener('click', () => { closePops(); $('supportDlg').showModal(); });
     $('supportDone').addEventListener('click', () => $('supportDlg').close());
     $('supportCopy').addEventListener('click', async () => {
-      const r = [`${VERSION}`, navigator.userAgent, `screen ${screen.width}×${screen.height} @${devicePixelRatio}`,
+      const r = [`${VERSION_LABEL} (build ${VERSION.replace(/^RRnotes_/, '')})`, navigator.userAgent, `screen ${screen.width}×${screen.height} @${devicePixelRatio}`,
         `save picker: ${'showSaveFilePicker' in window ? 'yes' : 'no'} · open picker: ${'showOpenFilePicker' in window ? 'yes' : 'no'} · share files: ${canShareFiles ? 'yes' : 'no'}`, '', ...all].join('\n');
       try { await navigator.clipboard.writeText(r); toast('Report copied. Paste it into a message.'); } catch (_) { toast('Could not copy the report'); }
     });
@@ -5878,11 +5924,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function frontCover() {
     const f = v => +v.toFixed(2), u = Math.min(W, H), cx = W / 2, cy = H / 2;
     const tw = u * 0.3, th = tw * 65 / 72, tx = cx - tw / 2, ty = cy - th - u * 0.06, lw = tw * 0.72, lh = lw * 36 / 40;
-    const n = VERSION.match(/_(\d+)$/);
     return `<rect x="${f(tx)}" y="${f(ty)}" width="${f(tw)}" height="${f(th)}" rx="${f(tw * 0.22)}" fill="#1e2a44"/>` +
       LOGO.replace('<svg class="logo"', `<svg x="${f(cx - lw / 2)}" y="${f(ty + (th - lh) / 2)}" width="${f(lw)}" height="${f(lh)}" color="#e9e4d4"`) +
       `<text x="${f(cx)}" y="${f(cy + u * 0.07)}" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="${f(u * 0.085)}" fill="#f4f2ec">RRnotes</text>` +
-      `<text x="${f(cx)}" y="${f(cy + u * 0.13)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${f(u * 0.04)}" fill="#f4f2ec" fill-opacity=".8">${n ? `Version ${+n[1]}` : esc(VERSION)}</text>`;
+      `<text x="${f(cx)}" y="${f(cy + u * 0.13)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${f(u * 0.04)}" fill="#f4f2ec" fill-opacity=".8">Version ${esc(APP_VERSION)}</text>`;
   }
   const lastHasContent = () => { const l = pages[pages.length - 1]; return !!(l.strokes.length || notesOf(l).length || imagesOf(l).length); };
   // At either end the notebook's cover follows the last page: it can be peeked at (half a turn), never landed on.
@@ -6375,6 +6420,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Pointer routing on the desk ----
   stage.addEventListener('pointerdown', e => {
+    hideObjBar();                                     // any touch on the desk closes the action bar
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
     if (nav && nav.slide && nav.mode === 'slidewait' && e.pointerType === 'touch') {   // a second finger: a pinch, not the slider
@@ -6388,9 +6434,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     // a sticky note's handles (drag, gear, fold, folded dot) work with stylus, finger and mouse
     const rb = e.pointerType === 'mouse' && e.button === 2;           // the right mouse button acts like the stylus button
     if (rb && (active || mapDrag)) return;
-    const iact = !rb && !active && e.target.closest && e.target.closest('#imgUi [data-iact]');
+    const penHidden = handleMode === 'hidden' && e.pointerType === 'pen';   // hidden corners are for fingers: the pen writes there
+    const iact = !rb && !penHidden && !active && e.target.closest && e.target.closest('#imgUi [data-iact]');
     if (iact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && imageAction(e, iact)) return;
-    const nact = !rb && !active && notesShown && e.target.closest && e.target.closest('#noteLayer [data-nact]');
+    const nact = !rb && !penHidden && !active && notesShown && e.target.closest && e.target.closest('#noteLayer [data-nact]');
     if (nact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && noteAction(e, nact)) return;
 
     if (e.pointerType === 'pen') {
@@ -6846,8 +6893,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('aboutBtn').addEventListener('click', async () => {
     closePops();
     $('aboutMark').innerHTML = LOGO;
-    const n = VERSION.match(/_(\d+)$/);
-    $('aboutVer').textContent = n ? `Version ${+n[1]}` : VERSION;
+    $('aboutVer').textContent = `Version ${APP_VERSION}`;
     const installed = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
     let kept = 'unknown', used = 'unknown', free = 'unknown';
     try { if (navigator.storage && navigator.storage.persisted) kept = (await navigator.storage.persisted()) ? 'kept permanently' : 'may be cleared by the browser'; } catch (_) {}
@@ -6858,7 +6904,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (isFinite(est.quota) && isFinite(est.usage)) free = fmtBytes(Math.max(0, est.quota - est.usage));
       }
     } catch (_) {}
-    const rows = [['Build', VERSION], ['Running as', installed ? 'installed app' : 'web page'], ['Notebooks', `${nbIdx.loaded.length} open`],
+    const rows = [['Build', VERSION.replace(/^RRnotes_/, '')], ['Running as', installed ? 'installed app' : 'web page'], ['Notebooks', `${nbIdx.loaded.length} open`],
       ['Storage used', used], ['Storage available', free], ['Browser storage', kept]];
     $('aboutUpd').textContent = '';
     $('aboutUpdate').disabled = false; $('aboutUpdate').textContent = 'Update';
@@ -6884,15 +6930,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (reg) reg.update().catch(() => {});
       const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
       if (!res.ok) throw new Error(res.status);
-      const m = (await res.text()).match(/const VERSION = '(RRnotes_\d+)'/);
+      const txt = await res.text(), m = txt.match(/const VERSION = '(RRnotes_\d+)'/), av = txt.match(/const APP_VERSION = '([\d.]+)'/);
       const latest = m ? verNo(m[1]) : 0, mine = verNo(VERSION);
       if (latest > mine) {
-        say(`Version ${latest} found. Restarting…`);
+        say(`Version ${av ? av[1] : latest} found. Restarting…`);
         await flushSave();
         setTimeout(() => location.reload(), 600);
         return;
       }
-      say(latest ? `Version ${mine} is the newest.` : 'No version found on the server.');
+      say(latest ? `Version ${APP_VERSION} is the newest.` : 'No version found on the server.');
     } catch (_) {
       say('The server can’t be reached right now. Try again when you’re online.');
     }
