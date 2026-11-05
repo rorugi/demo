@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_86</title>
+<title>RRnotes_87</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -694,18 +694,6 @@
   /* the page you land on: its light band takes the colour of its border */
   .page.target { --sheen: rgba(31, 111, 209, .85); --sheen-out: rgba(31, 111, 209, .5); --sheet-shine: rgba(31, 111, 209, .35); }
   .page { will-change: transform; }
-  .page::before {
-    content: "";
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 14px;
-    height: 14px;
-    z-index: 1;
-    background: linear-gradient(135deg, rgba(0, 0, 0, .07) 0 50%, var(--desk) 50%);
-    box-shadow: -1px -1px 2px rgba(0, 0, 0, .08);
-    border-top-left-radius: 2px;
-  }
   .page.turning { transform-origin: 0 50%; }
   /* turning back: the sheet lifts from the left and swings away over its right edge */
   .page.turning.from-left { transform-origin: 100% 50%; }
@@ -1375,7 +1363,7 @@
   </div>
   <div class="field">
     <label class="toggle" for="flipZoomToggle"><span>Zoom out while flipping<span class="sub">Shows the whole sheet, then returns to your spot</span></span><span class="switch"><input type="checkbox" id="flipZoomToggle"><i></i></span></label>
-    <label class="toggle" for="riffleToggle"><span>Riffle along the bottom edge<span class="sub">Hold or slide sideways to run through pages</span></span><span class="switch"><input type="checkbox" id="riffleToggle"><i></i></span></label>
+    <label class="toggle" for="riffleToggle"><span>Page slider beside the page<span class="sub">Touch the desk next to the page and move: right or down for later pages, left or up for earlier ones</span></span><span class="switch"><input type="checkbox" id="riffleToggle"><i></i></span></label>
   </div>
   <div class="row"><button type="button" class="primary" id="flipDone">Done</button></div>
 </dialog>
@@ -1563,7 +1551,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_86';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_87';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -2843,7 +2831,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('flipZoomToggle').checked = flipZoom;
     $('riffleToggle').checked = riffleOn;
     $('flipOpen').disabled = !flipOn;
-    $('flipSum').textContent = flipOn ? `${flipStyle === 'fan' ? 'Fan' : 'Quick'}${flipZoom ? ' · zoom out' : ''}${riffleOn ? ' · riffle' : ''}` : 'Off: swiping the edges does nothing';
+    $('flipSum').textContent = flipOn ? `${flipStyle === 'fan' ? 'Fan' : 'Quick'}${flipZoom ? ' · zoom out' : ''}${riffleOn ? ' · slider' : ''}` : 'Off: swiping the edges does nothing';
     store.set('flipStyle', flipStyle); store.set('flipOn', flipOn); store.set('flipZoom', flipZoom); store.set('riffleOn', riffleOn);
   }
   function setFlipStyle(f) { flipStyle = f; renderFlipCfg(); }
@@ -5656,16 +5644,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function edgeInfo(x, y) {
     const L = view.tx, R = view.tx + W * S(), T = view.ty, B = view.ty + H * S();
     const visL = Math.max(L, 0), visR = Math.min(R, vw), visT = Math.max(T, 0), visB = Math.min(B, vh);
-    if (x < visL - 24 || x > visR + 24 || y < visT || y > visB + 24) return null;
+    if (x < visL || x > visR || y < visT || y > visB) return null;     // on the page itself (the desk has the page slider)
     const side = !flipOn ? null : x >= visR - EDGE ? 'right' : x <= visL + EDGE ? 'left' : null;
-    const bottom = riffleOn && y >= visB - EDGE;
-    return side || bottom ? { side, bottom } : null;
+    return side ? { side, bottom: false } : null;
   }
   function startNav(e, info) {
     nav = { mode: 'pending', id: e.pointerId, side: info.side, bottom: info.bottom, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), vx: 0, rdx: 0, moved: 0 };
     if (info.bottom) nav.timer = setTimeout(() => { if (nav && nav.mode === 'pending' && nav.moved < 12) startRiffle(); }, 380);
   }
   function navMove(e) {
+    if (nav.slide) { slideMove(e); return; }
     const dx = e.clientX - nav.x0, dy = e.clientY - nav.y0, t = performance.now();
     nav.vx = (e.clientX - nav.lx) / Math.max(1, t - nav.lt); nav.lx = e.clientX; nav.lt = t;
     nav.moved = Math.max(nav.moved, Math.hypot(dx, dy));
@@ -5690,6 +5678,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function cancelNav() {
     if (!nav) return;
+    if (nav.slide) { slideCancel(); return; }
     clearTimeout(nav.timer);
     if (nav.mode === 'flip') { nav.forceCancel = true; endFlip(); }
     else if (nav.mode === 'riffle') endRiffle();
@@ -5723,10 +5712,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sh.style.zIndex = z;
     sh.hidden = false;
   }
-  function startFlip(dir) {
+  const lastHasContent = () => { const l = pages[pages.length - 1]; return !!(l.strokes.length || notesOf(l).length || imagesOf(l).length); };
+  function startFlip(dir, limit = FLIP_MAX) {
     clearTimeout(nav.timer);
-    const avail = dir > 0 ? pages.length - 1 - cur + (pages[pages.length - 1].strokes.length || notesOf(pages[pages.length - 1]).length || imagesOf(pages[pages.length - 1]).length ? 1 : 0) : cur;
-    const maxN = Math.min(FLIP_MAX, avail);
+    const avail = dir > 0 ? pages.length - 1 - cur + (lastHasContent() ? 1 : 0) : cur;
+    const maxN = Math.min(limit, avail);
     if (maxN <= 0) { const first = dir < 0; cancelNav(); if (first) toast('This is the first page.'); return; }
     if (dir < 0 && BACK_OVER_BINDING) {
       // Back: the pages are bound on the left, so the previous pages swing back over the binding.
@@ -5811,7 +5801,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function setFlip(p) {
     nav.p = p;
-    setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
+    if (nav.slide) { nav.slide.lp = Math.max(nav.slide.lp || 0, Math.min(1, p / 0.1)); setLift(nav.slide.lp); }   // stays out while sliding
+    else setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
     const ang = flipAngles(p);
     nav.sheets.forEach((sh, k) => paintSheet(sh, ang[k], nav.back ? 1 : nav.dir));
     const n = flipCount(p);
@@ -5820,7 +5811,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (nav.tgt !== tgt) {
       if (nav.tgt) nav.tgt.classList.remove('target');
       tgt.classList.add('target');
-      if (nav.tgt !== undefined) vibrate(6);
+      if (nav.tgt !== undefined && !nav.slide) vibrate(6);
       nav.tgt = tgt;
     }
     $('riffle').hidden = true;                   // no counter in the middle: the blue edge and the page number show it
@@ -5880,6 +5871,61 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         animating = false;
       }));
     }, settle + 20);
+  }
+
+  // ---- Page slider: a finger (or the pen) on the desk beside the page. Right or down: later pages, left or up:
+  // earlier ones; the further, the more pages (a little faster the further). It shows the same turning
+  // animation as a swipe: a window of a few sheets that moves along as the count grows.
+  const SLIDE_WIN = 3;
+  function offPage(x, y) {
+    const L = view.tx, R = view.tx + W * S(), T = view.ty, B = view.ty + H * S();
+    return x < L || x > R || y < T || y > B;
+  }
+  function startSlide(e) {
+    nav = { mode: 'slidewait', id: e.pointerId, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), vx: 0, moved: 0,
+            slide: { start: cur, dir: 0, bo: -1, abs: cur, warned: false } };
+  }
+  const slidePx = () => Math.max(30, Math.min(60, Math.min(vw, vh) / 16));   // first pages: one per this many px
+  function slideMove(e) {
+    const sl = nav.slide, raw = (e.clientX - nav.x0) + (e.clientY - nav.y0);   // right and down count forward
+    nav.vx = 0;
+    if (nav.mode === 'slidewait' && Math.abs(raw) < 12) return;
+    const x = Math.max(0, Math.abs(raw) - 12), dir = raw > 0 ? 1 : -1;
+    const maxT = dir > 0 ? pages.length - 1 - sl.start : sl.start;      // existing pages only (a swipe adds new ones)
+    if (maxT <= 0) {                              // nothing that way
+      if (sl.built) { slideTeardown(); sl.built = false; cur = sl.start; renderPage(); sl.bo = -1; }
+      nav.mode = 'slidewait';
+      if (!sl.warned) { sl.warned = true; toast(dir < 0 ? 'This is the first page.' : 'This is the last page.', 1500); }
+      return;
+    }
+    const T = Math.min(maxT, x / slidePx() + Math.pow(x / 260, 2));
+    const bo = Math.max(0, Math.min(Math.floor(T) - 1, maxT - 1));
+    if (!sl.built || dir !== sl.dir || bo !== sl.bo) {        // (re)lay the sheets from a new starting page
+      if (sl.built) slideTeardown();
+      cur = sl.start + dir * bo; renderPage();
+      sl.dir = dir; sl.bo = bo; sl.built = true;
+      nav.tgt = undefined;
+      startFlip(dir, Math.min(SLIDE_WIN, maxT - bo));
+    }
+    nav.mode = 'flip';
+    const rel = T - bo, p = Math.min(1, rel <= 1 ? rel * FLIP_FIRST : FLIP_FIRST + (rel - 1) * FLIP_NEXT);
+    setFlip(p);
+    const abs = sl.start + dir * bo + dir * flipCount(p);
+    if (abs !== sl.abs) { sl.abs = abs; vibrate(6); }
+  }
+  function slideTeardown() {                     // all sheets back to rest, the desk stays zoomed out
+    for (const el of [pageEl, ...pool]) {
+      el.style.transition = ''; el.style.transform = ''; el.style.zIndex = ''; el.style.visibility = '';
+      el.classList.remove('turning', 'from-left', 'target');
+      el.querySelector('.shade').style.opacity = 0;
+      if (el !== pageEl) el.hidden = true;
+    }
+  }
+  function slideCancel() {
+    const sl = nav.slide;
+    slideTeardown(); stage.style.transform = '';
+    cur = sl.start; renderPage();
+    nav = null;
   }
 
   // Riffle (bottom edge): slide right to go forward, left to go back; further = faster.
@@ -6078,6 +6124,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   stage.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
+    if (nav && nav.slide && nav.mode === 'slidewait' && e.pointerType === 'touch') {   // a second finger: a pinch, not the slider
+      const id = nav.id, x = nav.x0, y = nav.y0;
+      slideCancel(); touches.set(id, { x, y });
+    }
     if (animating || nav) return;
     try { stage.setPointerCapture(e.pointerId); } catch (_) {}
     if (e.pointerType !== 'pen' && e.button !== 2 && !active && !mapDrag && touches.size === 0 && mmHit(e.clientX, e.clientY)) { startMapDrag(e); return; }
@@ -6095,6 +6145,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (active && active.loose && e.pointerId === active.id) finishStroke(e, true);   // a fresh touch ends a "button held" stroke
       if (active) return;
       if (pinch && pinch.mode !== 'temp') { clearTimeout(pinch.holdT); pinch = null; }   // temporary zoom stays while the pen writes
+      if (riffleOn && !isBtn(e) && offPage(e.clientX, e.clientY)) { startSlide(e); return; }
       if (tool === 'lasso' && !isBtn(e)) { startLasso(e); return; }
       if (tool === 'magnifier') { startMagSel(e); return; }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -6113,6 +6164,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return;
       }
       if (touches.size > 2 || active || pinch) return;
+      if (riffleOn && offPage(e.clientX, e.clientY) && performance.now() - lastPen > PEN_QUIET_MS) { startSlide(e); return; }
       const info = edgeInfo(e.clientX, e.clientY);
       if (info && performance.now() - lastPen > PEN_QUIET_MS) { startNav(e, info); return; }
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
@@ -6127,6 +6179,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (active) return;
     if (isBtn(e)) { btnDown(e); return; }               // right mouse button: same as the stylus button
+    if (riffleOn && offPage(e.clientX, e.clientY)) { startSlide(e); return; }
     const info = edgeInfo(e.clientX, e.clientY);
     if (info && !(tool === 'lasso' && inSelBox(toMM(e)))) startNav(e, info);
     else if (tool === 'sticky') placeNote(e);
