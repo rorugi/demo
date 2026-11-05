@@ -12,7 +12,7 @@
 <link rel="manifest" href="notes.webmanifest">
 <link rel="icon" href="notes-icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="notes-icon-180.png">
-<title>RRnotes_70</title>
+<title>RRnotes_71</title>
 <style>
   /* Layout: the A4 sheet fills the screen; a floating, customisable toolbar sits over it. */
   :root {
@@ -246,6 +246,13 @@
   .noteswatches [aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--bar-fg); }
   .seg.notesizes { grid-template-columns: repeat(4, 1fr); }
   /* images: under the ink; small round handles on top */
+  /* handles on sticky notes and images: Always, Quiet (faint and small until the stylus comes near
+     or a finger taps the object; gone while writing) or only with the Select tool */
+  .hnd { transition: opacity .2s, transform .2s; transform-box: fill-box; transform-origin: center; }
+  .stage.hnd-quiet .hnd { opacity: .3; transform: scale(.78); }
+  .stage.hnd-quiet .near .hnd { opacity: 1; transform: none; }
+  .stage.hnd-select:not(.selecting) .hnd { opacity: 0; pointer-events: none; }
+  .stage.hidehnd .hnd { opacity: 0 !important; pointer-events: none; }
   .imgui [data-iact] { cursor: pointer; }
   .imgui [data-iact="move"] { cursor: grab; }
   .imgui [data-iact="size"] { cursor: nwse-resize; }
@@ -259,6 +266,8 @@
   .imgsizebox { display: grid; gap: 8px; padding: 6px 4px; font-size: 14px; }
   .imgsizebox .sub { display: block; font-size: 11.5px; opacity: .6; margin-top: 2px; }
   .seg.imgsizes { grid-template-columns: repeat(4, 1fr); }
+  .seg.hndmodes { grid-template-columns: repeat(3, 1fr); }
+  .seg.hndmodes button { font-size: 12.5px; padding: 0 2px; }
   .seg.imgsizes button { font-size: 12px; padding: 0 2px; }
   .seg.notesizes button { font-size: 12px; padding: 0 2px; white-space: nowrap; }
   .papers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -803,7 +812,7 @@
   /* same round handles as on sticky notes and images */
   .magbar button, .magresize {
     width: 26px; height: 26px; margin: 3px; display: grid; place-items: center; border-radius: 50%; box-sizing: border-box;
-    background: rgba(255, 255, 255, .88); border: 1px solid rgba(0, 0, 0, .35); color: #33352f;
+    background: rgba(255, 255, 255, .92); border: 1px solid rgba(0, 0, 0, .12); color: #4a4d45; box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
     cursor: pointer; padding: 0; pointer-events: auto; touch-action: none; flex: none;
   }
   .magbar button:hover, .magresize:hover { background: #fff; }
@@ -1173,6 +1182,15 @@
   <div class="menu">
     <label for="scribbleToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l4-6 3 7 3-8 3 8 3-6 2 4"/></svg><span>Scribble to erase<span class="sub">Scribble over ink to delete it</span></span><span class="switch"><input type="checkbox" id="scribbleToggle"><i></i></span></label>
   </div>
+  <h3>Handles</h3>
+  <div class="menu">
+    <div class="imgsizebox">
+      <span>Handles on sticky notes and images<span class="sub" id="hndSub"></span></span>
+      <div class="seg hndmodes" id="hndModes">
+        <button type="button" data-v="always">Always</button><button type="button" data-v="quiet">Quiet</button><button type="button" data-v="select">With Select</button>
+      </div>
+    </div>
+  </div>
   <h3>Images</h3>
   <div class="menu">
     <div class="imgsizebox">
@@ -1459,7 +1477,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_70';   // storage keys and file markers keep the internal name 'notizblock'
+  const VERSION = 'RRnotes_71';   // storage keys and file markers keep the internal name 'notizblock'
 
   // ---- Paper (all drawing coordinates are millimetres) ----
   let W = 210, H = 297;              // page size in mm (Page setup)
@@ -2281,6 +2299,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
   function updateToolbarState() {
+    stage.classList.toggle('selecting', tool === 'lasso');
     if (typeof refreshSelbar === 'function' && !sel) refreshSelbar();
     const els = document.querySelectorAll('.tb-items [data-id]');
     if (!els.length) return;
@@ -2299,7 +2318,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'eraser': el.setAttribute('aria-pressed', String(tool === 'eraser')); break;
-        case 'lasso': el.setAttribute('aria-pressed', String(tool === 'lasso')); break;
+        case 'lasso': el.setAttribute('aria-pressed', String(tool === 'lasso')); stage.classList.toggle('selecting', tool === 'lasso'); break;
         case 'sticky':
           el.setAttribute('aria-pressed', String(tool === 'sticky'));
           el.style.setProperty('--nc', notesShown ? NOTE_COLORS[noteCfg.color] : 'transparent');
@@ -3712,10 +3731,54 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     size: '<path d="M5 5l14 14M5 5h6M5 5v6M19 19h-6M19 19v-6"/>',          // double arrow: resize
     fold: '<path d="M20 4l-6 6M14 10V5.5M14 10h4.5M4 20l6-6M10 14v4.5M10 14H5.5"/>'   // arrows inward: fold away
   };
-  function handleChip(attr, act, cx, cy, r) {
-    const f = v => +(+v).toFixed(3), sw = f(1.3 / S());
-    return `<g ${attr}="${act}"><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * 0.9)}" fill="rgba(255,255,255,.88)" stroke="rgba(0,0,0,.35)" stroke-width="${sw}"/>` +
-      `<g transform="translate(${f(cx - r * 0.55)} ${f(cy - r * 0.55)}) scale(${f(r * 1.1 / 24)})" fill="none" stroke="#33352f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${HANDLE_ICON[act]}</g></g>`;
+  // a soft button: tinted (sticky notes: their own colour, a little darker) or white, thin edge, light shadow
+  const shade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
+  function handleChip(attr, act, cx, cy, r, tint) {
+    const f = v => +(+v).toFixed(3), sw = f(0.8 / S()), sh = f(r * 0.12);
+    return `<g ${attr}="${act}" class="hnd"><circle cx="${f(cx)}" cy="${f(cy + sh)}" r="${f(r * 0.9)}" fill="rgba(0,0,0,.18)"/>` +
+      `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * 0.9)}" fill="${tint || 'rgba(255,255,255,.94)'}" stroke="rgba(0,0,0,.14)" stroke-width="${sw}"/>` +
+      `<g transform="translate(${f(cx - r * 0.55)} ${f(cy - r * 0.55)}) scale(${f(r * 1.1 / 24)})" fill="none" stroke="${tint ? 'rgba(30,28,20,.72)' : '#4a4d45'}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${HANDLE_ICON[act]}</g></g>`;
+  }
+  // which objects show their handles fully (Quiet): near the hovering stylus, or tapped with a finger
+  let handleMode = (v => ['always', 'quiet', 'select'].includes(v) ? v : 'quiet')(store.get('handleMode', 'quiet'));
+  const nearIds = new Set(), nearUntil = new Map();
+  function applyNear() {
+    document.querySelectorAll('#noteLayer [data-nid], #imgUi [data-iid]').forEach(g => g.classList.toggle('near', nearIds.has(g.dataset.nid || g.dataset.iid)));
+  }
+  function setNear(ids) {
+    const now = performance.now();
+    nearUntil.forEach((t, id) => { if (t > now) ids.add(id); });
+    if (ids.size === nearIds.size && [...ids].every(i => nearIds.has(i))) return;
+    nearIds.clear(); ids.forEach(i => nearIds.add(i));
+    applyNear();
+  }
+  function revealHandles(id, ms = 3000) {             // e.g. after a finger tap on the object
+    nearUntil.set(id, performance.now() + ms);
+    setNear(new Set(nearIds));
+    setTimeout(() => { if ((nearUntil.get(id) || 0) <= performance.now()) { nearUntil.delete(id); nearIds.delete(id); applyNear(); } }, ms + 30);
+  }
+  let hoverFrame = 0, hoverEv = null, hoverOut = 0;
+  function hoverNear(e) {
+    hoverEv = e; clearTimeout(hoverOut);
+    if (hoverFrame) return;
+    hoverFrame = requestAnimationFrame(() => {
+      hoverFrame = 0;
+      const [x, y] = toMM(hoverEv), M = 12, ids = new Set();
+      if (notesShown) for (const n of notesOf(pages[cur])) if (!n.folded && x > n.x - M && y > n.y - M && x < n.x + noteW(n) + M && y < n.y + noteHt(n) + M) ids.add(n.id);
+      for (const m of imagesOf(pages[cur])) if (x > m.x - M && y > m.y - M && x < m.x + m.w + M && y < m.y + m.h + M) ids.add(m.id);
+      setNear(ids);
+    });
+  }
+  // while writing the handles step aside, and come back shortly after
+  let hideTimer = 0;
+  function handlesWhileWriting(on) {
+    clearTimeout(hideTimer);
+    if (on) stage.classList.add('hidehnd'); else hideTimer = setTimeout(() => stage.classList.remove('hidehnd'), 700);
+  }
+  function applyHandleMode() {
+    ['always', 'quiet', 'select'].forEach(m => stage.classList.toggle('hnd-' + m, handleMode === m));
+    const box = document.getElementById('hndModes');
+    if (box) box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === handleMode)));
   }
 
   // ---- Sticky notes ----
@@ -3738,16 +3801,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let out = `<g class="note"${nid}${data}><rect x="${+(n.x + 0.5).toFixed(2)}" y="${+(n.y + 0.9).toFixed(2)}" width="${z}" height="${zh}" fill="#000" opacity=".14"/>` +
       `<svg x="${+n.x.toFixed(2)}" y="${+n.y.toFixed(2)}" width="${z}" height="${zh}" viewBox="0 0 ${z} ${zh}" overflow="hidden"><rect width="${z}" height="${zh}" fill="${c}"/>` +
       `<g class="nink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(n.strokes, true)}</g>`;
-    if (ui) {                                 // same round handles as images: move, options, fold away
-      const h = Math.min(noteH, z / 3, zh / 2.6), r = h / 2, m0 = r + 0.3;   // a flat XS note gets smaller handles
-      out += handleChip('data-nact', 'move', m0, m0, r) + handleChip('data-nact', 'gear', z - m0, m0, r) + handleChip('data-nact', 'fold', z - m0, zh - m0, r);
+    out += '</svg>';
+    if (ui) {                                 // round handles on the corners, tinted with the note's colour: move, options, fold away
+      const r = Math.min(noteH, z / 3, zh / 2.2) / 2, t = shade(c, 0.86);
+      out += handleChip('data-nact', 'move', n.x, n.y, r, t) + handleChip('data-nact', 'gear', n.x + z, n.y, r, t) + handleChip('data-nact', 'fold', n.x + z, n.y + zh, r, t);
     }
-    return out + '</svg></g>';
+    return out + '</g>';
   }
   const notesMarkup = (pg, mode) => (mode === 'file' || notesShown) && pg.notes && pg.notes.length ? pg.notes.map(n => noteMarkup(n, mode)).join('') : '';
   function renderNotes() {
     noteH = noteHandle();
     noteLayer.innerHTML = notesMarkup(pages[cur], 'ui');
+    applyNear();
     // a menu open for one sticky note stays attached to its (redrawn) gear
     if (openPop === notePop && noteEdit.kind === 'note') {
       const g = noteLayer.querySelector(`[data-nid="${noteEdit.note.id}"] [data-nact="gear"]`);
@@ -3788,6 +3853,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const objW = o => o.src ? o.w : noteW(o), objH = o => o.src ? o.h : noteHt(o);
   // while held (faded) it can also be moved with the same finger
   function startPeek(e, n, delay, at) {
+    revealHandles(n.id);
     const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot() };
     a.timer = setTimeout(() => { if (active === a) { a.on = true; fadeNote(n, true); } }, delay);
     active = a;
@@ -4040,7 +4106,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const h = Math.max(4.5, 24 / S()), r = h / 2, f = v => +(+v).toFixed(3), sw = f(1.3 / S());
     const chip = (cx, cy, act) => handleChip('data-iact', act, cx, cy, r);
     imgUi.innerHTML = list.map(m => {
-      const m0 = Math.min(r, m.w / 4, m.h / 4) + 0.3;
+      const m0 = 0;                                // on the corners, half outside: nothing of the picture is covered
       if (cropSt && cropSt.m === m) {             // crop: a frame and four corner handles
         const C = cropSt.C, k = r * 0.9;
         return `<g data-iid="${m.id}" class="cropui"><rect x="${f(C.x)}" y="${f(C.y)}" width="${f(C.w)}" height="${f(C.h)}" fill="none" stroke="#fff" stroke-width="${f(2.2 / S())}"/>` +
@@ -4054,6 +4120,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         chip(m.x + m.w - m0, m.y + m0, 'gear') +
         chip(m.x + m.w - m0, m.y + m.h - m0, 'size') + '</g>';
     }).join('');
+    applyNear();
     if (openPop === imgPop && imgEdit) { const g = imgUi.querySelector(`[data-iid="${imgEdit.id}"] [data-iact="gear"]`); if (g) popAnchor = g; }
     if (openPop === cropPop && cropSt) { const g = imgUi.querySelector(`[data-iid="${cropSt.m.id}"]`); if (g) popAnchor = g; }
   }
@@ -4218,6 +4285,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   $('imgSizes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { imgMax = +b.dataset.v; store.set('imgMax', imgMax); renderImgSize(); }));
   renderImgSize();
+  const HND_SUB = { always: 'Always shown at full strength', quiet: 'Faint until the stylus comes near or a finger taps; hidden while writing', select: 'Only shown while the Select tool is on' };
+  $('hndModes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    handleMode = b.dataset.v; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode();
+  }));
+  $('hndSub').textContent = HND_SUB[handleMode];
+  applyHandleMode();
   // images no notebook uses any more are removed from the browser
   async function gcImages() {
     try {
@@ -5021,7 +5094,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     liveWrap.style.opacity = br.opacity;   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
     liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
-    styleCtx(); stage.classList.add('drawing');
+    styleCtx(); stage.classList.add('drawing'); handlesWhileWriting(true);
     feed(x, y);
   }
   function finishStroke(e, commit = true) {
@@ -5047,7 +5120,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (Math.hypot(x - l[0], y - l[1]) >= MIN_D) { a.pts.push([x, y]); drawIncrement(); }
     }
     active = null;
-    stage.classList.remove('drawing');
+    stage.classList.remove('drawing'); handlesWhileWriting(false);
     if (!commit) { clearCtx(lctx); clearCtx(tctx); return; }
     if (a.note) {                            // on a sticky note: stored in its own coordinates
       remember();
@@ -5412,6 +5485,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   stage.addEventListener('pointermove', e => {
     if (e.pointerType === 'pen') { lastPen = performance.now(); mapShy(e.clientX, e.clientY); }
+    if (!active && e.buttons === 0 && e.pointerType !== 'touch' && handleMode === 'quiet') hoverNear(e);   // stylus hovering or mouse
     if (mapDrag && e.pointerId === mapDrag.id) { moveMapDrag(e); return; }
     if (touches.has(e.pointerId)) {
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -5446,7 +5520,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
   }
   stage.addEventListener('pointerup', onUp);
-  stage.addEventListener('pointerleave', e => { if (e.pointerType === 'pen') mm.classList.remove('shy'); });
+  stage.addEventListener('pointerleave', e => {
+    if (e.pointerType === 'pen') mm.classList.remove('shy');
+    if (e.pointerType !== 'touch') { clearTimeout(hoverOut); hoverOut = setTimeout(() => setNear(new Set()), 900); }
+  });
   stage.addEventListener('pointercancel', onUp);
   stage.addEventListener('lostpointercapture', onUp);
   document.addEventListener('contextmenu', e => e.preventDefault());
