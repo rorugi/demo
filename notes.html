@@ -681,6 +681,9 @@
   /* ---------- desk + sheets ---------- */
   /* The desk is its own layer permanently, so zooming out during a flip only moves pixels on the
      GPU instead of redrawing the pages (redrawing caused the flicker). The body clips the screen. */
+  .fingtag { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; padding: 5px 11px; border-radius: 999px;
+    background: #c0392b; color: #fff; font: 600 13px/1 var(--ui); box-shadow: 0 2px 8px rgba(0,0,0,.25); white-space: nowrap; }
+  .fingtag[hidden] { display: none; }
   .deskcatch { position: fixed; inset: 0; touch-action: none; }   /* behind the desk: the screen edges while the desk is zoomed out */
   .stage { position: fixed; inset: 0; overflow: visible; touch-action: none; transform-origin: 0 0; will-change: transform; }
   .page {
@@ -1376,6 +1379,7 @@
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="appDefs"></defs></svg>
+<div class="fingtag" id="fingTag" hidden>Erasing</div>
 <div class="strip" id="strip" hidden><div class="strip-in" id="stripIn"></div></div>
 <div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
@@ -1675,8 +1679,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_110';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.18';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_111';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.19';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7167,6 +7171,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let fpan = null;
   $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct];
   $('fingAct').addEventListener('change', e => { fingAct = e.target.value; store.set('fingAct', fingAct); $('fingSub').textContent = FING[fingAct]; });
+  const FING_WAIT = 140;                         // ms a lone finger waits before erasing / selecting / highlighting
+  let fpend = null;
+  const fingTag = $('fingTag');
+  function fingGo() {
+    const p = fpend;
+    fpend = null;
+    if (!p || active || pinch || nav || touches.size !== 1 || !touches.has(p.id)) return;
+    const last = p.pts[p.pts.length - 1];
+    if (fingAct === 'erase') {
+      startErase(p.e0);
+      if (p.pts.length) eraseMove(p.pts);
+      showFingTag(last || p.e0);                 // erasing with a finger: say so, right above it
+    } else if (fingAct === 'lasso') {
+      startLasso(p.e0);
+      if (active && p.pts.length) { if (active.move) selMove(last); else if (active.lasso) lassoMove(p.pts); }
+    } else if (fingAct === 'hl') {
+      startStroke(p.e0, hlBrush());
+      if (active) for (const s of p.pts) { const [x, y] = toMM(s); feed(x, y, 0.5, s.timeStamp); }
+    }
+  }
+  function showFingTag(e) {
+    fingTag.hidden = false;
+    fingTag.style.transform = `translate(${Math.round(e.clientX)}px, ${Math.round(e.clientY - 64)}px) translateX(-50%)`;
+  }
   function setStylusMode(on, byHand) {
     penSeen = !!on; store.set('stylusMode', penSeen);
     updateToolbarState();
@@ -7259,6 +7287,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       tapDown(e);
       if (touches.size === 2) {
+        if (fpend) { clearTimeout(fpend.timer); fpend = null; }   // a pinch after all: the finger action never started
+        fingTag.hidden = true;
         if (active && active.type === 'touch') {
           if (active.peek) { active.dead = true; clearTimeout(active.timer); }   // a pinch: the first finger did not tap the note or image
           finishStroke(null, false);
@@ -7275,9 +7305,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const q = toMM(e), n = noteAt(q[0], q[1]) || imageAt(q[0], q[1]);
         if (n) { startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel); return; }   // selected: a finger drags it right away
         if (fingAct === 'pan') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty };
-        else if (fingAct === 'erase') startErase(e);
-        else if (fingAct === 'lasso') startLasso(e);
-        else if (fingAct === 'hl') startStroke(e, hlBrush());
+        else if (fingAct !== 'off') {               // erase / lasso / highlight: wait a moment — a second finger means a pinch, not this
+          const e0 = { pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 };
+          fpend = { id: e.pointerId, e0, pts: [], timer: setTimeout(fingGo, FING_WAIT) };
+        }
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -7337,6 +7368,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tap2) { const o = tap2.start.get(e.pointerId); if (o && Math.hypot(e.clientX - o.x, e.clientY - o.y) > 14) tap2.moved = true; }
       if (pinch) { updatePinch(); return; }
     }
+    if (fpend && e.pointerId === fpend.id) { fpend.pts.push({ pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 }); return; }
     if (fpan && e.pointerId === fpan.id && !pinch) {   // stylus mode, one finger moves the page
       if (touches.size > 1) { fpan = null; return; }
       view.tx = fpan.tx0 + e.clientX - fpan.x0; view.ty = fpan.ty0 + e.clientY - fpan.y0; clampView(); applyView();
@@ -7355,7 +7387,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active.noteDrag) { noteDragMove(e); return; }
     if (active.imgDrag) { imgDragMove(e); return; }
     if (active.peek) { peekMove(e); return; }
-    if (active.erase) { eraseMove(list.length ? list : [e]); return; }
+    if (active.erase) { eraseMove(list.length ? list : [e]); if (active.type === 'touch' && !fingTag.hidden) showFingTag(e); return; }
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
     if (active.move) { selMove(e); return; }
@@ -7367,6 +7399,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   function onUp(e) {
     if (fpan && e.pointerId === fpan.id) fpan = null;
+    if (fpend && e.pointerId === fpend.id) { clearTimeout(fpend.timer); fpend = null; }   // a tap: no erasing, no dot
+    if (fingTag && !fingTag.hidden && active && e.pointerId === active.id) fingTag.hidden = true;
     if (mapDrag && e.pointerId === mapDrag.id) { endMapDrag(); return; }
     const wasTouch = touches.delete(e.pointerId);
     if (wasTouch && pinch && touches.size < 2) releasePinch();
