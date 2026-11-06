@@ -216,7 +216,7 @@
   .swatch.hl { width: 9px; height: 5px; border-radius: 1.5px; }
   .inkinfo small { font: 600 8.5px/1 var(--ui); letter-spacing: -.03em; opacity: .75; font-variant-numeric: tabular-nums; white-space: nowrap; }
   /* presets: the pen with a small arrow pointing left (it hands its ink to the pen) */
-  .pen svg.gearmark { position: absolute; left: 3px; top: 3px; width: 11px; height: 11px; transform: none; }
+  .pen svg.gearmark { position: absolute; left: 4px; top: 4px; width: 8.5px; height: 8.5px; transform: none; }
   .gearmark .mk { fill: currentColor; stroke: var(--panel); stroke-width: 3.4; stroke-linejoin: round; paint-order: stroke; }
   /* the pen type button: the type, with a small arrow for its menu */
   .ptbtn { position: relative; }
@@ -652,7 +652,7 @@
   .tblist .ico svg { width: 20px; height: 20px; }
   .tblist .ico.pen svg { width: 18px; height: 18px; transform: translate(0, -4px); }
   .tblist .ico .inkinfo { left: 3px; bottom: 1px; }
-  .tblist .ico.pen svg.gearmark { width: 11px; height: 11px; left: 2px; top: 1px; transform: none; }
+  .tblist .ico.pen svg.gearmark { width: 8.5px; height: 8.5px; left: 3px; top: 2px; transform: none; }
   .tblist .ico.app { width: 30px; height: 26px; border-radius: 7px; background: var(--brand); color: var(--brand-fg); font: normal 700 15px/1 var(--mark); margin: 0 2px; }
   .tblist .ico.sepico i { width: 18px; height: 1.5px; background: currentColor; opacity: .5; }
   .tblist .name { flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1675,8 +1675,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_108';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.16';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_109';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.17';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1839,6 +1839,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const g = (d, cx, on) => { const k = on ? 0.66 : 0.46; return `<g transform="translate(${(cx - 12 * k).toFixed(2)} ${(12 - 12 * k).toFixed(2)}) scale(${k})" stroke-width="${on ? 2.6 : 2.8}" opacity="${on ? 1 : 0.35}">${d}</g>`; };
     return svg(g(MODE_STYLUS, stylus ? 8 : 5.5, stylus) + g(MODE_FINGER, stylus ? 18.5 : 16, !stylus));
   };
+  ICON.inmode = modeIcon(true);                  // (lists show it in stylus mode)
   const KINDS = Object.fromEntries(Object.entries(PEN_KINDS).map(([k, d]) => [k, d.label]));
   const VAR_T = new Set(['b', 'f', 'r', 'c']);
   const isVar = st => !!(st && VAR_T.has(st.t) && st.v && st.v.length);
@@ -3550,7 +3551,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(.6 .6) scale(.44)"><path fill="currentColor" stroke="var(--panel)" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke" d="${ARROW_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1.4) scale(.34)"><path fill="currentColor" stroke="var(--panel)" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke" d="${ARROW_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
