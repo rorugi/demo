@@ -1526,7 +1526,8 @@
   <p id="saveInfo"></p>
   <div class="opts">
     <label class="numfield savename"><span class="lbl">File name</span><input type="text" id="saveName" autocomplete="off" spellcheck="false" aria-label="File name"><span id="saveExt">.svg</span></label>
-    <label class="check"><input type="radio" name="saveFmt" id="fmtSvg" value="svg" checked><span>SVG<span class="sub">Opens in any browser and in drawing programs</span></span></label>
+    <label class="check"><input type="radio" name="saveFmt" id="fmtHtml" value="html" checked><span>Web page (.html)<span class="sub">Opens in any browser and in file previews, can be shared; RRnotes opens it again</span></span></label>
+    <label class="check"><input type="radio" name="saveFmt" id="fmtSvg" value="svg"><span>SVG<span class="sub">Opens in any browser and in drawing programs</span></span></label>
     <label class="check"><input type="radio" name="saveFmt" id="fmtSvgz" value="svgz"><span>Compressed SVG (.svgz)<span class="sub">About a quarter of the size; some file viewers can't preview it</span></span></label>
   </div>
   <div class="row">
@@ -1686,8 +1687,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_116';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.24';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_117';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.25';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3699,11 +3700,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const curPages = () => pages, curSetup = () => setup;
   // ---- Save dialog: file name and format (plain or compressed SVG); the last format is remembered ----
   const saveDlg = $('saveDlg');
-  const saveFmt = () => $('fmtSvgz').checked ? 'svgz' : 'svg';
+  const saveFmt = () => $('fmtSvgz').checked ? 'svgz' : $('fmtSvg').checked ? 'svg' : 'html';
   function saveNotebook() {
     closePops();
-    const fmt = store.get('saveFormat', 'svg') === 'svgz' && window.CompressionStream ? 'svgz' : 'svg';
-    $('fmtSvg').checked = fmt === 'svg'; $('fmtSvgz').checked = fmt === 'svgz';
+    let fmt = store.get('saveFmt2', 'html');
+    if (!['html', 'svg', 'svgz'].includes(fmt) || (fmt === 'svgz' && !window.CompressionStream)) fmt = 'html';
+    $('fmtHtml').checked = fmt === 'html'; $('fmtSvg').checked = fmt === 'svg'; $('fmtSvgz').checked = fmt === 'svgz';
     $('fmtSvgz').disabled = !window.CompressionStream;
     $('saveExt').textContent = '.' + fmt;
     const m = nbMeta();
@@ -3712,7 +3714,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('saveInfo').textContent = `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · ${strokes} ${strokes === 1 ? 'stroke' : 'strokes'} · ${setupLabel(setup)}`;
     saveDlg.showModal();
   }
-  ['fmtSvg', 'fmtSvgz'].forEach(id => $(id).addEventListener('change', () => { $('saveExt').textContent = '.' + saveFmt(); }));
+  ['fmtHtml', 'fmtSvg', 'fmtSvgz'].forEach(id => $(id).addEventListener('change', () => { $('saveExt').textContent = '.' + saveFmt(); }));
   $('saveCancel').addEventListener('click', () => saveDlg.close());
   $('saveName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('saveGo').click(); } });
   // ---- Share: the system share sheet (OneDrive, Drive, a network app, mail…). Allowed are SVG and PDF, not ZIP. ----
@@ -3733,6 +3735,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
   }
   async function notebookFile(fmt, name) {
+    if (fmt === 'html') {                          // the notebook as a web page: the same SVG inside, with its name on top
+      const d = new Date(), svg = await notebookSVG();
+      const body = collectionBody([{ name: name + '.html', pages: pages.length, svg }], `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, name);
+      return new File([collectionPage(body, name, null)], name + '.html', { type: 'text/html' });
+    }
     if (fmt === 'svgz') {
       const gz = await new Response(new Blob([await notebookSVG()]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
       return new File([gz], name + '.svgz', { type: 'image/svg+xml' });
@@ -3742,14 +3749,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function saveOrShare(share) {
     const fmt = saveFmt();
     // keep the name file-system friendly; the extension is added automatically
-    let name = $('saveName').value.trim().replace(/\.svgz?$/i, '').replace(/[\\/:*?"<>|]+/g, '-') || `RRnotes_${stamp()}`;
-    store.set('saveFormat', fmt);
+    let name = $('saveName').value.trim().replace(/\.(svgz?|html?)$/i, '').replace(/[\\/:*?"<>|]+/g, '-') || `RRnotes_${stamp()}`;
+    store.set('saveFmt2', fmt);
     saveDlg.close();
     const m = nbMeta(), rev = m.rev;                 // what is written now; later changes stay unsaved
     const file = await notebookFile(fmt, name);
     let saved;
     if (share) saved = await shareFiles([file]) ? file.name : null;
-    else saved = await saveBlob(file, file.name, fmt === 'svgz' ? 'RRnotes notebook (compressed SVG)' : 'RRnotes notebook (SVG)', 'image/svg+xml', '.' + fmt);
+    else saved = fmt === 'html' ? await saveBlob(file, file.name, 'RRnotes notebook (web page)', 'text/html', '.html')
+      : await saveBlob(file, file.name, fmt === 'svgz' ? 'RRnotes notebook (compressed SVG)' : 'RRnotes notebook (SVG)', 'image/svg+xml', '.' + fmt);
     if (!saved || !nbMeta(m.id)) return;
     Object.assign(m, { savedRev: rev, savedName: saved, savedAt: Date.now(), savedZip: '', name: fileBase(saved) });
     addRecent(saved);
@@ -4060,7 +4068,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     saveAll(allShare, fmt, name);
   });
   const escAttr = t => esc(t).replace(/\n/g, ' ');
-  function collectionBody(files, when) {
+  function collectionBody(files, when, single) {     // single: one notebook, named on top, no list
+    if (single) return `<header><h1>${esc(single)}</h1><p>${files[0].pages} ${files[0].pages === 1 ? 'page' : 'pages'} · saved ${esc(when)} with ${esc(VERSION_LABEL)}</p></header>\n` +
+      `<section class="notebook" id="nb-1" data-file="${escAttr(files[0].name)}">\n${files[0].svg.replace(/^<\?xml[^>]*>\s*/, '').replace(/nb-grid/g, 'nb1-grid').replace(/id="page-/g, 'id="nb1-page-')}</section>\n`;
     return `<header><h1>RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}</h1><p>Saved ${esc(when)} with ${esc(VERSION_LABEL)}</p>` +
       `<nav><ol>${files.map((f, i) => `<li><a href="#nb-${i + 1}">${esc(fileBase(f.name))}</a> <span>${f.pages} ${f.pages === 1 ? 'page' : 'pages'}</span></li>`).join('')}</ol></nav></header>\n` +
       files.map((f, i) => `<section class="notebook" id="nb-${i + 1}" data-file="${escAttr(f.name)}"><h2>${esc(fileBase(f.name))} <a href="#top" aria-label="Back to the list">↑</a></h2>\n${f.svg.replace(/^<\?xml[^>]*>\s*/, '').replace(/nb-grid/g, `nb${i + 1}-grid`).replace(/id="page-/g, `id="nb${i + 1}-page-`)}</section>\n`).join('');
