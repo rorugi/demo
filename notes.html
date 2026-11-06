@@ -283,6 +283,8 @@
   .supdlg .sub { display: block; font: 400 12.5px/1.35 var(--ui); opacity: .75; margin-top: 3px; text-transform: none; letter-spacing: 0; }
   .btntest.btn { background: rgba(214, 69, 65, .12); }
   .btntest .hint { opacity: .5; font-family: inherit; }
+  .btntest.holdtest { height: 110px; font-size: 14px; line-height: 1.5; padding: 10px 12px; }
+  .btntest.holdtest.btn { background: rgba(46, 160, 67, .15); }   /* green: long enough for a hold */
   select.dd { appearance: none; -webkit-appearance: none; width: 100%; height: 38px; padding: 0 34px 0 11px; border: 1px solid var(--bar-line); border-radius: 9px;
     background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center / 16px;
     color: inherit; font: 500 14px/1 var(--ui); cursor: pointer; }
@@ -1622,6 +1624,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     <span>Stylus button<span class="sub">Write here, press and let go of the button while the tip stays down. The box turns red while the app sees the button.</span></span>
     <div class="btntest" id="penBtnTest"><span class="hint">Try the stylus here</span></div>
   </div>
+  <div class="field">
+    <span>Hold time<span class="sub" id="holdTestSub"></span></span>
+    <div class="btntest holdtest" id="holdTest"><span class="hint">Rest a finger here, then lift it or move it</span></div>
+  </div>
   <div class="row"><button type="button" id="supportCopy">Copy report</button><button type="button" class="primary" id="supportDone">Close</button></div>
 </dialog>
 
@@ -1680,8 +1686,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_115';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.23';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_116';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.24';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -5328,10 +5334,43 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       e.preventDefault(); show(e);
       if (t === 'pointerup' || t === 'pointercancel') pad.classList.remove('btn');
     }));
-    $('supportBtn').addEventListener('click', () => { closePops(); $('supportDlg').showModal(); });
+    // hold test: how long a finger rested before it moved or lifted, against the Hold time setting
+    const hp = $('holdTest');
+    let h = null, tick = 0;
+    const secs = ms => (ms / 1000).toFixed(2) + ' s';
+    const verdict = ms => ms >= PEEK_HOLD ? 'counts as a hold' : ms <= QUICK_MS ? 'quick: a tap or a one-page swipe' : 'too short for a hold';
+    const holdSub = () => { $('holdTestSub').textContent = `Hold time ${holdTime}: a hold after ${secs(PEEK_HOLD)}, a quick swipe up to ${secs(QUICK_MS)}.`; };
+    const holdShow = (txt, on) => { hp.textContent = txt; hp.classList.toggle('btn', !!on); };
+    hp.addEventListener('pointerdown', e => {
+      e.preventDefault(); try { hp.setPointerCapture(e.pointerId); } catch (_) {}
+      h = { id: e.pointerId, t0: performance.now(), x: e.clientX, y: e.clientY, type: e.pointerType, size: `${Math.round(e.width || 0)}×${Math.round(e.height || 0)} px`, moved: 0 };
+      cancelAnimationFrame(tick);
+      const run = () => {
+        if (!h || h.moved) return;
+        const ms = performance.now() - h.t0;
+        holdShow(`Resting ${secs(ms)}\n${verdict(ms)}\ncontact ${h.size}`, ms >= PEEK_HOLD);
+        tick = requestAnimationFrame(run);
+      };
+      run();
+    });
+    hp.addEventListener('pointermove', e => {
+      if (!h || e.pointerId !== h.id || h.moved) return;
+      if (Math.hypot(e.clientX - h.x, e.clientY - h.y) >= 10) h.moved = performance.now() - h.t0;
+    });
+    const hpEnd = e => {
+      if (!h || e.pointerId !== h.id) return;
+      const rest = h.moved || performance.now() - h.t0, how = h.moved ? 'moved after' : 'lifted after';
+      const line = `hold   ${h.type.padEnd(5)} ${how} ${secs(rest)} (${verdict(rest)}), contact ${h.size}`;
+      all.push(line); while (all.length > 60) all.shift();
+      holdShow(`Last: ${how} ${secs(rest)}\n${verdict(rest)}\ncontact ${h.size}`, rest >= PEEK_HOLD);
+      h = null;
+    };
+    hp.addEventListener('pointerup', hpEnd); hp.addEventListener('pointercancel', hpEnd);
+    hp.addEventListener('contextmenu', e => e.preventDefault());
+    $('supportBtn').addEventListener('click', () => { closePops(); holdSub(); $('supportDlg').showModal(); });
     $('supportDone').addEventListener('click', () => $('supportDlg').close());
     $('supportCopy').addEventListener('click', async () => {
-      const r = [`${VERSION_LABEL} (build ${VERSION.replace(/^RRnotes_/, '')})`, navigator.userAgent, `screen ${screen.width}×${screen.height} @${devicePixelRatio}`,
+      const r = [`${VERSION_LABEL} (build ${VERSION.replace(/^RRnotes_/, '')})`, navigator.userAgent, `screen ${screen.width}×${screen.height} @${devicePixelRatio}`, `hold time ${holdTime} (${PEEK_HOLD} ms, quick swipe ${QUICK_MS} ms)`,
         `save picker: ${'showSaveFilePicker' in window ? 'yes' : 'no'} · open picker: ${'showOpenFilePicker' in window ? 'yes' : 'no'} · share files: ${canShareFiles ? 'yes' : 'no'}`, '', ...all].join('\n');
       try { await navigator.clipboard.writeText(r); toast('Report copied. Paste it into a message.'); } catch (_) { toast('Could not copy the report'); }
     });
