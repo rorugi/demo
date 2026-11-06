@@ -25,6 +25,8 @@
     --bar-line: rgba(24, 26, 22, .12);
     --bar-fg: #33352f;
     --active: rgba(24, 26, 22, .1);
+    --tray: rgba(30, 42, 68, .075);
+    --tray-hover: rgba(30, 42, 68, .13);
     --brand: #1e2a44;
     --brand-fg: #f4f1e6;
     --danger: #b3261e;
@@ -50,6 +52,8 @@
       --bar-line: rgba(255, 255, 255, .12);
       --bar-fg: #dedfd9;
       --active: rgba(255, 255, 255, .14);
+      --tray: rgba(255, 255, 255, .08);
+      --tray-hover: rgba(255, 255, 255, .14);
       --brand: #e9e4d4;
       --brand-fg: #1e2a44;
       --danger: #f2948c;
@@ -78,6 +82,8 @@
 
   /* ---------- floating toolbar ---------- */
   .toolbar {
+    scale: var(--tbk, 1);                         /* toolbar size: small 1, medium 1.5, large 2 */
+    transform-origin: 0 0;
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 10px);
     left: 50%;
@@ -123,12 +129,14 @@
   .toolbar.dragging { box-shadow: 0 10px 30px rgba(0, 0, 0, .24); }
   /* additional toolbars: bottom centre (horizontal) or right edge (vertical) until moved */
   .toolbar.extra {
+    transform-origin: 0 100%;
     top: auto;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px + var(--k, 0) * 54px);
     left: 50%;
     transform: translateX(-50%);
   }
   .toolbar.extra.vertical {
+    transform-origin: 100% 0;
     top: 50%; bottom: auto; left: auto;
     right: calc(env(safe-area-inset-right, 0px) + 10px + var(--k, 0) * 54px);
     transform: translateY(-50%);
@@ -229,7 +237,12 @@
   /* the pen type button: the type, with a small arrow for its menu */
   .ptbtn { position: relative; }
   .ptbtn svg.ptchev { position: absolute; right: 3px; bottom: 4px; width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
-  .toolbar [aria-pressed="true"].pen, .toolbar [aria-pressed="true"].eraser, .toolbar [aria-pressed="true"].mod { background: var(--active); }
+  .toolbar [aria-pressed="true"].pen, .toolbar [aria-pressed="true"].mod { background: var(--active); }
+  /* the tool in use: dark in light mode, light in dark mode */
+  .toolbar [aria-pressed="true"].realpen, .toolbar [aria-pressed="true"].eraser { background: var(--bar-fg); color: var(--panel); }
+  .toolbar [aria-pressed="true"].realpen .swatch { box-shadow: 0 0 0 1px var(--panel); }
+  .toolbar [aria-pressed="true"].realpen:hover, .toolbar [aria-pressed="true"].eraser:hover { background: var(--bar-fg); }
+  .toolbar [aria-pressed="true"].realpen .inkinfo small { opacity: .95; }
   /* stroke size and colour buttons */
   .mod i { display: block; border-radius: 50%; background: var(--c, #121315); }
   .sizebtn { grid-template-rows: 1fr auto; padding: 3px 3px 2px !important; }
@@ -245,6 +258,17 @@
   /* presets (full ink, colour only, size only) are never 'on': a short mark shows the one matching the pen */
   .toolbar .mod, .toolbar .preset { position: relative; }
   .toolbar .match { box-shadow: inset 0 0 0 1.5px rgba(128, 128, 128, .5); }
+  /* presets side by side sit on one faint tray, like a palette next to the pen */
+  .toolbar .preset.tray { background: var(--tray); border-radius: 0; }
+  .toolbar .preset.tray:hover { background: var(--tray-hover); }
+  .toolbar .tray.t-mid, .toolbar .tray.t-last { margin-left: -3px; }
+  .toolbar.vertical .tray.t-mid, .toolbar.vertical .tray.t-last { margin-left: 0; margin-top: -3px; }
+  .toolbar .tray.t-first { border-radius: 10px 0 0 10px; }
+  .toolbar .tray.t-last { border-radius: 0 10px 10px 0; }
+  .toolbar .tray.t-solo { border-radius: 10px; }
+  .toolbar.vertical .tray.t-first { border-radius: 10px 10px 0 0; }
+  .toolbar.vertical .tray.t-last { border-radius: 0 0 10px 10px; }
+  .tblist .ico.preset, .tblist .ico.sizeico[data-look] { background: var(--tray); border-radius: 7px; }
   .toolbar [aria-pressed="true"].mod { background: transparent; }
   .wide-btn.subtle { margin-top: 10px; color: var(--bar-fg); }
   /* highlighters sit behind the ink and blend like real highlighter ink */
@@ -1662,6 +1686,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <button type="button" data-o="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="2"/></svg>Horizontal</button>
       <button type="button" data-o="v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="18" rx="2"/></svg>Vertical</button>
     </div>
+    <div class="seg three" id="tbSize" aria-label="Toolbar size">
+      <button type="button" data-s="s">Small</button><button type="button" data-s="m">Medium</button><button type="button" data-s="l">Large</button>
+    </div>
     <label class="numfield" id="tbLetterRow">Handle letter<input type="text" id="tbLetter" maxlength="2" autocomplete="off" autocapitalize="characters" aria-label="Letter shown on the toolbar handle" placeholder="≡" style="max-width:60px;text-align:center;margin-left:auto"></label>
     <label class="toggle" id="tbShowRow" for="tbShow"><span>Show this toolbar<span class="sub">When off it is hidden but keeps its buttons</span></span><span class="switch"><input type="checkbox" id="tbShow"><i></i></span></label>
   </div>
@@ -1700,8 +1727,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_120';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.28';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_121';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.29';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1969,6 +1996,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       pos: cleanPos(b && b.pos),
       enabled: main ? true : !(b && b.enabled === false),
       min: !!(b && b.min),
+      size: b && (b.size === 'm' || b.size === 'l') ? b.size : 's',
       letter: main ? '' : cleanLetter(b && b.letter)
     };
   }
@@ -2612,7 +2640,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (const it of b.items) {
       const line = lines[lines.length - 1];
       if (it.type === 'br') lines.push([[]]);
-      else if (it.type === 'sepbr') line.push([]);
+      else if (it.type === 'sepbr' || it.type === 'sep') line.push([]);   // separators are where a too long toolbar may wrap
       else line[line.length - 1].push(it);
     }
     return lines.map((groups, h) => {
@@ -2636,7 +2664,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         lines.slice(1).forEach(l => l.remove());
         if (b.min || !b.enabled || groups.length < 2) continue;
         const len = x => vert ? x.offsetHeight : x.offsetWidth;
-        const avail = (vert ? innerHeight : innerWidth) - 30;
+        const avail = ((vert ? innerHeight : innerWidth) - 30) / barK(b);   // a larger toolbar wraps sooner
         const sizes = groups.map(len);
         const sepLen = groups.slice(1).map(g => { const sp = g.querySelector(':scope > .sep.soft'); return sp ? len(sp) + 9 : 0; });
         const lead = [...first.children].filter(c => !c.classList.contains('tbgrp')).reduce((a, c) => a + len(c) + 3, 0);
@@ -2676,11 +2704,33 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       attachDrag(el.querySelector('.grip'), b, () => openBarPop(b, el.querySelector('.grip')));
     });
     bars.forEach(b => setMin(b, b.min));
+    markTrays();
     updateToolbarState();
     fitToolbars();
     placeToolbar();
     $('tbSum').textContent = bars.length > 1 ? `${bars.length} toolbars` : '';
     document.querySelectorAll('.toolbar [title]').forEach(el => { el.dataset.tip = el.title; el.removeAttribute('title'); });   // names come from our own hover label
+  }
+  // presets next to each other (no other button, separator or line break between them) share one tray
+  function markTrays() {
+    bars.forEach(b => {
+      const el = barEl(b);
+      if (!el) return;
+      let run = [];
+      const flush = () => {
+        run.forEach((x, i) => {
+          x.classList.add('tray');
+          x.classList.add(run.length === 1 ? 't-solo' : i === 0 ? 't-first' : i === run.length - 1 ? 't-last' : 't-mid');
+        });
+        run = [];
+      };
+      for (const it of b.items) {
+        if (it.type !== 'preset') { flush(); continue; }
+        const x = el.querySelector(`[data-id="${it.id}"]`);
+        if (x) run.push(x);
+      }
+      flush();
+    });
   }
   function setSwatch(sw, b) {
     const col = displayColor(b.color, b.pickedOnDark);
@@ -2743,8 +2793,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // how a preset looks: a size preset as a line with its thickness, a colour preset as a colour disc,
   // everything else as a pen (its type, its colour, its thickness, as far as it sets them) — all with the arrow
   const presetLook = it => { const u = it.use; return u.width && !u.color && !u.kind && !u.highlighter ? 'size' : u.color && !u.width && !u.kind ? 'color' : 'pen'; };
-  const presetInner = look => look === 'size' ? `${SIZE_S}<small></small>${GEARMARK}` : look === 'color' ? `<i></i>${GEARMARK}`
-    : `${ICON.pen}<span class="inkinfo"><span class="swatch"></span><small></small></span>${GEARMARK}`;
+  const presetInner = look => look === 'size' ? `${SIZE_S}<small></small>` : look === 'color' ? `<i></i>`
+    : `${ICON.pen}<span class="inkinfo"><span class="swatch"></span><small></small></span>`;
   const presetClass = look => look === 'pen' ? 'pen preset' : look === 'size' ? 'mod sizebtn preset' : 'mod colbtn preset';
   function paintPresetEl(el, it) {               // el: the button (or the list icon) in its current look
     const look = presetLook(it), u = it.use, b = it.brush;
@@ -2808,7 +2858,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         case 'preset': {
           const lk = presetLook(it);
-          if (el.dataset.look !== lk) { el.className = presetClass(lk); el.innerHTML = presetInner(lk); el.dataset.look = lk; delete el.dataset.ico; }
+          if (el.dataset.look !== lk) { const tr = [...el.classList].filter(c => c === 'tray' || c.startsWith('t-')); el.className = presetClass(lk); el.classList.add(...tr); el.innerHTML = presetInner(lk); el.dataset.look = lk; delete el.dataset.ico; }
           const on = modMatches(it);
           el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
           paintPresetEl(el, it);
@@ -3173,6 +3223,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   // ---- Toolbars: placing and dragging (each one independently) ----
+  const TB_K = { s: 1, m: 1.5, l: 2 };
+  const barK = b => TB_K[b.size] || 1;
   function placeToolbar() {
     bars.forEach(b => {
       const el = barEl(b);
@@ -3180,8 +3232,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       el.classList.toggle('vertical', b.orient === 'v');
       el.setAttribute('aria-orientation', b.orient === 'v' ? 'vertical' : 'horizontal');
       el.hidden = !b.enabled;
-      if (!b.pos) { el.style.left = el.style.top = el.style.transform = el.style.right = el.style.bottom = ''; return; }
-      const w = el.offsetWidth, h = el.offsetHeight;
+      el.style.setProperty('--tbk', barK(b));
+      if (!b.pos) { el.style.left = el.style.top = el.style.transform = el.style.right = el.style.bottom = el.style.transformOrigin = ''; return; }
+      el.style.transformOrigin = '0 0';
+      const w = el.offsetWidth * barK(b), h = el.offsetHeight * barK(b);
       b.pos.x = Math.max(4, Math.min(window.innerWidth - w - 4, b.pos.x));
       b.pos.y = Math.max(4, Math.min(window.innerHeight - h - 4, b.pos.y));
       Object.assign(el.style, { transform: 'none', right: 'auto', bottom: 'auto', left: b.pos.x + 'px', top: b.pos.y + 'px' });
@@ -3520,6 +3574,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ).join('') + `<button type="button" class="new" id="tbNew">+ New toolbar</button>`;
     const main = edBar === bars[0];
     $('tbOrient').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.o === edBar.orient)));
+    $('tbSize').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === (edBar.size || 's'))));
     $('tbShowRow').hidden = main;
     $('tbShow').checked = edBar.enabled;
     $('tbLetterRow').hidden = main;
@@ -3545,6 +3600,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('tbOrient').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
     if (edBar.orient === b.dataset.o) return;
     edBar.orient = b.dataset.o; edBar.pos = null;        // a new layout starts at its default spot
+    itemsChanged();
+  }));
+  $('tbSize').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    if ((edBar.size || 's') === b.dataset.s) return;
+    edBar.size = b.dataset.s;
     itemsChanged();
   }));
   $('tbLetter').addEventListener('input', e => {
@@ -3615,7 +3675,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1.4) scale(.34)"><path fill="currentColor" stroke="var(--panel)" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke" d="${ARROW_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg('<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="currentColor" opacity=".12" stroke="none"/><path d="M15.2 4.8l4 4L9 19l-4.8.8.8-4.8z"/>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
@@ -4279,6 +4339,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         name: i ? `Toolbar ${i + 1}` : 'Main',
         enabled: b.enabled,
         minimized: b.min,
+        size: { s: 'small', m: 'medium', l: 'large' }[b.size || 's'],
         letter: b.letter || '',
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
@@ -4322,7 +4383,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
-    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter }, main);
+    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter, size: { small: 's', medium: 'm', large: 'l' }[t.size] }, main);
     let newBars = null;
     // toolbars from files before v45 are ignored
     if (+o.formatVersion >= 3 && Array.isArray(o.toolbars) && o.toolbars.length) newBars = o.toolbars.map((t, i) => fileBar(t || {}, i === 0));
