@@ -566,6 +566,8 @@
   .dlg h2 { margin: 0 0 4px; font: 600 16px/1.3 var(--ui); }
   .dlg p { margin: 0 0 16px; font-size: 13px; line-height: 1.45; opacity: .7; }
   .dlg .opts { display: grid; gap: 6px; margin-bottom: 18px; }
+  .dlg .picklist { max-height: min(50vh, 420px); overflow-y: auto; padding: 2px; }
+  .dlg .pickall { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--line, rgba(0,0,0,.12)); font-weight: 600; }
   .dlg .check {
     display: flex; align-items: center; gap: 10px;
     padding: 11px 12px;
@@ -1538,6 +1540,17 @@
   </div>
 </dialog>
 
+<dialog class="dlg" id="pickDlg" aria-labelledby="pickTitle">
+  <h2 id="pickTitle">Open notebooks</h2>
+  <p id="pickInfo"></p>
+  <label class="check pickall"><input type="checkbox" id="pickAll" checked><span>All notebooks</span></label>
+  <div class="opts picklist" id="pickList"></div>
+  <div class="row">
+    <button type="button" id="pickCancel">Cancel</button>
+    <button type="button" id="pickGo" class="primary">Open</button>
+  </div>
+</dialog>
+
 <dialog class="dlg" id="pdfDlg" aria-labelledby="pdfTitle">
   <h2 id="pdfTitle">Export PDF</h2>
   <p>Vector PDF in the page size, actual size, white paper.</p>
@@ -1658,8 +1671,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_103';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.11';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_104';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.12';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4077,16 +4090,47 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       return { name: (sec && sec.dataset.file) || `Notebook ${i + 1}.svg`, text: ser.serializeToString(el) };
     });
   }
+  // a file with several notebooks: choose which ones to open (all ticked to start with)
+  function pickNotebooks(file, list) {
+    return new Promise(resolve => {
+      const dlg = $('pickDlg');
+      $('pickInfo').textContent = `${file.name} holds ${list.length} notebooks. Choose the ones to open.`;
+      $('pickList').innerHTML = list.map((f, i) => {
+        const same = nbIdx.loaded.find(m => m.savedName === f.name && !unsaved(m));
+        const n = f.nb.pages.length;
+        return `<label class="check"><input type="checkbox" data-i="${i}" checked><span>${esc(fileBase(f.name))}<span class="sub">${n} ${n === 1 ? 'page' : 'pages'}${same ? ' · already open, gets this version' : ''}</span></span></label>`;
+      }).join('');
+      const boxes = () => [...$('pickList').querySelectorAll('input')];
+      const sync = () => {
+        const on = boxes().filter(b => b.checked).length;
+        $('pickAll').checked = on === list.length; $('pickAll').indeterminate = on > 0 && on < list.length;
+        $('pickGo').disabled = !on;
+        $('pickGo').textContent = on === list.length ? 'Open all' : `Open ${on}`;
+      };
+      $('pickList').onchange = sync;
+      $('pickAll').onchange = e => { boxes().forEach(b => { b.checked = e.target.checked; }); sync(); };
+      let done = false;
+      const finish = v => { if (done) return; done = true; if (dlg.open) dlg.close(); resolve(v); };
+      $('pickGo').onclick = () => finish(boxes().filter(b => b.checked).map(b => list[+b.dataset.i]));
+      $('pickCancel').onclick = () => finish(null);
+      dlg.onclose = () => finish(null);
+      sync();
+      dlg.showModal();
+    });
+  }
   async function loadAll(file) {
     let entries;
     try { entries = await collectionEntries(file); }
     catch (_) { toast(`${file.name} can’t be read as a notebook collection.`); return; }
+    let list = [];
+    for (const f of entries) { try { list.push({ ...f, nb: await parseNotebook(f.text) }); } catch (_) {} }
+    if (!list.length) { toast(`No RRnotes notebooks found in ${file.name}`); return; }
+    if (list.length > 1) { list = await pickNotebooks(file, list); if (!list || !list.length) return; }
     await flushSave();
     let added = 0, renewed = 0, firstNew = null;
     const now = Date.now();
-    for (const f of entries) {
-      let nb;
-      try { nb = await parseNotebook(f.text); } catch (_) { continue; }
+    for (const f of list) {
+      const nb = f.nb;
       const same = nbIdx.loaded.find(m => m.savedName === f.name && !unsaved(m));
       if (same) {                                    // open and unchanged: take the version from the ZIP
         Object.assign(same, { pages: nb.pages.length, savedAt: now, savedZip: file.name, modAt: now });
@@ -6316,11 +6360,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const L = view.tx, R = view.tx + W * S(), T = view.ty, B = view.ty + H * S();
     const visL = Math.max(L, 0), visR = Math.min(R, vw), visT = Math.max(T, 0), visB = Math.min(B, vh);
     if (x < visL || x > visR || y < visT || y > visB) return null;     // on the page itself (the desk has the page slider)
-    const side = !flipOn ? null : flipR && x >= visR - EDGE ? 'right' : flipL && x <= visL + EDGE ? 'left' : null;   // a switched-off edge is just page
-    return side ? { side, bottom: false } : null;
+    const side = !flipOn ? null : x >= visR - EDGE ? 'right' : x <= visL + EDGE ? 'left' : null;
+    if (!side) return null;
+    return { side, bottom: false, quick: !(side === 'right' ? flipR : flipL) };   // a switched-off edge only answers a short quick flick
   }
+  const QUICK_MS = 200;                          // a swipe shorter than this turns the page without zooming out
   function startNav(e, info) {
-    nav = { mode: 'pending', id: e.pointerId, side: info.side, bottom: info.bottom, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), vx: 0, rdx: 0, moved: 0 };
+    nav = { mode: 'pending', id: e.pointerId, side: info.side, bottom: info.bottom, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), t0: performance.now(), vx: 0, rdx: 0, moved: 0,
+            quick: !!info.quick, wide: Math.max(e.width || 0, e.height || 0) > 30 };
+    if (nav.quick) return;                       // switched-off edge: no hold, no slider, just the quick flick
     if (info.bottom) nav.timer = setTimeout(() => { if (nav && nav.mode === 'pending' && nav.moved < 12) { navRipple(nav.x0, nav.y0, true); startRiffle(); } }, 380);
     else navHold();
   }
@@ -6334,6 +6382,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const dx = e.clientX - nav.x0, dy = e.clientY - nav.y0, t = performance.now();
     nav.vx = (e.clientX - nav.lx) / Math.max(1, t - nav.lt); nav.lx = e.clientX; nav.lt = t;
     nav.moved = Math.max(nav.moved, Math.hypot(dx, dy));
+    if (nav.mode === 'dead') return;
+    if (nav.mode === 'pending' && nav.quick) {   // a switched-off edge: only a short, quick, sideways flick from a fingertip turns (decided on release)
+      if (nav.wide || t - nav.t0 > 320 || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
+      return;
+    }
     if (nav.mode === 'pending') {
       if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
         if (flipStyle === 'flat' && nav.side && (nav.side === 'right' ? dx < 0 : dx > 0)) { edgeToSlide('h'); slideMove(e); return; }
@@ -6351,6 +6404,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function navEnd() {
     if (!nav) return;
     clearTimeout(nav.timer);
+    if (nav.quick && nav.mode === 'pending') {   // the quick flick on a switched-off edge: one page, no zooming
+      const dx = nav.lx - nav.x0, dir = nav.side === 'right' ? (dx < 0 ? 1 : 0) : (dx > 0 ? -1 : 0);
+      if (dir && Math.abs(dx) >= 30 && performance.now() - nav.t0 <= 320) {
+        nav.noLift = true;
+        startFlip(dir, 1);
+        if (nav && nav.mode === 'flip') { setFlip(0.2); nav.quickTurn = true; endFlip(); }
+      }
+      nav = null;
+      return;
+    }
     if (nav.mode === 'flip') endFlip();
     else if (nav.mode === 'flat') flatEnd();
     else if (nav.mode === 'riffle') endRiffle();
@@ -6415,7 +6478,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       // Each starts edge-on (a thin sliver at the left edge) and opens to the right over the current page.
       const sheets = [];
       for (let k = 0; k < maxN; k++) { const sh = sheetAt(k); fillSheet(sh, cur - 1 - k, 11 + k, cover && k === realN ? 'front' : null); sh.classList.add('turning'); sh.classList.remove('from-left'); sheets.push(sh); }
-      Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: liftTarget(), back: true,
+      Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: nav.noLift ? null : liftTarget(), back: true,
         pMax: cover ? FLIP_NEXT * realN + FLIP_FIRST / 2 : 1 });     // the front cover comes half-way down at most
       setFlip(0);
       return;
@@ -6427,7 +6490,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (let k = 1; k < maxN; k++) { const sh = sheetAt(k - 1); fillSheet(sh, cur + dir * k, 10 + maxN - k); sheets.push(sh); }
     fillSheet(sheetAt(maxN - 1), cur + dir * maxN, 10, cover ? 'back' : null);
     sheets.forEach(sh => { sh.classList.add('turning'); sh.classList.toggle('from-left', dir < 0); });
-    Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: liftTarget(), back: false,   // (the slider reuses nav)
+    Object.assign(nav, { mode: 'flip', dir, maxN, realN, sheets, p: 0, lift: nav.noLift ? null : liftTarget(), back: false,   // (the slider reuses nav)
       pMax: cover ? commitAt(realN) - 0.001 : 1 });                  // the last page lifts up to upright at most
     setFlip(0);
   }
@@ -6498,7 +6561,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     p = Math.min(p, nav.pMax === undefined ? 1 : nav.pMax);
     nav.p = p;
     if (nav.slide) { nav.slide.lp = Math.max(nav.slide.lp || 0, Math.min(1, p / 0.1)); setLift(nav.slide.lp); }   // stays out while sliding
-    else setLift(Math.min(1, p / 0.1));          // fully zoomed out after the first 10 % of the swipe
+    else {                                       // a quick flick turns right away; a longer swipe zooms out (fully after the first 10 %)
+      const dt = performance.now() - (nav.t0 || 0) - QUICK_MS;
+      setLift(dt > 0 ? Math.min(1, p / 0.1) * Math.min(1, dt / 160) : 0);
+    }
     const ang = flipAngles(p);
     nav.sheets.forEach((sh, k) => paintSheet(sh, ang[k], nav.back ? 1 : nav.dir));
     const n = flipCount(p);
@@ -6528,7 +6594,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (n0.tgt) n0.tgt.classList.remove('target');
     const fast = n0.dir > 0 ? n0.vx < -0.5 : n0.vx > 0.5;
     let n = n0.forceCancel ? 0 : flipCount(n0.p);
-    if (!n0.forceCancel && n === 0 && fast && n0.p > 0.03) n = Math.min(1, n0.realN);
+    const quick = n0.quickTurn || performance.now() - (n0.t0 || 0) < 350;   // a short quick swipe: one page
+    if (!n0.forceCancel && n === 0 && (fast || quick) && n0.p > 0.03) n = Math.min(1, n0.realN);
     $('riffle').hidden = true;
     animating = true;
     const settle = 360;
@@ -6946,7 +7013,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       tapDown(e);
       if (touches.size === 2) {
-        if (active && active.type === 'touch') finishStroke(null, false);
+        if (active && active.type === 'touch') {
+          if (active.peek) { active.dead = true; clearTimeout(active.timer); }   // a pinch: the first finger did not tap the note or image
+          finishStroke(null, false);
+        }
         if (!active) startPinch();
         return;
       }
@@ -6968,7 +7038,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (isBtn(e)) { btnDown(e); return; }               // right mouse button: same as the stylus button
     if (riffleOn && offPage(e.clientX, e.clientY)) { startSlide(e); return; }
     const info = edgeInfo(e.clientX, e.clientY);
-    if (info && !(tool === 'lasso' && inSelBox(toMM(e)))) startNav(e, info);
+    if (info && !info.quick && !(tool === 'lasso' && inSelBox(toMM(e)))) startNav(e, info);
     else if (tool === 'sticky') placeNote(e);
     else tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
   });
