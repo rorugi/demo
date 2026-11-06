@@ -1249,6 +1249,10 @@
       <select class="dd" id="fingAct" aria-label="One finger in stylus mode">
         <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option>
       </select>
+      <span>Hold time<span class="sub" id="holdTimeSub"></span></span>
+      <div class="seg three" id="holdTimes">
+        <button type="button" data-v="short">Short</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="long">Long</button>
+      </div>
       <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
       <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
         <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
@@ -1676,8 +1680,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_113';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.21';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_114';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.22';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4213,7 +4217,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
-      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, fingerInStylusMode: fingAct, selectionColor: selColor, selectionGlowPx: selGlow,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, fingerInStylusMode: fingAct, holdTime, selectionColor: selColor, selectionGlowPx: selGlow,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, leftEdge: flipL, rightEdge: flipR, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
@@ -4254,6 +4258,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (o.stylusButton === 'grab' || o.stylusButton === 'erase') { penBtn = o.stylusButton; store.set('penBtn', penBtn); renderPenBtn(); }
     if (Object.values(SEL_COLORS).includes(o.selectionColor)) { selColor = o.selectionColor; store.set('selColor', selColor); applySelColor(); }
     if (+o.selectionGlowPx >= 0 && +o.selectionGlowPx <= 24) { selGlow = +o.selectionGlowPx; store.set('selGlow', selGlow); applySelColor(); }
+    if (HOLD_TIMES[o.holdTime]) setHoldTime(o.holdTime);
     if (FING[o.fingerInStylusMode]) { fingAct = o.fingerInStylusMode; store.set('fingAct', fingAct); $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct]; }
     if (TAP1[o.oneFingerDoubleTap]) { tap1Act = o.oneFingerDoubleTap; store.set('tap1', tap1Act); $('tap1Act').value = tap1Act; $('tap1Sub').textContent = TAP1[tap1Act]; }
     if (HOLD[o.holdPenAtEnd]) { holdAct = o.holdPenAtEnd; store.set('penHold', holdAct); $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct]; }
@@ -4705,7 +4710,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const objW = o => o.src ? o.w : noteW(o), objH = o => o.src ? o.h : noteHt(o);
   // while held (faded) it can also be moved with the same finger
   // a finger has to rest on a sticky note or image for a moment before it can move it (no accidental shifts)
-  const PEEK_HOLD = 350;
+  // Hold time (Settings → Gestures): how long a finger rests before it counts as a hold; the quick one-page swipe follows it
+  const HOLD_TIMES = { short: [250, 200], medium: [350, 300], long: [500, 400] };
+  let holdTime = HOLD_TIMES[store.get('holdTime', 'medium')] ? store.get('holdTime', 'medium') : 'medium';
+  let PEEK_HOLD = HOLD_TIMES[holdTime][0], QUICK_MS = HOLD_TIMES[holdTime][1];
+  const QUICK_MAX = () => QUICK_MS * 1.5;          // a flick released within this still turns just one page
   // a long finger hold was recognised: a circle in the selection colour pops up under the finger and spreads over the whole note or image, fading out
   function holdRipple(n, at) {
     const k = S(), w = objW(n), h = objH(n), rot = n.src && n.rot ? n.rot * Math.PI / 180 : 0;
@@ -5290,6 +5299,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('penBtnSub').textContent = BTN_SUB[penBtn];
   }
   $('penBtnModes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { penBtn = b.dataset.v; store.set('penBtn', penBtn); renderPenBtn(); }));
+  function setHoldTime(v) {
+    holdTime = HOLD_TIMES[v] ? v : 'medium';
+    [PEEK_HOLD, QUICK_MS] = HOLD_TIMES[holdTime];
+    store.set('holdTime', holdTime);
+    $('holdTimes').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === holdTime)));
+    $('holdTimeSub').textContent = `A finger resting ${(PEEK_HOLD / 1000).toLocaleString('en', { maximumFractionDigits: 2 })} s holds a note, an image or the pages; a swipe up to ${(QUICK_MS / 1000).toLocaleString('en', { maximumFractionDigits: 2 })} s turns one page`;
+  }
+  $('holdTimes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setHoldTime(b.dataset.v)));
+  setHoldTime(holdTime);
   renderPenBtn();
   // test pad: shows the raw values of the stylus button, so a tablet that reports it differently can be recognised
   (() => {
@@ -6311,7 +6329,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (a.pts.some(q => Math.hypot(q[0] - q0[0], q[1] - q0[1]) > 1.5)) return;
         finishStroke(null, false);
         startPeek({ pointerId: id, pointerType: 'touch' }, held, 0, q0, false, true);
-      }, 450);
+      }, PEEK_HOLD + 100);                       // finger mode: a little longer, as the finger may be starting to write
     }
     // while writing on a sticky note, the live ink is cut at its edge like the finished stroke
     liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + noteW(note)) * S()}px ${vh - view.ty - (note.y + noteHt(note)) * S()}px ${view.tx + note.x * S()}px)` : '';
@@ -6412,7 +6430,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!side) return null;
     return { side, bottom: false, quick: !(side === 'right' ? flipR : flipL) };   // a switched-off edge only answers a short quick flick
   }
-  const QUICK_MS = 300;                          // a swipe shorter than this turns the page without zooming out
   function startNav(e, info) {
     nav = { mode: 'pending', id: e.pointerId, side: info.side, bottom: info.bottom, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), t0: performance.now(), vx: 0, rdx: 0, moved: 0,
             quick: !!info.quick, wide: Math.max(e.width || 0, e.height || 0) > 30 };
@@ -6458,7 +6475,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nav.moved = Math.max(nav.moved, Math.hypot(dx, dy));
     if (nav.mode === 'dead') return;
     if (nav.mode === 'pending' && nav.quick) {   // a switched-off edge: only a short, quick, sideways flick from a fingertip turns (decided on release)
-      if (nav.wide || (nav.moved >= 10 && t - nav.t0 > 450) || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
+      if (nav.wide || (nav.moved >= 10 && t - nav.t0 > QUICK_MAX()) || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
       return;
     }
     // flat style: a quick flick turns one page directly; only a longer swipe brings up the row of pages
@@ -6483,7 +6500,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearTimeout(nav.timer);
     if (nav.mode === 'pending' && !nav.held && nav.side) {   // a quick flick (also on a switched-off edge): one page, no zooming
       const dx = nav.lx - nav.x0, dy = (nav.ly != null ? nav.ly : nav.y0) - nav.y0, dir = nav.side === 'right' ? (dx < 0 ? 1 : 0) : (dx > 0 ? -1 : 0);
-      if (dir && Math.abs(dx) >= 30 && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - nav.t0 <= 450) quickTurn(dir);
+      if (dir && Math.abs(dx) >= 30 && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - nav.t0 <= QUICK_MAX()) quickTurn(dir);
       else nav = null;
       return;
     }
@@ -6743,7 +6760,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (n0.tgt) n0.tgt.classList.remove('target');
     const fast = n0.dir > 0 ? n0.vx < -0.5 : n0.vx > 0.5;
     let n = n0.forceCancel ? 0 : flipCount(n0.p);
-    const quick = n0.quickTurn || performance.now() - (n0.t0 || 0) < 450;   // a short quick swipe: one page
+    const quick = n0.quickTurn || performance.now() - (n0.t0 || 0) < QUICK_MAX();   // a short quick swipe: one page
     if (!n0.forceCancel && n === 0 && (fast || quick) && n0.p > 0.03) n = Math.min(1, n0.realN);
     $('riffle').hidden = true;
     animating = true;
