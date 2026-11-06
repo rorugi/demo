@@ -1671,8 +1671,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_105';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.13';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_106';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.14';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6633,7 +6633,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function applyNavZoom() {
     const U = nav.uz, strip = $('strip');
     if (nav.slide && nav.slide.strip) { strip.style.transformOrigin = '0 0'; strip.style.transform = U ? `translate(${U.x}px, ${U.y}px) scale(${U.k})` : ''; }
-    else setLift(nav.le != null ? nav.le : 0);
+    else if (U || nav.lift) setLift(nav.le != null ? nav.le : 0);
+    else stage.style.transform = '';
   }
   function navZoomEnd(navLifted) {               // one finger left: it carries on turning from where the pages are
     const z = nav.z2;
@@ -6643,6 +6644,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!f) { navEnd(); return; }
     nav.x0 += f.x - z.na.x; nav.y0 += f.y - z.na.y;
     nav.lx = f.x; nav.ly = f.y; nav.lt = performance.now(); nav.vx = 0;
+    // back to the normal navigation view: the closer look glides out to the centre and the usual size
+    const n0 = nav, u0 = { ...(nav.uz || { k: 1, x: 0, y: 0 }) }, t0 = performance.now(), D = 240;
+    const step = now => {
+      if (nav !== n0 || n0.z2) return;           // ended, or a new closer look started
+      const q = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - q, 3);
+      n0.uz = q < 1 ? { k: u0.k + (1 - u0.k) * e, x: u0.x * (1 - e), y: u0.y * (1 - e) } : null;
+      applyNavZoom();
+      if (q < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
   function setFlip(p) {
     p = Math.min(p, nav.pMax === undefined ? 1 : nav.pMax);
