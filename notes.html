@@ -1679,8 +1679,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_111';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.19';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_112';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.20';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7174,8 +7174,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const FING_WAIT = 140;                         // ms a lone finger waits before erasing / selecting / highlighting
   let fpend = null;
   const fingTag = $('fingTag');
+  const FING_MOVE = 10;                          // px the finger has to travel: taps, double taps and a resting finger do nothing
+  const fingFar = p => p.pts.some(q => Math.hypot(q.clientX - p.e0.clientX, q.clientY - p.e0.clientY) >= FING_MOVE);
   function fingGo() {
     const p = fpend;
+    if (p && !fingFar(p)) { p.ready = true; return; }   // not moving yet: wait for it to move
     fpend = null;
     if (!p || active || pinch || nav || touches.size !== 1 || !touches.has(p.id)) return;
     const last = p.pts[p.pts.length - 1];
@@ -7368,7 +7371,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tap2) { const o = tap2.start.get(e.pointerId); if (o && Math.hypot(e.clientX - o.x, e.clientY - o.y) > 14) tap2.moved = true; }
       if (pinch) { updatePinch(); return; }
     }
-    if (fpend && e.pointerId === fpend.id) { fpend.pts.push({ pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 }); return; }
+    if (fpend && e.pointerId === fpend.id) {
+      fpend.pts.push({ pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 });
+      if (fpend.ready && fingFar(fpend)) fingGo();   // waited long enough, and now it really moves
+      return;
+    }
     if (fpan && e.pointerId === fpan.id && !pinch) {   // stylus mode, one finger moves the page
       if (touches.size > 1) { fpan = null; return; }
       view.tx = fpan.tx0 + e.clientX - fpan.x0; view.ty = fpan.ty0 + e.clientY - fpan.y0; clampView(); applyView();
