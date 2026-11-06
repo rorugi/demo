@@ -215,11 +215,9 @@
   .swatch { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--c, #000); box-shadow: 0 0 0 1px var(--bar-line); }
   .swatch.hl { width: 9px; height: 5px; border-radius: 1.5px; }
   .inkinfo small { font: 600 8.5px/1 var(--ui); letter-spacing: -.03em; opacity: .75; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  /* presets: the pen with a small plus (a pen ready to pick up) */
+  /* presets: the pen with a small arrow pointing left (it hands its ink to the pen) */
   .pen svg.gearmark { position: absolute; left: 3px; top: 3px; width: 11px; height: 11px; transform: none; }
-  .gearmark path { fill: none; stroke-linecap: round; }
-  .gearmark .halo { stroke: var(--panel); stroke-width: 9; }
-  .gearmark .mk { stroke: currentColor; stroke-width: 3.6; }
+  .gearmark .mk { fill: currentColor; stroke: var(--panel); stroke-width: 3.4; stroke-linejoin: round; paint-order: stroke; }
   /* the pen type button: the type, with a small arrow for its menu */
   .ptbtn { position: relative; }
   .ptbtn svg.ptchev { position: absolute; right: 3px; bottom: 4px; width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
@@ -1248,6 +1246,10 @@
       <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
         <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
       </select>
+      <span>One finger in stylus mode<span class="sub" id="fingSub"></span></span>
+      <select class="dd" id="fingAct" aria-label="One finger in stylus mode">
+        <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option>
+      </select>
       <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
       <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
         <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
@@ -1673,8 +1675,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_107';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.15';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_108';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.16';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1830,6 +1832,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     chisel:    { label: 'Calligraphy', sub: 'Chisel nib: broad going down, thin going up to the right', t: 'c' },
     pencil:    { label: 'Pencil', sub: 'Grainy, darker when pressed', t: 'p' }
   };
+  // finger / stylus: the one in charge is big and dark, the other small and faint
+  const MODE_FINGER = '<path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5c0 3.6-2.4 6-6 6s-4.7-1.5-6.4-4.2L4.4 13.4a1.4 1.4 0 0 1 2.3-1.6L9 14"/>';
+  const MODE_STYLUS = '<path d="M16.3 3.6l4.1 4.1L8.6 19.5 4 20l.5-4.6z"/><path d="M14 5.9l4.1 4.1"/>';
+  const modeIcon = stylus => {
+    const g = (d, cx, on) => { const k = on ? 0.66 : 0.46; return `<g transform="translate(${(cx - 12 * k).toFixed(2)} ${(12 - 12 * k).toFixed(2)}) scale(${k})" stroke-width="${on ? 2.6 : 2.8}" opacity="${on ? 1 : 0.35}">${d}</g>`; };
+    return svg(g(MODE_STYLUS, stylus ? 8 : 5.5, stylus) + g(MODE_FINGER, stylus ? 18.5 : 16, !stylus));
+  };
   const KINDS = Object.fromEntries(Object.entries(PEN_KINDS).map(([k, d]) => [k, d.label]));
   const VAR_T = new Set(['b', 'f', 'r', 'c']);
   const isVar = st => !!(st && VAR_T.has(st.t) && st.v && st.v.length);
@@ -1839,6 +1848,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const ITEM_TYPES = {
     pen:    { label: 'Pen', multi: true },
     pentype: { label: 'Pen type' },
+    inmode: { label: 'Finger / stylus' },
     space:  { label: 'Empty space', multi: true },
     preset: { label: 'Preset', multi: true },
     sticky: { label: 'Sticky notes' },
@@ -1894,7 +1904,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return [
       { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) }, { id: uid(), type: 'pentype' },
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b, undefined, true) })),
-      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
+      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
     ];
@@ -1946,6 +1956,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const saved = store.get('toolbars', null);
     if (Array.isArray(saved) && saved.length) bars = saved.map((b, i) => cleanBar(b, i === 0));
     else bars = [cleanBar(null, true)];
+  }
+  // stylus mode: the stylus writes and fingers don't (they tap, hold, turn pages, or do what Gestures says);
+  // finger mode: fingers write too. The stylus switches to stylus mode by itself; the mode button switches either way.
+  let penSeen = store.get('stylusMode', false) === true;
+  if (!store.get('imAdded', false)) {          // the mode button arrives once, before Undo
+    store.set('imAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'inmode'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'undo');
+      m.splice(k < 0 ? m.length : k, 0, { id: uid(), type: 'inmode' });
+      store.set('toolbars', bars);
+    }
   }
   if (!store.get('ptAdded', false)) {          // the pen type button arrives once, right after the first pen
     store.set('ptAdded', true);
@@ -2506,6 +2527,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
       case 'undo': return `<button type="button" ${a} aria-label="Undo" title="Undo">${ICON.undo}</button>`;
+      case 'inmode': return `<button type="button" class="imbtn" ${a}>${modeIcon(penSeen)}</button>`;
       case 'redo': return `<button type="button" ${a} aria-label="Redo" title="Redo">${ICON.redo}</button>`;
       case 'sep': return `<span class="sep" ${a} aria-hidden="true"></span>`;
       case 'size': return `<button type="button" class="mod sizebtn" ${a}>${SIZE_S}<small></small></button>`;
@@ -2645,8 +2667,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const sizeLine = w => Math.max(1.3, Math.min(6.5, 0.8 + w * 3)).toFixed(1);
   const PENLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="penlock" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>';
   const GEAR_D = 'M9.73 4.33L9.92 1.30L14.08 1.30L14.27 4.33A8.0 8.0 0 0 1 15.82 4.97L18.10 2.96L21.04 5.90L19.03 8.18A8.0 8.0 0 0 1 19.67 9.73L22.70 9.92L22.70 14.08L19.67 14.27A8.0 8.0 0 0 1 19.03 15.82L21.04 18.10L18.10 21.04L15.82 19.03A8.0 8.0 0 0 1 14.27 19.67L14.08 22.70L9.92 22.70L9.73 19.67A8.0 8.0 0 0 1 8.18 19.03L5.90 21.04L2.96 18.10L4.97 15.82A8.0 8.0 0 0 1 4.33 14.27L1.30 14.08L1.30 9.92L4.33 9.73A8.0 8.0 0 0 1 4.97 8.18L2.96 5.90L5.90 2.96L8.18 4.97A8.0 8.0 0 0 1 9.73 4.33ZM16.4 12a4.4 4.4 0 1 0-8.8 0 4.4 4.4 0 1 0 8.8 0z';   // a plain gear: eight wide teeth around a round hole
-  const PLUS_D = 'M12 4.5v15M4.5 12h15';
-  const GEARMARK = `<svg class="gearmark" viewBox="0 0 24 24" aria-hidden="true"><path class="halo" d="${PLUS_D}"/><path class="mk" d="${PLUS_D}"/></svg>`;   // presets carry a plus
+  const ARROW_D = 'M1 12L11.2 3.6V8.6H23v6.8H11.2v5z';      // a solid arrow pointing left: this preset hands its ink over to the pen
+  const GEARMARK = `<svg class="gearmark" viewBox="0 0 24 24" aria-hidden="true"><path class="mk" d="${ARROW_D}"/></svg>`;
   const PTCHEV = '<svg class="ptchev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>';
   const SIZE_S = '<svg class="sizes-s" viewBox="0 0 26 16" aria-hidden="true"><path d="M3 11.5C5.5 5 9.5 3.2 11.8 6.6c1.6 2.4 1.9 5.8 5 5.4C19.6 11.6 21.7 7.8 23 4"/></svg>';
   function paintSizeBtn(el, it) {
@@ -2746,6 +2768,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
         case 'undo': el.disabled = !undoStack.length; break;
+        case 'inmode':
+          if (el.dataset.m !== String(penSeen)) { el.innerHTML = modeIcon(penSeen); el.dataset.m = String(penSeen); }
+          el.setAttribute('aria-label', penSeen ? 'Stylus mode: fingers don’t write. Tap for finger mode' : 'Finger mode: fingers write. Tap for stylus mode');
+          break;
         case 'redo': el.disabled = !redoStack.length; break;
         case 'lock': {
           el.setAttribute('aria-pressed', String(zoomLocked));
@@ -2813,6 +2839,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         else { tool = it.type; closePops(); updateToolbarState(); }
         break;
       case 'undo': undo(); break;
+      case 'inmode': setStylusMode(!penSeen, true); break;
       case 'redo': redo(); break;
       case 'lock': setLocked(!zoomLocked); break;
       case 'fs': toggleFs(); break;
@@ -3523,7 +3550,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(.6 .6) scale(.44)" stroke-linecap="round"><path stroke="var(--panel)" stroke-width="9" d="${PLUS_D}"/><path stroke-width="3.6" d="${PLUS_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(.6 .6) scale(.44)"><path fill="currentColor" stroke="var(--panel)" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke" d="${ARROW_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
@@ -4183,7 +4210,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
-      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, selectionColor: selColor, selectionGlowPx: selGlow,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, fingerInStylusMode: fingAct, selectionColor: selColor, selectionGlowPx: selGlow,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, leftEdge: flipL, rightEdge: flipR, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
@@ -4224,6 +4251,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (o.stylusButton === 'grab' || o.stylusButton === 'erase') { penBtn = o.stylusButton; store.set('penBtn', penBtn); renderPenBtn(); }
     if (Object.values(SEL_COLORS).includes(o.selectionColor)) { selColor = o.selectionColor; store.set('selColor', selColor); applySelColor(); }
     if (+o.selectionGlowPx >= 0 && +o.selectionGlowPx <= 24) { selGlow = +o.selectionGlowPx; store.set('selGlow', selGlow); applySelColor(); }
+    if (FING[o.fingerInStylusMode]) { fingAct = o.fingerInStylusMode; store.set('fingAct', fingAct); $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct]; }
     if (TAP1[o.oneFingerDoubleTap]) { tap1Act = o.oneFingerDoubleTap; store.set('tap1', tap1Act); $('tap1Act').value = tap1Act; $('tap1Sub').textContent = TAP1[tap1Act]; }
     if (HOLD[o.holdPenAtEnd]) { holdAct = o.holdPenAtEnd; store.set('penHold', holdAct); $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct]; }
     if (TAP2[o.twoFingerDoubleTap]) { tap2Act = o.twoFingerDoubleTap; store.set('tap2', tap2Act); $('tap2Act').value = tap2Act; $('tap2Sub').textContent = TAP2[tap2Act]; }
@@ -5300,7 +5328,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Stroke drawing ----
   let active = null;               // pen: { id, type, pts, sx, sy, color, width, opacity } · eraser: { erase: true, … }
-  let penSeen = false, lastPen = -1e9, strokeSerial = 0;
+  let lastPen = -1e9, strokeSerial = 0;
   const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   const toMM = e => [(e.clientX - view.tx) / S(), (e.clientY - view.ty) / S()];
 
@@ -6247,10 +6275,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     magwin.addEventListener('contextmenu', e => e.preventDefault());
   }
 
-  function startStroke(e) {
+  function startStroke(e, over) {
     const [x, y] = toMM(e);
     if (x < 0 || y < 0 || x > W || y > H) return;
-    const br = effBrush();                  // the pen, with an active size / colour button applied
+    const br = over || effBrush();          // the pen, with an active size / colour button applied (or the finger's highlighter)
     clearCtx(lctx); clearCtx(tctx);
     const note = noteAt(x, y);              // a stroke that starts on a sticky note belongs to it
     const img = !note && objSel && objSel.src && inObj(objSel, [x, y]) ? objSel : null;   // …on the selected image: to the image
@@ -6765,7 +6793,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const slidePx = () => Math.max(30, Math.min(60, Math.min(vw, vh) / 16));   // first pages: one per this many px
   function slideMove(e) {
-    const sl = nav.slide, dx = e.clientX - nav.x0, dy = e.clientY - nav.y0;
+    const sl = nav.slide, dx = e.clientX - nav.x0, dy = e.clientY - nav.y0, tn = performance.now();
+    (nav.fh = nav.fh || []).push([tn, e.clientX, e.clientY]);
+    while (nav.fh.length > 2 && tn - nav.fh[0][0] > 100) nav.fh.shift();
     if (!sl.src) {                                 // held at an edge: the first clear movement says sideways or along the edge
       if (Math.hypot(dx, dy) < 12) return;
       sl.src = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
@@ -6813,23 +6843,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (abs !== sl.abs) { sl.abs = abs; vibrate(6); }
   }
   // ---- Letting go while running through the pages fast: they run on and slow down; touch again to carry on ----
+  // The time to touch again follows how fast the finger itself was moving when it let go (a quick flick of the finger
+  // usually means: moving the hand back to go on), not how fast the pages run.
   function startCoast() {
-    const sl = nav.slide, h = sl && sl.hist, now = performance.now();
+    const sl = nav.slide, h = sl && sl.hist, fh = nav.fh, now = performance.now();
     if (!h || h.length < 2 || now - h[h.length - 1][0] > 90) return false;   // the finger had stopped
     const a = h[0], b = h[h.length - 1], v = (b[1] - a[1]) / Math.max(16, b[0] - a[0]);   // pages per ms
-    if (Math.abs(v) < 0.004) return false;
-    nav.mode = 'coast'; nav.id = null; nav.cv = Math.max(-0.06, Math.min(0.06, v)); nav.ct = now; sl.hist = [];
+    let fs = 0;                                                              // finger speed, px per ms
+    if (fh && fh.length > 1) { const f0 = fh[0], f1 = fh[fh.length - 1]; fs = Math.hypot(f1[1] - f0[1], f1[2] - f0[2]) / Math.max(16, f1[0] - f0[0]); }
+    if (Math.abs(v) < 0.004 && fs < 0.6) return false;
+    const grace = Math.max(700, Math.min(2000, 600 + 700 * Math.min(2, fs)));   // ms after letting go in which a touch carries on
+    nav.mode = 'coast'; nav.id = null; nav.cv = Math.max(-0.06, Math.min(0.06, v)); nav.ct = now; nav.until = now + grace; sl.hist = [];
     const n0 = nav;
     const step = t => {
       if (nav !== n0 || n0.mode !== 'coast') return;
       const dt = Math.min(50, t - n0.ct); n0.ct = t;
-      let pos = sl.pos + n0.cv * dt;
-      n0.cv *= Math.exp(-dt / 420);                // slows down: it runs on about 0.4 s worth of its speed
-      const lo = 0, hi = pages.length - 1;
-      if (pos <= lo || pos >= hi) { pos = Math.max(lo, Math.min(hi, pos)); n0.cv = 0; }
-      if (sl.style === 'flat') { flatMove(pos); sl.pos = pos; }
-      else { slideTo(pos); n0.mode = 'coast'; }
-      if (Math.abs(n0.cv) < 0.0007) { endCoast(); return; }
+      if (n0.cv) {
+        let pos = sl.pos + n0.cv * dt;
+        n0.cv *= Math.exp(-dt / 650);              // slows down: it runs on about 0.65 s worth of its speed
+        const lo = 0, hi = pages.length - 1;
+        if (pos <= lo || pos >= hi) { pos = Math.max(lo, Math.min(hi, pos)); n0.cv = 0; }   // at the first or last page it waits there
+        if (Math.abs(n0.cv) < 0.0006) n0.cv = 0;
+        if (sl.style === 'flat') { flatMove(pos); sl.pos = pos; }
+        else { slideTo(pos); n0.mode = 'coast'; }
+      }
+      if (!n0.cv && t >= n0.until) { endCoast(); return; }   // stopped, and no new touch in time: land
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -6843,7 +6881,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function regrab(e) {                           // a finger while the pages run on: it takes over from where they are
     const sl = nav.slide;
     nav.id = e.pointerId; nav.x0 = nav.lx = e.clientX; nav.y0 = nav.ly = e.clientY; nav.lt = performance.now(); nav.moved = 0;
-    sl.base = sl.pos; sl.hist = [];
+    sl.base = sl.pos; sl.hist = []; nav.fh = []; nav.cv = 0;
     nav.mode = sl.style === 'flat' ? 'flat' : 'flip';
   }
   function slideTeardown() {                     // all sheets back to rest, the desk stays zoomed out
@@ -7119,6 +7157,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       toast(to === 1 ? 'Whole page' : rz && to === rz ? '1:1' : `${Math.round(to * 100)}%`, 900);
     }
   }
+  // ---- Finger or stylus mode, and what one finger does in stylus mode ----
+  const FING = { off: 'Fingers tap, hold, zoom and turn pages, but leave the page alone', pan: 'Drag to move the page; taps and double taps work as before',
+    erase: 'The finger erases (eraser settings); the stylus keeps writing', lasso: 'The finger draws a lasso to select and move ink',
+    hl: 'The finger highlights with your highlighter preset; the stylus keeps its pen' };
+  let fingAct = (v => FING[v] ? v : 'off')(store.get('fingAct', 'off'));
+  let fpan = null;
+  $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct];
+  $('fingAct').addEventListener('change', e => { fingAct = e.target.value; store.set('fingAct', fingAct); $('fingSub').textContent = FING[fingAct]; });
+  function setStylusMode(on, byHand) {
+    penSeen = !!on; store.set('stylusMode', penSeen);
+    updateToolbarState();
+    if (byHand) toast(penSeen ? 'Stylus mode: fingers don’t write' : 'Finger mode: fingers write', 1600);
+  }
+  function hlBrush() {                           // the highlighter preset (the first one), or a yellow highlighter
+    const it = allItems().find(i => i.type === 'preset' && i.brush.highlighter);
+    const b = it ? { ...brush(), ...it.brush } : cleanBrush(DEFAULT_PRESETS[3]);
+    return { ...b, kind: 'pen', highlighter: true };
+  }
   $('tap1Act').value = tap1Act;
   $('tap1Sub').textContent = TAP1[tap1Act];
   $('tap1Act').addEventListener('change', e => { tap1Act = e.target.value; store.set('tap1', tap1Act); $('tap1Sub').textContent = TAP1[tap1Act]; });
@@ -7183,7 +7239,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (nact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && noteAction(e, nact)) return;
 
     if (e.pointerType === 'pen') {
-      penSeen = true; lastPen = performance.now();
+      if (!penSeen) setStylusMode(true); lastPen = performance.now();
       if (active && active.loose && e.pointerId === active.id) finishStroke(e, true);   // a fresh touch ends a "button held" stroke
       if (active) return;
       if (pinch && pinch.mode !== 'temp') { clearTimeout(pinch.holdT); pinch = null; }   // temporary zoom stays while the pen writes
@@ -7215,7 +7271,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
       if (penSeen) {                                     // fingers don't write, but can peek under a sticky note
         const q = toMM(e), n = noteAt(q[0], q[1]) || imageAt(q[0], q[1]);
-        if (n) startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel);   // selected: a finger drags it right away
+        if (n) { startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel); return; }   // selected: a finger drags it right away
+        if (fingAct === 'pan') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty };
+        else if (fingAct === 'erase') startErase(e);
+        else if (fingAct === 'lasso') startLasso(e);
+        else if (fingAct === 'hl') startStroke(e, hlBrush());
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -7275,6 +7335,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tap2) { const o = tap2.start.get(e.pointerId); if (o && Math.hypot(e.clientX - o.x, e.clientY - o.y) > 14) tap2.moved = true; }
       if (pinch) { updatePinch(); return; }
     }
+    if (fpan && e.pointerId === fpan.id && !pinch) {   // stylus mode, one finger moves the page
+      if (touches.size > 1) { fpan = null; return; }
+      view.tx = fpan.tx0 + e.clientX - fpan.x0; view.ty = fpan.ty0 + e.clientY - fpan.y0; clampView(); applyView();
+      return;
+    }
     if (nav && nav.z2 && (e.pointerId === nav.id || e.pointerId === nav.z2.id)) { navZoomMove(); return; }   // while zooming, the pages hold still
     if (nav && e.pointerId === nav.id) { navMove(e); return; }
     if (!active || e.pointerId !== active.id) return;
@@ -7299,6 +7364,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   function onUp(e) {
+    if (fpan && e.pointerId === fpan.id) fpan = null;
     if (mapDrag && e.pointerId === mapDrag.id) { endMapDrag(); return; }
     const wasTouch = touches.delete(e.pointerId);
     if (wasTouch && pinch && touches.size < 2) releasePinch();
@@ -7595,6 +7661,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
+      case 'inmode': return penSeen ? 'Stylus mode · tap: finger mode' : 'Finger mode · tap: stylus mode';
       case 'redo': return 'Redo';
       case 'lock': return zoomLocked ? 'Zoom locked' : 'Zoom unlocked';
       case 'fs': return fsElement() ? 'Exit full screen' : 'Full screen';
