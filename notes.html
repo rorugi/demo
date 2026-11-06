@@ -180,9 +180,9 @@
   .toolbar .space { width: 34px; height: 34px; flex: none; }
   .tblist .ico.spaceico i { width: 18px; height: 18px; border: 1.5px dashed currentColor; border-radius: 4px; opacity: .45; box-sizing: border-box; }
   /* pen locks: what presets, size and colour buttons may not change */
-  .locks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .locks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
   .locks button { min-width: 0; padding: 0 4px; height: 34px; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden; white-space: nowrap; border: 1px solid var(--bar-line); border-radius: 8px; background: transparent; color: var(--bar-fg); font: 500 12px/1 var(--ui); cursor: pointer; }
-  .locks button svg { flex: none; width: 13px; height: 13px; opacity: .45; }
+  .locks button svg { flex: none; width: 14px; height: 14px; opacity: .55; }
   .locks button[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); font-weight: 600; }
   .locks button[aria-pressed="true"] svg { opacity: 1; }
   .locksub { font-size: 11.5px; opacity: .6; margin-top: -4px; }
@@ -1130,8 +1130,9 @@
     <button type="button" data-lock="color" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Colour</button>
     <button type="button" data-lock="width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Thickness</button>
     <button type="button" data-lock="opacity" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Opacity</button>
+    <button type="button" data-lock="kind" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Pen type</button>
   </div>
-  <div class="locksub" data-for="pen">Presets, size and colour buttons leave locked values alone. This menu still changes them.</div>
+  <div class="locksub" data-for="pen">Closed lock: presets, size and colour buttons leave it alone. Open lock: they may change it. This menu still changes everything.</div>
   <button type="button" class="wide-btn subtle" id="savePreset" data-for="pen">Save as preset</button>
 </div>
 
@@ -1689,8 +1690,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_118';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.26';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_119';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.27';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3072,7 +3073,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       $('kindSel').innerHTML = (keep ? `<option value="keep">Keep the pen's type</option>` : '') + Object.entries(PEN_KINDS).map(([t, d]) => `<option value="${t}">${d.label}</option>`).join('');
       $('kindSel').value = cur;
     }
-    $('locks').querySelectorAll('[data-lock]').forEach(b => b.setAttribute('aria-pressed', String(!!penLocks()[b.dataset.lock])));
+    $('locks').querySelectorAll('[data-lock]').forEach(b => {      // a closed lock when locked, an open one when presets may change it
+      const on = !!penLocks()[b.dataset.lock];
+      b.setAttribute('aria-pressed', String(on));
+      b.querySelector('.shk').setAttribute('d', on ? 'M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5' : 'M8.5 10.5V8a3.5 3.5 0 0 1 6.7-1.4');
+      b.title = `${b.textContent.trim()}: ${on ? 'locked, presets leave it alone' : 'open, presets may change it'}`;
+    });
     const customW = !WIDTHS.includes(br.width);
     $('customWidthBox').setAttribute('aria-pressed', String(customW));
     if (!keepInput) $('customWidth').value = customW ? String(br.width) : '';
