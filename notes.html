@@ -1432,13 +1432,17 @@
 
 <dialog class="dlg" id="flipDlg" aria-labelledby="flipTitle">
   <h2 id="flipTitle">Page flip</h2>
-  <p>Swipe from the right edge to turn forward, from the left edge to turn back. Along either edge, slide up or down to run through the pages.</p>
+  <p>Swipe from the right edge to turn forward, from the left edge to turn back. Along either edge, slide up or down to run through the pages. Each edge can be switched off.</p>
   <div class="field">
     <span>Style</span>
     <div class="seg" id="flipStyle">
       <button type="button" data-f="book">Notebook</button>
       <button type="button" data-f="flat">Flat</button>
     </div>
+  </div>
+  <div class="field">
+    <label class="toggle" for="flipLToggle"><span>Left edge<span class="sub">Swipe to turn back, slide along it to run through the pages</span></span><span class="switch"><input type="checkbox" id="flipLToggle"><i></i></span></label>
+    <label class="toggle" for="flipRToggle"><span>Right edge<span class="sub">Swipe to turn forward. Turn it off if your hand resting on the screen turns pages</span></span><span class="switch"><input type="checkbox" id="flipRToggle"><i></i></span></label>
   </div>
   <div class="field">
     <label class="toggle" for="flipZoomToggle"><span>Zoom out while flipping<span class="sub">Shows the whole sheet, then returns to your spot</span></span><span class="switch"><input type="checkbox" id="flipZoomToggle"><i></i></span></label>
@@ -1654,8 +1658,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_102';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.10';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_103';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.11';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3148,24 +3152,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let flipStyle = store.get('flipStyle', 'book') === 'flat' ? 'flat' : 'book';   // edge swipes: pages turn (notebook) or slide by (flat)
   let flipOn = store.get('flipOn', true) !== false;
   let flipZoom = store.get('flipZoom', true) !== false;
+  let flipL = store.get('flipL', true) !== false, flipR = store.get('flipR', true) !== false;   // which page edges react
   let riffleOn = store.get('riffleOn', true) !== false;
   let sliderStyle = store.get('sliderStyle', 'book') === 'flat' ? 'flat' : 'book';   // notebook: pages turn · flat: a strip of pages
   function renderFlipCfg() {
     $('flipStyle').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === flipStyle)));
     $('flipToggle').checked = flipOn;
     $('flipZoomToggle').checked = flipZoom;
+    $('flipLToggle').checked = flipL; $('flipRToggle').checked = flipR;
     $('riffleToggle').checked = riffleOn;
     $('slideStyle').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === sliderStyle)); b.disabled = !riffleOn; });
     $('flipOpen').disabled = !flipOn;
-    $('flipSum').textContent = flipOn ? `${flipStyle === 'flat' ? 'Flat' : 'Notebook'}${flipZoom && flipStyle !== 'flat' ? ' · zoom out' : ''}${riffleOn ? (sliderStyle === 'flat' ? ' · flat slider' : ' · slider') : ''}` : 'Off: swiping the edges does nothing';
+    $('flipSum').textContent = flipOn ? `${flipStyle === 'flat' ? 'Flat' : 'Notebook'}${flipL && flipR ? '' : flipL ? ' · left edge only' : flipR ? ' · right edge only' : ' · edges off'}${flipZoom && flipStyle !== 'flat' ? ' · zoom out' : ''}${riffleOn ? (sliderStyle === 'flat' ? ' · flat slider' : ' · slider') : ''}` : 'Off: swiping the edges does nothing';
     store.set('sliderStyle', sliderStyle);
     store.set('flipStyle', flipStyle); store.set('flipOn', flipOn); store.set('flipZoom', flipZoom); store.set('riffleOn', riffleOn);
+    store.set('flipL', flipL); store.set('flipR', flipR);
   }
   function setFlipStyle(f) { flipStyle = f; renderFlipCfg(); }
   $('slideStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { sliderStyle = b.dataset.v; renderFlipCfg(); }));
   $('flipStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setFlipStyle(b.dataset.f)));
   $('flipToggle').addEventListener('change', e => { flipOn = e.target.checked; renderFlipCfg(); });
   $('flipZoomToggle').addEventListener('change', e => { flipZoom = e.target.checked; renderFlipCfg(); });
+  $('flipLToggle').addEventListener('change', e => { flipL = e.target.checked; renderFlipCfg(); });
+  $('flipRToggle').addEventListener('change', e => { flipR = e.target.checked; renderFlipCfg(); });
   $('riffleToggle').addEventListener('change', e => { riffleOn = e.target.checked; renderFlipCfg(); });
   $('flipOpen').addEventListener('click', () => { closePops(); $('flipDlg').showModal(); });
   $('flipDone').addEventListener('click', () => $('flipDlg').close());
@@ -4130,7 +4139,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       scribbleErase: scribbleOn,
       handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, selectionColor: selColor, selectionGlowPx: selGlow,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
-      pageFlip: { enabled: flipOn, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
+      pageFlip: { enabled: flipOn, leftEdge: flipL, rightEdge: flipR, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
       scrollMarginMm,
       calibration: pxPerMm ? { pxPerMm: +pxPerMm.toFixed(4), screen: screenSig() } : null,
@@ -4180,6 +4189,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (typeof pf.enabled === 'boolean') flipOn = pf.enabled;
       if (pf.style === 'flat' || pf.style === 'notebook') flipStyle = pf.style === 'flat' ? 'flat' : 'book';
       if (typeof pf.zoomOut === 'boolean') flipZoom = pf.zoomOut;
+      if (typeof pf.leftEdge === 'boolean') flipL = pf.leftEdge;
+      if (typeof pf.rightEdge === 'boolean') flipR = pf.rightEdge;
       if (typeof pf.riffle === 'boolean') riffleOn = pf.riffle;
       if (pf.slider === 'flat' || pf.slider === 'notebook') sliderStyle = pf.slider === 'flat' ? 'flat' : 'book';
     }
@@ -6305,7 +6316,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const L = view.tx, R = view.tx + W * S(), T = view.ty, B = view.ty + H * S();
     const visL = Math.max(L, 0), visR = Math.min(R, vw), visT = Math.max(T, 0), visB = Math.min(B, vh);
     if (x < visL || x > visR || y < visT || y > visB) return null;     // on the page itself (the desk has the page slider)
-    const side = !flipOn ? null : x >= visR - EDGE ? 'right' : x <= visL + EDGE ? 'left' : null;
+    const side = !flipOn ? null : flipR && x >= visR - EDGE ? 'right' : flipL && x <= visL + EDGE ? 'left' : null;   // a switched-off edge is just page
     return side ? { side, bottom: false } : null;
   }
   function startNav(e, info) {
