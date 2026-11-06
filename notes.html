@@ -683,6 +683,7 @@
   /* ---------- desk + sheets ---------- */
   /* The desk is its own layer permanently, so zooming out during a flip only moves pixels on the
      GPU instead of redrawing the pages (redrawing caused the flicker). The body clips the screen. */
+  .deskcatch { position: fixed; inset: 0; touch-action: none; }   /* behind the desk: the screen edges while the desk is zoomed out */
   .stage { position: fixed; inset: 0; overflow: visible; touch-action: none; transform-origin: 0 0; will-change: transform; }
   .page {
     position: absolute;
@@ -1066,6 +1067,7 @@
 </head>
 <body>
 
+<div class="deskcatch" aria-hidden="true"></div>
 <div class="stage" id="stage">
   <div class="page" id="sheetB" hidden>
     <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1671,8 +1673,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_106';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.14';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_107';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.15';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6415,6 +6417,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     // flat style: a quick flick turns one page directly; only a longer swipe brings up the row of pages
     if (nav.mode === 'pending' && flipStyle === 'flat' && nav.side && !nav.held && t - nav.t0 < QUICK_MS) return;
+    if (nav.mode === 'pending' && nav.held && nav.side && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) { edgeToSlide('h'); slideMove(e); return; }   // held first: sideways runs through all the pages
     if (nav.mode === 'pending') {
       if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
         if (flipStyle === 'flat' && nav.side && (nav.side === 'right' ? dx < 0 : dx > 0)) { edgeToSlide('h'); slideMove(e); return; }
@@ -6439,6 +6442,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       return;
     }
     if (nav.held && (nav.mode === 'pending' || nav.mode === 'slidewait')) { nav = null; unLift(); return; }
+    if (nav.slide && (nav.mode === 'flip' || nav.mode === 'flat') && startCoast()) return;   // let go fast: the pages run on
     if (nav.mode === 'flip') endFlip();
     else if (nav.mode === 'flat') flatEnd();
     else if (nav.mode === 'riffle') endRiffle();
@@ -6770,15 +6774,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nav.vx = 0;
     if (nav.mode === 'slidewait' && Math.abs(raw) < 12) return;
     const x = Math.max(0, Math.abs(raw) - 12), dir = raw > 0 ? 1 : -1;
+    const base = sl.base != null ? sl.base : sl.start;   // where this finger took over (after a lift and a new touch while the pages run on)
     if (sl.style === 'flat') {                     // a strip of pages: the one in the middle is where you land
       if (!sl.strip) flatStart(sl);
       nav.mode = 'flat';
       const T = sl.src === 'h' ? Math.abs(raw) / flatGeom().step : x / slidePx() + Math.pow(x / 260, 2);   // a swipe moves the strip with the finger
-      flatMove(Math.max(-1, Math.min(pages.length, sl.start + dir * T)));
+      const pos = Math.max(-1, Math.min(pages.length, base + dir * T));
+      flatMove(pos); trackPos(pos);
       return;
     }
+    slideTo(base + dir * (x / slidePx() + Math.pow(x / 260, 2)));
+    nav.mode = 'flip';
+  }
+  // the position while running through the pages (page index with a fraction), remembered for the run-on after letting go
+  function trackPos(pos) {
+    const sl = nav.slide, t = performance.now();
+    sl.pos = pos;
+    (sl.hist = sl.hist || []).push([t, pos]);
+    while (sl.hist.length > 2 && t - sl.hist[0][0] > 120) sl.hist.shift();
+  }
+  // notebook style: lay the turning sheets for a position (they are always laid out from the page the slide began on)
+  function slideTo(pos) {
+    const sl = nav.slide, rel = pos - sl.start, dir = rel > 0 ? 1 : rel < 0 ? -1 : sl.dir || 1;
     const maxT = dir > 0 ? pages.length - 1 - sl.start : sl.start;      // existing pages only (a swipe adds new ones)
-    const T = Math.min(maxT + 1, x / slidePx() + Math.pow(x / 260, 2));  // one more: the cover, which only peeks
+    const T = Math.min(maxT + 1, Math.abs(rel));                       // one more: the cover, which only peeks
+    trackPos(sl.start + dir * T);
     const bo = Math.max(0, Math.min(Math.floor(T) - 1, maxT - 1));
     if (!sl.built || dir !== sl.dir || bo !== sl.bo) {        // (re)lay the sheets from a new starting page
       if (sl.built) slideTeardown();
@@ -6787,11 +6807,44 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       nav.tgt = undefined;
       startFlip(dir, Math.min(SLIDE_WIN, maxT - bo + 1), true);
     }
-    nav.mode = 'flip';
-    const rel = T - bo, p = Math.min(1, rel <= 1 ? rel * FLIP_FIRST : FLIP_FIRST + (rel - 1) * FLIP_NEXT);
+    const rl = T - bo, p = Math.min(1, rl <= 1 ? rl * FLIP_FIRST : FLIP_FIRST + (rl - 1) * FLIP_NEXT);
     setFlip(p);
     const abs = sl.start + dir * bo + dir * flipCount(p);
     if (abs !== sl.abs) { sl.abs = abs; vibrate(6); }
+  }
+  // ---- Letting go while running through the pages fast: they run on and slow down; touch again to carry on ----
+  function startCoast() {
+    const sl = nav.slide, h = sl && sl.hist, now = performance.now();
+    if (!h || h.length < 2 || now - h[h.length - 1][0] > 90) return false;   // the finger had stopped
+    const a = h[0], b = h[h.length - 1], v = (b[1] - a[1]) / Math.max(16, b[0] - a[0]);   // pages per ms
+    if (Math.abs(v) < 0.004) return false;
+    nav.mode = 'coast'; nav.id = null; nav.cv = Math.max(-0.06, Math.min(0.06, v)); nav.ct = now; sl.hist = [];
+    const n0 = nav;
+    const step = t => {
+      if (nav !== n0 || n0.mode !== 'coast') return;
+      const dt = Math.min(50, t - n0.ct); n0.ct = t;
+      let pos = sl.pos + n0.cv * dt;
+      n0.cv *= Math.exp(-dt / 420);                // slows down: it runs on about 0.4 s worth of its speed
+      const lo = 0, hi = pages.length - 1;
+      if (pos <= lo || pos >= hi) { pos = Math.max(lo, Math.min(hi, pos)); n0.cv = 0; }
+      if (sl.style === 'flat') { flatMove(pos); sl.pos = pos; }
+      else { slideTo(pos); n0.mode = 'coast'; }
+      if (Math.abs(n0.cv) < 0.0007) { endCoast(); return; }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    return true;
+  }
+  function endCoast() {                          // stopped: land on the page in front
+    nav.mode = nav.slide.style === 'flat' ? 'flat' : 'flip';
+    if (nav.mode === 'flat') flatEnd(); else endFlip();
+    nav = null;
+  }
+  function regrab(e) {                           // a finger while the pages run on: it takes over from where they are
+    const sl = nav.slide;
+    nav.id = e.pointerId; nav.x0 = nav.lx = e.clientX; nav.y0 = nav.ly = e.clientY; nav.lt = performance.now(); nav.moved = 0;
+    sl.base = sl.pos; sl.hist = [];
+    nav.mode = sl.style === 'flat' ? 'flat' : 'flip';
   }
   function slideTeardown() {                     // all sheets back to rest, the desk stays zoomed out
     for (const el of [pageEl, ...pool]) {
@@ -7081,11 +7134,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('tap2Act').addEventListener('change', e => { tap2Act = e.target.value; store.set('tap2', tap2Act); $('tap2Sub').textContent = TAP2[tap2Act]; });
 
   // ---- Pointer routing on the desk ----
+  // while the desk is zoomed out (turning pages) it no longer covers the screen edges: a finger landing there
+  // during page navigation (to carry on after letting go, or for a closer look) still belongs to it
+  document.addEventListener('pointerdown', e => {
+    if (!nav || !e.isTrusted || stage.contains(e.target) || !(nav.mode === 'coast' || navZoomable())) return;
+    if (e.target.closest && e.target.closest('dialog, .pop, .toolbar, .tb, #toolbar')) return;
+    e.preventDefault();
+    stage.dispatchEvent(new PointerEvent('pointerdown', e));
+  }, true);
+  for (const t of ['pointermove', 'pointerup', 'pointercancel'])     // ...and so do its moves and its lifting
+    document.addEventListener(t, e => {
+      if (!nav || !e.isTrusted || stage.contains(e.target) || !(e.pointerId === nav.id || (nav.z2 && e.pointerId === nav.z2.id))) return;
+      stage.dispatchEvent(new PointerEvent(t, e));
+    }, true);
   stage.addEventListener('pointerdown', e => {
     // a touch or a stroke outside the selected sticky note or image ends its selection (its handles still work)
     if (objSel && !(e.target.closest && e.target.closest('[data-nact],[data-iact]')) && !inObj(objSel, toMM(e))) deselectObj();
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
+    if (nav && nav.mode === 'coast') {
+      if (e.pointerType === 'pen') { endCoast(); return; }   // the pen stops it where it is
+      if (e.pointerType === 'touch') touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+      regrab(e);
+      return;
+    }
     if (nav && e.pointerType === 'touch' && e.pointerId !== nav.id && !nav.z2 && navZoomable()) {   // a second finger while turning pages: a closer look
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       try { stage.setPointerCapture(e.pointerId); } catch (_) {}
