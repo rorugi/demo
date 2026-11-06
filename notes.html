@@ -1671,8 +1671,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_104';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.12';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_105';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.13';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6368,25 +6368,53 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function startNav(e, info) {
     nav = { mode: 'pending', id: e.pointerId, side: info.side, bottom: info.bottom, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), t0: performance.now(), vx: 0, rdx: 0, moved: 0,
             quick: !!info.quick, wide: Math.max(e.width || 0, e.height || 0) > 30 };
-    if (nav.quick) return;                       // switched-off edge: no hold, no slider, just the quick flick
+    if (nav.quick) { if (!nav.wide) navHold(); return; }   // switched-off edge: a quick flick, or hold a fingertip still first
     if (info.bottom) nav.timer = setTimeout(() => { if (nav && nav.mode === 'pending' && nav.moved < 12) { navRipple(nav.x0, nav.y0, true); startRiffle(); } }, 380);
     else navHold();
   }
   // a finger that rests before turning: the ripple shows it was felt
   function navHold() {
     const n0 = nav;
-    n0.holdT = setTimeout(() => { if (nav === n0 && n0.moved < 10 && (n0.mode === 'pending' || n0.mode === 'slidewait')) { navRipple(n0.x0, n0.y0, n0.slide && n0.slide.src === 'desk'); vibrate(8); } }, PEEK_HOLD);
+    n0.holdT = setTimeout(() => {
+      if (nav !== n0 || n0.moved >= 10 || !(n0.mode === 'pending' || n0.mode === 'slidewait')) return;
+      n0.held = true; n0.quick = false;          // held still: navigating now, even on a switched-off edge
+      navRipple(n0.x0, n0.y0, n0.slide && n0.slide.src === 'desk'); vibrate(8);
+      preLift();
+    }, PEEK_HOLD);
+  }
+  // a finger held to navigate: zoom out right away (no need to move first), so it is clear the pages are in hand
+  function preLift() {
+    const style = nav.slide ? nav.slide.style : flipStyle === 'flat' ? 'flat' : 'book';
+    if (style === 'flat') {                      // the flat style: the row of pages comes up
+      if (!nav.slide) edgeToSlide(null);         // which way moves the row is settled by the first movement
+      if (!nav.slide.strip) flatStart(nav.slide);
+      nav.mode = 'flat';
+      return;
+    }
+    const L = liftTarget();
+    if (!L) return;
+    nav.lift = L; nav.le = 1;
+    stage.style.transition = 'transform .25s cubic-bezier(.3,.1,.3,1)';
+    stage.style.transform = `translate(${L.dx}px, ${L.dy}px) scale(${L.f})`;
+    setTimeout(() => { if (stage.style.transition.startsWith('transform .25s')) stage.style.transition = ''; }, 270);
+  }
+  function unLift() {                            // let go without turning: zoom back in
+    stage.style.transition = 'transform .25s cubic-bezier(.3,.1,.3,1)';
+    stage.style.transform = '';
+    setTimeout(() => { if (!nav) stage.style.transition = ''; }, 270);
   }
   function navMove(e) {
     if (nav.slide) { slideMove(e); return; }
     const dx = e.clientX - nav.x0, dy = e.clientY - nav.y0, t = performance.now();
-    nav.vx = (e.clientX - nav.lx) / Math.max(1, t - nav.lt); nav.lx = e.clientX; nav.lt = t;
+    nav.vx = (e.clientX - nav.lx) / Math.max(1, t - nav.lt); nav.lx = e.clientX; nav.ly = e.clientY; nav.lt = t;
     nav.moved = Math.max(nav.moved, Math.hypot(dx, dy));
     if (nav.mode === 'dead') return;
     if (nav.mode === 'pending' && nav.quick) {   // a switched-off edge: only a short, quick, sideways flick from a fingertip turns (decided on release)
-      if (nav.wide || t - nav.t0 > 320 || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
+      if (nav.wide || (nav.moved >= 10 && t - nav.t0 > 320) || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
       return;
     }
+    // flat style: a quick flick turns one page directly; only a longer swipe brings up the row of pages
+    if (nav.mode === 'pending' && flipStyle === 'flat' && nav.side && !nav.held && t - nav.t0 < QUICK_MS) return;
     if (nav.mode === 'pending') {
       if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
         if (flipStyle === 'flat' && nav.side && (nav.side === 'right' ? dx < 0 : dx > 0)) { edgeToSlide('h'); slideMove(e); return; }
@@ -6404,16 +6432,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function navEnd() {
     if (!nav) return;
     clearTimeout(nav.timer);
-    if (nav.quick && nav.mode === 'pending') {   // the quick flick on a switched-off edge: one page, no zooming
-      const dx = nav.lx - nav.x0, dir = nav.side === 'right' ? (dx < 0 ? 1 : 0) : (dx > 0 ? -1 : 0);
-      if (dir && Math.abs(dx) >= 30 && performance.now() - nav.t0 <= 320) {
-        nav.noLift = true;
-        startFlip(dir, 1);
-        if (nav && nav.mode === 'flip') { setFlip(0.2); nav.quickTurn = true; endFlip(); }
-      }
-      nav = null;
+    if (nav.mode === 'pending' && !nav.held && nav.side) {   // a quick flick (also on a switched-off edge): one page, no zooming
+      const dx = nav.lx - nav.x0, dy = (nav.ly != null ? nav.ly : nav.y0) - nav.y0, dir = nav.side === 'right' ? (dx < 0 ? 1 : 0) : (dx > 0 ? -1 : 0);
+      if (dir && Math.abs(dx) >= 30 && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - nav.t0 <= 350) quickTurn(dir);
+      else nav = null;
       return;
     }
+    if (nav.held && (nav.mode === 'pending' || nav.mode === 'slidewait')) { nav = null; unLift(); return; }
     if (nav.mode === 'flip') endFlip();
     else if (nav.mode === 'flat') flatEnd();
     else if (nav.mode === 'riffle') endRiffle();
@@ -6421,6 +6446,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function cancelNav() {
     if (!nav) return;
+    if (nav.held && nav.mode === 'pending') { nav = null; unLift(); return; }
     if (nav.slide) { slideCancel(); return; }
     clearTimeout(nav.timer);
     if (nav.mode === 'flip') { nav.forceCancel = true; endFlip(); }
@@ -6542,6 +6568,33 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return best;
   }
+  // one page at once, for a quick flick: the notebook style turns the sheet, the flat style slides the page across
+  function quickTurn(dir) {
+    const target = cur + dir;
+    if (target < 0 || (target >= pages.length && !lastHasContent())) { nav = null; return; }
+    if (flipStyle !== 'flat') {
+      nav.noLift = true;
+      startFlip(dir, 1);
+      if (nav && nav.mode === 'flip') { setFlip(0.12); nav.quickTurn = true; endFlip(); }
+      nav = null;
+      return;
+    }
+    nav = null;
+    animating = true;
+    const off = Math.min(vw, W * S()) * 0.35;
+    stage.style.transition = 'transform .13s ease-in, opacity .13s ease-in';
+    stage.style.transform = `translateX(${-dir * off}px)`; stage.style.opacity = '0';
+    setTimeout(() => {
+      if (target >= pages.length) pages.push({ strokes: [] });
+      cur = target; renderPage(); scheduleSave(); vibrate(6);
+      stage.style.transition = 'none';
+      stage.style.transform = `translateX(${dir * off}px)`;
+      stage.getBoundingClientRect();
+      stage.style.transition = 'transform .2s cubic-bezier(.2,.7,.3,1), opacity .2s ease-out';
+      stage.style.transform = ''; stage.style.opacity = '';
+      setTimeout(() => { stage.style.transition = ''; animating = false; }, 220);
+    }, 140);
+  }
   // Zoom out while flipping: the whole desk is scaled (cheap), so the view itself never changes and
   // zooming back in returns exactly to the same spot on the new page.
   function liftTarget() {
@@ -6552,15 +6605,50 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return { f, dx: vw / 2 - f * cx, dy: vh / 2 - f * cy };
   }
   function setLift(e) {
-    const L = nav && nav.lift;
-    if (!L) return;
-    const k = e < 1 ? 1 - Math.pow(1 - e, 2) : 1;                      // ease out
-    stage.style.transform = `translate(${L.dx * k}px, ${L.dy * k}px) scale(${1 + (L.f - 1) * k})`;
+    if (!nav) return;
+    const L = nav.lift, U = nav.uz;              // U: a closer look with a second finger while turning
+    nav.le = e;
+    if (!L && !U) return;
+    let t = U ? `translate(${U.x}px, ${U.y}px) scale(${U.k}) ` : '';
+    if (L) { const k = e < 1 ? 1 - Math.pow(1 - e, 2) : 1; t += `translate(${L.dx * k}px, ${L.dy * k}px) scale(${1 + (L.f - 1) * k})`; }   // ease out
+    stage.style.transform = t;
+  }
+  // ---- While turning pages: a second finger zooms in for a closer look; lift either finger and the other turns on ----
+  const navZoomable = () => !!nav && (nav.mode === 'flip' || nav.mode === 'flat' || ((nav.mode === 'pending' || nav.mode === 'slidewait') && nav.held));
+  function navZoomStart(e) {
+    clearTimeout(nav.holdT); clearTimeout(nav.timer);
+    const a = touches.get(nav.id) || { x: nav.lx, y: nav.ly != null ? nav.ly : nav.y0 }, b = { x: e.clientX, y: e.clientY };
+    nav.uz = nav.uz || { k: 1, x: 0, y: 0 };
+    nav.z2 = { id: e.pointerId, d0: Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), m0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, u0: { ...nav.uz }, na: { x: a.x, y: a.y } };
+  }
+  function navZoomMove() {
+    const z = nav.z2, a = touches.get(nav.id), b = touches.get(z.id);
+    if (!a || !b) return;
+    const d = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const k = Math.max(1, Math.min(8, z.u0.k * d / z.d0));
+    const px = (z.m0.x - z.u0.x) / z.u0.k, py = (z.m0.y - z.u0.y) / z.u0.k;   // the spot that was under the fingers stays under them
+    nav.uz = { k, x: Math.min(0, Math.max(vw * (1 - k), m.x - k * px)), y: Math.min(0, Math.max(vh * (1 - k), m.y - k * py)) };
+    applyNavZoom();
+  }
+  function applyNavZoom() {
+    const U = nav.uz, strip = $('strip');
+    if (nav.slide && nav.slide.strip) { strip.style.transformOrigin = '0 0'; strip.style.transform = U ? `translate(${U.x}px, ${U.y}px) scale(${U.k})` : ''; }
+    else setLift(nav.le != null ? nav.le : 0);
+  }
+  function navZoomEnd(navLifted) {               // one finger left: it carries on turning from where the pages are
+    const z = nav.z2;
+    nav.z2 = null;
+    if (navLifted) nav.id = z.id;
+    const f = touches.get(nav.id);
+    if (!f) { navEnd(); return; }
+    nav.x0 += f.x - z.na.x; nav.y0 += f.y - z.na.y;
+    nav.lx = f.x; nav.ly = f.y; nav.lt = performance.now(); nav.vx = 0;
   }
   function setFlip(p) {
     p = Math.min(p, nav.pMax === undefined ? 1 : nav.pMax);
     nav.p = p;
-    if (nav.slide) { nav.slide.lp = Math.max(nav.slide.lp || 0, Math.min(1, p / 0.1)); setLift(nav.slide.lp); }   // stays out while sliding
+    if (nav.slide) { nav.slide.lp = nav.held ? 1 : Math.max(nav.slide.lp || 0, Math.min(1, p / 0.1)); setLift(nav.slide.lp); }   // stays out while sliding
+    else if (nav.held) setLift(1);               // held first: already zoomed out
     else {                                       // a quick flick turns right away; a longer swipe zooms out (fully after the first 10 %)
       const dt = performance.now() - (nav.t0 || 0) - QUICK_MS;
       setLift(dt > 0 ? Math.min(1, p / 0.1) * Math.min(1, dt / 160) : 0);
@@ -6599,14 +6687,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('riffle').hidden = true;
     animating = true;
     const settle = 360;
-    if (n0.lift) {                           // zoom back in while the sheets land
+    if (n0.lift || n0.uz) {                  // zoom back in while the sheets land
       stage.style.transition = `transform ${settle / 1000}s cubic-bezier(.3,.1,.3,1)`;
       requestAnimationFrame(() => { stage.style.transform = ''; });
     }
+    const ang0 = n0.forceCancel ? [] : flipAngles(n0.p);
     n0.sheets.forEach((sh, k) => {
       sh.style.transition = 'transform .36s cubic-bezier(.2,.7,.3,1)';
       const done = k < n;
       if (n0.back) requestAnimationFrame(() => paintSheet(sh, done ? 0 : 90, 1));   // lands flat, or swings back to the binding
+      else if (done && (ang0[k] || 0) < 90) {      // still lying on the page: lift it up to edge-on, then it is gone
+        sh.style.transition = 'transform .24s cubic-bezier(.4,.1,.6,1)';
+        requestAnimationFrame(() => { paintSheet(sh, 90, n0.dir); setTimeout(() => { sh.style.visibility = 'hidden'; }, 240); });
+      }
       else requestAnimationFrame(() => paintSheet(sh, done ? 180 : 0, n0.dir));
     });
     setTimeout(() => {
@@ -6658,6 +6751,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const slidePx = () => Math.max(30, Math.min(60, Math.min(vw, vh) / 16));   // first pages: one per this many px
   function slideMove(e) {
     const sl = nav.slide, dx = e.clientX - nav.x0, dy = e.clientY - nav.y0;
+    if (!sl.src) {                                 // held at an edge: the first clear movement says sideways or along the edge
+      if (Math.hypot(dx, dy) < 12) return;
+      sl.src = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+    }
     const raw = sl.src === 'v' ? dy : sl.src === 'h' ? -dx : dx + dy;   // down (and right beside the page) forward; a swipe pulls the pages
     nav.vx = 0;
     if (nav.mode === 'slidewait' && Math.abs(raw) < 12) return;
@@ -6695,7 +6792,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function slideCancel() {
     const sl = nav.slide;
-    if (sl.strip) { $('strip').hidden = true; nav = null; return; }
+    if (sl.strip) { $('strip').hidden = true; $('strip').style.transform = ''; nav = null; return; }
     slideTeardown(); stage.style.transform = '';
     cur = sl.start; renderPage();
     nav = null;
@@ -6759,6 +6856,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function flatEnd() {
     const sl = nav.slide, st = sl.strip, g = st.g;
+    if (nav.uz) { $('strip').style.transition = 'transform .26s cubic-bezier(.3,.1,.3,1)'; $('strip').style.transform = ''; }   // the closer look ends
     const t = Math.max(-1, Math.min(pages.length, Math.round(st.c)));
     const land = Math.max(0, t);                  // the title page leads to page 1
     if (land >= pages.length) {                   // the plus: a new page
@@ -6775,7 +6873,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     animating = true;
     setTimeout(() => {
       if (land !== cur) { cur = land; renderPage(); scheduleSave(); }
-      requestAnimationFrame(() => requestAnimationFrame(() => { $('strip').hidden = true; inner.innerHTML = ''; animating = false; }));
+      requestAnimationFrame(() => requestAnimationFrame(() => { $('strip').hidden = true; $('strip').style.transform = ''; $('strip').style.transition = ''; inner.innerHTML = ''; animating = false; }));
     }, 280);
   }
 
@@ -6977,6 +7075,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (objSel && !(e.target.closest && e.target.closest('[data-nact],[data-iact]')) && !inObj(objSel, toMM(e))) deselectObj();
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
+    if (nav && e.pointerType === 'touch' && e.pointerId !== nav.id && !nav.z2 && navZoomable()) {   // a second finger while turning pages: a closer look
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+      navZoomStart(e);
+      return;
+    }
     if (nav && nav.slide && nav.mode === 'slidewait' && e.pointerType === 'touch') {   // a second finger: a pinch, not the slider
       const id = nav.id, x = nav.x0, y = nav.y0;
       slideCancel(); touches.set(id, { x, y });
@@ -7087,6 +7191,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tap2) { const o = tap2.start.get(e.pointerId); if (o && Math.hypot(e.clientX - o.x, e.clientY - o.y) > 14) tap2.moved = true; }
       if (pinch) { updatePinch(); return; }
     }
+    if (nav && nav.z2 && (e.pointerId === nav.id || e.pointerId === nav.z2.id)) { navZoomMove(); return; }   // while zooming, the pages hold still
     if (nav && e.pointerId === nav.id) { navMove(e); return; }
     if (!active || e.pointerId !== active.id) return;
     if (e.pointerType !== 'touch' && btnSwitch(e)) return;
@@ -7114,6 +7219,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const wasTouch = touches.delete(e.pointerId);
     if (wasTouch && pinch && touches.size < 2) releasePinch();
     if (wasTouch && !touches.size) tapUp();
+    if (nav && nav.z2 && (e.pointerId === nav.z2.id || e.pointerId === nav.id)) { navZoomEnd(e.pointerId === nav.id); return; }
     if (nav && e.pointerId === nav.id) { navEnd(); return; }
     if (active && e.pointerId === active.id) {
       if (active.noteDrag) endNoteDrag();
