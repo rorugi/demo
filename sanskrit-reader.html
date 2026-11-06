@@ -40,12 +40,13 @@ header p{margin:0;color:var(--muted);max-width:62ch}
 .ver{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 .controls{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-.opts{display:flex;flex-wrap:wrap;align-items:end;gap:10px 20px}
-.opts .row{flex:1 1 220px}
+.opts{display:grid;gap:2px}
+.opts .row{max-width:380px;margin-bottom:8px}
+.opt{display:flex;align-items:center;gap:10px}
 .info-btn{width:26px;height:26px;min-height:0;padding:0;border-radius:50%;font-size:14px;font-weight:600;font-family:Georgia,serif;font-style:italic;
-  display:inline-grid;place-items:center;border:1.5px solid var(--muted);color:var(--muted);background:transparent;margin-left:-12px}
+  display:inline-grid;place-items:center;border:1.5px solid var(--muted);color:var(--muted);background:transparent;flex:none}
 .info-btn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
-.info{flex-basis:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px}
+.info{margin:4px 0 10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px}
 .info[hidden]{display:none}
 .info h3{margin:0 0 6px;font-size:15px}
 .info p{margin:6px 0}
@@ -153,13 +154,8 @@ button:disabled{opacity:.45;cursor:default}
           <option value='"Kalam"'>Kalam (handwritten)</option>
         </select>
       </div>
-      <label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label>
-      <button class="info-btn" id="infoBtn" type="button" aria-expanded="false" aria-controls="info" title="How syllable weight works">i</button>
-      <label class="check"><input type="checkbox" id="optTimer"> Reading timer</label>
-      <label class="check" title="Tap or click a word to hear it on its own"><input type="checkbox" id="optTap"> Speak a word when tapped</label>
-      <label class="check" title="While reading aloud, the IAST transliteration of each word appears above it as it is spoken"><input type="checkbox" id="optIast"> Show transcription while reading aloud</label>
-      <label class="check" title="Splits the text at every space and reads each piece as its own word, highlighting it while it is spoken"><input type="checkbox" id="optWord"> Read aloud word by word</label>
-      <div class="info" id="info" hidden>
+      <div class="opt"><label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoLong" title="About heavy syllables">i</button></div>
+      <div class="info" id="infoLong" hidden>
         <h3>Syllable weight (guru and laghu)</h3>
         <p>Sanskrit metre counts every syllable as either <b>light</b> (laghu, ⏑, one mātrā) or <b>heavy</b> (guru, –, two mātrās). The orange marks the vowel of each heavy syllable.</p>
         <ul>
@@ -174,6 +170,34 @@ button:disabled{opacity:.45;cursor:default}
           <li><b>Everything else is light:</b> a short vowel followed by at most one consonant, or by a vowel.</li>
         </ul>
         <p>Weight belongs to the syllable, not the vowel: a short vowel before a conjunct is still pronounced short, but the syllable takes two mātrās in metre. Aspirates (kh, gh, th, bh …) are single consonants, and candrabindu (m̐) does not make a syllable heavy. Metres often treat the last syllable of a verse quarter as heavy regardless (anceps); that is not marked here. The popup also shows the word's weight pattern, e.g. – – ⏑.</p>
+      </div>
+      <div class="opt"><label class="check"><input type="checkbox" id="optTimer"> Reading timer</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoTimer" title="About the reading timer">i</button></div>
+      <div class="info" id="infoTimer" hidden>
+        <h3>Reading timer</h3>
+        <p><b>What it does:</b> adds a row to the bottom bar with a clock, the number of syllables you have read, and your pace in <b>syllables per minute</b>. Press Start and read the text yourself, out loud or silently. Tap the word you have reached to update your pace as you go, or press Done at the end.</p>
+        <p><b>Why it helps:</b> fluent reading of Devanagari comes with practice, and a number makes progress visible from one week to the next. Syllables are counted rather than words because Sanskrit words vary so much in length: a single compound can have more syllables than a whole line of short words, so words per minute would say little.</p>
+        <p>The timer is off each time you open the page, so the bar stays small when you only want to read.</p>
+      </div>
+      <div class="opt"><label class="check"><input type="checkbox" id="optWord"> Read aloud word by word</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoWord" title="About reading word by word">i</button></div>
+      <div class="info" id="infoWord" hidden>
+        <h3>Read aloud word by word</h3>
+        <p><b>What it does:</b> splits the text at every space and gives each piece to the voice on its own, one after the other. The word being spoken is highlighted for exactly as long as it is heard. Daṇḍas (। ॥) and verse numbers are shown but not read.</p>
+        <p><b>Why it helps:</b> normally the voice reads half a verse in one go, and the highlight depends on the voice reporting which word it has reached. Many Indian voices do not report this, so the highlight lags, jumps or stays on the first word. Reading word by word keeps the highlight in step with the voice on every device.</p>
+        <p>The reading becomes slower, with a short pause after each word, which suits beginners and following along with a finger. Long compounds are still read as one word, since they contain no spaces.</p>
+      </div>
+      <div class="opt"><label class="check"><input type="checkbox" id="optIast"> Show transcription while reading aloud</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoIast" title="About the transcription while reading aloud">i</button></div>
+      <div class="info" id="infoIast" hidden>
+        <h3>Show transcription while reading aloud</h3>
+        <p><b>What it does:</b> while the text is read aloud, the IAST transliteration of the word being spoken appears above it and moves along with the voice, the same popup you get by tapping a word.</p>
+        <p><b>Why it helps:</b> you see the Devanagari, its Latin transliteration and hear the sound at the same moment, without stopping to tap. This links each letter to its sound and helps with conjuncts that are hard to decode. With <i>Heavy syllables in orange</i> also on, you see the long and heavy syllables as they are spoken.</p>
+        <p>It works best together with <i>Read aloud word by word</i>, which keeps the popup on the right word.</p>
+      </div>
+      <div class="opt"><label class="check"><input type="checkbox" id="optTap"> Speak a word when tapped</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoTap" title="About speaking a tapped word">i</button></div>
+      <div class="info" id="infoTap" hidden>
+        <h3>Speak a word when tapped</h3>
+        <p><b>What it does:</b> tapping or clicking a word reads just that word aloud, with the voice and speed chosen in the bottom bar. While the whole text is playing, a tap still continues reading from that word instead.</p>
+        <p><b>Why it helps:</b> you can practise a difficult word or a long compound on its own, listen to it as often as you like and repeat it, without playing the whole text. At a slow speed (0.3× to 0.5×) every syllable is easy to hear.</p>
+        <p>Device voices are not perfect for Sanskrit, especially if there is no Sanskrit voice and Hindi or Marathi stands in. Use them as a guide and check long vowels and heavy syllables with the transcription.</p>
       </div>
     </div>
   </section>
@@ -220,7 +244,7 @@ button:disabled{opacity:.45;cursor:default}
 </footer>
 
 <script>
-const APP_VERSION = '0.1.24'; // the version people see: x.y.z (z counts up with every release)
+const APP_VERSION = '0.1.25'; // the version people see: x.y.z (z counts up with every release)
 document.getElementById("ver").textContent = `Version ${APP_VERSION}`;
 
 // ---------- Sample texts ----------
@@ -847,7 +871,7 @@ optWord.addEventListener("change",()=>{ store("word",optWord.checked?"1":"0"); r
 fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value); if(popWord!==null) showPop(popWord); });
 optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
 optTimer.addEventListener("change",applyTimer);
-$("infoBtn").addEventListener("click",e=>{ const box=$("info"); box.hidden=!box.hidden; e.currentTarget.setAttribute("aria-expanded",String(!box.hidden)); });
+document.querySelectorAll(".info-btn").forEach(b=>b.addEventListener("click",()=>{ const box=$(b.getAttribute("aria-controls")); box.hidden=!box.hidden; b.setAttribute("aria-expanded",String(!box.hidden)); }));
 addEventListener("resize",sizeBar);
 applyFont(); applyTimer();
 
