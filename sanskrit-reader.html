@@ -37,6 +37,8 @@ header{display:grid;gap:4px}
 .back:hover{color:var(--accent)}
 h1{margin:0;font-size:clamp(28px,6vw,38px);font-weight:600;line-height:1.15}
 header p{margin:0;color:var(--muted);max-width:62ch}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.ver{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 .controls{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
 .opts{display:flex;flex-wrap:wrap;align-items:end;gap:10px 20px}
@@ -124,7 +126,7 @@ button:disabled{opacity:.45;cursor:default}
 <body>
 <div class="wrap">
   <header>
-    <a class="back" href="index.html">← Demos</a>
+    <div class="top"><a class="back" href="index.html">← Demos</a><span class="ver" id="ver"></span></div>
     <h1>Sanskrit Reader</h1>
     <p>Read Sanskrit in Devanagari. Hover over or tap a word to see its IAST transliteration, listen to the text read aloud, and time yourself to see your reading pace in syllables per minute.</p>
   </header>
@@ -155,6 +157,7 @@ button:disabled{opacity:.45;cursor:default}
       <label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label>
       <button class="info-btn" id="infoBtn" type="button" aria-expanded="false" aria-controls="info" title="How syllable weight works">i</button>
       <label class="check"><input type="checkbox" id="optTimer"> Reading timer</label>
+      <label class="check" title="Splits the text at every space and reads each piece as its own word, highlighting it while it is spoken"><input type="checkbox" id="optWord"> Read aloud word by word</label>
       <div class="info" id="info" hidden>
         <h3>Syllable weight (guru and laghu)</h3>
         <p>Sanskrit metre counts every syllable as either <b>light</b> (laghu, ⏑, one mātrā) or <b>heavy</b> (guru, –, two mātrās). The orange marks the vowel of each heavy syllable.</p>
@@ -216,6 +219,9 @@ button:disabled{opacity:.45;cursor:default}
 </footer>
 
 <script>
+const APP_VERSION = '0.1.20'; // the version people see: x.y.z (z counts up with every release)
+document.getElementById("ver").textContent = `Version ${APP_VERSION}`;
+
 // ---------- Sample texts ----------
 const TEXTS = [
   {group:"Bhagavad Gītā", name:"1.1 · The field of dharma", text:
@@ -424,12 +430,15 @@ function render(){
   }
   const text=input.value.trim();
   if(!text){ const e=document.createElement("div"); e.className="empty"; e.textContent="Type or paste Devanagari above to start reading."; reader.appendChild(e); resetTimer(); return; }
+  // Word-by-word mode: a word is simply whatever stands between two spaces (or line breaks), taken as it is.
+  const byWord=optWord.checked, re=byWord ? /\S+/g : WORD_RE;
   for(const line of text.split(/\n/)){
     const ld=document.createElement("span"); ld.className="line";
-    let last=0, m, run=[]; WORD_RE.lastIndex=0;
-    while((m=WORD_RE.exec(line))){
+    let last=0, m, run=[]; re.lastIndex=0;
+    while((m=re.exec(line))){
       const w=m[0];
-      if(!/[ऄ-हॐक़-ॡॲ-ॿ]/.test(w)){ continue; } // no letters: leave as punctuation
+      if(byWord && !/\p{L}/u.test(w)){ continue; } // word-by-word: a lone daṇḍa or verse number stays punctuation
+      if(!byWord && !/[ऄ-हॐक़-ॡॲ-ॿ]/.test(w)){ continue; } // no letters: leave as punctuation
       if(m.index>last){ const gap=line.slice(last,m.index); if(/[।॥|]/.test(gap)){ weigh(run); run=[]; if(words.length) words[words.length-1].stop=true; } ld.appendChild(punct(gap)); }
       const sp=document.createElement("span"); sp.className="w"; sp.textContent=w;
       const syl=syllables(w); totalSyl+=syl;
@@ -437,6 +446,7 @@ function render(){
       const wd={el:sp, text:w, iast:toIAST(w), parts:toIASTParts(w), syl, cum:totalSyl};
       words.push(wd); run.push(wd);
       ld.appendChild(sp); last=m.index+w.length;
+      if(byWord && /[।॥|]/.test(w)){ weigh(run); run=[]; wd.stop=true; } // daṇḍa written onto the word
     }
     weigh(run);
     if(words.length) words[words.length-1].stop=true; // a line break is a pause in speech too
@@ -636,7 +646,8 @@ function romanise(s){
     .replace(/ḷ/g,"l").replace(/ê/g,"e").replace(/ô/g,"o").replace(/'/g,"");
 }
 function spoken(word,v){
-  let s=word.replace(/-/g,"").normalize("NFC");
+  // Speak only letters and vowel signs, so a daṇḍa or verse number written onto a word isn't read out
+  let s=word.normalize("NFC").replace(/[^\p{L}\p{M}‌‍]/gu,"");
   const l=v?langOf(v):"sa";
   if(!v || DEVA_LANGS.has(l)) return s;
   if(SCRIPT_BASE[l]!=null){
@@ -649,6 +660,8 @@ function spoken(word,v){
 
 // Playback: one utterance per half-verse (up to a daṇḍa or line end, at most 12 words) keeps each one short,
 // which avoids the cut-off some browsers apply to long utterances and lets us restart from any word.
+// In word-by-word mode every word is its own utterance, so the highlight follows each word exactly,
+// even with voices that report no word boundaries.
 let sState="idle", session=0, cur=-1, utter=null;
 function setState(s){
   sState=s;
@@ -665,7 +678,7 @@ function markSpeak(i){
   if(r.bottom>barTop-12) scrollBy({top:r.bottom-barTop+Math.min(160,innerHeight/4),behavior:"smooth"});
   else if(r.top<12) scrollBy({top:r.top-Math.min(160,innerHeight/4),behavior:"smooth"});
 }
-function chunkEnd(i){ let j=i; while(j<words.length-1 && !words[j].stop && j-i<11) j++; return j; }
+function chunkEnd(i){ if(optWord.checked) return i; let j=i; while(j<words.length-1 && !words[j].stop && j-i<11) j++; return j; }
 function speakFrom(i,id){
   if(id!==session) return;
   if(i>=words.length){ finishSpeech(); return; }
@@ -739,7 +752,7 @@ input.addEventListener("input",()=>{
   render();
 });
 // ---------- Options (remembered per browser) ----------
-const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer");
+const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer"), optWord=$("optWord");
 function store(k,v){ try{ localStorage.setItem("sr."+k,v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem("sr."+k); }catch(e){ return null; } }
 function applyFont(){ document.documentElement.style.setProperty("--f-read",`${fontSel.value},"Noto Serif Devanagari",serif`); }
@@ -751,6 +764,8 @@ function applyTimer(){
 const f0=load("font"); if(f0 && [...fontSel.options].some(o=>o.value===f0)) fontSel.value=f0;
 optLong.checked=load("long")==="1";
 optTimer.checked=false; // timer is off by default on every visit
+optWord.checked=load("word")==="1";
+optWord.addEventListener("change",()=>{ store("word",optWord.checked?"1":"0"); render(); }); // re-split the text; stops any playback
 fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value); if(popWord!==null) showPop(popWord); });
 optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
 optTimer.addEventListener("change",applyTimer);
