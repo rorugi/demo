@@ -220,7 +220,7 @@ button:disabled{opacity:.45;cursor:default}
 </footer>
 
 <script>
-const APP_VERSION = '0.1.22'; // the version people see: x.y.z (z counts up with every release)
+const APP_VERSION = '0.1.23'; // the version people see: x.y.z (z counts up with every release)
 document.getElementById("ver").textContent = `Version ${APP_VERSION}`;
 
 // ---------- Sample texts ----------
@@ -650,7 +650,8 @@ function romanise(s){
 }
 function spoken(word,v){
   // Speak only letters and vowel signs, so a daṇḍa or verse number written onto a word isn't read out
-  let s=word.normalize("NFC").replace(/[^\p{L}\p{M}‌‍]/gu,"");
+  let s=word.normalize("NFC").replace(/[^\p{L}\p{M}\u200C\u200D]/gu,"");
+  s=s.replace(/ऽ/g," ").trim(); // voices stumble over the avagraha, so it is read as a space: a short break inside the word
   const l=v?langOf(v):"sa";
   if(!v || DEVA_LANGS.has(l)) return s;
   if(SCRIPT_BASE[l]!=null){
