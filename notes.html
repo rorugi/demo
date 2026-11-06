@@ -217,7 +217,7 @@
   .inkinfo small { font: 600 8.5px/1 var(--ui); letter-spacing: -.03em; opacity: .75; font-variant-numeric: tabular-nums; white-space: nowrap; }
   /* presets: the pencil with a small gear */
   .pen svg.gearmark { position: absolute; left: 3px; top: 3px; width: 11px; height: 11px; transform: none; }
-  .gearmark path, .gearmark circle { fill: var(--panel); stroke: currentColor; stroke-width: 2.6; stroke-linejoin: round; }
+  .gearmark path { fill: currentColor; stroke: var(--panel); stroke-width: 3.2; stroke-linejoin: round; paint-order: stroke; }
   .toolbar [aria-pressed="true"].pen, .toolbar [aria-pressed="true"].eraser, .toolbar [aria-pressed="true"].mod { background: var(--active); }
   /* stroke size and colour buttons */
   .mod i { display: block; border-radius: 50%; background: var(--c, #121315); }
@@ -1649,8 +1649,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_100';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.8';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_101';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.9';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2620,7 +2620,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const sizeLine = w => Math.max(1.3, Math.min(6.5, 0.8 + w * 3)).toFixed(1);
   const PENLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="penlock" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>';
-  const GEARMARK = '<svg class="gearmark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></svg>';
+  const GEAR_D = 'M9.73 4.33L9.92 1.30L14.08 1.30L14.27 4.33A8.0 8.0 0 0 1 15.82 4.97L18.10 2.96L21.04 5.90L19.03 8.18A8.0 8.0 0 0 1 19.67 9.73L22.70 9.92L22.70 14.08L19.67 14.27A8.0 8.0 0 0 1 19.03 15.82L21.04 18.10L18.10 21.04L15.82 19.03A8.0 8.0 0 0 1 14.27 19.67L14.08 22.70L9.92 22.70L9.73 19.67A8.0 8.0 0 0 1 8.18 19.03L5.90 21.04L2.96 18.10L4.97 15.82A8.0 8.0 0 0 1 4.33 14.27L1.30 14.08L1.30 9.92L4.33 9.73A8.0 8.0 0 0 1 4.97 8.18L2.96 5.90L5.90 2.96L8.18 4.97A8.0 8.0 0 0 1 9.73 4.33ZM16.4 12a4.4 4.4 0 1 0-8.8 0 4.4 4.4 0 1 0 8.8 0z';   // a plain gear: eight wide teeth around a round hole
+  const GEARMARK = `<svg class="gearmark" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="${GEAR_D}"/></svg>`;
   const SIZE_S = '<svg class="sizes-s" viewBox="0 0 26 16" aria-hidden="true"><path d="M3 11.5C5.5 5 9.5 3.2 11.8 6.6c1.6 2.4 1.9 5.8 5 5.4C19.6 11.6 21.7 7.8 23 4"/></svg>';
   function paintSizeBtn(el, it) {
     const i = el.querySelector('svg');
@@ -3491,7 +3492,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'preset' ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1) scale(.42)" stroke-width="3.6"><path fill="var(--panel)" d="M12 1.8l1.9 2.3 2.9-.8.8 2.9 2.9.8-.8 2.9 2.3 1.9-2.3 1.9.8 2.9-2.9.8-.8 2.9-2.9-.8L12 22.2l-1.9-2.3-2.9.8-.8-2.9-2.9-.8.8-2.9L1.8 12l2.3-1.9-.8-2.9 2.9-.8.8-2.9 2.9.8z"/><circle cx="12" cy="12" r="3.6"/></g>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(.6 .6) scale(.44)"><path fill="currentColor" fill-rule="evenodd" stroke="var(--panel)" stroke-width="3.2" paint-order="stroke" d="${GEAR_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
