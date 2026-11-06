@@ -185,6 +185,11 @@
   .locks button svg { flex: none; width: 14px; height: 14px; opacity: .55; }
   .locks button[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); font-weight: 600; }
   .locks button[aria-pressed="true"] svg { opacity: 1; }
+  .parts { display: flex; flex-wrap: wrap; margin-bottom: 4px; }
+  .parts button { flex: 1 1 auto; padding: 0 10px; }
+  .parts button svg { opacity: 0; }
+  .parts button[aria-pressed="true"] svg { opacity: 1; }
+  .pop .partoff { opacity: .35; }                 /* a part this preset leaves alone (touch it to switch it on) */
   .locksub { font-size: 11.5px; opacity: .6; margin-top: -4px; }
   /* a pen with locks shows a small lock top left */
   .pen svg.penlock { position: absolute; left: 3px; top: 3px; width: 10px; height: 10px; transform: none; display: none; opacity: .7; }
@@ -217,7 +222,9 @@
   .swatch.hl { width: 9px; height: 5px; border-radius: 1.5px; }
   .inkinfo small { font: 600 8.5px/1 var(--ui); letter-spacing: -.03em; opacity: .75; font-variant-numeric: tabular-nums; white-space: nowrap; }
   /* presets: the pen with a small arrow pointing left (it hands its ink to the pen) */
-  .pen svg.gearmark { position: absolute; left: 4px; top: 4px; width: 8.5px; height: 8.5px; transform: none; }
+  .pen svg.gearmark, .mod svg.gearmark, .tblist .ico svg.gearmark { position: absolute; left: 4px; top: 4px; width: 8.5px; height: 8.5px; transform: none; }
+  .toolbar .sizebtn svg.gearmark, .tblist .sizeico svg.gearmark { width: 8.5px; height: 8.5px; left: 3px; top: 3px; }
+  .tblist .ico { position: relative; }
   .gearmark .mk { fill: currentColor; stroke: var(--panel); stroke-width: 3.4; stroke-linejoin: round; paint-order: stroke; }
   /* the pen type button: the type, with a small arrow for its menu */
   .ptbtn { position: relative; }
@@ -1110,29 +1117,32 @@
 <!-- pen menu -->
 <div class="pop" id="penPop" role="dialog" aria-label="Pen settings" hidden>
   <div class="poptitle" id="penPopTitle" hidden></div>
-  <h3 data-for="pen preset color">Colour</h3>
-  <div class="swatches" id="swatches" data-for="pen preset color"></div>
-  <button type="button" class="custom-color" id="customColorBox" data-for="pen preset color" aria-expanded="false" aria-controls="picker"><span class="dot" id="customDot"></span>Custom colour<small id="customHex"></small><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-  <div class="picker" id="picker" hidden>
+  <h3 data-for="preset">This preset sets</h3>
+  <div class="locks parts" id="parts" data-for="preset"></div>
+  <h3 data-for="pen preset" data-part="color">Colour</h3>
+  <div class="swatches" id="swatches" data-for="pen preset" data-part="color"></div>
+  <button type="button" class="custom-color" id="customColorBox" data-for="pen preset" data-part="color" aria-expanded="false" aria-controls="picker"><span class="dot" id="customDot"></span>Custom colour<small id="customHex"></small><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="picker" id="picker" data-part="color" hidden>
     <div class="sv" id="pkSv" role="slider" aria-label="Saturation and brightness"><i id="pkKnob"></i></div>
     <input type="range" class="hue" id="pkHue" min="0" max="359" step="1" aria-label="Hue">
     <label class="hexrow"><i id="pkDot"></i><input type="text" id="pkHex" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" placeholder="#1F6FD1" aria-label="Hex colour code, type or paste"></label>
   </div>
-  <h3 data-for="pen preset size">Thickness</h3>
-  <div class="widths" id="widths" data-for="pen preset size"></div>
-  <h3 data-for="pen preset color">Opacity <output id="opVal" for="opacity">100%</output></h3>
-  <input type="range" class="opacity" id="opacity" min="10" max="100" step="5" value="100" aria-label="Opacity" data-for="pen preset color">
-  <h3 data-for="pen preset">Pen type</h3>
-  <select class="dd" id="kindSel" aria-label="Pen type" data-for="pen preset"></select>
-  <label class="hlrow" for="hlToggle" data-for="pen preset color"><span>Highlighter<span class="sub">Drawn behind existing ink</span></span><span class="switch"><input type="checkbox" id="hlToggle"><i></i></span></label>
+  <h3 data-for="pen preset" data-part="width">Thickness</h3>
+  <div class="widths" id="widths" data-for="pen preset" data-part="width"></div>
+  <h3 data-for="pen preset" data-part="opacity">Opacity <output id="opVal" for="opacity">100%</output></h3>
+  <input type="range" class="opacity" id="opacity" min="10" max="100" step="5" value="100" aria-label="Opacity" data-for="pen preset" data-part="opacity">
+  <h3 data-for="pen preset" data-part="kind">Pen type</h3>
+  <select class="dd" id="kindSel" aria-label="Pen type" data-for="pen preset" data-part="kind"></select>
+  <label class="hlrow" for="hlToggle" data-for="pen preset" data-part="highlighter"><span>Highlighter<span class="sub">Drawn behind existing ink</span></span><span class="switch"><input type="checkbox" id="hlToggle"><i></i></span></label>
   <h3 data-for="pen">Locked against presets</h3>
   <div class="locks" id="locks" data-for="pen">
     <button type="button" data-lock="color" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Colour</button>
     <button type="button" data-lock="width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Thickness</button>
     <button type="button" data-lock="opacity" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Opacity</button>
     <button type="button" data-lock="kind" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Pen type</button>
+    <button type="button" data-lock="highlighter" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Highlighter</button>
   </div>
-  <div class="locksub" data-for="pen">Closed lock: presets, size and colour buttons leave it alone. Open lock: they may change it. This menu still changes everything.</div>
+  <div class="locksub" data-for="pen">Closed lock: presets leave it alone. Open lock: they may change it. This menu still changes everything.</div>
   <button type="button" class="wide-btn subtle" id="savePreset" data-for="pen">Save as preset</button>
 </div>
 
@@ -1690,8 +1700,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_119';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.27';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_120';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.28';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1868,6 +1878,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     inmode: { label: 'Finger / stylus' },
     space:  { label: 'Empty space', multi: true },
     preset: { label: 'Preset', multi: true },
+    color:  { label: 'Colour preset', multi: true, add: true },   // these three are added as presets with one part on
+    size:   { label: 'Size preset', multi: true, add: true },
+    ptype:  { label: 'Pen type preset', multi: true, add: true },
     sticky: { label: 'Sticky notes' },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
@@ -1877,8 +1890,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sep:    { label: 'Separator', multi: true },
     br:     { label: 'Line break', multi: true },
     sepbr:  { label: 'Separator (wraps)', multi: true },
-    size:   { label: 'Stroke size', multi: true },
-    color:  { label: 'Colour', multi: true },
     magnifier: { label: 'Magnifier' },
     lock:   { label: 'Zoom lock' },
     fs:     { label: 'Full screen' },
@@ -1897,7 +1908,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     opacity: b && okO(b.opacity) ? +b.opacity : 1,
     highlighter: !!(b && b.highlighter),
     pickedOnDark: !!(b && b.pickedOnDark),
-    kind: b && PEN_KINDS[b.kind] ? b.kind : preset && (!b || b.kind === undefined || b.kind === 'keep') ? 'keep' : 'pen'   // pen type (highlighters always draw evenly); a preset may keep the pen's
+    kind: b && PEN_KINDS[b.kind] ? b.kind : 'pen'   // pen type (highlighters always draw evenly)
 
   });
   // stroke size and colour buttons: each applies its part to the current pen
@@ -1908,11 +1919,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     highlighter: !!(c && c.highlighter),
     pickedOnDark: !!(c && c.pickedOnDark)
   });
+  // Presets: each part (colour, thickness, opacity, pen type, highlighter) can be switched on or off; a part that is off
+  // leaves the pen alone. Colour, size and pen type presets are just presets with one part on.
+  const PARTS = ['color', 'width', 'opacity', 'kind', 'highlighter'];
+  const PART_NAMES = { color: 'Colour', width: 'Thickness', opacity: 'Opacity', kind: 'Pen type', highlighter: 'Highlighter' };
+  const cleanUse = (u, d) => Object.fromEntries(PARTS.map(k => [k, u && typeof u[k] === 'boolean' ? u[k] : !!(d && d[k])]));
+  const ALL_BUT_KIND = { color: true, width: true, opacity: true, highlighter: true };
   function cleanItemData(it, o) {
-    if (it.type === 'pen' || it.type === 'preset') o.brush = cleanBrush(it.brush, undefined, it.type === 'preset');
-    if (it.type === 'pen' && it.locks) { const l = {}; ['color', 'width', 'opacity'].forEach(k => { if (it.locks[k] === true) l[k] = true; }); if (Object.keys(l).length) o.locks = l; }
-    if (it.type === 'size') o.width = cleanWidth(it.width);
-    if (it.type === 'color') o.paint = cleanPaint(it.paint);
+    if (it.type === 'size') { o.type = 'preset'; o.brush = cleanBrush({ width: cleanWidth(it.width) }); o.use = cleanUse(null, { width: true }); return o; }
+    if (it.type === 'color') { o.type = 'preset'; o.brush = cleanBrush(cleanPaint(it.paint)); o.use = cleanUse(null, { color: true, opacity: true, highlighter: true }); return o; }
+    if (it.type === 'ptype') { o.type = 'preset'; o.brush = cleanBrush(it.brush); o.use = cleanUse(null, { kind: true }); return o; }
+    if (it.type === 'pen' || it.type === 'preset') o.brush = cleanBrush(it.brush);
+    if (it.type === 'preset') o.use = cleanUse(it.use, it.brush && it.brush.kind && it.brush.kind !== 'keep' ? { ...ALL_BUT_KIND, kind: true } : ALL_BUT_KIND);
+    if (it.type === 'pen' && it.locks) { const l = {}; PARTS.forEach(k => { if (it.locks[k] === true) l[k] = true; }); if (Object.keys(l).length) o.locks = l; }
     return o;
   }
   // one pen you draw with; presets only hand their ink to it
@@ -1920,7 +1939,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const defaultItems = () => {
     return [
       { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) }, { id: uid(), type: 'pentype' },
-      ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b, undefined, true) })),
+      ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b), use: cleanUse(null, ALL_BUT_KIND) })),
       { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
@@ -2547,9 +2566,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'inmode': return `<button type="button" class="imbtn" ${a}>${modeIcon(penSeen)}</button>`;
       case 'redo': return `<button type="button" ${a} aria-label="Redo" title="Redo">${ICON.redo}</button>`;
       case 'sep': return `<span class="sep" ${a} aria-hidden="true"></span>`;
-      case 'size': return `<button type="button" class="mod sizebtn" ${a}>${SIZE_S}<small></small></button>`;
-      case 'color': return `<button type="button" class="mod colbtn" ${a}><i></i></button>`;
-      case 'preset': return `<button type="button" class="pen preset" ${a}>${ICON.pen}<span class="inkinfo"><span class="swatch"></span><small></small></span>${GEARMARK}</button>`;
+      case 'preset': { const lk = presetLook(it); return `<button type="button" class="${presetClass(lk)}" data-look="${lk}" ${a}>${presetInner(lk)}</button>`; }
       case 'lock': return `<button type="button" ${a} aria-pressed="true">${ICON.lock(false)}</button>`;
       case 'fs': return `<button type="button" ${a}>${ICON.fs(false)}</button>`;
       case 'zoom': return `<button type="button" ${a} title="Fit page" aria-label="Reset zoom to fit page">100%</button>`;
@@ -2705,27 +2722,57 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // They only work while a pen is active (or restyle a selection), so it is always clear which pen gets them.
   const effBrush = () => ({ ...brush() });
   const samePaint = (a, b) => a.color.toLowerCase() === b.color.toLowerCase() && a.opacity === b.opacity && !!a.highlighter === !!b.highlighter && !!a.pickedOnDark === !!b.pickedOnDark;
-  const isMod = it => it.type === 'size' || it.type === 'color' || it.type === 'preset';
+  const isMod = it => it.type === 'preset';
   // locks: a pen can keep its colour, thickness and/or opacity when presets are tapped
   const penLocks = () => itemById(penId).locks || {};
-  const modValues = it => it.type === 'size' ? { width: it.width } : it.type === 'color' ? cleanPaint(it.paint) : cleanBrush(it.brush, undefined, true);
-  const modKeys = it => (it.type === 'size' ? ['width'] : it.type === 'color' ? ['color', 'opacity'] : ['color', 'width', 'opacity', ...(it.brush.kind && it.brush.kind !== 'keep' ? ['kind'] : [])]).filter(k => !penLocks()[k]);
-  const sameVal = (k, a, b) => k === 'kind' ? (a.kind || 'pen') === (b.kind || 'pen') : k === 'color' ? a.color.toLowerCase() === b.color.toLowerCase() && !!a.pickedOnDark === !!b.pickedOnDark : a[k] === b[k];
-  const keepsMode = () => Object.keys(penLocks()).length > 0;    // a pen with locks stays highlighter / normal pen
+  const modValues = it => it.brush;
+  const modKeys = it => PARTS.filter(k => it.use && it.use[k] && !penLocks()[k]);   // the parts it sets on this pen
+  const sameVal = (k, a, b) => k === 'kind' ? (a.kind || 'pen') === (b.kind || 'pen') : k === 'highlighter' ? !!a.highlighter === !!b.highlighter
+    : k === 'color' ? a.color.toLowerCase() === b.color.toLowerCase() && !!a.pickedOnDark === !!b.pickedOnDark : a[k] === b[k];
   const modMatches = it => {
     if (tool !== 'pen') return false;
-    const v = modValues(it), keys = modKeys(it);
-    if (!keys.length) return false;
-    if (!keepsMode() && it.type !== 'size' && !!v.highlighter !== !!brush().highlighter) return false;
-    return keys.every(k => sameVal(k, brush(), v));
+    const keys = modKeys(it);
+    return keys.length > 0 && keys.every(k => sameVal(k, brush(), it.brush));
   };
   const modUsable = () => tool === 'pen' || (tool === 'lasso' && !!sel);
   const modLocked = it => tool === 'pen' && !modKeys(it).length;   // everything it sets is locked on this pen
   function applyMod(it) {
-    const v = modValues(it), b = brush();
+    const v = it.brush, b = brush();
     modKeys(it).forEach(k => { b[k] = v[k]; if (k === 'color') b.pickedOnDark = v.pickedOnDark; });
-    if (it.type !== 'size' && !keepsMode()) b.highlighter = v.highlighter;
   }
+  // how a preset looks: a size preset as a line with its thickness, a colour preset as a colour disc,
+  // everything else as a pen (its type, its colour, its thickness, as far as it sets them) — all with the arrow
+  const presetLook = it => { const u = it.use; return u.width && !u.color && !u.kind && !u.highlighter ? 'size' : u.color && !u.width && !u.kind ? 'color' : 'pen'; };
+  const presetInner = look => look === 'size' ? `${SIZE_S}<small></small>${GEARMARK}` : look === 'color' ? `<i></i>${GEARMARK}`
+    : `${ICON.pen}<span class="inkinfo"><span class="swatch"></span><small></small></span>${GEARMARK}`;
+  const presetClass = look => look === 'pen' ? 'pen preset' : look === 'size' ? 'mod sizebtn preset' : 'mod colbtn preset';
+  function paintPresetEl(el, it) {               // el: the button (or the list icon) in its current look
+    const look = presetLook(it), u = it.use, b = it.brush;
+    if (look === 'size') { paintSizeBtn(el, { width: b.width }); return; }
+    if (look === 'color') { paintColorBtn(el, { paint: { color: b.color, pickedOnDark: b.pickedOnDark, opacity: u.opacity ? b.opacity : 1, highlighter: u.highlighter && b.highlighter } }); return; }
+    const sw = el.querySelector('.swatch');
+    setSwatch(sw, { ...b, highlighter: u.highlighter && b.highlighter, kind: u.kind ? b.kind : undefined, opacity: u.opacity ? b.opacity : 1 });
+    sw.style.visibility = u.color ? '' : 'hidden';
+    sw.nextElementSibling.textContent = u.width ? +b.width.toFixed(2) : '';
+    const ico = el.querySelector('.pen-ico');
+    if (ico && !u.color) ico.style.setProperty('--c', 'transparent');   // no colour set: an empty pen
+  }
+  const presetName = it => {
+    const u = it.use, on = PARTS.filter(k => u[k]);
+    if (on.length === 1 && u.kind) return 'Pen type preset';
+    if (presetLook(it) === 'size') return 'Size preset';
+    if (presetLook(it) === 'color') return u.highlighter && it.brush.highlighter ? 'Highlighter colour' : 'Colour preset';
+    return u.highlighter && it.brush.highlighter ? 'Highlighter preset' : 'Preset';
+  };
+  const presetParts = it => {                    // "#D92B1E · 0.45 mm · Brush pen"
+    const u = it.use, b = it.brush, x = [];
+    if (u.color) x.push(b.color.toUpperCase());
+    if (u.width) x.push(b.width + ' mm');
+    if (u.opacity && (b.opacity < 1 || x.length === 0)) x.push(Math.round(b.opacity * 100) + ' %');
+    if (u.kind) x.push(KINDS[b.kind] || 'Pen');
+    if (u.highlighter && (b.highlighter || x.length === 0)) x.push(b.highlighter ? 'highlighter' : 'no highlighter');
+    return x.length ? x.join(' · ') : 'sets nothing';
+  };
   const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
   function updateToolbarState() {
     stage.classList.toggle('selecting', tool === 'lasso');
@@ -2760,27 +2807,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           el.setAttribute('aria-label', `Sticky notes, ${notesShown ? 'shown' : 'hidden'}. Tap to place one, tap again for colour, size and show / hide`);
           break;
         case 'preset': {
-          const on = modMatches(it), b = it.brush;
-          el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
-          paintPreset(el, b);
-          el.setAttribute('aria-label', `Preset: ${b.highlighter ? 'highlighter, ' : ''}${b.color}, ${b.width} mm${b.opacity < 1 ? `, ${Math.round(b.opacity * 100)} % opacity` : ''}${on ? ', matches the pen' : ''}. Tap to give it to the pen, tap again to change`);
-          el.dataset.tip = modLocked(it) ? 'Preset · locked on this pen' : el.disabled ? 'Preset · choose a pen first' : 'Preset';
-          break;
-        }
-        case 'size': {
+          const lk = presetLook(it);
+          if (el.dataset.look !== lk) { el.className = presetClass(lk); el.innerHTML = presetInner(lk); el.dataset.look = lk; delete el.dataset.ico; }
           const on = modMatches(it);
           el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
-          paintSizeBtn(el, it);
-          el.setAttribute('aria-label', `Stroke size ${it.width} mm${on ? ', matches the pen' : ''}. Tap to give it to the pen, tap again to change`);
-          el.dataset.tip = `Stroke size ${it.width} mm`;
-          break;
-        }
-        case 'color': {
-          const on = modMatches(it);
-          el.classList.toggle('match', on); el.disabled = !modUsable() || modLocked(it);
-          paintColorBtn(el, it);
-          el.setAttribute('aria-label', `Colour ${it.paint.color}${it.paint.highlighter ? ', highlighter' : ''}${it.paint.opacity < 1 ? `, ${Math.round(it.paint.opacity * 100)} % opacity` : ''}. Tap to give it to the pen, tap again to change`);
-          el.dataset.tip = it.paint.highlighter ? 'Highlighter colour' : 'Colour';
+          paintPresetEl(el, it);
+          el.setAttribute('aria-label', `${presetName(it)}: ${presetParts(it)}${on ? ', matches the pen' : ''}. Tap to give it to the pen, tap again to change`);
+          el.dataset.tip = modLocked(it) ? presetName(it) + ' · locked on this pen' : el.disabled ? presetName(it) + ' · choose a pen first' : presetName(it);
           break;
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
@@ -2837,8 +2870,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (tool === 'sticky') { openPop === notePop && noteEdit.kind === 'tool' ? closePops() : (noteEdit = { kind: 'tool' }, renderNotePop(), showPop(notePop, el)); }
         else { if (sel) clearSelection(); tool = 'sticky'; closePops(); updateToolbarState(); }
         break;
-      case 'size':
-      case 'color':
       case 'preset':
         if (sel && sel.items.length && tool === 'lasso') { closePops(); restyleSelection(it); break; }     // change the selected strokes
         if (tool !== 'pen') break;                       // needs an active pen (the button is greyed out)
@@ -2910,9 +2941,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   // ---- Pen menu: edits the current pen, or a stroke size / colour button ----
   const swatchesEl = $('swatches'), widthsEl = $('widths');
-  let penEdit = { kind: 'pen' };            // { kind: 'pen' | 'size' | 'color', item, linked }
-  // what the menu changes: the pen's brush, the size button, or the colour button's paint
-  const ed = () => penEdit.kind === 'size' ? penEdit.item : penEdit.kind === 'color' ? penEdit.item.paint : penEdit.kind === 'preset' ? penEdit.item.brush : brush();
+  let penEdit = { kind: 'pen' };            // { kind: 'pen' | 'preset', item, linked }
+  // what the menu changes: the pen's brush, or the preset's
+  const ed = () => penEdit.kind === 'preset' ? penEdit.item.brush : brush();
+  // a preset's parts: switched on and off at the top; touching a part that is off switches it on
+  const partsEl = $('parts');
+  partsEl.innerHTML = PARTS.map(k => `<button type="button" data-part-sw="${k}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>${PART_NAMES[k]}</button>`).join('');
+  partsEl.addEventListener('click', e => {
+    const b = e.target.closest('[data-part-sw]');
+    if (!b || penEdit.kind !== 'preset') return;
+    const u = penEdit.item.use, k = b.dataset.partSw;
+    u[k] = !u[k];
+    if (penEdit.linked && tool === 'pen' && !modKeys(penEdit.item).length) penEdit.linked = false;
+    penChanged(false);
+  });
+  penPop.addEventListener('pointerdown', e => {
+    if (penEdit.kind !== 'preset') return;
+    const p = e.target.closest('[data-part].partoff');
+    if (p) { penEdit.item.use[p.dataset.part] = true; penChanged(false); }
+  }, true);
   const penChanged = keepInput => {
     if (penEdit.linked && penEdit.item && tool === 'pen') applyMod(penEdit.item);   // the pen keeps matching the button being edited
     saveItems(); updateToolbarState(); renderPenPop(keepInput !== false); };
@@ -3001,7 +3048,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // the pen's ink as a new preset, placed right after the pen
   $('savePreset').addEventListener('click', () => {
     const p = itemById(penId), bar = barOf(penId);
-    bar.items.splice(bar.items.indexOf(p) + 1, 0, { id: uid(), type: 'preset', brush: { ...cleanBrush(p.brush), kind: 'keep' } });
+    bar.items.splice(bar.items.indexOf(p) + 1, 0, { id: uid(), type: 'preset', brush: cleanBrush(p.brush), use: cleanUse(null, ALL_BUT_KIND) });
     closePops(); saveItems(); renderToolbar();
     toast('Preset saved next to the pen.');
   });
@@ -3009,7 +3056,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('hlToggle').addEventListener('change', e => {
     const b = ed();
     b.highlighter = e.target.checked;
-    if (b.highlighter && penEdit.kind === 'color') { if (b.opacity > 0.6) b.opacity = 0.4; if (b.color === '#121315' || b.color === '#4b5059') b.color = '#f0bf12'; }
     if (b.highlighter && (penEdit.kind === 'pen' || penEdit.kind === 'preset')) {   // sensible start values for a highlighter
       if (b.width < 2) b.width = 5;
       if (b.opacity > 0.6) b.opacity = 0.4;
@@ -3048,8 +3094,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const br = { ...brush(), ...ed() };       // preview with the pen's other properties
     const k = penEdit.kind;
     penPop.querySelectorAll('[data-for]').forEach(x => { x.hidden = !x.dataset.for.split(' ').includes(k); });
-    penPop.setAttribute('aria-label', k === 'size' ? 'Stroke size button' : k === 'color' ? 'Colour button' : k === 'preset' ? 'Preset' : 'Pen settings');
-    $('penPopTitle').textContent = k === 'size' ? 'Stroke size button' : k === 'color' ? 'Colour button' : k === 'preset' ? 'Preset' : '';
+    const pu = k === 'preset' ? penEdit.item.use : null;
+    penPop.querySelectorAll('[data-part]').forEach(x => x.classList.toggle('partoff', !!pu && !pu[x.dataset.part]));
+    if (pu) partsEl.querySelectorAll('[data-part-sw]').forEach(b => b.setAttribute('aria-pressed', String(!!pu[b.dataset.partSw])));
+    penPop.setAttribute('aria-label', k === 'preset' ? presetName(penEdit.item) : 'Pen settings');
+    $('penPopTitle').textContent = k === 'preset' ? presetName(penEdit.item) : '';
     $('penPopTitle').hidden = k === 'pen';
     const lc = br.color.toLowerCase(), shown = displayColor(br.color, br.pickedOnDark);
     swatchesEl.querySelectorAll('button').forEach(b => {
@@ -3068,11 +3117,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const i = b.querySelector('i'); i.style.setProperty('--c', shown); i.style.opacity = br.opacity;
     });
     $('hlToggle').checked = br.highlighter;
-    {
-      const keep = k === 'preset', cur = ed().kind || (keep ? 'keep' : 'pen');
-      $('kindSel').innerHTML = (keep ? `<option value="keep">Keep the pen's type</option>` : '') + Object.entries(PEN_KINDS).map(([t, d]) => `<option value="${t}">${d.label}</option>`).join('');
-      $('kindSel').value = cur;
-    }
+    if (!$('kindSel').options.length) $('kindSel').innerHTML = Object.entries(PEN_KINDS).map(([t, d]) => `<option value="${t}">${d.label}</option>`).join('');
+    $('kindSel').value = ed().kind || 'pen';
     $('locks').querySelectorAll('[data-lock]').forEach(b => {      // a closed lock when locked, an open one when presets may change it
       const on = !!penLocks()[b.dataset.lock];
       b.setAttribute('aria-pressed', String(on));
@@ -3532,9 +3578,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (it.type === 'sep') return `<span class="ico sepico"><i></i></span>`;
     if (it.type === 'space') return `<span class="ico spaceico"><i></i></span>`;
     if (it.type === 'br') return `<span class="ico">${ICON.br}</span>`;
-    if (it.type === 'size') return `<span class="ico sizeico" style="--sw:${sizeLine(it.width)};--c:currentColor">${SIZE_S}</span>`;
-    if (it.type === 'preset') return `<span class="ico pen preset">${ICON.pen}<span class="inkinfo"><span class="swatch"></span><small></small></span>${GEARMARK}</span>`;
-    if (it.type === 'color') return `<span class="ico mod colbtn${it.paint.highlighter ? ' hl' : ''}"><i style="--c:${displayColor(it.paint.color, it.paint.pickedOnDark)};--o:${Math.max(0.3, it.paint.opacity)}"></i></span>`;
+    if (it.type === 'preset') { const lk = presetLook(it); return `<span class="ico ${lk === 'size' ? 'sizeico' : presetClass(lk)}" data-look="${lk}">${presetInner(lk)}</span>`; }
     if (it.type === 'sepbr') return `<span class="ico">${ICON.sepbr}</span>`;
     if (it.type === 'real') return `<span class="ico txt">1:1</span>`;
     const ic = it.type === 'lock' ? ICON.lock(false) : it.type === 'fs' ? ICON.fs(false) : ICON[it.type];
@@ -3554,9 +3598,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     tbList.innerHTML = first + (edBar.items.length ? '' : '<li class="empty">No buttons yet. Add some below.</li>') +
       edBar.items.map(it => {
         const name = it.type === 'pen' ? `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penList.indexOf(it) + 1}<small>${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}${it.locks ? ' · locked: ' + Object.keys(it.locks).map(k => k === 'width' ? 'thickness' : k).join(', ') : ''}</small>`
-          : it.type === 'preset' ? `${it.brush.highlighter ? 'Highlighter preset' : 'Preset'}<small>${it.brush.color.toUpperCase()} · ${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}</small>`
-          : it.type === 'size' ? `Stroke size<small>${it.width} mm</small>`
-          : it.type === 'color' ? `${it.paint.highlighter ? 'Highlighter colour' : 'Colour'}<small>${it.paint.color.toUpperCase()}${it.paint.opacity < 1 ? ' · ' + Math.round(it.paint.opacity * 100) + ' %' : ''}</small>`
+          : it.type === 'preset' ? `${presetName(it)}<small>${presetParts(it)}</small>`
           : ITEM_TYPES[it.type].label;
         const lastPen = main && it.type === 'pen' && mainPens === 1;
         return `<li data-id="${it.id}"><span class="handle" role="button" aria-label="Move ${ITEM_TYPES[it.type].label}">${ICON.handle}</span>${rowIcon(it)}<span class="name">${name}</span>` +
@@ -3564,7 +3606,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }).join('');
     tbList.querySelectorAll('li[data-id]').forEach(li => {
       const it = itemById(li.dataset.id);
-      if (it.type === 'pen' || it.type === 'preset') setSwatch(li.querySelector('.swatch'), it.brush);
+      if (it.type === 'pen') setSwatch(li.querySelector('.swatch'), it.brush);
+      if (it.type === 'preset') paintPresetEl(li.querySelector('.ico'), it);
     });
     renderAddList();
   }
@@ -3572,7 +3615,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1.4) scale(.34)"><path fill="currentColor" stroke="var(--panel)" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke" d="${ARROW_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg(`<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><g transform="translate(1 1.4) scale(.34)"><path fill="currentColor" stroke="var(--panel)" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke" d="${ARROW_D}"/></g>`) : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
@@ -3602,15 +3645,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   tbAddList.addEventListener('click', e => {
     const b = e.target.closest('[data-add]');
     if (!b || b.disabled) return;
-    const t = b.dataset.add, it = { id: uid(), type: t };
+    const t = b.dataset.add, it = { id: uid(), type: ITEM_TYPES[t].add ? 'preset' : t };
+    const presets = allItems().filter(i => i.type === 'preset');
     if (t === 'pen' || t === 'preset') it.brush = cleanBrush(brush());    // starts with the pen's current ink
+    if (t === 'preset') it.use = cleanUse(null, ALL_BUT_KIND);
     if (t === 'size') {                       // a size not on a button yet
-      const used = new Set(allItems().filter(i => i.type === 'size').map(i => i.width));
-      it.width = [0.35, 0.6, 1.2, 0.25, 0.45, 0.8, 2, 5].find(w => !used.has(w)) || 0.45;
+      const used = new Set(presets.filter(i => i.use.width).map(i => i.brush.width));
+      it.brush = cleanBrush({ ...brush(), width: [0.35, 0.6, 1.2, 0.25, 0.45, 0.8, 2, 5].find(w => !used.has(w)) || 0.45 });
+      it.use = cleanUse(null, { width: true });
     }
     if (t === 'color') {                      // a colour not on a button yet
-      const used = new Set(allItems().filter(i => i.type === 'color').map(i => i.paint.color.toLowerCase()));
-      it.paint = cleanPaint({ color: NEXT_COLORS.find(c => !used.has(c)) || '#121315' });
+      const used = new Set(presets.filter(i => i.use.color).map(i => i.brush.color.toLowerCase()));
+      it.brush = cleanBrush({ ...brush(), color: NEXT_COLORS.find(c => !used.has(c)) || '#121315', pickedOnDark: false, highlighter: false });
+      it.use = cleanUse(null, { color: true });
+    }
+    if (t === 'ptype') {                      // a pen type not on a button yet
+      const used = new Set(presets.filter(i => i.use.kind).map(i => i.brush.kind));
+      it.brush = cleanBrush({ ...brush(), kind: ['fountain', 'pencil', 'brush', 'ballpoint', 'chisel', 'pen'].find(k => !used.has(k)) || 'fountain' });
+      it.use = cleanUse(null, { kind: true });
     }
     edBar.items.push(it);
     itemsChanged();
@@ -4231,9 +4283,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
         items: b.items.map(it => it.type === 'pen' || it.type === 'preset'
-          ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark, ...(it.locks ? { locked: { color: !!it.locks.color, thickness: !!it.locks.width, opacity: !!it.locks.opacity } } : {}) }
-          : it.type === 'size' ? { type: 'size', widthMm: it.width }
-          : it.type === 'color' ? { type: 'color', color: it.paint.color, opacity: it.paint.opacity, highlighter: it.paint.highlighter, colorPickedOnDarkPaper: it.paint.pickedOnDark }
+          ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, penType: it.brush.kind, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark,
+              ...(it.use ? { sets: { color: it.use.color, thickness: it.use.width, opacity: it.use.opacity, penType: it.use.kind, highlighter: it.use.highlighter } } : {}),
+              ...(it.locks ? { locked: { color: !!it.locks.color, thickness: !!it.locks.width, opacity: !!it.locks.opacity, penType: !!it.locks.kind, highlighter: !!it.locks.highlighter } } : {}) }
           : { type: it.type })
       })),
       selectedPen: pens().findIndex(p => p.id === penId) + 1,
@@ -4263,7 +4315,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     try { o = JSON.parse(await file.text()); } catch (_) { o = null; }
     if (!o || o.app !== 'notizblock' || o.kind !== 'options') { toast(`${file.name} isn't an RRnotes options file.`); return; }
     const fileItems = list => list.map(i => !i ? i
-      : i.type === 'pen' || i.type === 'preset' ? { type: i.type, locks: i.locked ? { color: i.locked.color === true, width: i.locked.thickness === true, opacity: i.locked.opacity === true } : null, brush: { color: i.color, width: i.widthMm, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
+      : i.type === 'pen' || i.type === 'preset' ? { type: i.type,
+          locks: i.locked ? { color: i.locked.color === true, width: i.locked.thickness === true, opacity: i.locked.opacity === true, kind: i.locked.penType === true, highlighter: i.locked.highlighter === true } : null,
+          use: i.sets ? { color: i.sets.color, width: i.sets.thickness, opacity: i.sets.opacity, kind: i.sets.penType, highlighter: i.sets.highlighter } : undefined,
+          brush: { color: i.color, width: i.widthMm, opacity: i.opacity, kind: i.penType, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
@@ -6171,25 +6226,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const map = new Map();
     pages[cur].strokes = pages[cur].strokes.map(st => {
       if (!sel.items.includes(st)) return st;
-      const n = { ...st };
-      if (it.type === 'size') n.w = it.width;
-      else if (it.type === 'preset') {
-        const b = it.brush;
-        n.w = b.width; n.c = b.color; n.o = b.opacity;
-        if (b.highlighter) { n.h = 1; delete n.t; delete n.v; } else delete n.h;
-        if (b.pickedOnDark) n.k = 1; else delete n.k;
-      } else {
-        n.c = it.paint.color; n.o = it.paint.opacity;
-        if (it.paint.highlighter) { n.h = 1; delete n.t; delete n.v; } else delete n.h;
-        if (it.paint.pickedOnDark) n.k = 1; else delete n.k;
-      }
+      const n = { ...st }, u = it.use, b = it.brush;
+      if (u.width) n.w = b.width;
+      if (u.color) { n.c = b.color; if (b.pickedOnDark) n.k = 1; else delete n.k; }
+      if (u.opacity) n.o = b.opacity;
+      if (u.kind && (b.kind === 'pencil' || b.kind === 'pen')) { if (b.kind === 'pencil') n.t = 'p'; else delete n.t; delete n.v; }   // pressure widths can't be made up afterwards
+      if (u.highlighter) { if (b.highlighter) { n.h = 1; delete n.t; delete n.v; } else delete n.h; }
       map.set(st, n);
       return n;
     });
     sel.items = sel.items.map(st => map.get(st) || st);
     sel.box = selBox(sel.items, sel.imgs);
     renderPage(); scheduleSave();
-    toast(`${it.type === 'size' ? 'Resized' : it.type === 'preset' ? 'Restyled' : 'Recoloured'} ${sel.items.length} ${sel.items.length === 1 ? 'stroke' : 'strokes'}. Undo brings the old ${it.type === 'size' ? 'size' : it.type === 'preset' ? 'look' : 'colour'} back.`);
+    toast(`Restyled ${sel.items.length} ${sel.items.length === 1 ? 'stroke' : 'strokes'}. Undo brings the old look back.`);
   }
 
   // ---- Magnifier: a part of one page kept in view while you work on others ----
@@ -7780,9 +7829,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const ink = b => `${b.highlighter ? 'highlighter, ' : ''}${b.width} mm${b.opacity < 1 ? ', ' + Math.round(b.opacity * 100) + ' %' : ''}`;
     switch (it.type) {
       case 'pen': return `Pen ${pens().indexOf(it) + 1} · ${ink(it.brush)}${lockedNames(it)}`;
-      case 'preset': return `Preset · ${it.brush.color.toUpperCase()}, ${ink(it.brush)}${PEN_KINDS[it.brush.kind] ? ', ' + KINDS[it.brush.kind].toLowerCase() : ''}${el.disabled ? (modLocked(it) ? ' · locked on this pen' : ' · choose a pen first') : ''}`;
-      case 'size': return `Stroke size · ${it.width} mm${el.disabled ? ' · choose a pen first' : ''}`;
-      case 'color': return `Colour · ${it.paint.color.toUpperCase()}${it.paint.highlighter ? ', highlighter' : ''}${el.disabled ? ' · choose a pen first' : ''}`;
+      case 'preset': return `${presetName(it)} · ${presetParts(it)}${el.disabled ? (modLocked(it) ? ' · locked on this pen' : ' · choose a pen first') : ''}`;
       case 'eraser': return 'Eraser';
       case 'pentype': return `Pen type · ${KINDS[brush().highlighter ? 'pen' : brush().kind || 'pen']}`;
       case 'lasso': return 'Select';
