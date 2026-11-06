@@ -156,6 +156,7 @@ button:disabled{opacity:.45;cursor:default}
       <label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label>
       <button class="info-btn" id="infoBtn" type="button" aria-expanded="false" aria-controls="info" title="How syllable weight works">i</button>
       <label class="check"><input type="checkbox" id="optTimer"> Reading timer</label>
+      <label class="check" title="Tap or click a word to hear it on its own"><input type="checkbox" id="optTap"> Speak a word when tapped</label>
       <label class="check" title="While reading aloud, the IAST transliteration of each word appears above it as it is spoken"><input type="checkbox" id="optIast"> Show transcription while reading aloud</label>
       <label class="check" title="Splits the text at every space and reads each piece as its own word, highlighting it while it is spoken"><input type="checkbox" id="optWord"> Read aloud word by word</label>
       <div class="info" id="info" hidden>
@@ -219,7 +220,7 @@ button:disabled{opacity:.45;cursor:default}
 </footer>
 
 <script>
-const APP_VERSION = '0.1.21'; // the version people see: x.y.z (z counts up with every release)
+const APP_VERSION = '0.1.22'; // the version people see: x.y.z (z counts up with every release)
 document.getElementById("ver").textContent = `Version ${APP_VERSION}`;
 
 // ---------- Sample texts ----------
@@ -502,7 +503,8 @@ reader.addEventListener("click",e=>{
   const i=+t.dataset.i;
   showPop(i);
   if(running && optTimer.checked) markProgress(i);
-  if(sState!=="idle") jumpTo(i); // while playing or paused, tapping a word continues from there
+  if(sState==="speaking") jumpTo(i); // while playing, tapping a word continues from there
+  else { if(sState==="paused") jumpTo(i); if(optTap.checked) sayWord(i); } // otherwise speak just that word
 });
 document.addEventListener("pointerdown",e=>{ if(!e.target.closest(".w")) hidePop(); });
 const rePop=()=>{ if(popWord!==null) showPop(popWord,popWord!==cur); };
@@ -705,7 +707,27 @@ function speakFrom(i,id){
   utter=u; // keep a reference: some browsers drop events of garbage-collected utterances
   synth.speak(u);
 }
+// Speak one tapped word on its own (does not start or change playback)
+let tapEl=null;
+function sayWord(i){
+  const w=words[i]; if(!synth || !w || typeof SpeechSynthesisUtterance==="undefined") return;
+  session++; const id=session;
+  const v=currentVoice();
+  const u=new SpeechSynthesisUtterance(spoken(w.text,v));
+  if(v){ u.voice=v; u.lang=normLang(v.lang); } else u.lang="hi-IN";
+  u.rate=Number(rateSel.value)||1;
+  const off=()=>{ if(tapEl && sState==="idle") tapEl.classList.remove("spk"); tapEl=null; };
+  if(tapEl && sState==="idle") tapEl.classList.remove("spk");
+  tapEl=w.el; if(sState==="idle") w.el.classList.add("spk");
+  u.onend=()=>{ if(id===session) off(); };
+  u.onerror=e=>{ if(id!==session) return; off();
+    if(e.error!=="interrupted" && e.error!=="canceled"){ sHintLocked=true; setHint(`Couldn't play (${e.error}). Try another voice.`,true); } };
+  utter=u;
+  if(synth.speaking||synth.pending){ synth.cancel(); setTimeout(()=>{ if(id===session) synth.speak(u); },60); }
+  else { synth.cancel(); synth.speak(u); } // speak inside the tap so mobile browsers allow audio
+}
 function play(from){
+  if(tapEl){ tapEl.classList.remove("spk"); tapEl=null; }
   if(!synth || !words.length) return;
   session++; const id=session;
   sHintLocked=false; updateVoiceHint();
@@ -755,7 +777,7 @@ input.addEventListener("input",()=>{
   render();
 });
 // ---------- Options (remembered per browser) ----------
-const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer"), optWord=$("optWord"), optIast=$("optIast");
+const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer"), optWord=$("optWord"), optIast=$("optIast"), optTap=$("optTap");
 function store(k,v){ try{ localStorage.setItem("sr."+k,v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem("sr."+k); }catch(e){ return null; } }
 function applyFont(){ document.documentElement.style.setProperty("--f-read",`${fontSel.value},"Noto Serif Devanagari",serif`); }
@@ -769,6 +791,8 @@ optLong.checked=load("long")==="1";
 optTimer.checked=false; // timer is off by default on every visit
 optWord.checked=load("word")==="1";
 optIast.checked=load("iast")==="1";
+optTap.checked=load("tap")==="1";
+optTap.addEventListener("change",()=>store("tap",optTap.checked?"1":"0"));
 optIast.addEventListener("change",()=>{ store("iast",optIast.checked?"1":"0");
   if(optIast.checked && sState!=="idle" && cur>=0) showPop(cur,false); else if(!optIast.checked && popWord===cur) hidePop(); });
 optWord.addEventListener("change",()=>{ store("word",optWord.checked?"1":"0"); render(); }); // re-split the text; stops any playback
