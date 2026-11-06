@@ -1245,10 +1245,6 @@
   <h3>Fingers</h3>
   <div class="menu">
     <div class="imgsizebox">
-      <span>Double tap with two fingers<span class="sub" id="tap2Sub"></span></span>
-      <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
-        <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
-      </select>
       <span>One finger in stylus mode<span class="sub" id="fingSub"></span></span>
       <select class="dd" id="fingAct" aria-label="One finger in stylus mode">
         <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option>
@@ -1256,6 +1252,10 @@
       <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
       <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
         <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
+      </select>
+      <span>Double tap with two fingers<span class="sub" id="tap2Sub"></span></span>
+      <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
+        <option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="lock">Zoom lock on / off</option><option value="off">Nothing</option>
       </select>
     </div>
   </div>
@@ -1271,6 +1271,7 @@
         <button type="button" data-v="grab">Move &amp; erase</button><button type="button" data-v="erase">Erase only</button>
       </div>
     </div>
+    <label for="scribbleToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l4-6 3 7 3-8 3 8 3-6 2 4"/></svg><span>Scribble to erase<span class="sub">Scribble over ink to delete it</span></span><span class="switch"><input type="checkbox" id="scribbleToggle"><i></i></span></label>
   </div>
 </div>
 <div class="pop" id="advPop" role="dialog" aria-label="Advanced settings" hidden>
@@ -1302,10 +1303,6 @@
       <button type="button" class="open" id="mapOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><rect x="8" y="9" width="8" height="7" rx=".8"/></svg><span>Page map…<span class="sub" id="mapSum"></span></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       <span class="switch"><input type="checkbox" id="mapToggle" aria-label="Show the page map"><i></i></span>
     </div>
-  </div>
-  <h3>Writing</h3>
-  <div class="menu">
-    <label for="scribbleToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l4-6 3 7 3-8 3 8 3-6 2 4"/></svg><span>Scribble to erase<span class="sub">Scribble over ink to delete it</span></span><span class="switch"><input type="checkbox" id="scribbleToggle"><i></i></span></label>
   </div>
   <h3>Handles</h3>
   <div class="menu">
@@ -1679,8 +1676,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_112';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.20';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_113';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.21';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4292,6 +4289,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     toast(`Loaded options from ${file.name}.${calibNote}`);
   });
 
+  // ---- A tap beside an open dialog closes it, as its Cancel / Done / Close would, unless that would lose something ----
+  // (page setup with changes not applied yet, or text typed into a field)
+  document.addEventListener('input', e => { const d = e.target.closest && e.target.closest('dialog.dlg'); if (d && e.target.matches('input[type=text], input:not([type]), textarea')) d.dataset.dirty = '1'; }, true);
+  $('setupDlg').addEventListener('click', e => { if (e.target.closest('[data-v]')) $('setupDlg').dataset.dirty = '1'; });
+  document.addEventListener('close', e => { if (e.target.dataset) delete e.target.dataset.dirty; }, true);
+  document.addEventListener('click', e => {
+    const d = e.target;
+    if (!(d instanceof HTMLDialogElement) || !d.open || !d.classList.contains('dlg')) return;
+    const r = d.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) return;   // inside the dialog's own padding
+    if (d.dataset.dirty === '1') return;
+    const btn = [...d.querySelectorAll('button')].find(b => /^(cancel|no|done|close)$/i.test(b.textContent.trim()) && !b.disabled && b.offsetParent);
+    if (btn) btn.click(); else if (d.oncancel) d.oncancel(); else d.close();
+  });
+
   // ---- Confirm dialog ----
   function ask(title, text, okLabel) {
     const dlg = $('confirmDlg');
@@ -6400,7 +6412,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!side) return null;
     return { side, bottom: false, quick: !(side === 'right' ? flipR : flipL) };   // a switched-off edge only answers a short quick flick
   }
-  const QUICK_MS = 200;                          // a swipe shorter than this turns the page without zooming out
+  const QUICK_MS = 300;                          // a swipe shorter than this turns the page without zooming out
   function startNav(e, info) {
     nav = { mode: 'pending', id: e.pointerId, side: info.side, bottom: info.bottom, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: performance.now(), t0: performance.now(), vx: 0, rdx: 0, moved: 0,
             quick: !!info.quick, wide: Math.max(e.width || 0, e.height || 0) > 30 };
@@ -6446,7 +6458,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nav.moved = Math.max(nav.moved, Math.hypot(dx, dy));
     if (nav.mode === 'dead') return;
     if (nav.mode === 'pending' && nav.quick) {   // a switched-off edge: only a short, quick, sideways flick from a fingertip turns (decided on release)
-      if (nav.wide || (nav.moved >= 10 && t - nav.t0 > 320) || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
+      if (nav.wide || (nav.moved >= 10 && t - nav.t0 > 450) || Math.abs(dy) > 40 || Math.abs(dx) > Math.min(W * S(), vw) * 0.45) nav.mode = 'dead';
       return;
     }
     // flat style: a quick flick turns one page directly; only a longer swipe brings up the row of pages
@@ -6471,7 +6483,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearTimeout(nav.timer);
     if (nav.mode === 'pending' && !nav.held && nav.side) {   // a quick flick (also on a switched-off edge): one page, no zooming
       const dx = nav.lx - nav.x0, dy = (nav.ly != null ? nav.ly : nav.y0) - nav.y0, dir = nav.side === 'right' ? (dx < 0 ? 1 : 0) : (dx > 0 ? -1 : 0);
-      if (dir && Math.abs(dx) >= 30 && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - nav.t0 <= 350) quickTurn(dir);
+      if (dir && Math.abs(dx) >= 30 && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - nav.t0 <= 450) quickTurn(dir);
       else nav = null;
       return;
     }
@@ -6731,7 +6743,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (n0.tgt) n0.tgt.classList.remove('target');
     const fast = n0.dir > 0 ? n0.vx < -0.5 : n0.vx > 0.5;
     let n = n0.forceCancel ? 0 : flipCount(n0.p);
-    const quick = n0.quickTurn || performance.now() - (n0.t0 || 0) < 350;   // a short quick swipe: one page
+    const quick = n0.quickTurn || performance.now() - (n0.t0 || 0) < 450;   // a short quick swipe: one page
     if (!n0.forceCancel && n === 0 && (fast || quick) && n0.p > 0.03) n = Math.min(1, n0.realN);
     $('riffle').hidden = true;
     animating = true;
