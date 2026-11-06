@@ -30,8 +30,7 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
 .wrap{max-width:780px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:20px}
-.wrap{padding-bottom:calc(var(--bar-h,72px) + 28px)}
-body.timing .wrap{padding-bottom:calc(var(--bar-h,130px) + 55vh)}
+.wrap{padding-bottom:calc(var(--bar-h,72px) + 60vh)} /* room below the text so its last lines can be scrolled up high */
 header{display:grid;gap:4px}
 .back{font-size:14px;color:var(--muted);text-decoration:none}
 .back:hover{color:var(--accent)}
@@ -157,6 +156,7 @@ button:disabled{opacity:.45;cursor:default}
       <label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label>
       <button class="info-btn" id="infoBtn" type="button" aria-expanded="false" aria-controls="info" title="How syllable weight works">i</button>
       <label class="check"><input type="checkbox" id="optTimer"> Reading timer</label>
+      <label class="check" title="While reading aloud, the IAST transliteration of each word appears above it as it is spoken"><input type="checkbox" id="optIast"> Show transcription while reading aloud</label>
       <label class="check" title="Splits the text at every space and reads each piece as its own word, highlighting it while it is spoken"><input type="checkbox" id="optWord"> Read aloud word by word</label>
       <div class="info" id="info" hidden>
         <h3>Syllable weight (guru and laghu)</h3>
@@ -219,7 +219,7 @@ button:disabled{opacity:.45;cursor:default}
 </footer>
 
 <script>
-const APP_VERSION = '0.1.20'; // the version people see: x.y.z (z counts up with every release)
+const APP_VERSION = '0.1.21'; // the version people see: x.y.z (z counts up with every release)
 document.getElementById("ver").textContent = `Version ${APP_VERSION}`;
 
 // ---------- Sample texts ----------
@@ -464,10 +464,10 @@ function punct(s){ // keep "॥ २.२० ॥" together; leading space stays br
 
 // ---------- Popup ----------
 let popWord=null;
-function showPop(i){
+function showPop(i,chip=true){
   const w=words[i]; if(!w) return;
   if(popWord!==null && words[popWord]) words[popWord].el.classList.remove("on");
-  popWord=i; w.el.classList.add("on");
+  popWord=i; w.el.classList.toggle("on",chip);
   const box=$("popIast"); box.textContent="";
   for(const p of w.parts){
     const txt=p.t==="-"?"–":p.t;
@@ -505,8 +505,9 @@ reader.addEventListener("click",e=>{
   if(sState!=="idle") jumpTo(i); // while playing or paused, tapping a word continues from there
 });
 document.addEventListener("pointerdown",e=>{ if(!e.target.closest(".w")) hidePop(); });
-addEventListener("scroll",()=>{ if(popWord!==null) showPop(popWord); },{passive:true});
-addEventListener("resize",()=>{ if(popWord!==null) showPop(popWord); });
+const rePop=()=>{ if(popWord!==null) showPop(popWord,popWord!==cur); };
+addEventListener("scroll",rePop,{passive:true});
+addEventListener("resize",rePop);
 
 // ---------- Timer ----------
 let running=false, startAt=0, elapsed=0, tick=null, progress=-1, finished=false;
@@ -677,6 +678,7 @@ function markSpeak(i){
   const r=w.el.getBoundingClientRect(), barTop=bar.getBoundingClientRect().top;
   if(r.bottom>barTop-12) scrollBy({top:r.bottom-barTop+Math.min(160,innerHeight/4),behavior:"smooth"});
   else if(r.top<12) scrollBy({top:r.top-Math.min(160,innerHeight/4),behavior:"smooth"});
+  if(optIast.checked) showPop(i,false); // transcription above the word being spoken
 }
 function chunkEnd(i){ if(optWord.checked) return i; let j=i; while(j<words.length-1 && !words[j].stop && j-i<11) j++; return j; }
 function speakFrom(i,id){
@@ -715,6 +717,7 @@ function pauseSpeech(){ session++; synth.cancel(); setState("paused"); }
 function jumpTo(i){ if(sState==="speaking") play(i); else { markSpeak(i); } }
 function finishSpeech(){
   session++;
+  if(optIast.checked && popWord===cur) hidePop();
   if(cur>=0 && words[cur]) words[cur].el.classList.remove("spk");
   cur=-1; setState("idle"); updateVoiceHint();
 }
@@ -752,7 +755,7 @@ input.addEventListener("input",()=>{
   render();
 });
 // ---------- Options (remembered per browser) ----------
-const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer"), optWord=$("optWord");
+const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer"), optWord=$("optWord"), optIast=$("optIast");
 function store(k,v){ try{ localStorage.setItem("sr."+k,v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem("sr."+k); }catch(e){ return null; } }
 function applyFont(){ document.documentElement.style.setProperty("--f-read",`${fontSel.value},"Noto Serif Devanagari",serif`); }
@@ -765,6 +768,9 @@ const f0=load("font"); if(f0 && [...fontSel.options].some(o=>o.value===f0)) font
 optLong.checked=load("long")==="1";
 optTimer.checked=false; // timer is off by default on every visit
 optWord.checked=load("word")==="1";
+optIast.checked=load("iast")==="1";
+optIast.addEventListener("change",()=>{ store("iast",optIast.checked?"1":"0");
+  if(optIast.checked && sState!=="idle" && cur>=0) showPop(cur,false); else if(!optIast.checked && popWord===cur) hidePop(); });
 optWord.addEventListener("change",()=>{ store("word",optWord.checked?"1":"0"); render(); }); // re-split the text; stops any playback
 fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value); if(popWord!==null) showPop(popWord); });
 optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
