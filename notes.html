@@ -197,7 +197,11 @@
   .parts button { flex: 1 1 auto; padding: 0 10px; }
   .parts button svg { opacity: 0; }
   .parts button[aria-pressed="true"] svg { opacity: 1; }
-  .pop .partoff { opacity: .35; }                 /* a part this preset leaves alone (touch it to switch it on) */
+  /* a preset only shows the parts it sets: the others fold away (and unfold when switched on) */
+  #penPop [data-part] { max-height: 480px; transition: max-height .24s ease, opacity .2s ease, margin .24s ease, padding .24s ease; }
+  #penPop .partgone { display: none !important; }
+  #penPop .partoff { max-height: 0 !important; opacity: 0; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important;
+    border-width: 0 !important; overflow: hidden; pointer-events: none; }
   .locksub { font-size: 11.5px; opacity: .6; margin-top: -4px; }
   /* a pen with locks shows a small lock top left */
   .pen svg.penlock { position: absolute; left: 3px; top: 3px; width: 10px; height: 10px; transform: none; display: none; opacity: .7; }
@@ -660,6 +664,9 @@
   .tbtabs button.off { opacity: .55; }
   .tbtabs .new { border-style: dashed; }
   .tbhead { display: grid; gap: 8px; padding: 0 4px 10px; }
+  .tbsize { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .tbsize input { flex: 1; min-width: 0; accent-color: var(--brand); height: 28px; }
+  .tbsize output { min-width: 46px; text-align: right; font-variant-numeric: tabular-nums; opacity: .75; }
   .tbhead .toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
   .tbhead .toggle .sub { display: block; font-size: 12px; opacity: .6; margin-top: 2px; }
   .tbhead .toggle .switch { margin-left: auto; }
@@ -1686,9 +1693,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <button type="button" data-o="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="2"/></svg>Horizontal</button>
       <button type="button" data-o="v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="18" rx="2"/></svg>Vertical</button>
     </div>
-    <div class="seg three" id="tbSize" aria-label="Toolbar size">
-      <button type="button" data-s="s">Small</button><button type="button" data-s="m">Medium</button><button type="button" data-s="l">Large</button>
-    </div>
+    <label class="tbsize"><span>Size</span><input type="range" id="tbSize" min="80" max="200" step="10" value="100" aria-label="Toolbar size in percent"><output id="tbSizeVal" for="tbSize">100 %</output></label>
     <label class="numfield" id="tbLetterRow">Handle letter<input type="text" id="tbLetter" maxlength="2" autocomplete="off" autocapitalize="characters" aria-label="Letter shown on the toolbar handle" placeholder="≡" style="max-width:60px;text-align:center;margin-left:auto"></label>
     <label class="toggle" id="tbShowRow" for="tbShow"><span>Show this toolbar<span class="sub">When off it is hidden but keeps its buttons</span></span><span class="switch"><input type="checkbox" id="tbShow"><i></i></span></label>
   </div>
@@ -1727,8 +1732,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_121';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.29';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_122';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.2.30';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1996,7 +2001,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       pos: cleanPos(b && b.pos),
       enabled: main ? true : !(b && b.enabled === false),
       min: !!(b && b.min),
-      size: b && (b.size === 'm' || b.size === 'l') ? b.size : 's',
+      scale: b && +b.scale >= 0.8 && +b.scale <= 2 ? Math.round(+b.scale * 10) / 10 : 1,   // toolbar size, 80–200 %
       letter: main ? '' : cleanLetter(b && b.letter)
     };
   }
@@ -2994,7 +2999,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let penEdit = { kind: 'pen' };            // { kind: 'pen' | 'preset', item, linked }
   // what the menu changes: the pen's brush, or the preset's
   const ed = () => penEdit.kind === 'preset' ? penEdit.item.brush : brush();
-  // a preset's parts: switched on and off at the top; touching a part that is off switches it on
+  let lastPartItem = null;
+  // a preset's parts: switched on and off at the top; the parts that are off fold away
   const partsEl = $('parts');
   partsEl.innerHTML = PARTS.map(k => `<button type="button" data-part-sw="${k}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>${PART_NAMES[k]}</button>`).join('');
   partsEl.addEventListener('click', e => {
@@ -3005,11 +3011,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (penEdit.linked && tool === 'pen' && !modKeys(penEdit.item).length) penEdit.linked = false;
     penChanged(false);
   });
-  penPop.addEventListener('pointerdown', e => {
-    if (penEdit.kind !== 'preset') return;
-    const p = e.target.closest('[data-part].partoff');
-    if (p) { penEdit.item.use[p.dataset.part] = true; penChanged(false); }
-  }, true);
   const penChanged = keepInput => {
     if (penEdit.linked && penEdit.item && tool === 'pen') applyMod(penEdit.item);   // the pen keeps matching the button being edited
     saveItems(); updateToolbarState(); renderPenPop(keepInput !== false); };
@@ -3145,7 +3146,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const k = penEdit.kind;
     penPop.querySelectorAll('[data-for]').forEach(x => { x.hidden = !x.dataset.for.split(' ').includes(k); });
     const pu = k === 'preset' ? penEdit.item.use : null;
-    penPop.querySelectorAll('[data-part]').forEach(x => x.classList.toggle('partoff', !!pu && !pu[x.dataset.part]));
+    // parts the preset doesn't set fold away (animated while the menu is open on the same preset), and unfold when switched on
+    const anim = !penPop.hidden && penEdit.item && penEdit.item === lastPartItem;
+    lastPartItem = penEdit.item || null;
+    penPop.querySelectorAll('[data-part]').forEach(x => {
+      const off = !!pu && !pu[x.dataset.part], was = x.classList.contains('partoff');
+      clearTimeout(x._pt);
+      if (off) {
+        x.classList.add('partoff');
+        if (anim && !was) x._pt = setTimeout(() => { if (x.classList.contains('partoff')) x.classList.add('partgone'); }, 250);
+        else x.classList.add('partgone');
+      } else {
+        x.classList.remove('partgone');
+        if (anim && was) void x.offsetHeight;      // start folded, then open up
+        x.classList.remove('partoff');
+      }
+    });
     if (pu) partsEl.querySelectorAll('[data-part-sw]').forEach(b => b.setAttribute('aria-pressed', String(!!pu[b.dataset.partSw])));
     penPop.setAttribute('aria-label', k === 'preset' ? presetName(penEdit.item) : 'Pen settings');
     $('penPopTitle').textContent = k === 'preset' ? presetName(penEdit.item) : '';
@@ -3223,8 +3239,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   // ---- Toolbars: placing and dragging (each one independently) ----
-  const TB_K = { s: 1, m: 1.5, l: 2 };
-  const barK = b => TB_K[b.size] || 1;
+  const barK = b => b.scale || 1;
   function placeToolbar() {
     bars.forEach(b => {
       const el = barEl(b);
@@ -3574,7 +3589,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ).join('') + `<button type="button" class="new" id="tbNew">+ New toolbar</button>`;
     const main = edBar === bars[0];
     $('tbOrient').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.o === edBar.orient)));
-    $('tbSize').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === (edBar.size || 's'))));
+    $('tbSize').value = Math.round(barK(edBar) * 100); $('tbSizeVal').textContent = Math.round(barK(edBar) * 100) + ' %';
     $('tbShowRow').hidden = main;
     $('tbShow').checked = edBar.enabled;
     $('tbLetterRow').hidden = main;
@@ -3602,11 +3617,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     edBar.orient = b.dataset.o; edBar.pos = null;        // a new layout starts at its default spot
     itemsChanged();
   }));
-  $('tbSize').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-    if ((edBar.size || 's') === b.dataset.s) return;
-    edBar.size = b.dataset.s;
-    itemsChanged();
-  }));
+  $('tbSize').addEventListener('input', e => {     // live while sliding; the layout (wrapping) is redone when let go
+    edBar.scale = +e.target.value / 100;
+    $('tbSizeVal').textContent = e.target.value + ' %';
+    const el = barEl(edBar); if (el) el.style.setProperty('--tbk', edBar.scale);
+  });
+  $('tbSize').addEventListener('change', () => { saveItems(); renderToolbar(); });
   $('tbLetter').addEventListener('input', e => {
     edBar.letter = cleanLetter(e.target.value);
     saveItems(); renderToolbar(); renderTbList();
@@ -4339,7 +4355,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         name: i ? `Toolbar ${i + 1}` : 'Main',
         enabled: b.enabled,
         minimized: b.min,
-        size: { s: 'small', m: 'medium', l: 'large' }[b.size || 's'],
+        sizePercent: Math.round(barK(b) * 100),
         letter: b.letter || '',
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
@@ -4383,7 +4399,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
-    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter, size: { small: 's', medium: 'm', large: 'l' }[t.size] }, main);
+    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter, scale: +t.sizePercent / 100 }, main);
     let newBars = null;
     // toolbars from files before v45 are ignored
     if (+o.formatVersion >= 3 && Array.isArray(o.toolbars) && o.toolbars.length) newBars = o.toolbars.map((t, i) => fileBar(t || {}, i === 0));
