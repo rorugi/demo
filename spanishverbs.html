@@ -111,7 +111,13 @@ body.learn .lbtn{background:var(--ink);color:#fff}
 .llist input{width:13px;height:13px;margin:0;accent-color:var(--ink);flex:none}
 .llist .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .llist .lp{margin-left:auto;color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
-.lreset{display:block;margin:12px 0 0;color:var(--muted)}
+.lreset{display:block;margin:8px 0 0;color:var(--muted)}
+.lio{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--soft);padding-top:10px;margin-top:12px;font-size:12px}
+.lio button{font:inherit;font-size:11px;background:none;border:1px solid #ccc;border-radius:999px;padding:2px 9px;cursor:pointer;margin-left:4px;color:var(--ink)}
+.lio button:hover{border-color:var(--ink)}
+.lmsg{margin:6px 0 0;color:var(--muted);min-height:0}
+.lmsg:empty{display:none}
+.lmsg.err{color:var(--cond)}
 .lreset.warn{border-color:var(--cond);color:var(--cond)}
 body.learn .verb.lo,body.learn .chips a.lo,body.learn .chips .sep{display:none}
 body.learn .lc.h{cursor:pointer;background:linear-gradient(#e9e9e9,#e9e9e9) no-repeat 4px 50%/calc(100% - 10px) 66%}
@@ -169,6 +175,9 @@ body.learn main{padding-bottom:110px}
       <p class="lhint">Alle Formen sind verdeckt. Tippe eine Form an, um sie zu sehen, und bewerte sie dann. Ein Spaltentitel (Pres. …) oder Zeilentitel (yo …) zeigt die ganze Spalte oder Zeile.<br>Leicht: 10 Tage sichtbar · Schwer: 1 Tag · Vergessen: 1 Minute. Jede weitere richtige Antwort verdoppelt die Zeit, Vergessen setzt sie auf 1 Minute zurück.</p>
       <div class="lhead"><b>Verben zum Lernen</b><span><button type="button" data-a="all">Alle</button><button type="button" data-a="none">Keine</button></span></div>
       <div class="llist" id="llist"></div>
+      <div class="lio"><b>Fortschritt</b><span><button type="button" id="lsave">Speichern (.json)</button><button type="button" id="lload">Laden</button></span></div>
+      <p class="lmsg" id="lmsg" aria-live="polite"></p>
+      <input type="file" id="lfile" accept=".json,application/json" hidden>
       <button type="button" class="lreset" id="lreset">Fortschritt zurücksetzen</button>
     </div>
   </div>
@@ -404,6 +413,40 @@ lreset.addEventListener('click',()=>{
     rto=setTimeout(()=>{lreset.classList.remove('warn');lreset.textContent='Fortschritt zurücksetzen'},4000);return}
   L.due={};L.n={};saveL();lreset.classList.remove('warn');lreset.textContent='Fortschritt zurückgesetzt';hideRate();
   setTimeout(()=>lreset.textContent='Fortschritt zurücksetzen',2500);
+});
+// ---------- Fortschritt als JSON speichern / laden
+const lmsg=document.getElementById('lmsg'),lfile=document.getElementById('lfile');
+let mto;
+function msg(s,err){lmsg.textContent=s;lmsg.classList.toggle('err',!!err);clearTimeout(mto);mto=setTimeout(()=>lmsg.textContent='',6000)}
+document.getElementById('lsave').addEventListener('click',()=>{
+  const data={app:'spanishverbs',version:1,saved:new Date().toISOString(),on:L.on,off:L.off,due:L.due,n:L.n};
+  const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='verben-fortschritt-'+new Date().toISOString().slice(0,10)+'.json';
+  lmenu.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  msg('Gespeichert: '+Object.keys(L.due).length+' bewertete Formen.');
+});
+document.getElementById('lload').addEventListener('click',()=>{lfile.value='';lfile.click()});
+lfile.addEventListener('change',()=>{
+  const f=lfile.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(!d||d.app!=='spanishverbs'||typeof d.due!=='object')throw 0;
+      const ids=new Set(CELLS.map(c=>c.id)),vids=new Set(SECS.map(s=>s.id));
+      const due={},n={};
+      for(const k in d.due)if(ids.has(k)&&typeof d.due[k]==='number')due[k]=d.due[k];
+      for(const k in (d.n||{}))if(ids.has(k)&&Number.isInteger(d.n[k])&&d.n[k]>0)n[k]=d.n[k];
+      L.due=due;L.n=n;
+      if(Array.isArray(d.off))L.off=d.off.filter(v=>vids.has(v));
+      if(typeof d.on==='boolean')L.on=d.on;
+      saveL();hideRate();applyL();updProgress();
+      msg('Geladen: '+Object.keys(due).length+' bewertete Formen'+(d.saved?' (Stand '+new Date(d.saved).toLocaleDateString('de-AT')+')':'')+'.');
+    }catch(e){msg('Die Datei ist kein gültiger Fortschritt.',true)}
+  };
+  rd.onerror=()=>msg('Die Datei konnte nicht gelesen werden.',true);
+  rd.readAsText(f);
 });
 setInterval(()=>{if(L.on)updCells()},10000);
 applyL();
