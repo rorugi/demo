@@ -14,49 +14,49 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
-html{scroll-padding-top:116px}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans",system-ui,sans-serif;font-size:15px;line-height:1.45}
+html{scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans",system-ui,sans-serif;font-size:11px;line-height:1.45}
 a{color:inherit}
 .bar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--soft)}
-.bar-in{max-width:860px;margin:0 auto;padding:12px 16px 6px;display:flex;gap:12px;align-items:center}
-.filt{max-width:860px;margin:0 auto;padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px}
+.bar-in{max-width:860px;margin:0 auto;padding:8px 16px 4px;display:flex;gap:12px;align-items:center}
+.filt{max-width:860px;margin:0 auto;padding:0 16px 8px;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11px}
 .filt label{display:flex;gap:6px;align-items:center;cursor:pointer;user-select:none}
-.filt input{width:17px;height:17px;margin:0;accent-color:var(--ink)}
+.filt input{width:13px;height:13px;margin:0;accent-color:var(--ink)}
 body.no-ind .b-ind,body.no-imp .b-imp,body.no-sub .b-sub{display:none}
-.home{font-weight:700;text-decoration:none;white-space:nowrap;font-size:15px}
+.home{font-weight:700;text-decoration:none;white-space:nowrap;font-size:13px}
 .home span{color:var(--pres)}
 .sw{position:relative;flex:1}
-#q{width:100%;font:inherit;font-size:16px;padding:10px 14px 10px 38px;border:2px solid var(--ink);border-radius:10px;background:#fff;outline:none}
+#q{width:100%;font:inherit;font-size:14px;padding:6px 12px 6px 32px;border:1.5px solid var(--ink);border-radius:8px;background:#fff;outline:none}
 #q:focus{border-color:var(--pres)}
-.sw svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--muted)}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted)}
 #res{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #ccc;border-radius:10px;
   box-shadow:0 10px 30px rgba(0,0,0,.12);list-style:none;margin:0;padding:4px;max-height:60vh;overflow:auto;display:none}
 #res.open{display:block}
-#res li{padding:8px 10px;border-radius:7px;cursor:pointer;display:flex;gap:10px;align-items:baseline}
+#res li{padding:6px 10px;font-size:13px;border-radius:7px;cursor:pointer;display:flex;gap:10px;align-items:baseline}
 #res li[aria-selected=true]{background:#f2f2f2}
 #res li b{font-weight:700;white-space:nowrap}
-#res li span{color:var(--muted);font-size:13px;line-height:1.35}
+#res li span{color:var(--muted);font-size:11px;line-height:1.35}
 #res li.empty{color:var(--muted);cursor:default}
 main{max-width:860px;margin:0 auto;padding:8px 16px 80px}
 header.intro{padding:28px 0 8px}
-h1{font-size:clamp(26px,5vw,34px);margin:0 0 4px;line-height:1.15}
+h1{font-size:clamp(20px,4vw,24px);margin:0 0 4px;line-height:1.15}
 h1 em{font-style:normal;background:linear-gradient(90deg,var(--pres),var(--imp),var(--ind),var(--fut),var(--cond));-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{margin:0 0 14px;color:var(--muted)}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;margin:0 0 14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11px;margin:0 0 14px}
 .legend b{font-weight:700}
 .legend .k{display:flex;gap:6px;align-items:baseline}
 .legend .u,.legend .ud{font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
-.chips a{text-decoration:none;font-size:13px;padding:3px 9px;border:1px solid #ccc;border-radius:999px}
+.chips a{text-decoration:none;font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:999px}
 .chips a:hover{border-color:var(--pres);color:var(--pres)}
 .verb{padding:28px 0 18px;border-top:2px solid var(--ink);margin-top:28px}
-.verb h2{text-align:center;font-size:24px;margin:0 0 8px;font-weight:400}
+.verb h2{text-align:center;font-size:20px;margin:0 0 8px;font-weight:400}
 .verb h2 .inf{font-weight:700}
-.like{text-align:center;margin:-4px 0 8px;font-size:14px}
+.like{text-align:center;margin:-4px 0 8px}
 .like a{font-weight:700}
-.bes{margin:6px 0 4px;font-size:14px}
-h3{font-size:16px;margin:20px 0 6px;font-weight:700}
-h3 small{font-size:12px;font-weight:400;color:#333;margin-left:8px}
+.bes{margin:6px 0 4px}
+h3{font-size:14px;margin:18px 0 5px;font-weight:700}
+h3 small{font-size:11px;font-weight:400;color:#333;margin-left:8px}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:3px 6px;white-space:nowrap;font-size:12px}
@@ -77,23 +77,24 @@ tbody tr:last-child td.pr{border-bottom:2.5px solid var(--line)}
 .ud{text-decoration:underline dotted;text-decoration-thickness:2px;text-underline-offset:3px}
 .more{display:grid;grid-template-columns:repeat(4,1fr);gap:0 18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .more div{padding:5px 0;display:flex;flex-direction:column;gap:2px}
-.more span{font-weight:700;font-size:13px}
+.more span{font-weight:700}
+.more b{font-size:12px}
 .more em{font-style:normal}
-.alo{margin:12px 0 0;font-size:14px}
-.sim{margin:0;font-size:14px;line-height:1.7}
+.alo{margin:12px 0 0}
+.sim{margin:0;line-height:1.7}
 .sim .dot{color:#999;padding:0 2px}
-.top{display:inline-block;margin-top:14px;font-size:13px;color:var(--muted);text-decoration:none}
+.top{display:inline-block;margin-top:14px;color:var(--muted);text-decoration:none}
 .top:hover{color:var(--pres)}
 .flash{animation:fl 1.8s ease-out}
 td.flash,span.flash{outline:2px solid var(--pres);outline-offset:-1px;border-radius:3px}
 @keyframes fl{0%,40%{background:var(--hl)}100%{background:transparent}}
-footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:13px}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--muted)}
 @media (max-width:600px){
-  .bar-in{padding:10px 12px 6px}
-  .filt{padding:0 12px 8px;font-size:13px;gap:4px 14px}
+  .bar-in{padding:8px 8px 4px}
+  .filt{padding:0 8px 6px;gap:4px 14px}
   .home{display:none}
   main{padding:4px 8px 60px}
-  .verb h2{font-size:21px}
+  .verb h2{font-size:18px}
   th,td{padding:3px 2px}
   th:not(.p),td:not(.p){padding-left:3px}
   td b{font-weight:600}
@@ -118,7 +119,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font
   </div>
   <div class="filt" role="group" aria-label="Tabellen anzeigen">
     <label><input type="checkbox" data-b="ind" checked> Indikativ</label>
-    <label><input type="checkbox" data-b="imp" checked> Imperativ<span class="lg">&nbsp;&amp; zusammengesetzte Zeiten</span></label>
+    <label><input type="checkbox" data-b="imp" checked> <span>Imperativ<span class="lg"> &amp; zusammengesetzte Zeiten</span></span></label>
     <label><input type="checkbox" data-b="sub" checked> Subjuntivo</label>
   </div>
 </div>
