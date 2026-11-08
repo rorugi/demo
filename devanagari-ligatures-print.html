@@ -8,9 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
 <style>
+/* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
+@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
 /* Printable chart: A4 portrait, 6 cards per row, ordered by importance in four tiers */
 :root{
   --fg:#1c2321; --muted:#5d6762; --line:#cfd4cd; --card:#fff;
+  --no:#2c5a8c; /* northern (Calcutta) forms */
   --sa:#b8670c; /* darker than the main page's #e9a23b so it reads well on paper */
   --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
   --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
@@ -48,6 +51,15 @@ h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
 .duo{display:flex;gap:2.5mm;align-items:center;justify-content:center}
 .duo span{font-size:29px;line-height:1.38;white-space:nowrap}
 .duo .sa{color:var(--sa)}
+.duo .no{font-family:"Uttara",serif;color:var(--no)}
+.nw .duo{gap:2mm}
+.nw .duo span{font-size:25px}
+.tier .k{display:inline-flex;gap:10px;font-size:12px;color:var(--muted);letter-spacing:0;text-transform:none;font-weight:400}
+.tier .k b{font-weight:400;font-size:15px;margin-right:3px}
+.tier .k .no{font-family:"Uttara",serif;color:var(--no)}
+.tier .k .sa{color:var(--sa)}
+.tier .k .hi{color:var(--fg)}
+.intro{margin:-1mm 0 2mm;font-size:11.5px;color:var(--muted)}
 .cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3}
 .cap .dv{font-family:var(--f-hi);font-size:13.5px;color:var(--fg)}
 footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
@@ -91,7 +103,7 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
 
 <main class="sheet">
   <header>
-    <h1>Devanagari ligatures <small>Continued: र forms, vowel signs and further clusters</small></h1>
+    <h1>Devanagari ligatures <small>Continued: further forms, and northern letter shapes</small></h1>
     <div class="key">
       <span><b class="hi">क</b>Hindi · Tiro Devanagari Hindi</span>
       <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro Devanagari Sanskrit</span>
@@ -123,21 +135,18 @@ const TIERS = [
     ["ट्ट","ṭṭa"],["ड्ड","ḍḍa"],["ट्र","ṭra"],["प्त","pta"],["ह्र","hra"],["ह्व","hva"],
     ["ह्न","hna"],["द्म","dma"],["द्भ","dbha"],["द्ग","dga"],["द्द","dda"],["त्स","tsa"],
     ["क्ल","kla"],["क्व","kva"],["श्ल","śla"],["श्न","śna"],["क्ष्म","kṣma"],["त्त्व","ttva"]]},
-  {p:2, t:"Forms of र", n:"reph above, stroke or caret below", items:[
-    ["र्थ","rtha"],["र्त","rta"],["र्ष","rṣa"],["र्ण","rṇa"],["र्क","rka"],["र्ग","rga"],
-    ["र्श","rśa"],["र्द","rda"],["र्च","rca"],["र्ज","rja"],["र्ध","rdha"],["र्ह","rha"],
-    ["ब्र","bra"],["भ्र","bhra"],["म्र","mra"],["व्र","vra"],["ध्र","dhra"],["ड्र","ḍra"]]},
+  {p:2, t:"Forms of र", n:"regular and the same in both fonts; a few examples", items:[
+    ["र्थ","rtha"],["र्ष","rṣa"],["र्श","rśa"],["ब्र","bra"],["भ्र","bhra"],["ड्र","ḍra"]]},
   {p:2, t:"Vowel signs that change shape", n:"ु ू ृ joined to the letter", items:[
-    ["रु","ru"],["रू","rū"],["कृ","kṛ"],["हृ","hṛ"],["दृ","dṛ"],["गृ","gṛ"],
-    ["शृ","śṛ"],["हु","hu"],["हू","hū"],["दु","du"],["दू","dū"],["श्रु","śru"]]},
-  {p:2, t:"Further common clusters", n:"mostly half forms", items:[
-    ["क्य","kya"],["ग्य","gya"],["न्म","nma"],["ज्य","jya"],["ल्य","lya"],["प्य","pya"],
-    ["ख्य","khya"],["स्क","ska"],["स्प","spa"],["स्न","sna"],["त्म","tma"],["त्न","tna"],
-    ["न्ध","ndha"],["म्प","mpa"],["म्म","mma"],["ब्द","bda"],["ग्न","gna"],["च्च","cca"],
-    ["क्क","kka"],["ज्ज","jja"],["प्प","ppa"],["ष्क","ṣka"],["ष्प","ṣpa"],["ल्प","lpa"]]},
-  {p:2, t:"Nasals, retroflex and stacks", n:"rarer, mostly Sanskrit", items:[
-    ["म्भ","mbha"],["ण्य","ṇya"],["श्य","śya"],["त्थ","ttha"],["ब्ध","bdha"],["ग्ध","gdha"],
-    ["ध्व","dhva"],["ण्ट","ṇṭa"],["ण्ठ","ṇṭha"],["म्न","mna"],["ह्ल","hla"],["ड्ढ","ḍḍha"]]},
+    ["रु","ru"],["रू","rū"],["कृ","kṛ"],["हृ","hṛ"],["शृ","śṛ"],["दू","dū"]]},
+  {p:2, t:"Further clusters", n:"where the fonts differ, plus frequent examples", items:[
+    ["क्य","kya"],["ग्य","gya"],["न्म","nma"],["ल्य","lya"],["स्न","sna"],["च्च","cca"],
+    ["क्क","kka"],["ल्प","lpa"],["श्य","śya"],["ह्ल","hla"],["ज्य","jya"],["त्म","tma"],
+    ["स्क","ska"],["म्भ","mbha"],["ण्य","ṇya"],["त्थ","ttha"],["ब्ध","bdha"],["ण्ठ","ṇṭha"]]},
+  {p:2, nw:1, t:"North and south", n:"", items:[
+    ["अ","a"],["आ","ā"],["ओ","o"],["औ","au"],["ऋ","ṛ"],["झ","jha"],
+    ["ण","ṇa"],["ल","la"],["श","śa"],["क्ष","kṣa"],["श्र","śra"],["ल्ल","lla"],
+    ["श्ल","śla"],["ञ्च","ñca"],["१","1"],["५","5"],["८","8"],["९","9"]]},
 ];
 const H = "्";
 // "क्ष" -> "क् + ष": dead consonants keep their virama
@@ -149,16 +158,26 @@ TIERS.forEach(tier => {
   const h = document.createElement("h2"); h.textContent = tier.t;
   const sm = document.createElement("small"); sm.textContent = tier.n; h.append(sm);
   const g = document.createElement("div"); g.className = "grid";
+  const extra = [];
+  if (tier.nw){
+    sec.classList.add("nw");
+    h.insertAdjacentHTML("beforeend", '<span class="k"><span><b class="hi">क</b>Hindi</span><span><b class="sa">क</b>Sanskrit</span><span><b class="no">क</b>North · Uttara</span></span>');
+    const p = document.createElement("p"); p.className = "intro";
+    p.textContent = "Both Tiro fonts follow the southern (Bombay) style of Devanagari printing. The northern (Calcutta) style, shown here in Uttara, draws these letters differently; ligatures with them change along.";
+    extra.push(p);
+  }
   tier.items.forEach(([t, tr]) => {
     const c = document.createElement("div"); c.className = "cell";
-    c.innerHTML = `<span class="n">${++n}</span><span class="duo"><span class="hi" lang="hi"></span><span class="sa" lang="sa"></span></span><span class="cap"><span class="dv"></span> · <span class="tr"></span></span>`;
+    c.innerHTML = `${tier.nw ? "" : `<span class="n">${++n}</span>`}<span class="duo"><span class="hi" lang="hi"></span><span class="sa" lang="sa"></span>${tier.nw ? '<span class="no" lang="sa"></span>' : ""}</span><span class="cap"><span class="dv"></span> · <span class="tr"></span></span>`;
     c.querySelector(".hi").textContent = t;
     c.querySelector(".sa").textContent = t;
-    c.querySelector(".dv").textContent = parts(t);
-    c.querySelector(".tr").textContent = tr;
+    if (tier.nw) c.querySelector(".no").textContent = t;
+    const f = parts(t);
+    if (f === t) c.querySelector(".cap").textContent = tr; else c.querySelector(".dv").textContent = f;
+    c.querySelector(".tr")?.replaceChildren(tr);
     g.append(c);
   });
-  sec.append(h, g); document.getElementById("tiers" + tier.p).append(sec);
+  sec.append(h, ...extra, g); document.getElementById("tiers" + tier.p).append(sec);
 });
 
 // Wait for the web fonts so the printout never falls back to a system font
