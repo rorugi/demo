@@ -133,6 +133,7 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
   body{background:#fff}
   .bar{display:none}
   .sheet,.pt .sheet{width:auto;margin:0;padding:0;box-shadow:none}
+  .pt .sheet{padding-left:10mm} /* with the 1 cm page margin: 2 cm on the left, even when a browser replaces the page margins */
 }
 </style>
 </head>
@@ -372,7 +373,7 @@ function save(){
 }
 function render(){
   document.body.classList.toggle("pt", portrait);
-  $("page").textContent = portrait ? "@page{size:A4 portrait;margin:7mm 9mm 7mm 20mm}" : "@page{size:A4 landscape;margin:7mm 9mm}";
+  $("page").textContent = portrait ? "@page{size:A4 portrait;margin:7mm 9mm 7mm 10mm}" : "@page{size:A4 landscape;margin:7mm 9mm}";
   $("oLand").setAttribute("aria-pressed", !portrait); $("oPort").setAttribute("aria-pressed", portrait);
   document.querySelectorAll(".trad input").forEach(i => i.checked = on.has(i.value));
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();

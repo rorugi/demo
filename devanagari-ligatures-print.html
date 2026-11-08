@@ -70,11 +70,12 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
   .grid{grid-template-columns:repeat(3,1fr)}
   header{flex-direction:column;align-items:flex-start}
 }
-@page{size:A4 portrait;margin:9mm 10mm 9mm 20mm}
+/* 2 cm on the left: 1 cm page margin plus 1 cm inside the sheet, so it stays even when a browser replaces the page margins */
+@page{size:A4 portrait;margin:9mm 10mm}
 @media print{
   body{background:#fff}
   .bar{display:none}
-  .sheet{max-width:none;margin:0;padding:0;box-shadow:none}
+  .sheet{max-width:none;margin:0;padding:0 0 0 10mm;box-shadow:none}
   .sheet + .sheet{break-before:page}
   .grid{grid-template-columns:repeat(6,1fr)}
   header{flex-direction:row;align-items:flex-end}
