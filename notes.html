@@ -339,6 +339,10 @@
   .bmbar.tl .bmtag.here { padding-left: calc(env(safe-area-inset-left, 0px) + 18px); }
   .bmbar.tr .bmtag.here { padding-right: calc(env(safe-area-inset-right, 0px) + 18px); }
   .bmtag:active { transform: scaleX(1.06); }
+  .bmtag.bmfold { --c: var(--panel); --fg: var(--bar-fg); min-width: 0; height: 30px; gap: 4px; opacity: .8; outline: 1px solid var(--bar-line); outline-offset: -1px; }
+  .bmtag.bmfold svg { width: 17px; height: 17px; flex: none; }
+  .bmtag.bmfold small { font: 600 12px var(--ui); opacity: .8; }
+  .bmtag.bmfold[aria-expanded="true"] svg path { fill: currentColor; fill-opacity: .25; }
   .bmthumb { position: absolute; display: flex; gap: 1px; pointer-events: none; z-index: 2; }
   .bmthumb svg.ribbon, .thumb .paper .bmthumb svg.ribbon, .stile > .bmthumb svg.ribbon { position: static; inset: auto; width: 21px; height: 28px; display: block; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.3)); }
   .bmthumb.tl { left: 6%; top: -4px; }
@@ -1935,8 +1939,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_140';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.17';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_141';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.18';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6557,6 +6561,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const BM_COLORS = ['#d92b1e', '#1f6fd1', '#2f9e41', '#f08a10', '#a92fb4', '#0e9bb8', '#d6336c', '#4b5059'];
   let bmShow = (v => ['off', 'tl', 'tr'].includes(v) ? v : 'off')(store.get('bmShow', 'off'));
   let bmThumb = (v => ['off', 'tl', 'tr', 'b'].includes(v) ? v : 'tl')(store.get('bmThumb', 'tl'));
+  let bmFolded = store.get('bmFolded', false) === true;   // the box on the screen: only its bookmark tab
   const bmPop = $('bmPop'), bmList = $('bmList'), bmBox = $('bmBox'), pickerEl = $('picker');
   let bmColOpen = null, bmEditing = null;          // the bookmark whose colours are open / whose label is being typed
   const shownMarks = () => marks.filter(m => pages.includes(m.page));
@@ -6630,8 +6635,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     // the box on the screen
     bmBox.hidden = bmShow === 'off' || !list.length;
     bmBox.className = 'bmbar ' + bmShow;
-    if (!bmBox.hidden) bmBox.innerHTML = list.map(m => `<button type="button" class="bmtag${m.page === pages[cur] ? ' here' : ''}" data-bm="${m.id}" style="--c:${m.color};--fg:${inkOn(m.color)}" title="${esc(m.label || 'Page ' + pnum(m))}">` +
-      `<span>${esc(m.label || String(pnum(m)))}</span></button>`).join('');
+    if (!bmBox.hidden) bmBox.innerHTML =
+      `<button type="button" class="bmtag bmfold" data-bmfold="1" aria-expanded="${!bmFolded}" aria-label="${bmFolded ? 'Show' : 'Hide'} the bookmarks" title="${bmFolded ? 'Show' : 'Hide'} the bookmarks">` +
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.5-6 4.5z"/></svg>${bmFolded ? `<small>${list.length}</small>` : ''}</button>` +
+      (bmFolded ? '' : list.map(m => `<button type="button" class="bmtag${m.page === pages[cur] ? ' here' : ''}" data-bm="${m.id}" style="--c:${m.color};--fg:${inkOn(m.color)}" title="${esc(m.label || 'Page ' + pnum(m))}">` +
+      `<span>${esc(m.label || String(pnum(m)))}</span></button>`).join(''));
     updateToolbarState();
   }
   // reordering: hold a bookmark's box a moment, then drag it up or down
@@ -6735,7 +6743,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('bmAdd').addEventListener('click', addMark);
   $('bmShowSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; bmShow = b.dataset.v; store.set('bmShow', bmShow); renderMarks(); });
   $('bmThumbSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; bmThumb = b.dataset.v; store.set('bmThumb', bmThumb); renderMarks(); if (!$('overview').hidden) buildOverview(); });
-  bmBox.addEventListener('click', e => { const b = e.target.closest('[data-bm]'), m = b && marks.find(x => x.id === b.dataset.bm); if (m) goMark(m); });
+  bmBox.addEventListener('click', e => {
+    if (e.target.closest('[data-bmfold]')) { bmFolded = !bmFolded; store.set('bmFolded', bmFolded); renderMarks(); return; }
+    const b = e.target.closest('[data-bm]'), m = b && marks.find(x => x.id === b.dataset.bm);
+    if (m) goMark(m);
+  });
   function openMarks(anchor) {
     if (openPop === bmPop) { closePops(); return; }
     bmColOpen = bmEditing = null;
