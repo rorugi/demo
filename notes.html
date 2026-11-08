@@ -1939,8 +1939,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_144';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.21';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_145';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.22';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8926,18 +8926,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const FING = { off: 'Fingers tap, hold, zoom and turn pages, but leave the page alone', pan: 'Drag to move the page; taps and double taps work as before',
     erase: 'The finger erases (eraser settings); the stylus keeps writing', lasso: 'The finger draws a lasso to select and move ink',
     hl: 'The finger highlights with your highlighter preset; the stylus keeps its pen',
-    swipe: 'Swipe left or right to turn the page; zoomed in, the finger moves the page first' };
+    swipe: 'Swipe left or right to turn the page (zoom and place stay); a longer swipe runs through the pages' };
   let fingAct = (v => FING[v] ? v : 'off')(store.get('fingAct', 'off'));
   let fpan = null;
   $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct];
   $('fingAct').addEventListener('change', e => { fingAct = e.target.value; store.set('fingAct', fingAct); $('fingSub').textContent = FING[fingAct]; });
   // "Swipe between pages": a quick sideways swipe turns one page (left: next, right: back), like the quick flick at the edges.
-  // Zoomed in, the page moves with the finger; only when it can't move further that way does the swipe turn the page.
+  // The finger never moves the page: zoomed in, the next page comes at the same zoom and in the same place.
   function fingSwipe(f, e) {
     const dx = e.clientX - f.x0, dy = e.clientY - f.y0, dt = performance.now() - f.t0;
     if (Math.abs(dx) < 50 || Math.abs(dx) < 1.5 * Math.abs(dy) || dt > 700 || nav || animating || pinch) return false;
-    if (Math.abs(view.tx - f.tx0) > Math.abs(dx) * 0.3) return false;   // the page moved: that was moving it, not turning
-    view.tx = f.tx0; view.ty = f.ty0; applyView();
     const dir = dx < 0 ? 1 : -1;
     nav = { mode: 'pending', id: e.pointerId, side: dir > 0 ? 'right' : 'left', bottom: false, x0: f.x0, y0: f.y0, lx: e.clientX, ly: e.clientY,
             lt: performance.now(), t0: f.t0, vx: 0, rdx: 0, moved: Math.abs(dx), quick: true, wide: false };
@@ -8949,9 +8947,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const dx = e.clientX - f.x0, dy = e.clientY - f.y0, dt = performance.now() - f.t0;
     if (nav || animating) return false;
     if (Math.abs(dx) < 1.5 * Math.abs(dy) || dt < 350 || Math.abs(dx) < 60) return false;   // a quick swipe is over before this
-    if (Math.abs(view.tx - f.tx0) > Math.abs(dx) * 0.3) return false;   // zoomed in and the page still moves: keep moving it
     fpan = null;
-    view.tx = f.tx0; view.ty = f.ty0; applyView();
     startSlide(e);                                 // from here on the finger moves through the pages
     nav.slide.src = 'h'; nav.slide.style = flipStyle === 'flat' ? 'flat' : 'book';   // sideways: the pages follow the finger (left: on)
     nav.held = true; vibrate(6);
@@ -9268,8 +9264,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (fpan && e.pointerId === fpan.id && !pinch) {   // stylus mode, one finger moves the page
       if (touches.size > 1) { fpan = null; return; }
+      if (fpan.swipe) { swipeToSlide(fpan, e); return; }   // swiping never moves the page itself
       view.tx = fpan.tx0 + e.clientX - fpan.x0; view.ty = fpan.ty0 + e.clientY - fpan.y0; clampView(); applyView();
-      if (fpan.swipe && swipeToSlide(fpan, e)) return;
       return;
     }
     if (nav && nav.z2 && (e.pointerId === nav.id || e.pointerId === nav.z2.id)) { navZoomMove(); return; }   // while zooming, the pages hold still
