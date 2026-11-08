@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devanagari Ligatures – Print Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Printable chart: A4 portrait, 6 cards per row, ordered by importance in four tiers */
+:root{
+  --fg:#1c2321; --muted:#5d6762; --line:#d6dad3; --card:#f1f2ee;
+  --sa:#b8670c; /* darker than the main page's #e9a23b so it reads well on paper */
+  --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
+  --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+.hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa)}
+
+.bar{max-width:210mm;margin:0 auto;padding:14px 4px 10px;display:flex;gap:12px;align-items:center}
+.bar a{color:var(--muted);text-decoration:none;font-size:14px}
+.bar a:hover{color:var(--sa)}
+.bar button{margin-left:auto;appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:8px 16px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--fg);display:inline-flex;gap:8px;align-items:center}
+.bar button svg{width:18px;height:18px}
+.bar button:hover{border-color:var(--sa)}
+.bar button:focus-visible,.bar a:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
+
+.sheet{max-width:210mm;margin:0 auto 32px;background:#fff;padding:12mm 12mm 10mm;box-shadow:0 2px 14px rgba(0,0,0,.12)}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1.5px solid var(--fg);padding-bottom:6px;margin-bottom:2mm}
+h1{margin:0;font-size:22px;line-height:1.2;font-weight:600}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+.key{display:flex;gap:14px;font-size:13px;white-space:nowrap}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key b{font-size:22px;font-weight:400;line-height:1}
+
+.tier{margin-top:3mm}
+.tier h2{margin:0 0 2mm;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:baseline;break-after:avoid}
+.tier h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:1.6mm}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1mm 1mm 1.4mm;display:grid;justify-items:center;position:relative;break-inside:avoid}
+.cell .n{position:absolute;left:4px;top:2px;font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
+.duo{display:flex;gap:2.5mm;align-items:center;justify-content:center}
+.duo span{font-size:29px;line-height:1.38;white-space:nowrap}
+.duo .sa{color:var(--sa)}
+.cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3}
+.cap .dv{font-family:var(--f-hi);font-size:13.5px;color:var(--fg)}
+footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+
+@media (max-width:640px){
+  .sheet{padding:16px 10px}
+  .grid{grid-template-columns:repeat(3,1fr)}
+  header{flex-direction:column;align-items:flex-start}
+}
+@page{size:A4 portrait;margin:9mm 10mm}
+@media print{
+  body{background:#fff}
+  .bar{display:none}
+  .sheet{max-width:none;margin:0;padding:0;box-shadow:none}
+  .grid{grid-template-columns:repeat(6,1fr)}
+  header{flex-direction:row;align-items:flex-end}
+}
+</style>
+</head>
+<body>
+<nav class="bar">
+  <a href="devanagari-ligatures.html">← Devanagari ligatures</a>
+  <button type="button" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Print</button>
+</nav>
+
+<main class="sheet">
+  <header>
+    <h1>Devanagari ligatures <small>The most important conjuncts, in order of importance</small></h1>
+    <div class="key">
+      <span><b class="hi">क</b>Hindi · Tiro Devanagari Hindi</span>
+      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro Devanagari Sanskrit</span>
+    </div>
+  </header>
+  <div id="tiers"></div>
+  <footer>
+    <span>Order is approximate: by frequency in text and how hard a form is to recognise.</span>
+    <span>rorugi.github.io/demo</span>
+  </footer>
+</main>
+
+<script>
+// [cluster, transliteration]. Tiers run from must-know to classical; order inside a tier is by frequency.
+const TIERS = [
+  {t:"Essential", n:"learn these as units", items:[
+    ["क्ष","kṣa"],["ज्ञ","jña"],["त्र","tra"],["श्र","śra"],["प्र","pra"],["क्र","kra"],
+    ["द्य","dya"],["त्त","tta"],["द्ध","ddha"],["द्व","dva"],["द्र","dra"],["ह्म","hma"]]},
+  {t:"Very common", n:"in almost every text", items:[
+    ["स्त","sta"],["न्त","nta"],["स्थ","stha"],["न्द","nda"],["त्य","tya"],["त्व","tva"],
+    ["स्व","sva"],["स्य","sya"],["न्य","nya"],["र्म","rma"],["र्य","rya"],["र्व","rva"],
+    ["श्च","śca"],["ष्ट","ṣṭa"],["ष्ठ","ṣṭha"],["क्त","kta"],["ग्र","gra"],["ह्य","hya"]]},
+  {t:"Common", n:"frequent in reading", items:[
+    ["न्द्र","ndra"],["ष्ट्र","ṣṭra"],["स्त्र","stra"],["ङ्ग","ṅga"],["ङ्क","ṅka"],["ञ्च","ñca"],
+    ["ञ्ज","ñja"],["ण्ड","ṇḍa"],["न्न","nna"],["म्ब","mba"],["च्छ","ccha"],["ल्ल","lla"],
+    ["स्म","sma"],["श्व","śva"],["ध्य","dhya"],["व्य","vya"],["प्त","pta"],["ष्ण","ṣṇa"]]},
+  {t:"Classical", n:"stacks and rarer forms, mostly Sanskrit", items:[
+    ["ट्ट","ṭṭa"],["ड्ड","ḍḍa"],["ट्र","ṭra"],["ड्र","ḍra"],["ह्र","hra"],["ह्व","hva"],
+    ["ह्न","hna"],["द्म","dma"],["द्भ","dbha"],["द्ग","dga"],["द्द","dda"],["त्स","tsa"],
+    ["क्ल","kla"],["क्व","kva"],["श्ल","śla"],["श्न","śna"],["क्ष्म","kṣma"],["त्त्व","ttva"]]},
+];
+const H = "्";
+// "क्ष" -> "क् + ष": dead consonants keep their virama
+const parts = t => { const o = []; for (const c of t){ if (c === H && o.length) o[o.length-1] += c; else o.push(c); } return o.join(" + "); };
+
+const root = document.getElementById("tiers");
+let n = 0;
+TIERS.forEach(tier => {
+  const sec = document.createElement("section"); sec.className = "tier";
+  const h = document.createElement("h2"); h.textContent = tier.t;
+  const sm = document.createElement("small"); sm.textContent = tier.n; h.append(sm);
+  const g = document.createElement("div"); g.className = "grid";
+  tier.items.forEach(([t, tr]) => {
+    const c = document.createElement("div"); c.className = "cell";
+    c.innerHTML = `<span class="n">${++n}</span><span class="duo"><span class="hi" lang="hi"></span><span class="sa" lang="sa"></span></span><span class="cap"><span class="dv"></span> · <span class="tr"></span></span>`;
+    c.querySelector(".hi").textContent = t;
+    c.querySelector(".sa").textContent = t;
+    c.querySelector(".dv").textContent = parts(t);
+    c.querySelector(".tr").textContent = tr;
+    g.append(c);
+  });
+  sec.append(h, g); root.append(sec);
+});
+
+// Wait for the web fonts so the printout never falls back to a system font
+document.getElementById("print").onclick = () => document.fonts.ready.then(() => window.print());
+</script>
+</body>
+</html>

@@ -30,6 +30,11 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-
 header{display:grid;gap:4px}
 .back{font-size:14px;color:var(--muted);text-decoration:none;width:max-content}
 .back:hover{color:var(--accent)}
+.top{display:flex;justify-content:space-between;align-items:center}
+.print{color:var(--muted);display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel)}
+.print svg{width:20px;height:20px}
+.print:hover{color:var(--accent);border-color:var(--accent)}
+.print:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
 h1 .deva{font-family:var(--f-sa);font-weight:400;color:var(--accent)}
@@ -148,7 +153,10 @@ textarea{font-family:var(--f-hi);font-size:20px;line-height:1.6;color:var(--fg);
 <body>
 <main class="wrap">
   <header>
-    <a class="back" href="index.html">← Demos</a>
+    <div class="top">
+      <a class="back" href="index.html">← Demos</a>
+      <a class="print" href="devanagari-ligatures-print.html" aria-label="Printable ligature chart" title="Printable ligature chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></a>
+    </div>
     <div class="eyebrow">Font comparison · Conjuncts</div>
     <h1>Devanagari ligatures in Hindi and Sanskrit <span class="deva">ङ्क्ष</span></h1>
     <p class="lede">Same text, two fonts from one family. Tiro Devanagari Hindi follows modern Hindi practice with half forms and a visible virama; Tiro Devanagari Sanskrit sets the stacked ligatures of classical Sanskrit printing.</p>
