@@ -1616,6 +1616,7 @@
   <h2 id="liveTitle">Share live</h2>
   <div id="liveOff">
     <p>Others follow this notebook live in their browser: every stroke as you write it, page turns, notes and pictures. They only watch. Everything is encrypted; the key is part of the link.</p>
+    <div id="livePassRow" hidden><p id="livePassMsg" class="sub"></p><input type="password" id="livePass" class="livelink" autocomplete="current-password" aria-label="Password for live sharing"></div>
     <div class="row"><button type="button" id="liveClose2" onclick="this.closest('dialog').close()">Cancel</button><button type="button" id="liveStart" class="primary">Start sharing</button></div>
   </div>
   <div id="liveOn" hidden>
@@ -1763,8 +1764,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_123';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.0';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_124';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.1';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8088,10 +8089,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sub.parentNode.insertBefore(line, sub);
   });
   // ==== Live sharing: the notebook on this device, followed live in other browsers ====
-  // A small relay (live.php next to notes.html) passes encrypted changes on; the key stays after the # of the
-  // viewer link and never reaches the server. Viewers get the whole notebook first, then every change:
+  // A small relay (rrlive.php next to notes.html) passes encrypted changes on; the key stays after the # of the
+  // viewer link and never reaches the server. Only this device can change the session (it keeps a write token). Viewers get the whole notebook first, then every change:
   // finished strokes, the stroke being written (point by point), erasing, moving, notes, pictures, the page.
-  const LIVE_URL = 'live.php';
+  const LIVE_URL = 'rrlive.php';
   const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
   const unb64 = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
   const b64u = u8 => b64(u8).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -8111,46 +8112,63 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (u[0] === 1) bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     return JSON.parse(new TextDecoder().decode(bytes));
   }
-  const liveReq = async (sid, q, body) => {
-    const r = await fetch(`${LIVE_URL}?s=${sid}&${q}`, body === undefined ? { cache: 'no-store' } : { method: 'POST', body, cache: 'no-store' });
-    if (!r.ok) throw new Error('live ' + r.status);
+  const liveReq = async (sid, q, body, tok, pass) => {   // body: undefined = GET; tok: the write token of the sharing device
+    const headers = {};
+    if (tok) headers['X-RR-Token'] = tok;
+    if (pass) headers['X-RR-Pass'] = pass;
+    const r = await fetch(`${LIVE_URL}?s=${sid}&${q}`, { method: body === undefined ? 'GET' : 'POST', body, headers, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' });
+    if (!r.ok) { const e = new Error('live ' + r.status); e.status = r.status; throw e; }
     return q.startsWith('a=img') && body === undefined ? r.text() : r.json();
   };
+  const liveId = n => b64u(crypto.getRandomValues(new Uint8Array(n * 2))).replace(/[^A-Za-z0-9]/g, '').slice(0, n).padEnd(n, '0');
   const liveChip = $('liveChip');
   const pageImgIds = list => { const s = new Set(); list.forEach(pg => (pg.images || []).forEach(m => s.add(m.src))); return s; };
 
   // ---- sharing (this device writes) ----
   var lv = null;                                   // { sid, raw, key, link, seq, sent: WeakMap, order, setupSig, imgs:Set, dirty, nav, busy, viewers: Map }
   async function liveStart() {
-    const sid = b64u(crypto.getRandomValues(new Uint8Array(12))).replace(/[^A-Za-z0-9]/g, '').slice(0, 16).padEnd(16, 'x');
+    if (!window.crypto || !crypto.subtle) { toast('Live sharing needs a secure (https) page.', 4000); return; }
     const raw = crypto.getRandomValues(new Uint8Array(16));
-    const s = { sid, raw, key: await liveKey(raw), seq: 0, sent: new WeakMap(), order: [], setupSig: '', imgs: new Set(), dirty: false, nav: false, busy: false,
-      viewers: new Map(), lastSnap: 0, changedSinceSnap: false, stroke: null, err: 0 };
-    s.link = location.origin + location.pathname + '#live=' + sid + '.' + b64u(raw);
+    const s = { sid: liveId(22), raw, key: await liveKey(raw), tok: b64u(crypto.getRandomValues(new Uint8Array(24))), seq: 0, sent: new WeakMap(), order: [],
+      setupSig: '', imgs: new Set(), dirty: false, nav: false, busy: false, watch: 0, lastSnap: 0, changedSinceSnap: false, stroke: null, err: 0, force: false };
+    s.link = location.origin + location.pathname + '#live=' + s.sid + '.' + b64u(raw);
     lv = s;
-    try { await liveSnap(); }
-    catch (_) { lv = null; liveUi(); toast('Live sharing needs live.php on the web server, next to notes.html.', 5000); return; }
+    $('liveStart').disabled = true;
+    try { await liveSnap($('livePass').value || store.get('livePass', '')); }
+    catch (e) {
+      lv = null; liveUi();
+      if (e.status === 401) { $('livePassRow').hidden = false; $('livePassMsg').textContent = $('livePass').value ? 'Wrong password.' : 'This server asks for a password.'; $('livePass').focus(); }
+      else toast(e.status === 507 ? 'The live server is full right now. Try again later.' : 'Live sharing needs rrlive.php on the web server, next to notes.html.', 5000);
+      return;
+    } finally { $('liveStart').disabled = false; }
+    if ($('livePass').value) { store.set('livePass', $('livePass').value); $('livePass').value = ''; }
+    $('livePassRow').hidden = true;
     liveUi();
-    liveListen(s);
+    liveWho(s);
     toast('Live sharing is on. Send the link to the viewers.');
   }
-  function liveStop() { lv = null; liveUi(); toast('Live sharing stopped.'); }
+  function liveStop() {
+    const s = lv;
+    lv = null; liveUi(); toast('Live sharing stopped.');
+    if (s) liveReq(s.sid, 'a=end', '', s.tok).catch(() => {});   // the relay removes everything
+  }
   async function liveUploadImages(ids) {
     for (const id of ids) {
       if (!lv || lv.imgs.has(id)) continue;
       const rec = imgStore.get(id);
       if (!rec || !rec.blob) continue;
       const d = await liveEnc(lv.key, { w: rec.w, h: rec.h, type: rec.type, b: b64(new Uint8Array(await rec.blob.arrayBuffer())) });
-      await liveReq(lv.sid, 'a=img&id=' + id, d);
+      await liveReq(lv.sid, 'a=img&id=' + encodeURIComponent(id), d, lv.tok);
       lv.imgs.add(id);
     }
   }
   const pageSig = pg => JSON.stringify(Object.fromEntries(Object.entries(pg).filter(([k]) => k !== 'strokes')));
   function markSent(i) { const pg = pages[i]; lv.sent.set(pg, { refs: pg.strokes.slice(), sig: pageSig(pg) }); }   // stroke objects are never changed in place
-  async function liveSnap() {                     // the whole notebook; the relay forgets what came before it
-    await liveUploadImages(pageImgIds(pages));
+  async function liveSnap(pass) {                 // the whole notebook; the relay forgets what came before it
     const d = await liveEnc(lv.key, { t: 'snap', setup, cur, pages });
-    const r = await liveReq(lv.sid, 'a=snap', JSON.stringify({ d }));
+    if (lv.seq) await liveUploadImages(pageImgIds(pages));        // pictures first, so viewers find them
+    const r = await liveReq(lv.sid, 'a=snap', d, lv.tok, pass);   // (the first one also opens the session)
+    await liveUploadImages(pageImgIds(pages));
     lv.seq = r.n;                                  // viewers further back start over from this snapshot
     pages.forEach((_, i) => markSent(i));
     lv.order = pages.slice(); lv.setupSig = JSON.stringify(setup); lv.lastSnap = Date.now(); lv.changedSinceSnap = false;
@@ -8165,7 +8183,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     try {
       while (lv === s) {
         const structural = pages.length !== s.order.length || pages.some((p, i) => p !== s.order[i]) || JSON.stringify(setup) !== s.setupSig;
-        if (structural || (s.changedSinceSnap && Date.now() - s.lastSnap > 60000)) { s.dirty = false; await liveSnap(); s.nav = true; continue; }
+        if (structural || s.force || (s.changedSinceSnap && Date.now() - s.lastSnap > 60000)) { s.dirty = false; s.force = false; await liveSnap(); s.nav = true; continue; }
         const msgs = [];
         if (s.dirty) {
           s.dirty = false;
@@ -8189,55 +8207,54 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           }
         }
         if (!msgs.length) break;
-        const r = await liveReq(s.sid, 'a=push', JSON.stringify({ f: 'h', d: await liveEnc(s.key, msgs) }));
+        const r = await liveReq(s.sid, 'a=push', await liveEnc(s.key, msgs), s.tok);
         s.seq = Math.max(s.seq, r.n); s.err = 0;
       }
-    } catch (_) {
-      if (lv === s) { s.err++; s.dirty = true; setTimeout(() => { if (lv === s) liveSend(); }, Math.min(10000, 1000 * s.err)); }
+    } catch (e) {
+      if (lv === s && e.status === 403) { lv = null; toast('Live sharing ended (the session is no longer on the server).', 5000); }
+      else if (lv === s) { s.err++; s.dirty = true; if (e.status === 409 || e.status === 404) s.force = true; setTimeout(() => { if (lv === s) liveSend(); }, Math.min(10000, 1000 * s.err)); }
     } finally { s.busy = false; liveUi(); }
     if (lv === s && active && active.pts && s.stroke && active.pts.length > s.stroke.k) lvKick();   // still writing
   }
-  async function liveListen(s) {                  // who is watching (viewers say hello now and then)
-    let after = s.seq;
+  async function liveWho(s) {                     // how many are watching (asked now and then)
     while (lv === s) {
-      try {
-        const r = await liveReq(s.sid, `a=pull&after=${after}&not=h`);
-        if (r.reset) { after = s.seq; continue; }
-        after = r.n;
-        for (const [, from] of r.r || []) if (from.startsWith('v')) s.viewers.set(from, Date.now());
-        liveUi();
-      } catch (_) { await new Promise(res => setTimeout(res, 3000)); }
+      await new Promise(res => setTimeout(res, s.watch ? 15000 : 5000));
+      if (lv !== s) break;
+      try { s.watch = (await liveReq(s.sid, 'a=who', undefined, s.tok)).w || 0; liveUi(); } catch (_) {}
     }
   }
-  const watching = () => { if (!lv) return 0; const t = Date.now(); return [...lv.viewers.values()].filter(x => t - x < 70000).length; };
+  const watching = () => lv ? lv.watch : 0;
 
   // ---- viewing (#live=… in the address) ----
   var lvw = null;                                  // { sid, key, n, follow, hostCur, hostN, tmp, vid }
   async function startViewer() {
-    const v = lvw = { sid: LIVE_VIEW.sid, key: await liveKey(unb64u(LIVE_VIEW.key)), n: 0, follow: true, hostCur: 0, hostN: 1, tmp: null, vid: 'v' + uid().slice(0, 10), state: 'Connecting…' };
+    const v = lvw = { sid: LIVE_VIEW.sid, key: await liveKey(unb64u(LIVE_VIEW.key)), n: 0, follow: true, hostCur: 0, hostN: 1, tmp: null, vid: liveId(12), state: 'Connecting…', ended: false };
     document.body.classList.add('viewer');
     liveUi();
-    const hello = async () => { try { await liveReq(v.sid, 'a=push', JSON.stringify({ f: v.vid, d: await liveEnc(v.key, { t: 'hello' }) })); } catch (_) {} };
+    const hello = () => { if (!v.ended) liveReq(v.sid, 'a=hi&v=' + v.vid, '').catch(() => {}); };
     hello(); setInterval(hello, 30000);
+    const ended = () => { v.ended = true; v.state = 'Sharing has ended'; v.follow = false; v.tmp = null; drawTmp(); liveUi(); };
     const loadSnap = async () => {
       for (;;) {
         try {
           const r = await liveReq(v.sid, 'a=snap');
+          if (r.ended) { ended(); return false; }
           if (r.none) { v.state = 'Waiting for the notebook…'; liveUi(); await new Promise(res => setTimeout(res, 2000)); continue; }
-          v.n = r.n; viewerApply(await liveDec(v.key, r.d)); v.state = ''; liveUi(); return;
+          v.n = r.n; viewerApply(await liveDec(v.key, r.d)); v.state = ''; liveUi(); return true;
         } catch (_) { v.state = 'Can’t reach the notebook. Is the link complete?'; liveUi(); await new Promise(res => setTimeout(res, 3000)); }
       }
     };
-    await loadSnap();
+    if (!await loadSnap()) return;
     for (;;) {
       try {
-        const r = await liveReq(v.sid, `a=pull&after=${v.n}&not=${v.vid}`);
-        if (r.reset) { await loadSnap(); continue; }
-        for (const [n, from, d] of r.r || []) {
+        const r = await liveReq(v.sid, `a=pull&after=${v.n}`);
+        if (r.ended) { ended(); return; }
+        if (r.reset) { if (!await loadSnap()) return; continue; }
+        for (const [n, d] of r.r || []) {
           v.n = n;
-          if (from !== 'h') continue;
-          const msgs = await liveDec(v.key, d);
-          msgs.forEach(viewerApply);
+          let msgs = null;
+          try { msgs = await liveDec(v.key, d); } catch (_) { continue; }   // not from the sharing device: ignored
+          if (Array.isArray(msgs)) msgs.forEach(m => { try { viewerApply(m); } catch (_) {} });
         }
         v.n = Math.max(v.n, r.n);
         if (v.state) { v.state = ''; liveUi(); }
@@ -8248,10 +8265,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const ids = [...pageImgIds(pages)].filter(id => !imgStore.has(id));
     for (const id of ids) {
       try {
-        const o = await liveDec(lvw.key, await liveReq(lvw.sid, 'a=img&id=' + id));
+        const o = await liveDec(lvw.key, await liveReq(lvw.sid, 'a=img&id=' + encodeURIComponent(id)));
         const blob = new Blob([unb64(o.b)], { type: o.type });
         imgStore.set(id, { url: URL.createObjectURL(blob), w: o.w, h: o.h, type: o.type, blob });
-      } catch (_) {}
+      } catch (_) { if (!lvw.imgRetry && (lvw.imgTries = (lvw.imgTries || 0) + 1) < 20) lvw.imgRetry = setTimeout(() => { lvw.imgRetry = 0; viewerImages(); }, 3000); }
     }
     if (ids.length) renderPage();
   }
@@ -8326,7 +8343,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
   function renderLiveDlg() {
     $('liveOff').hidden = !!lv; $('liveOn').hidden = !lv;
-    if (lv) { $('liveLink').value = lv.link; const n = watching(); $('liveWatch').textContent = lv.err ? 'Can’t reach live.php right now, trying again…' : n ? `${n} ${n === 1 ? 'viewer is' : 'viewers are'} following.` : 'Nobody is following yet.'; }
+    if (lv) { $('liveLink').value = lv.link; const n = watching(); $('liveWatch').textContent = lv.err ? 'Can’t reach the live server right now, trying again…' : n ? `${n} ${n === 1 ? 'viewer is' : 'viewers are'} following.` : 'Nobody is following yet.'; }
   }
   $('liveBtn').addEventListener('click', () => { closePops(); renderLiveDlg(); $('liveDlg').showModal(); });
   $('liveStart').addEventListener('click', () => liveStart());
