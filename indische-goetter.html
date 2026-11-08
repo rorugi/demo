@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Indiens Götterwelt – vom Ṛgveda bis heute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Layout: header, toolbar (search, relation filters, zoom), graph (sticky lane header + scrollable SVG: eras vertical, traditions as lanes) beside an info panel; story index and short essays below */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --chalk:#eef2e9; --accent:#e9a23b; --ink:#241a08;
+  --band:rgba(34,48,46,.045); --node:#fbfcfa;
+  --r-evo:#7d8781; --r-kid:#3a78bd; --r-mar:#cc4a74; --r-ava:#8656c2; --r-ally:#3a9466; --r-story:#d98d1e;
+  --f-deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120; --slate:#1c2826;
+  --band:rgba(226,231,227,.035); --node:#20292a;
+  --r-evo:#9aa49f; --r-kid:#6aa6e6; --r-mar:#ea7a9e; --r-ava:#ae8ae6; --r-ally:#62c08f; --r-story:#e9a23b; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+main{max-width:1560px;margin:0 auto;padding:28px 14px 64px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+a{color:inherit}
+button{font:inherit;color:inherit}
+.back{font-size:14px;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--accent)}
+h1{margin:4px 0 6px;font-size:clamp(26px,5vw,38px);font-weight:600;line-height:1.15}
+h2{margin:0 0 8px;font-size:20px;font-weight:600;line-height:1.25}
+h3{margin:0 0 4px;font-size:16px;font-weight:600}
+p{margin:0}
+.lead{color:var(--muted);max-width:78ch}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.search{position:relative;flex:1 1 240px;max-width:360px}
+.search input{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:inherit;font-size:15px}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.results{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:30;display:none;max-height:320px;overflow:auto}
+.results.open{display:block}
+.results button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:8px 12px;cursor:pointer}
+.results button:hover,.results button.hl{background:var(--band)}
+.results small{color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.chipf{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px 3px 8px;font-size:13.5px;cursor:pointer}
+.chipf i{width:16px;height:3px;border-radius:2px;background:var(--c)}
+.chipf[aria-pressed="false"]{opacity:.45}
+.chipf[aria-pressed="false"] i{background:var(--muted)}
+.zoom{display:flex;gap:4px;margin-left:auto}
+.zoom button{border:1px solid var(--line);background:var(--panel);border-radius:8px;min-width:36px;height:34px;cursor:pointer;font-size:16px}
+.zoom button:hover{border-color:var(--accent)}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lg{display:inline-block;width:22px;height:14px;border-radius:4px;background:var(--node);border:1px solid var(--line);position:relative}
+.lg.god::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:3px 0 0 3px;background:var(--fg)}
+.lg.story{border-radius:999px;border-color:var(--r-story);background:color-mix(in srgb,var(--r-story) 16%,var(--node))}
+.lg.hum{border-style:dashed;border-color:var(--muted)}
+
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.graph{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}
+.lanehead{height:36px;overflow:hidden;border-bottom:1px solid var(--line);position:relative;background:var(--panel);z-index:2}
+.lanehead-in{position:absolute;left:0;top:0;height:36px;will-change:transform}
+.lanehead span{position:absolute;top:7px;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px;border-left:4px solid var(--c)}
+.scroll{height:calc(100vh - 230px);min-height:440px;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+svg#g{display:block;font-family:var(--f-ui);user-select:none;-webkit-user-select:none}
+.band{fill:var(--band)}
+.cell{fill:var(--c);fill-opacity:.035}
+.celllab{fill:var(--muted);font-size:10.5px;letter-spacing:.02em}
+.era{cursor:pointer}
+.era .t{fill:var(--fg);font-size:15px;font-weight:600}
+.era .d{fill:var(--muted);font-size:12px}
+.era .k{fill:var(--muted);font-size:11.5px}
+.era:hover .t,.era:focus-visible .t{fill:var(--accent)}
+.axis{stroke:var(--muted);stroke-width:1.2;opacity:.6}
+.axistxt{fill:var(--muted);font-size:11px;font-weight:600}
+
+.e{fill:none;stroke-width:1.4;opacity:.24;transition:opacity .15s}
+.e.evo{stroke:var(--r-evo);stroke-dasharray:6 4;stroke-width:1.8}
+.e.kid{stroke:var(--r-kid)}
+.e.mar{stroke:var(--r-mar)}
+.e.ava{stroke:var(--r-ava)}
+.e.ally{stroke:var(--r-ally)}
+.e.story{stroke:var(--r-story);stroke-dasharray:2 3;opacity:.16}
+svg.sel .e{opacity:.035}
+svg.sel .e.on{opacity:.95;stroke-width:2.4}
+svg.hide-evo .e.evo,svg.hide-kid .e.kid,svg.hide-mar .e.mar,svg.hide-ava .e.ava,svg.hide-ally .e.ally,svg.hide-story .e.story{display:none}
+
+.n{cursor:pointer;outline:none;transition:opacity .15s}
+.n .bg{fill:var(--node);stroke:var(--line);stroke-width:1}
+.n .tint{fill:var(--c);fill-opacity:.12}
+.n .bar{fill:var(--c)}
+.n .t1{fill:var(--fg);font-size:12.5px;font-weight:600}
+.n .t2{fill:var(--muted);font-size:10.2px}
+.n.s .bg{stroke:var(--r-story);stroke-width:1.2}
+.n.s .tint{fill:var(--r-story);fill-opacity:.13}
+.n.s .t1,.n.s .l2{font-weight:500;font-style:italic;fill:var(--fg);font-size:12px}
+.n.h .bg{stroke:var(--muted);stroke-dasharray:4 3}
+.n:hover .bg{stroke:var(--accent);stroke-width:1.8}
+.n:focus-visible .bg{stroke:var(--accent);stroke-width:2.5}
+svg.sel .n{opacity:.2}
+svg.sel .n.on{opacity:1}
+.n.cur .bg{stroke:var(--fg);stroke-width:2.6}
+
+.panel{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--pc,var(--accent));
+  border-radius:14px;padding:16px 18px 18px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.panel .x{float:right;border:0;background:none;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:0 0 6px 12px}
+.panel .kicker{font-size:12.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--pc,var(--muted))}
+.panel h2{margin:2px 0 2px;font-size:23px}
+.panel .deva{font-family:var(--f-deva);font-weight:400;font-size:21px;margin-left:6px;color:var(--muted)}
+.panel .meta{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+.panel .sub{font-style:italic;color:var(--muted);margin-bottom:8px}
+.panel p{margin:0 0 10px}
+.panel dl{margin:4px 0 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14.5px}
+.panel dt{color:var(--muted)}
+.panel dd{margin:0}
+.panel h4{margin:14px 0 6px;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.rel{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.rel li{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline;font-size:14.5px}
+.rel .ph{color:var(--muted);min-width:0}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--node);border-radius:999px;padding:1px 10px 1px 8px;font-size:14px;cursor:pointer;line-height:1.6}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.chip.st::before{content:"✦";width:auto;height:auto;background:none;color:var(--r-story);font-size:11px}
+.chip:hover{border-color:var(--accent)}
+.chip small{color:var(--muted);font-size:12px}
+.intro ol{padding-left:20px;margin:6px 0 12px}
+.intro li{margin-bottom:4px}
+.starts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.rlegend{display:grid;gap:4px;font-size:14px;margin:6px 0 10px}
+.rlegend span{display:flex;align-items:center;gap:8px}
+.rlegend i{display:inline-block;width:26px;height:0;border-top:2px solid var(--c)}
+.rlegend i.d{border-top-style:dashed}
+.rlegend i.dot{border-top-style:dotted}
+.hint{font-size:13px;color:var(--muted)}
+
+.stories{display:grid;gap:18px}
+.stories .er{display:grid;gap:6px}
+.stories .er h3 span{color:var(--muted);font-weight:400;font-size:14px;margin-left:6px}
+.stories .list{display:flex;flex-wrap:wrap;gap:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card p{color:var(--muted);font-size:15px}
+.note{font-size:13px;color:var(--muted);max-width:90ch}
+
+@media (max-width:980px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .scroll{height:72vh;min-height:380px}
+  .panel{position:fixed;left:8px;right:8px;bottom:8px;top:auto;max-height:56vh;z-index:40;transform:translateY(115%);transition:transform .22s ease;
+    box-shadow:0 -6px 30px rgba(0,0,0,.25);padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .panel.open{transform:none}
+  .panel .intro-only{display:none}
+  .zoom{margin-left:0}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <h1>Indiens Götterwelt – vom Ṛgveda bis heute</h1>
+    <p class="lead">Rund 3500 Jahre in einer Grafik: Von oben nach unten läuft die Zeit, nebeneinander stehen fünf große Linien – die vedischen Götter, Brahmā und die Lehrer, Viṣṇu, die Göttin und Śiva. Linien zeigen, wer aus wem hervorgeht, wer mit wem verheiratet ist, wessen Form oder Kind er ist und wer in welcher Geschichte mitspielt.</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="search">
+      <input id="q" type="search" placeholder="Suchen: Shiva, Kali, Hanuman, Gita …" autocomplete="off" aria-label="Gott oder Geschichte suchen">
+      <div class="results" id="results" role="listbox"></div>
+    </div>
+    <div class="filters" id="filters" aria-label="Beziehungsarten ein- und ausblenden"></div>
+    <div class="zoom">
+      <button id="zout" aria-label="Verkleinern">−</button>
+      <button id="zfit" aria-label="Ganze Breite" title="Ganze Breite">⤢</button>
+      <button id="zin" aria-label="Vergrößern">+</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="lg god"></i>Gott, Göttin</span>
+    <span><i class="lg story"></i>✦ Geschichte</span>
+    <span><i class="lg hum"></i>Mensch, Bewegung</span>
+  </div>
+
+  <div class="wrap">
+    <section class="graph" aria-label="Flussdiagramm der Götter">
+      <div class="lanehead"><div class="lanehead-in" id="lanehead"></div></div>
+      <div class="scroll" id="scroll"><svg id="g" role="group" aria-label="Götter und Geschichten nach Epochen"></svg></div>
+    </section>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+  <p class="hint">Antippen öffnet Details und hebt alle Verbindungen hervor. Ziehen oder wischen verschiebt die Grafik, zwei Finger oder Strg + Mausrad zoomen.</p>
+
+  <section>
+    <h2>Alle Geschichten</h2>
+    <div class="stories" id="stories"></div>
+  </section>
+
+  <section>
+    <h2>Kurz erklärt</h2>
+    <div class="cards">
+      <div class="card"><h3>Vom Opferfeuer zum Tempel</h3><p>Die vedische Religion kannte keine Tempel und keine Götterbilder. Man lud die Götter ins Feuer ein und speiste sie mit Gaben. Erst um die Zeitenwende entstehen Bilder, unter den Guptas Steintempel. Seitdem steht für die meisten Menschen die Verehrung eines Bildes (pūjā) im Mittelpunkt, nicht mehr das Feueropfer.</p></div>
+      <div class="card"><h3>Warum Indra fiel und Viṣṇu und Śiva stiegen</h3><p>Indra war der Gott einer Kriegergesellschaft und ihres Opfers. Als die Upaniṣaden nach dem Einen hinter allem fragten und Menschen eine persönliche Beziehung zu Gott suchten, passten zwei Randgötter besser: Viṣṇu und Rudra-Śiva. Sie nahmen andere Gestalten in sich auf und wurden zum höchsten Gott ihrer Anhänger.</p></div>
+      <div class="card"><h3>Avatāra, Form, Familie</h3><p>Die Tradition hat drei Wege, Neues aufzunehmen: Viṣṇu steigt herab und wird zu Fisch, Eber, Rāma, Kṛṣṇa oder sogar Buddha. Die Göttin zeigt sich in unzähligen Formen, bis zur Dorfgöttin. Und Śiva bekommt Familie: Gaṇeśa, Skanda und der tamilische Murugan werden Söhne, eine lokale Göttin wird zur Gattin.</p></div>
+      <div class="card"><h3>Die Göttin wird die Höchste</h3><p>Uṣas, die Morgenröte, und Vāc, die heilige Rede, sind die großen Göttinnen des Ṛgveda. Um das 5.–6. Jh. verkündet das Devī-Māhātmya, dass die höchste Macht weiblich ist. Durgā, Kālī, Lakṣmī, Sarasvatī und die Dorfgöttinnen gelten von da an vielen als Formen der einen Mahādevī.</p></div>
+      <div class="card"><h3>Heute</h3><p>Film und Fernsehen prägen, wie Götter aussehen. Feste wie Gaṇeśa Caturthī, Durgā Pūjā oder die Kumbh Melā wurden zu Massenereignissen, und Tempelbau ist auch Politik geworden. Neue Göttinnen sind entstanden, und durch die Diaspora werden die Götter heute auf allen Kontinenten verehrt.</p></div>
+    </div>
+  </section>
+
+  <p class="note">Die Datierungen sind Näherungen. Die alten Texte wuchsen über Jahrhunderte, und die Forschung ist sich oft uneinig. Zu fast jeder Geschichte gibt es regionale Fassungen; erzählt wird hier die bekannteste. Die Zuordnung zu einer Spalte zeigt die Linie, in der eine Gestalt ihren Platz gefunden hat. Feste Grenzen gibt es zwischen den Linien nicht.</p>
+</main>
+
+<script>
+/* ---------- Daten ---------- */
+const LANES=[
+ {id:'ved',n:'Vedische Götter',c:'#a57a22',cols:2},
+ {id:'bra',n:'Brahmā · Schöpfung · Lehre',c:'#3c8a6f',cols:2},
+ {id:'vis',n:'Viṣṇu & Avatāras',c:'#2c6e9e',cols:3},
+ {id:'dev',n:'Devī – die Göttin',c:'#b23b55',cols:2},
+ {id:'shi',n:'Śiva & Familie',c:'#6a55a0',cols:2},
+];
+const ERAS=[
+ {id:'e1',n:'Ṛgveda',d:'ca. 1500–1000 v. Chr.',k:'Hymnen, Feueropfer, keine Tempel',x:'Die ältesten Hymnen, über Jahrhunderte mündlich weitergegeben. Verehrt werden Naturmächte und Ritualgötter im Feueropfer (yajña), ohne Tempel und ohne Bilder. Indra, Agni und Soma stehen im Mittelpunkt, Viṣṇu und Rudra sind Randfiguren. Am Ende des Ṛgveda fragen erste Hymnen nach dem Ursprung von allem.'},
+ {id:'e2',n:'Spätvedische Zeit',d:'ca. 1000–500 v. Chr.',k:'Opfermystik, Upaniṣaden',x:'Die Brāhmaṇas deuten das Opfer als Motor des Kosmos, Prajāpati wird zum Schöpfer. Die Upaniṣaden fragen nach dem Einen hinter allem: Brahman, das mit dem eigenen Selbst (ātman) identisch ist. Hier tauchen Urformen späterer Avatāra-Mythen auf, und mit Umā erscheint zum ersten Mal die spätere Pārvatī.'},
+ {id:'e3',n:'Epen',d:'ca. 400 v. – 400 n. Chr.',k:'Mahābhārata, Rāmāyaṇa, Gītā',x:'Mahābhārata und Rāmāyaṇa wachsen über Jahrhunderte. Kṛṣṇa und Rāma werden zu Gesichtern Viṣṇus, Śiva tritt als großer Asket hervor. Erste Götterbilder entstehen in Mathurā und auf Münzen der Kuṣāṇa. Um 113 v. Chr. weiht der Grieche Heliodor dem Gott Vāsudeva eine Säule.'},
+ {id:'e4',n:'Purāṇen & Gupta-Zeit',d:'ca. 300–900 n. Chr.',k:'Purāṇen, Tempel, Trimūrti',x:'Die Purāṇen ordnen die Götterwelt: Götterfamilien, die Lehre von den drei Gestalten (Trimūrti), die zehn Avatāras. Das Devī-Māhātmya macht die Göttin zur höchsten Macht. Steintempel und große Bildprogramme entstehen, und Gaṇeśa wird zu einem eigenständigen Gott.'},
+ {id:'e5',n:'Bhakti & Tantra',d:'ca. 600–1800',k:'Hingabe, Volkssprachen, Tantra',x:'Dichterheilige singen in den Volkssprachen von der persönlichen Liebe zu Gott: zuerst die Tamil-Āḻvārs und -Nāyaṉmārs, später Jayadeva, Tulsīdās und Caitanya. Im Tantra entstehen eigene Göttinnen-Kulte. Regionale Götter wie Jagannātha, Viṭṭhala oder Murugan werden mit den großen Göttern verbunden.'},
+ {id:'e6',n:'Moderne',d:'ca. 1800 – heute',k:'Reform, Medien, Massenfeste',x:'Reformer berufen sich wieder auf die Veden. Druck, Kalenderbilder, Film und Fernsehen prägen neue Götterbilder. Neue Göttinnen entstehen, Feste werden zu Massenereignissen, Tempelbau wird politisch, und die Diaspora trägt die Götter um die Welt.'},
+];
+
+/* t: g = Gott/Göttin, s = Geschichte, h = Mensch/Bewegung */
+const N=[
+/* ===== e1 Ṛgveda ===== */
+{id:'indra',l:'ved',e:'e1',t:'g',n:'Indra',d:'इन्द्र',s:'Gewitter, König der Götter',x:'Der meistbesungene Gott des Ṛgveda, rund ein Viertel der Hymnen gilt ihm. Er trinkt Soma, schwingt den Donnerkeil, befreit die Wasser und führt die Krieger an. Mit den Maruts als Gefolge ist er das Ideal des starken Herrschers.',a:'Vajra (Donnerkeil), Somatrank; später Elefant Airāvata',o:'Himmel und Luftraum',q:'Ṛgveda, alle Bücher'},
+{id:'agni',l:'ved',e:'e1',t:'g',n:'Agni',d:'अग्नि',s:'Feuer, Bote zum Himmel',x:'Das Opferfeuer selbst. Er trägt die Gaben zu den Göttern und holt sie zum Opfer herbei. Der Ṛgveda beginnt mit einem Hymnus an Agni. Er lebt in drei Formen, als Sonne, Blitz und Herdfeuer. Bis heute ist er bei jeder Hochzeit (sieben Schritte ums Feuer) und bei jeder Einäscherung dabei.',a:'Zwei Gesichter, sieben Zungen, Widder',o:'Herd, Opferaltar',q:'Ṛgveda 1.1 und rund 200 Hymnen'},
+{id:'soma',l:'ved',e:'e1',t:'g',n:'Soma',d:'सोम',s:'Rauschtrank und Gott',x:'Pflanze, Trank und Gott zugleich; das ganze neunte Buch des Ṛgveda besingt ihn. Welche Pflanze gemeint war, ist bis heute ungeklärt. Später wird Soma mit dem Mond (Candra) gleichgesetzt. Die Legende des Tempels von Somnāth erzählt, wie der Mond Śiva verehrte, um einen Fluch Dakṣas loszuwerden.',a:'Presssteine, Seihtuch; später Mondsichel',o:'Berge; später der Mond',q:'Ṛgveda, Buch 9'},
+{id:'varuna',l:'ved',e:'e1',t:'g',n:'Varuṇa',d:'वरुण',s:'Hüter der Weltordnung',x:'Wacht zusammen mit Mitra über ṛta, die kosmische und moralische Ordnung, und straft Eidbruch mit seiner Schlinge. Nichts bleibt ihm verborgen. In den Epen schrumpft er zum Gott der Gewässer und des Westens.',a:'Schlinge (pāśa); später das Seeungeheuer Makara',o:'Himmelsgewölbe; später der Ozean',q:'Ṛgveda, v. a. Buch 7'},
+{id:'surya',l:'ved',e:'e1',t:'g',n:'Sūrya',d:'सूर्य',s:'Sonne, Savitṛ',x:'Die Sonne fährt im Wagen mit sieben Pferden über den Himmel. Als Savitṛ, der Antreiber, wird er im Gāyatrī-Mantra (Ṛgveda 3.62.10) angerufen, das bis heute täglich rezitiert wird.',a:'Wagen mit sieben Pferden, Lotus',q:'Ṛgveda'},
+{id:'vayu',l:'ved',e:'e1',t:'g',n:'Vāyu',d:'वायु',s:'Wind, Lebensatem',x:'Wind und Atem. Im Puruṣa-Hymnus entsteht er aus dem Atem des Urmenschen. In den Epen wird er Vater zweier Kraftprotze: Hanumān und Bhīma.',a:'Antilope, Fahne',q:'Ṛgveda'},
+{id:'ashvins',l:'ved',e:'e1',t:'g',n:'Aśvins',d:'अश्विनौ',s:'Götterzwillinge, Heiler',x:'Zwillinge im Pferdewagen, Retter in Not und Ärzte der Götter. Im Mahābhārata zeugen sie die Pāṇḍava-Zwillinge Nakula und Sahadeva.',q:'Ṛgveda, über 50 Hymnen'},
+{id:'yama',l:'ved',e:'e1',t:'g',n:'Yama',d:'यम',s:'Erster Toter, Herr der Toten',x:'Der erste Sterbliche, der starb, und darum König im Reich der Väter (Ṛgveda 10.14). Später wird er zum strengen Richter mit Büffel und Schlinge, der mit seinem Schreiber Citragupta die Taten der Menschen verbucht.',a:'Zwei vieräugige Hunde; später Büffel, Schlinge',o:'Reich der Väter; später der Süden',q:'Ṛgveda 10.10, 10.14'},
+{id:'dyaus',l:'ved',e:'e1',t:'g',n:'Dyaus Pitṛ',d:'द्यौः',s:'Himmelsvater',x:'Der Himmel als Vater, sprachlich verwandt mit Zeus pater und Jupiter. Mit der Erde Pṛthivī bildet er das Urelternpaar; Uṣas ist seine Tochter. Schon im Ṛgveda verblasst er.',q:'Ṛgveda'},
+{id:'s_vrtra',l:'ved',e:'e1',t:'s',n:'Indra tötet Vṛtra',where:'Mythischer Raum: Berge und Himmelswasser',src:'Ṛgveda 1.32',w:['indra','soma','maruts'],wo:'Tvaṣṭṛ, der Schmied der Götter',x:'Die Schlange Vṛtra hält die Wasser in den Bergen gefangen. Indra stärkt sich mit Soma, greift zum Donnerkeil, den Tvaṣṭṛ geschmiedet hat, und erschlägt sie. Die Wasser strömen frei wie Kühe, die aus dem Stall gelassen werden. Es ist der Grundmythos des Ṛgveda: Ordnung siegt über die Blockade.'},
+
+{id:'purusha',l:'bra',e:'e1',t:'g',n:'Puruṣa',d:'पुरुष',s:'Urmensch, Weltopfer',x:'Ein kosmischer Riese mit tausend Köpfen. Die Götter opfern ihn, und aus seinen Teilen entsteht die Welt, auch die vier Stände (varṇa). Der Hymnus wird zur Urszene späterer Schöpfungslehren und zum Schlüsseltext der Kastenordnung.',q:'Ṛgveda 10.90 (Puruṣasūkta)'},
+{id:'hiranyagarbha',l:'bra',e:'e1',t:'g',n:'Hiraṇyagarbha',d:'हिरण्यगर्भ',s:'Goldkeim, Schöpfungsfragen',x:'Der goldene Keim, aus dem alles hervorgeht (Ṛgveda 10.121), besungen mit dem Kehrvers „Welchem Gott sollen wir opfern?“. Der Hymnus 10.129 (Nāsadīya) fragt noch radikaler, ob überhaupt jemand den Ursprung kennt, und nennt das Begehren (kāma) den ersten Samen des Geistes.',q:'Ṛgveda 10.121, 10.129'},
+{id:'s_purusha',l:'bra',e:'e1',t:'s',n:'Das Opfer des Puruṣa',where:'Der ganze Kosmos',src:'Ṛgveda 10.90',w:['purusha','indra','agni','vayu','surya','soma'],x:'Die Götter opfern den Urmenschen. Aus seinem Geist wird der Mond, aus seinem Auge die Sonne, aus seinem Mund Indra und Agni, aus seinem Atem Vāyu. Aus Mund, Armen, Schenkeln und Füßen gehen Priester, Krieger, Bauern und Diener hervor. So begründet ein einziges Opfer zugleich Kosmos und Gesellschaft.'},
+
+{id:'vishnu_v',l:'vis',e:'e1',t:'g',n:'Viṣṇu (vedisch)',d:'विष्णु',s:'Nebengott der drei Schritte',x:'Ihm gelten nur etwa fünf Hymnen. Bekannt ist er für die drei weiten Schritte, mit denen er die Welt durchmisst, und als Helfer Indras. Dass er einmal für Millionen der höchste Gott sein würde, deutet hier noch nichts an.',q:'Ṛgveda 1.154, 1.22'},
+{id:'s_trivikrama',l:'vis',e:'e1',t:'s',n:'Viṣṇus drei Schritte',where:'Erde, Luftraum, Himmel',src:'Ṛgveda 1.154',w:['vishnu_v','indra'],x:'Mit drei Schritten durchmisst Viṣṇu die Welt. Sein höchster Schritt führt an einen Ort, an dem eine Quelle von Honig fließt. Indra feiert ihn als Gefährten. Aus diesem Bild wird später die Geschichte vom Zwerg Vāmana.'},
+
+{id:'ushas',l:'dev',e:'e1',t:'g',n:'Uṣas',d:'उषस्',s:'Morgenröte',x:'Die meistbesungene Göttin des Ṛgveda, mit rund 20 Hymnen: eine junge Frau, die jeden Morgen die Dunkelheit vertreibt und an die Vergänglichkeit erinnert. Sie ist verwandt mit Eos und Aurora. Als eigene Kultgöttin verschwindet sie später.',q:'Ṛgveda'},
+{id:'vac',l:'dev',e:'e1',t:'g',n:'Vāc',d:'वाच्',s:'Die heilige Rede',x:'Die Rede als Göttin. In Ṛgveda 10.125 spricht sie selbst: Sie trage alle Götter und durchdringe Himmel und Erde. Dieser Hymnus wird bis heute als Devīsūkta zusammen mit dem Devī-Māhātmya rezitiert. Er ist ein früher Keim der Idee einer höchsten Göttin.',q:'Ṛgveda 10.125'},
+{id:'sarasvati_r',l:'dev',e:'e1',t:'g',n:'Sarasvatī (Fluss)',d:'सरस्वती',s:'Göttin eines Flusses',x:'Ein mächtiger Fluss, gepriesen als beste der Mütter, der Flüsse und der Göttinnen (Ṛgveda 2.41.16). Der Fluss trocknete später aus. Seine Göttin verschmilzt mit Vāc und wird zur Göttin von Sprache und Wissen.',q:'Ṛgveda'},
+{id:'aditi',l:'dev',e:'e1',t:'g',n:'Aditi',d:'अदिति',s:'Die Grenzenlose',x:'Die „Ungebundene“, Mutter der Ādityas wie Mitra und Varuṇa. In den Purāṇen ist sie die Gattin des Weisen Kaśyapa und Mutter der Götter, und Viṣṇu wird als Vāmana ihr Sohn.',q:'Ṛgveda'},
+{id:'prthivi',l:'dev',e:'e1',t:'g',n:'Pṛthivī',d:'पृथिवी',s:'Mutter Erde',x:'Die breite Erde, mit Dyaus das Urelternpaar. Der Atharvaveda widmet ihr einen großen Erdhymnus (12.1). Sie lebt fort als Bhūdevī, die Erdgöttin an Viṣṇus Seite.',q:'Ṛgveda; Atharvaveda 12.1'},
+
+{id:'rudra',l:'shi',e:'e1',t:'g',n:'Rudra',d:'रुद्र',s:'Der Heuler, wilder Bogenschütze',x:'Ein gefürchteter Gott der Wildnis, der Krankheit schickt und zugleich der „beste der Ärzte“ ist. Man bittet ihn, fernzubleiben, und nennt ihn beschwichtigend śiva, „den Gütigen“. Aus diesem Beinamen wird später der Name eines der größten Götter.',a:'Bogen und Pfeile, Heilkräuter',o:'Berge, Wildnis',q:'Ṛgveda 1.114, 2.33'},
+{id:'maruts',l:'shi',e:'e1',t:'g',n:'Maruts',d:'मरुतः',s:'Sturmschar, Söhne Rudras',x:'Eine Schar junger Sturmgötter mit goldenen Waffen, Söhne Rudras. Sie begleiten Indra in die Schlacht, eine frühe Brücke zwischen Indra und Rudra.',q:'Ṛgveda'},
+
+/* ===== e2 Spätvedisch ===== */
+{id:'s_naciketas',l:'ved',e:'e2',t:'s',n:'Naciketas bei Yama',where:'Im Haus des Todes',src:'Kaṭha-Upaniṣad',w:['yama','brahman'],wo:'Naciketas und sein Vater Vājaśravas',x:'Ein Vater verschenkt bei einem Opfer nur alte Kühe. Sein Sohn Naciketas fragt, wem er ihn geben werde. „Dem Tod!“, ruft der Vater im Zorn. Der Junge wartet drei Nächte vor Yamas Haus, erhält dafür drei Wünsche und besteht auf dem letzten: Was geschieht nach dem Tod? Yama lehrt ihn das unsterbliche Selbst.'},
+{id:'prajapati',l:'bra',e:'e2',t:'g',n:'Prajāpati',d:'प्रजापति',s:'Herr der Geschöpfe',x:'Der Schöpfergott der Brāhmaṇas. Er erschafft die Welt durch Askese (tapas) und gibt sich dabei selbst hin; im Opfer wird er immer wieder zusammengesetzt. Die Frage „Welchem Gott?“ aus dem Hiraṇyagarbha-Hymnus beantworten die Priester mit ihm. Später geht er in Brahmā auf.',q:'Śatapatha-Brāhmaṇa u. a.'},
+{id:'brahman',l:'bra',e:'e2',t:'g',n:'Brahman',d:'ब्रह्मन्',s:'Das Eine, der Weltgrund',x:'Kein Gott mit Gestalt, sondern der Grund von allem. Die Upaniṣaden lehren, dass das innerste Selbst (ātman) mit Brahman identisch ist: „Das bist du“ (Chāndogya-Upaniṣad 6.8.7). Alle späteren Götter lassen sich als Gesichter dieses Einen deuten.',q:'Upaniṣaden'},
+{id:'s_manu',l:'vis',e:'e2',t:'s',n:'Manu und der Fisch',where:'Große Flut; Landung auf einem Berg im Norden',src:'Śatapatha-Brāhmaṇa 1.8.1; Mahābhārata; Matsya-Purāṇa',w:['brahma','vishnu'],wo:'Manu, der erste Mensch',x:'Manu findet beim Waschen einen kleinen Fisch, der um Schutz bittet. Er zieht ihn groß, und der Fisch warnt ihn vor einer Flut. Manu bindet sein Schiff an das Horn des Fisches und landet auf einem Berg. Im Brāhmaṇa bleibt der Fisch namenlos, im Mahābhārata ist er Brahmā, in den Purāṇen Viṣṇus erster Avatāra Matsya.'},
+{id:'lakshmi',l:'dev',e:'e2',t:'g',n:'Śrī-Lakṣmī',d:'लक्ष्मी',s:'Glück, Fülle, Schönheit',x:'Im Śatapatha-Brāhmaṇa entsteigt Śrī dem Asketen Prajāpati, und die Götter begehren ihre Gaben. Früh erscheint sie als Gaja-Lakṣmī, von Elefanten mit Wasser übergossen, sogar auf buddhistischen Stūpas wie in Sanchi. In den Purāṇen steigt sie aus dem Milchozean und wählt Viṣṇu. Heute ist sie die Göttin von Dīvālī.',a:'Lotus, Elefanten, Goldmünzen, Eule',o:'Vaikuṇṭha; Kolhapur',q:'Śatapatha-Brāhmaṇa 11.4.3; Śrī-Sūkta'},
+{id:'s_kena',l:'dev',e:'e2',t:'s',n:'Umā erklärt Indra das Brahman',where:'Himālaya',src:'Kena-Upaniṣad 3–4',w:['brahman','agni','vayu','indra','parvati'],x:'Brahman erscheint den siegestrunkenen Göttern als rätselhaftes Wesen. Agni kann einen Grashalm nicht verbrennen, Vāyu kann ihn nicht wegblasen. Als Indra sich nähert, verschwindet es, und an seiner Stelle steht Umā Haimavatī, die Tochter des Himālaya. Sie erklärt ihm, dass der Sieg Brahman gehörte. Es ist die erste Erwähnung der späteren Pārvatī.'},
+{id:'s_rudram',l:'shi',e:'e2',t:'s',n:'Namaḥ Śivāya: Rudra steigt auf',where:'Opferliturgie und Upaniṣaden',src:'Taittirīya-Saṃhitā 4.5 (Śrī Rudram); Śvetāśvatara-Upaniṣad',w:['rudra','shiva','brahman'],x:'Im Yajurveda wird Rudra mit hundert Namen angerufen; dort steht auch die Formel „namaḥ śivāya“, später das Grundmantra der Śiva-Verehrung. Die Śvetāśvatara-Upaniṣad (etwa 4.–2. Jh. v. Chr.) geht weiter: Rudra ist der eine Herr und das Brahman selbst. Damit ist der Weg vom Randgott zum höchsten Gott beschritten.'},
+
+/* ===== e3 Epen ===== */
+{id:'pandavas',l:'ved',e:'e3',t:'h',n:'Pāṇḍavas & Karṇa',s:'Söhne der alten Götter',x:'Die Helden des Mahābhārata haben göttliche Väter: Yudhiṣṭhira stammt von Dharma (Yama), Bhīma von Vāyu, Arjuna von Indra, die Zwillinge Nakula und Sahadeva von den Aśvins, ihr Halbbruder Karṇa von Sūrya. So leben die vedischen Götter in den Helden fort, während Kṛṣṇa zum eigentlichen Gott der Geschichte wird.',o:'Hastināpura, Indraprastha (Delhi), Kurukṣetra',q:'Mahābhārata'},
+{id:'indra_p',l:'ved',e:'e3',t:'g',n:'Indra (Epen, Purāṇen)',k:'Indra (später)',d:'इन्द्र',s:'Himmelskönig im Abstieg',x:'Indra bleibt König im Himmel Svarga, wird aber zur zwiespältigen Figur. Er verliert seinen Thron an Dämonen, fürchtet mächtige Asketen und schickt himmlische Tänzerinnen, um sie abzulenken. Kṛṣṇa demütigt ihn am Govardhana. Heute wird er kaum verehrt; eine Ausnahme ist das Fest Indra Jātrā in Kathmandu.',a:'Elefant Airāvata, Donnerkeil',o:'Svarga mit der Stadt Amarāvatī',q:'Epen, Purāṇen'},
+{id:'s_savitri',l:'ved',e:'e3',t:'s',n:'Sāvitrī überlistet Yama',where:'Wald im Königreich Madra',src:'Mahābhārata, Vanaparvan',w:['yama'],wo:'Sāvitrī und Satyavān',x:'Die Prinzessin Sāvitrī heiratet Satyavān, obwohl sie weiß, dass er nach einem Jahr sterben wird. Als Yama seine Seele holt, folgt sie ihm. Mit klugen Worten erringt sie Wunsch um Wunsch, bis Yama ihr den Gatten zurückgeben muss. In Nordindien erinnert das Fest Vaṭ Sāvitrī daran.'},
+{id:'s_ahalya',l:'ved',e:'e3',t:'s',n:'Indra und Ahalyā',where:'Einsiedelei des Gautama bei Mithilā',src:'Rāmāyaṇa, Bālakāṇḍa',w:['indra_p','rama'],wo:'Ahalyā und der Weise Gautama',x:'Indra nimmt die Gestalt des Weisen Gautama an und verführt dessen Frau Ahalyā. Gautama verflucht beide. Ahalyā muss unsichtbar büßen, in späteren Fassungen als Stein, bis Rāma vorbeikommt und sie erlöst. Die Geschichte zeigt, wie tief der einstige Götterkönig gefallen ist.'},
+
+{id:'brahma',l:'bra',e:'e3',t:'g',n:'Brahmā',d:'ब्रह्मा',s:'Schöpfer mit vier Köpfen',x:'In den Epen ist er der Schöpfer und Großvater der Welt. Er sitzt auf einem Lotus, der aus Viṣṇus Nabel wächst, hält die Veden und reitet einen Schwan. Asketen gewährt er Wünsche, auch Dämonen wie Rāvaṇa, Hiraṇyakaśipu oder Tāraka, und zwingt damit die anderen Götter immer wieder zum Eingreifen. Tempel hat er kaum; zwei Geschichten erklären, warum.',a:'Vier Köpfe, Veden, Wassertopf, Gebetskette, Schwan',o:'Brahmaloka; Pushkar',q:'Epen; Muṇḍaka-Upaniṣad 1.1'},
+{id:'sarasvati',l:'bra',e:'e3',t:'g',n:'Sarasvatī',d:'सरस्वती',s:'Sprache, Wissen, Musik',x:'Aus Fluss und Rede wird die Göttin der Gelehrsamkeit, weiß gekleidet, mit der Laute Vīṇā. Sie gilt als Brahmās Gattin. Schülerinnen und Schüler verehren sie zu Vasant Pañcamī. Als Benzaiten reiste sie mit dem Buddhismus bis nach Japan.',a:'Vīṇā, Buch, Schwan, weißer Lotus',q:'Epen, Purāṇen'},
+
+{id:'vishnu',l:'vis',e:'e3',t:'g',n:'Viṣṇu-Nārāyaṇa',d:'विष्णु',s:'Erhalter der Welt',x:'Der vedische Nebengott verschmilzt mit Nārāyaṇa, der auf den Urwassern ruht, und mit dem Helden Vāsudeva-Kṛṣṇa. Zwischen den Weltzeitaltern schläft er auf der Schlange Śeṣa. Wann immer die Ordnung (dharma) wankt, steigt er herab (avatāra). Die klassische Liste nennt zehn: Fisch, Schildkröte, Eber, Mann-Löwe, Zwerg, Paraśurāma, Rāma, Kṛṣṇa oder Balarāma, Buddha und Kalki.',a:'Muschel, Diskus Sudarśana, Keule, Lotus; Garuḍa; Schlange Śeṣa',o:'Vaikuṇṭha, Milchozean; Srirangam, Tirupati',q:'Mahābhārata (Nārāyaṇīya); Viṣṇu-Purāṇa'},
+{id:'krishna',l:'vis',e:'e3',t:'g',n:'Kṛṣṇa',d:'कृष्ण',s:'Hirtengott, Lehrer der Gītā',x:'Er ist aus mehreren Gestalten zusammengewachsen: aus dem Helden Vāsudeva, dem der Grieche Heliodor um 113 v. Chr. eine Garuḍa-Säule weihte, dem Fürsten von Dvārakā und dem verspielten Hirtenjungen aus Vraj. Im Mahābhārata ist er Arjunas Wagenlenker und verkündet die Bhagavad Gītā. Für viele ist er nicht ein Avatāra, sondern Gott selbst.',a:'Flöte, Pfauenfeder, dunkle Haut, Kühe',o:'Mathurā, Vṛndāvana, Govardhana, Dvārakā, Kurukṣetra',q:'Mahābhārata, Harivaṃśa, Bhāgavata-Purāṇa'},
+{id:'rama',l:'vis',e:'e3',t:'g',n:'Rāma',d:'राम',s:'Prinz von Ayodhyā',x:'Der Held des Rāmāyaṇa: ein Prinz, der seinem Vater zuliebe ins Exil geht, seine entführte Frau Sītā zurückholt und als gerechter König regiert. Erst in den jüngeren Rahmenbüchern des Epos ist er Viṣṇus Avatāra. Sein Name ist heute Gruß („Rām Rām“) und politisches Symbol zugleich.',a:'Bogen und Pfeile; mit Sītā, Lakṣmaṇa und Hanumān',o:'Ayodhyā, Citrakūṭ, Pañcavaṭī, Rāmeśvaram, Laṅkā',q:'Vālmīki-Rāmāyaṇa'},
+{id:'hanuman',l:'vis',e:'e3',t:'g',n:'Hanumān',d:'हनुमान्',s:'Affe, Diener Rāmas',x:'Sohn des Windgottes Vāyu, unermesslich stark und ganz seinem Herrn Rāma ergeben. Er springt nach Laṅkā, findet Sītā und holt einen ganzen Berg mit Heilkräutern. Im Mahābhārata trifft er seinen Halbbruder Bhīma und sitzt auf Arjunas Wagenfahne. Spätere Traditionen sehen in ihm einen Anteil Śivas. Heute ist er einer der beliebtesten Götter Indiens.',a:'Keule, Berg in der Hand, rote Farbe',o:'Kiṣkindhā (bei Hampi), Laṅkā; Sankat Mochan in Vārāṇasī',q:'Rāmāyaṇa; Hanumān Cālīsā (16. Jh.)'},
+{id:'garuda',l:'vis',e:'e3',t:'g',n:'Garuḍa',d:'गरुड',s:'Adler, Reittier Viṣṇus',x:'Der Vogelkönig raubt den Göttern den Unsterblichkeitstrank, um seine Mutter aus der Knechtschaft der Schlangen zu befreien; seither sind Schlangen seine Feinde. Viṣṇu macht ihn zu seinem Reittier. Heute ist er Wappentier Indonesiens und Thailands.',q:'Mahābhārata, Ādiparvan'},
+{id:'s_krishna_birth',l:'vis',e:'e3',t:'s',n:'Kṛṣṇas Geburt im Kerker',where:'Mathurā, über die Yamunā nach Gokula',src:'Harivaṃśa; Bhāgavata-Purāṇa 10',w:['krishna','vishnu','mahadevi'],wo:'König Kaṃsa, Devakī, Vasudeva, Yaśodā',x:'König Kaṃsa erfährt, dass ihn das achte Kind seiner Schwester Devakī töten wird, und sperrt sie ein. Als Kṛṣṇa geboren wird, öffnen sich die Türen. Vasudeva trägt das Kind durch die Yamunā nach Gokula und tauscht es gegen ein neugeborenes Mädchen. Als Kaṃsa das Mädchen töten will, entschwebt es als Göttin Yogamāyā und verkündet sein Ende. Gefeiert wird die Geburt zu Janmāṣṭamī.'},
+{id:'s_govardhana',l:'vis',e:'e3',t:'s',n:'Kṛṣṇa hebt den Govardhana',where:'Govardhana-Hügel bei Mathurā',src:'Harivaṃśa; Bhāgavata-Purāṇa 10.24–27',w:['krishna','indra_p'],x:'Kṛṣṇa überredet die Hirten, statt Indra den Berg zu verehren, der ihre Kühe nährt. Der gekränkte Indra schickt sieben Tage lang Unwetter. Kṛṣṇa hebt den Berg auf dem kleinen Finger hoch wie einen Schirm, bis Indra aufgibt und ihm huldigt. Ein Mythos über den Machtwechsel vom vedischen Indra zum Gott der Hingabe.'},
+{id:'s_hanuman_sun',l:'vis',e:'e3',t:'s',n:'Hanumān will die Sonne essen',where:'Am Himmel',src:'Rāmāyaṇa, Uttarakāṇḍa',w:['hanuman','surya','indra_p','vayu','brahma'],x:'Das Affenkind hält die aufgehende Sonne für eine reife Frucht und springt hinauf. Indra schlägt es mit dem Donnerkeil an den Kiefer (hanu), daher der Name. Vāyu zieht sich beleidigt zurück, und allen Wesen geht der Atem aus. Um ihn zu versöhnen, beschenken Brahmā und die Götter Hanumān mit Unverwundbarkeit und Kräften.'},
+{id:'s_ramayana',l:'vis',e:'e3',t:'s',n:'Sītās Raub und der Krieg um Laṅkā',where:'Pañcavaṭī an der Godāvarī, Rāmeśvaram, Laṅkā',src:'Vālmīki-Rāmāyaṇa',w:['rama','sita','hanuman','brahma','agni'],wo:'Rāvaṇa, Lakṣmaṇa, der Geier Jaṭāyu, Vibhīṣaṇa',x:'Rāvaṇa, der zehnköpfige König von Laṅkā, ist dank eines Wunsches von Brahmā für Götter und Dämonen unverwundbar, die Menschen hat er vergessen. Er raubt Sītā im Wald. Rāma und Lakṣmaṇa verbünden sich mit den Affen, Hanumān findet Sītā, ein Damm führt übers Meer, Rāma tötet Rāvaṇa. Sītā beweist ihre Treue in Agnis Feuer. Dussehra und Dīvālī feiern Sieg und Heimkehr.'},
+{id:'s_gita',l:'vis',e:'e3',t:'s',n:'Die Bhagavad Gītā',where:'Schlachtfeld Kurukṣetra (Haryana)',src:'Mahābhārata, Bhīṣmaparvan',w:['krishna','pandavas','vishnu'],wo:'Arjuna',x:'Vor der großen Schlacht will Arjuna nicht gegen Verwandte und Lehrer kämpfen. Sein Wagenlenker Kṛṣṇa lehrt ihn, zu handeln, ohne am Erfolg zu hängen, und zeigt drei Wege: Handeln, Erkenntnis und Hingabe. Schließlich offenbart er seine kosmische Gestalt, in der alle Götter und alle Zeit enthalten sind.'},
+
+{id:'sita',l:'dev',e:'e3',t:'g',n:'Sītā',d:'सीता',s:'Tochter der Erde',x:'König Janaka findet sie in einer Ackerfurche (sītā), sie ist ein Kind der Erde. Sie folgt Rāma ins Exil, wird von Rāvaṇa geraubt und muss nach ihrer Befreiung durch Agnis Feuer gehen. Am Ende kehrt sie in den Schoß der Erde zurück. Später gilt sie als Verkörperung Lakṣmīs.',o:'Mithilā/Janakpur (Nepal), Ayodhyā, Aśoka-Hain in Laṅkā',q:'Rāmāyaṇa'},
+{id:'ganga',l:'dev',e:'e3',t:'g',n:'Gaṅgā',d:'गङ्गा',s:'Heiliger Fluss',x:'Die Flussgöttin, die vom Himmel herabkam. Im Mahābhārata ist sie die Mutter Bhīṣmas. Ihr Wasser reinigt von Schuld. An ihren Ufern in Vārāṇasī und Haridvār werden Tote verbrannt, an ihren Zusammenflüssen findet die Kumbh Melā statt.',a:'Seeungeheuer Makara, Wassertopf',o:'Gangotri, Haridvār, Prayāgrāj, Vārāṇasī, Gaṅgāsāgar',q:'Epen'},
+{id:'parvati',l:'dev',e:'e3',t:'g',n:'Pārvatī / Umā',d:'पार्वती',s:'Tochter des Himālaya',x:'Die Bergtochter (auch Umā, Gaurī) ist die wiedergeborene Satī und gewinnt den Asketen Śiva durch eigene Askese. Als Ehefrau zieht sie ihn ins Familienleben: Sie ist Mutter von Gaṇeśa und Skanda und mit Śiva verschmolzen als Ardhanārīśvara, halb Mann, halb Frau. Als Annapūrṇā nährt sie Vārāṇasī.',a:'Löwe, Lotus, Spiegel',o:'Kailāsa, Himālaya',q:'Kena-Upaniṣad; Epen; Kālidāsa'},
+{id:'s_ganga',l:'dev',e:'e3',t:'s',n:'Gaṅgā kommt herab',where:'Gangotri im Himālaya bis zum Meer bei Gaṅgāsāgar',src:'Rāmāyaṇa, Bālakāṇḍa; Purāṇen',w:['ganga','shiva','brahma','vishnu'],wo:'König Bhagīratha, die 60 000 Söhne Sagaras, der Weise Kapila',x:'Die 60 000 Söhne des Königs Sagara werden vom Weisen Kapila zu Asche verbrannt, und nur das Himmelswasser der Gaṅgā kann sie erlösen. Ihr Nachfahre Bhagīratha übt jahrelang Askese, Brahmā gewährt die Bitte. Doch die Wucht des Falls würde die Erde zerschlagen: Śiva fängt den Strom in seinen Haarflechten auf und lässt ihn sanft frei. In den Purāṇen entspringt Gaṅgā zuvor an Viṣṇus Fuß.'},
+
+{id:'shiva',l:'shi',e:'e3',t:'g',n:'Śiva',d:'शिव',s:'Asket, Tänzer, Zerstörer',x:'Aus Rudra wird der große Gott (Mahādeva): Asket auf dem Kailāsa und Familienvater, Zerstörer am Ende der Zeit, Tänzer und Herr der Tiere (Paśupati). Verehrt wird er vor allem als Liṅga; der älteste bekannte steht in Gudimallam (um das 2. Jh. v. Chr.). Ob ein Siegel der Induskultur einen „Proto-Śiva“ zeigt, ist umstritten.',a:'Dreizack, Trommel, Schlange, Mondsichel, Gaṅgā im Haar, drittes Auge, blauer Hals; der Stier Nandī',o:'Kailāsa, Vārāṇasī, die zwölf Jyotirliṅgas',q:'Śvetāśvatara-Upaniṣad; Mahābhārata; Śiva- und Liṅga-Purāṇa'},
+{id:'skanda',l:'shi',e:'e3',t:'g',n:'Skanda / Kārttikeya',d:'स्कन्द',s:'Kriegsgott mit sechs Gesichtern',x:'Śivas Same wird von Agni und Gaṅgā getragen, das Kind von den sechs Kṛttikās (den Plejaden) aufgezogen, daher seine sechs Gesichter. Er führt das Götterheer an und tötet den Dämon Tāraka. Münzen der Kuṣāṇa zeigen ihn schon im 2. Jh. n. Chr.',a:'Speer (vel), Pfau, Hahnenbanner',q:'Mahābhārata, Vanaparvan; Kālidāsa, Kumārasambhava'},
+{id:'s_kirata',l:'shi',e:'e3',t:'s',n:'Arjuna ringt mit Śiva',where:'Berg Indrakīla im Himālaya',src:'Mahābhārata, Vanaparvan; Bhāravi, Kirātārjunīya',w:['shiva','parvati','pandavas'],wo:'Arjuna; ein Dämon in Gestalt eines Ebers',x:'Arjuna übt Askese, um Götterwaffen zu erlangen. Ein Eber greift an, Arjuna und ein fremder Jäger schießen gleichzeitig und streiten um die Beute. Arjuna unterliegt im Zweikampf und erkennt im Jäger Śiva, begleitet von Pārvatī. Beeindruckt schenkt Śiva ihm die Waffe Pāśupata.'},
+{id:'s_tripura',l:'shi',e:'e3',t:'s',n:'Śiva zerstört die drei Städte',where:'Drei fliegende Festungen im Weltraum',src:'Mahābhārata, Karṇaparvan',w:['shiva','brahma','vishnu'],x:'Drei Dämonen besitzen Burgen aus Gold, Silber und Eisen, die nur einmal in tausend Jahren in einer Linie stehen. Die Götter bauen Śiva einen kosmischen Wagen: Die Erde ist der Wagen, Brahmā der Lenker, Viṣṇu der Pfeil. Mit einem einzigen Schuss verbrennt Śiva als Tripurāntaka alle drei.'},
+
+/* ===== e4 Purāṇen & Gupta ===== */
+{id:'trimurti',l:'bra',e:'e4',t:'g',n:'Trimūrti',d:'त्रिमूर्ति',s:'Schaffen · Erhalten · Auflösen',x:'Die Lehre von einem Göttlichen in drei Gestalten: Brahmā erschafft, Viṣṇu erhält, Śiva löst auf. Sie klingt bei Kālidāsa und in den Purāṇen an, blieb aber eher Theorie, denn jede Tradition stellt ihren eigenen Gott über die beiden anderen. Die berühmte dreiköpfige Büste in Elephanta (6. Jh.) zeigt eigentlich drei Gesichter Śivas.',q:'Maitrāyaṇī-Upaniṣad; Kālidāsa; Purāṇen'},
+{id:'kama',l:'bra',e:'e4',t:'g',n:'Kāma',d:'काम',s:'Gott der Liebe',x:'Das Begehren, im Nāsadīya-Hymnus der erste Same des Geistes, wird zum Liebesgott mit Zuckerrohrbogen und Blütenpfeilen, verheiratet mit Rati, der Lust. Śiva verbrennt ihn mit seinem dritten Auge; seither ist er körperlos (Anaṅga). Er wird als Kṛṣṇas Sohn Pradyumna wiedergeboren.',a:'Zuckerrohrbogen, fünf Blütenpfeile, Papagei, Banner mit Makara',q:'Purāṇen; Kālidāsa'},
+{id:'shankara',l:'bra',e:'e4',t:'h',n:'Śaṅkara',d:'शङ्कर',s:'Philosoph des Advaita, 8. Jh.',x:'Der Lehrer des Advaita-Vedānta erklärt die Welt als Erscheinung des einen Brahman. Er gründet Klöster in den vier Himmelsrichtungen: Śṛṅgeri, Dvārakā, Purī und Jyotirmaṭh. Die Tradition schreibt ihm die Verehrung von fünf Göttern nebeneinander zu (pañcāyatana): Śiva, Viṣṇu, Devī, Gaṇeśa und Sūrya.',o:'Kālaḍi (Kerala), Kāśī, Śṛṅgeri'},
+{id:'alvars',l:'bra',e:'e4',t:'h',n:'Āḻvārs & Nāyaṉmārs',s:'Tamil-Dichterheilige, 6.–9. Jh.',x:'Zwölf Viṣṇu-Dichter (Āḻvārs) und 63 Śiva-Heilige (Nāyaṉmārs) ziehen von Tempel zu Tempel und singen auf Tamil statt auf Sanskrit von leidenschaftlicher Liebe zu Gott. Unter ihnen sind Frauen wie Āṇṭāḷ und Kāraikkāl Ammaiyār. Mit ihnen beginnt die Bhakti-Bewegung, die sich nach Norden ausbreitet.',o:'Srirangam, Chidambaram, Kāñcīpuram'},
+{id:'s_lotus',l:'bra',e:'e4',t:'s',n:'Brahmā aus Viṣṇus Nabel',where:'Urozean zwischen zwei Weltzeitaltern',src:'Devī-Māhātmya 1; Viṣṇu- und Bhāgavata-Purāṇa',w:['brahma','vishnu','mahadevi'],wo:'Die Dämonen Madhu und Kaiṭabha',x:'Zwischen zwei Weltzeitaltern schläft Viṣṇu auf der Schlange Śeṣa. Aus seinem Nabel wächst ein Lotus, darin sitzt Brahmā. Aus Viṣṇus Ohrenschmalz entstehen die Dämonen Madhu und Kaiṭabha und bedrohen Brahmā. Er ruft die Göttin des Schlafs (Yoganidrā) an, sie lässt Viṣṇu erwachen, und er tötet beide. Das Devī-Māhātmya erzählt es, um zu zeigen: Selbst Viṣṇu untersteht der Göttin.'},
+
+{id:'matsya',l:'vis',e:'e4',t:'g',n:'Matsya',d:'मत्स्य',s:'1. Avatāra: Fisch',x:'Als Fisch rettet Viṣṇu Manu, die Weisen und die Veden vor der großen Flut und tötet den Dämon, der die Veden gestohlen hat.',q:'Matsya-Purāṇa, Bhāgavata-Purāṇa 8'},
+{id:'kurma',l:'vis',e:'e4',t:'g',n:'Kūrma',d:'कूर्म',s:'2. Avatāra: Schildkröte',x:'Als riesige Schildkröte trägt Viṣṇu den Berg Mandara, damit Götter und Dämonen den Milchozean quirlen können. Eigene Tempel hat er kaum, einer steht in Srikurmam (Andhra Pradesh).',q:'Purāṇen'},
+{id:'varaha',l:'vis',e:'e4',t:'g',n:'Varāha',d:'वराह',s:'3. Avatāra: Eber',x:'Als Eber taucht Viṣṇu in den Urozean und hebt die Erde auf seinen Hauern heraus. Das Felsrelief von Udayagiri (um 401 n. Chr.) gilt als Meisterwerk der Gupta-Kunst und wohl auch als Bild des Königs, der sein Reich rettet.',o:'Udayagiri (Madhya Pradesh), Khajurāho',q:'Purāṇen'},
+{id:'narasimha',l:'vis',e:'e4',t:'g',n:'Narasiṃha',d:'नरसिंह',s:'4. Avatāra: Mann-Löwe',x:'Halb Mensch, halb Löwe bricht Viṣṇu aus einer Säule, um seinen Verehrer Prahlāda zu retten. Ein eigener, oft wilder Kult blüht in Südindien und Odisha.',o:'Ahobilam, Simhachalam',q:'Viṣṇu-, Bhāgavata-Purāṇa'},
+{id:'vamana',l:'vis',e:'e4',t:'g',n:'Vāmana',d:'वामन',s:'5. Avatāra: Zwerg',x:'Als zwergenhafter Brahmanenjunge, Sohn der Aditi, erbittet Viṣṇu vom Dämonenkönig Bali drei Schritte Land und wächst zum Riesen Trivikrama. Hier lebt der vedische Mythos von den drei Schritten weiter.',q:'Bhāgavata-Purāṇa 8'},
+{id:'parashurama',l:'vis',e:'e4',t:'g',n:'Paraśurāma',d:'परशुराम',s:'6. Avatāra: Rāma mit der Axt',x:'Ein Brahmane mit der Kriegeraxt, die er von Śiva erhielt. Weil ein König die Wunschkuh seines Vaters raubte, vernichtet er einundzwanzigmal die Kriegerkaste. Er unterrichtet Bhīṣma, Droṇa und Karṇa. Der Legende nach schuf er die Küste Keralas, indem er seine Axt ins Meer warf.',o:'Kerala, Konkan',q:'Mahābhārata; Purāṇen'},
+{id:'buddha_av',l:'vis',e:'e4',t:'g',n:'Buddha',d:'बुद्ध',s:'9. Avatāra',x:'Ab etwa dem 6. Jh. zählen Purāṇen auch den Buddha zu Viṣṇus Avatāras, zunächst als List, um Dämonen von den Veden abzubringen. Jayadeva preist ihn im 12. Jh. dafür, dass er blutige Opfer beendete. Manche Listen setzen stattdessen Balarāma ein.',q:'Bhāgavata-Purāṇa; Gītagovinda'},
+{id:'kalki',l:'vis',e:'e4',t:'g',n:'Kalki',d:'कल्कि',s:'10. Avatāra, noch erwartet',x:'Am Ende des dunklen Zeitalters (Kali-Yuga) erscheint Viṣṇu auf einem weißen Pferd mit flammendem Schwert, beendet das Chaos und eröffnet ein neues goldenes Zeitalter.',q:'Viṣṇu-Purāṇa; Kalki-Purāṇa'},
+{id:'mohini',l:'vis',e:'e4',t:'g',n:'Mohinī',d:'मोहिनी',s:'Viṣṇu als Verführerin',x:'Viṣṇus einzige weibliche Gestalt. Beim Quirlen des Ozeans betört sie die Dämonen und gibt den Nektar nur den Göttern. Später rettet sie Śiva vor dem Dämon Bhasmāsura, der jeden zu Asche verbrennt, dessen Kopf er berührt: Sie lockt ihn in einen Tanz, bei dem er die eigene Stirn berührt. Mit Śiva zeugt sie Ayyappa.',q:'Mahābhārata; Bhāgavata-Purāṇa'},
+{id:'s_churning',l:'vis',e:'e4',t:'s',n:'Das Quirlen des Milchozeans',where:'Milchozean; Nektartropfen fallen in Prayāg, Haridvār, Ujjain, Nāsik',src:'Mahābhārata, Ādiparvan; Viṣṇu- und Bhāgavata-Purāṇa',w:['vishnu','kurma','mohini','lakshmi','shiva','indra_p','soma','surya'],wo:'Die Asuras, die Schlange Vāsuki, der Berg Mandara, Rāhu',x:'Götter und Dämonen verbünden sich auf Zeit, um den Unsterblichkeitstrank zu gewinnen. Der Berg Mandara dient als Quirl, die Schlange Vāsuki als Seil, Viṣṇu trägt als Schildkröte alles. Zuerst steigt tödliches Gift auf: Śiva trinkt es, sein Hals färbt sich blau. Es folgen der Mond, Lakṣmī, die Viṣṇu wählt, und schließlich der Nektar, den Mohinī den Göttern zuspielt. Der Dämon Rāhu nascht trotzdem; Sonne und Mond verraten ihn, und Viṣṇu schlägt ihm den Kopf ab. Seither verschluckt Rāhu die beiden bei Finsternissen.'},
+{id:'s_prahlada',l:'vis',e:'e4',t:'s',n:'Prahlāda und Narasiṃha',where:'Palast des Hiraṇyakaśipu (Tradition: Ahobilam oder Multan)',src:'Viṣṇu-Purāṇa; Bhāgavata-Purāṇa 7',w:['narasimha','brahma'],wo:'Hiraṇyakaśipu, Prahlāda, Holikā',x:'Der Dämonenkönig Hiraṇyakaśipu hat sich von Brahmā fast vollständige Unverwundbarkeit erbeten: weder durch Mensch noch Tier, weder drinnen noch draußen, weder bei Tag noch bei Nacht. Sein Sohn Prahlāda verehrt trotzdem Viṣṇu. Alle Mordversuche scheitern, seine Tante Holikā verbrennt an seiner Stelle im Feuer, daher das Holi-Feuer. Schließlich bricht Narasiṃha in der Dämmerung aus einer Säule und tötet den König auf der Türschwelle, auf seinem Schoß, mit bloßen Krallen.'},
+{id:'s_bali',l:'vis',e:'e4',t:'s',n:'Vāmana und König Bali',where:'Opferplatz des Bali; gefeiert in Kerala (Onam)',src:'Bhāgavata-Purāṇa 8',w:['vamana','aditi'],wo:'Bali, Enkel Prahlādas; sein Lehrer Śukra',x:'Bali, ein frommer Dämonenkönig und Enkel Prahlādas, hat die drei Welten erobert. Viṣṇu kommt als kleiner Brahmane und bittet um drei Schritte Land. Trotz der Warnung seines Lehrers Śukra sagt Bali zu. Der Zwerg wächst: ein Schritt bedeckt die Erde, einer den Himmel, für den dritten bietet Bali seinen Kopf. Er wird in die Unterwelt geschickt, darf aber jedes Jahr sein Volk besuchen. Das feiert Kerala als Onam.'},
+{id:'s_varaha',l:'vis',e:'e4',t:'s',n:'Varāha rettet die Erde',where:'Urozean; Relief in Udayagiri',src:'Viṣṇu-Purāṇa; Varāha-Purāṇa; Śatapatha-Brāhmaṇa 14.1.2',w:['varaha','bhudevi','prajapati'],wo:'Der Dämon Hiraṇyākṣa',x:'Der Dämon Hiraṇyākṣa, Bruder des Hiraṇyakaśipu, zerrt die Erde in die Tiefe des Ozeans. Viṣṇu taucht als Eber hinab, kämpft tausend Jahre lang und hebt die Erdgöttin auf seinem Hauer ans Licht. Schon im Śatapatha-Brāhmaṇa hebt ein Eber die Erde empor, dort noch als Gestalt Prajāpatis.'},
+
+{id:'durga',l:'dev',e:'e4',t:'g',n:'Durgā',d:'दुर्गा',s:'Unbesiegbare Kriegerin',x:'Die „schwer Zugängliche“ reitet einen Löwen und trägt in vielen Armen die Waffen aller Götter. Frühe Bilder der Büffeltöterin gibt es schon aus Mathurā (1.–2. Jh.), ihr Grundtext ist das Devī-Māhātmya. Ihr Fest Navarātri endet mit Vijayādaśamī; die Durgā Pūjā in Kolkata ist seit 2021 immaterielles UNESCO-Kulturerbe.',a:'Löwe oder Tiger, Dreizack, Diskus, Schwert',o:'Vindhya, Kolkata, Chamundi-Hügel (Mysuru), Vaiṣṇo Devī',q:'Devī-Māhātmya (um 5.–6. Jh.)'},
+{id:'kali',l:'dev',e:'e4',t:'g',n:'Kālī',d:'काली',s:'Die Schwarze: Zeit und Tod',x:'Im Devī-Māhātmya springt sie aus der zornigen Stirn der Göttin, tötet Caṇḍa und Muṇḍa und trinkt das Blut Raktabījas. Ab dem 18. Jh. besingen bengalische Dichter wie Rāmprasād sie als liebende Mutter; das bekannte Bild zeigt sie auf dem liegenden Śiva.',a:'Herausgestreckte Zunge, Schädelkette, Schwert, abgeschlagener Kopf',o:'Kālīghāṭ und Dakṣiṇeśvar (Kolkata), Kāmākhyā',q:'Devī-Māhātmya 7–8'},
+{id:'mahadevi',l:'dev',e:'e4',t:'g',n:'Mahādevī',d:'महादेवी',s:'Die große Göttin',x:'Das Devī-Māhātmya, Teil des Mārkaṇḍeya-Purāṇa, verkündet: Die höchste Macht ist weiblich. Alle Göttinnen und die Kraft (śakti) aller Götter sind Formen dieser einen Göttin. Sie ist Mutter der Welt und zugleich ihre Täuschung (māyā). Diese Sicht prägt die Śākta-Traditionen bis heute.',q:'Devī-Māhātmya; Devī-Bhāgavata-Purāṇa'},
+{id:'sati',l:'dev',e:'e4',t:'g',n:'Satī',d:'सती',s:'Erste Frau Śivas',x:'Die Tochter Dakṣas heiratet Śiva gegen den Willen ihres Vaters. Als Dakṣa ihn kränkt, verbrennt sie sich im Opferfeuer selbst und wird als Pārvatī wiedergeboren. Ihr Name wurde später auf die Witwenverbrennung übertragen, die die britische Verwaltung 1829 verbot.',q:'Purāṇen'},
+{id:'bhudevi',l:'dev',e:'e4',t:'g',n:'Bhūdevī',d:'भूदेवी',s:'Erdgöttin, Viṣṇus Gattin',x:'Die vedische Pṛthivī als Gattin Viṣṇus, neben Śrīdevī (Lakṣmī). Wird sie von Dämonen und Ungerechtigkeit erdrückt, klagt sie den Göttern ihr Leid, und Viṣṇu steigt herab, etwa als Varāha oder als Kṛṣṇa. Sītā ist ihre Tochter.',q:'Purāṇen'},
+{id:'s_mahisha',l:'dev',e:'e4',t:'s',n:'Durgā tötet Mahiṣa',where:'Vindhya-Berge; Chamundi-Hügel in Mysuru',src:'Devī-Māhātmya 2–4',w:['durga','shiva','vishnu','brahma','indra_p','mahadevi'],wo:'Mahiṣāsura, der Büffeldämon',x:'Der Büffeldämon Mahiṣa vertreibt die Götter aus dem Himmel. Aus dem Zorn von Brahmā, Viṣṇu, Śiva und den anderen Göttern entsteht ein Licht, das sich zur Göttin formt. Jeder Gott gibt ihr seine Waffe: Śiva den Dreizack, Viṣṇu den Diskus, Indra den Donnerkeil, der Himālaya den Löwen. Nach langer Schlacht enthauptet sie Mahiṣa, als er aus dem Büffelkörper steigt. Der Name Mysuru soll auf ihn zurückgehen.'},
+{id:'s_raktabija',l:'dev',e:'e4',t:'s',n:'Kālī und Raktabīja',where:'Schlachtfeld im Himālaya',src:'Devī-Māhātmya 7–8',w:['kali','durga'],wo:'Caṇḍa, Muṇḍa, Raktabīja, Śumbha und Niśumbha',x:'Die Dämonenbrüder Śumbha und Niśumbha wollen die Göttin zur Frau. Im Krieg trifft sie auf Raktabīja: Aus jedem Tropfen seines Blutes, der zu Boden fällt, entsteht ein neuer Raktabīja. Kālī breitet ihre Zunge aus und trinkt das Blut, bevor es die Erde berührt. So kann die Göttin ihn besiegen.'},
+
+{id:'ganesha',l:'shi',e:'e4',t:'g',n:'Gaṇeśa',d:'गणेश',s:'Elefantenkopf, Herr der Hindernisse',x:'Herr der Scharen (gaṇa), der Hindernisse beseitigt und auch setzt, angerufen vor jedem Beginn. Ab dem 5. Jh. erscheint er als eigenständiger Gott mit Elefantenkopf und dickem Bauch. Eine spätere Legende macht ihn zum Schreiber des Mahābhārata, sein abgebrochener Stoßzahn diente als Feder.',a:'Ratte, Süßigkeit Modaka, abgebrochener Stoßzahn, Schlinge, Elefantenstachel',o:'Aṣṭavināyaka (Maharashtra), Mumbai, Pune',q:'Purāṇen; Gaṇeśa- und Mudgala-Purāṇa'},
+{id:'s_daksha',l:'shi',e:'e4',t:'s',n:'Dakṣas Opfer und Satīs Tod',where:'Kanakhal bei Haridvār; die Śakti-Pīṭhas, z. B. Kāmākhyā (Assam)',src:'Mahābhārata 12; Śiva-, Bhāgavata- und Devī-Bhāgavata-Purāṇa',w:['shiva','sati','brahma','vishnu','mahadevi'],wo:'Dakṣa (ein Sohn Brahmās), Vīrabhadra',x:'Dakṣa veranstaltet ein großes Opfer und lädt seinen unheimlichen Schwiegersohn Śiva nicht ein. Satī geht trotzdem hin, wird gedemütigt und verbrennt sich im Opferfeuer. Śiva entsendet den schrecklichen Vīrabhadra, der das Opfer verwüstet und Dakṣa enthauptet; später bekommt Dakṣa einen Ziegenkopf. Trauernd trägt Śiva Satīs Leichnam durch die Welt, bis Viṣṇu ihn mit dem Diskus zerteilt. Wo die Teile fallen, entstehen die Śakti-Pīṭhas.'},
+{id:'s_kama',l:'shi',e:'e4',t:'s',n:'Śiva verbrennt Kāma',where:'Himālaya',src:'Kālidāsa, Kumārasambhava; Śiva-Purāṇa',w:['shiva','parvati','kama','skanda','brahma','indra_p'],wo:'Der Dämon Tāraka; Rati',x:'Der Dämon Tāraka hat von Brahmā erwirkt, dass nur ein Sohn Śivas ihn töten kann, doch Śiva meditiert in Trauer um Satī. Indra schickt Kāma, um ihn für Pārvatī zu entflammen. Śiva öffnet sein drittes Auge und verbrennt Kāma zu Asche. Erst Pārvatīs eigene, härteste Askese gewinnt ihn. Ihr Sohn Skanda besiegt Tāraka.'},
+{id:'s_ganesha_head',l:'shi',e:'e4',t:'s',n:'Wie Gaṇeśa seinen Kopf bekam',where:'Kailāsa',src:'Śiva-Purāṇa; Brahmavaivarta-Purāṇa',w:['ganesha','parvati','shiva'],x:'Pārvatī formt aus Kurkumapaste einen Jungen und lässt ihn vor ihrem Bad Wache halten. Śiva kommt heim, wird abgewiesen und schlägt ihm im Kampf den Kopf ab. Pārvatīs Zorn lässt die Welt erzittern. Śiva verspricht, den Jungen zu beleben, und setzt ihm den Kopf des ersten Wesens auf, das man findet: eines Elefanten. Andere Fassungen machen den bösen Blick des Planeten Śani verantwortlich.'},
+{id:'s_lingodbhava',l:'shi',e:'e4',t:'s',n:'Die Feuersäule (Liṅgodbhava)',where:'Aruṇācala, Tiruvannamalai (Tamil Nadu)',src:'Liṅga-Purāṇa; Śiva-Purāṇa',w:['shiva','brahma','vishnu'],x:'Brahmā und Viṣṇu streiten, wer der Größere sei. Da erscheint eine endlose Säule aus Feuer. Viṣṇu gräbt als Eber nach ihrem Fuß, Brahmā fliegt als Schwan zu ihrer Spitze, beide finden kein Ende. Viṣṇu gibt das zu, Brahmā lügt und nennt eine Blüte als Zeugin. Śiva tritt aus der Säule hervor und verflucht Brahmā: Man werde ihm kaum Tempel bauen. Am Aruṇācala brennt zur Erinnerung jedes Jahr das Kārttikai-Dīpam-Feuer.'},
+{id:'s_markandeya',l:'shi',e:'e4',t:'s',n:'Mārkaṇḍeya: Śiva besiegt den Tod',where:'Thirukkadaiyur (Tamil Nadu)',src:'Liṅga-Purāṇa; Tamil-Tempeltradition',w:['shiva','yama'],wo:'Der Junge Mārkaṇḍeya',x:'Dem Jungen Mārkaṇḍeya ist ein Leben von nur 16 Jahren bestimmt. Als Yama ihn holen will, umklammert er einen Liṅga, und Yamas Schlinge legt sich um beide. Śiva bricht wütend aus dem Liṅga hervor und tritt den Tod nieder (als Kālāntaka). Mārkaṇḍeya bleibt für immer sechzehn.'},
+{id:'s_bhairava',l:'shi',e:'e4',t:'s',n:'Bhairava und Brahmās fünfter Kopf',where:'Vārāṇasī (Kapālamocana)',src:'Śiva-Purāṇa; Kūrma-Purāṇa',w:['shiva','brahma'],x:'Brahmā hatte einst fünf Köpfe und brüstete sich, der Höchste zu sein. Śiva nimmt die schreckliche Gestalt Bhairava an und reißt ihm den fünften Kopf ab. Der Schädel klebt an Bhairavas Hand, als Zeichen der Schuld des Brahmanenmordes. Er wandert als Bettler durch die Welt, bis der Schädel in Kāśī (Vārāṇasī) abfällt. Seither ist Kāla Bhairava der Stadtwächter von Vārāṇasī.'},
+
+/* ===== e5 Bhakti & Tantra ===== */
+{id:'surya_p',l:'ved',e:'e5',t:'g',n:'Sūrya-Kult',d:'सूर्य',s:'Sonnentempel, Chhaṭh',x:'Im Mittelalter erhält Sūrya prächtige Tempel, oft mit Stiefeln im iranischen Stil dargestellt; eine Legende erzählt, Kṛṣṇas Sohn Sāmba habe Sonnenpriester aus Persien geholt. Höhepunkt ist der Tempel von Koṇārka (13. Jh.), ein steinerner Sonnenwagen. In Bihar lebt die Sonnenverehrung beim Fest Chhaṭh als Massenfest weiter.',o:'Koṇārka, Modhera, Multan',q:'Sāmba-Purāṇa; Tempel'},
+{id:'s_pushkar',l:'bra',e:'e5',t:'s',n:'Warum Brahmā nur in Pushkar wohnt',where:'Pushkar (Rajasthan)',src:'Padma-Purāṇa',w:['brahma','sarasvati'],wo:'Das Hirtenmädchen Gāyatrī',x:'Brahmā will in Pushkar ein großes Opfer feiern, doch seine Frau Sāvitrī (Sarasvatī) kommt zu spät. Weil das Ritual eine Gattin verlangt, heiratet er rasch das Hirtenmädchen Gāyatrī. Die erzürnte Sāvitrī verflucht ihn: Nur in Pushkar solle man ihn verehren. Der Tempel dort ist einer der ganz wenigen Brahmā-Tempel, Sāvitrīs Tempel thront auf dem Hügel darüber.'},
+
+{id:'jagannatha',l:'vis',e:'e5',t:'g',n:'Jagannātha',d:'जगन्नाथ',s:'Herr der Welt, Puri',x:'Ein Gott aus Holz mit großen runden Augen, verehrt mit seinen Geschwistern Balabhadra und Subhadrā. Der Legende nach verehrte ihn ursprünglich ein Stammeshäuptling im Wald. Der Tempel in Puri stammt aus dem 12. Jh., die Figuren werden alle paar Jahrzehnte neu geschnitzt. Beim Wagenfest Ratha Yātrā ziehen Hunderttausende die Wagen; aus „Juggernaut“ wurde im Englischen ein Wort.',o:'Puri (Odisha)',q:'Tempeltradition, Gītagovinda'},
+{id:'vitthala',l:'vis',e:'e5',t:'g',n:'Viṭṭhala',d:'विठ्ठल',s:'Kṛṣṇa auf dem Ziegelstein',x:'Der Kṛṣṇa von Pandharpur steht mit den Händen in den Hüften auf einem Ziegelstein: Sein Verehrer Puṇḍalīka pflegte gerade seine Eltern und warf ihm den Stein hin, damit er warte. Dichterheilige wie Jñāneśvar und Tukārām besangen ihn auf Marathi. Bis heute pilgern jedes Jahr Hunderttausende zu Fuß zur Vārī.',o:'Pandharpur (Maharashtra)',q:'Marathi-Bhakti, 13.–17. Jh.'},
+{id:'venkateshvara',l:'vis',e:'e5',t:'g',n:'Veṅkaṭeśvara',d:'वेङ्कटेश्वर',s:'Bālājī von Tirupati',x:'Viṣṇu als Herr des Veṅkaṭa-Hügels, schon von den Āḻvārs besungen. Für seine Hochzeit mit Padmāvatī nahm er der Legende nach einen Kredit beim Reichtumsgott Kubera auf, und die Spenden der Pilger zahlen ihn ab. Tirumala gehört zu den meistbesuchten und reichsten Heiligtümern der Welt; viele opfern dort ihr Haar.',o:'Tirumala (Andhra Pradesh)',q:'Āḻvār-Hymnen; Tempeltradition'},
+{id:'caitanya',l:'vis',e:'e5',t:'h',n:'Caitanya',d:'चैतन्य',s:'Ekstatiker, 1486–1534',x:'Der bengalische Mystiker tanzte und sang die Namen Kṛṣṇas auf den Straßen. Seine Anhänger sehen in ihm Kṛṣṇa und Rādhā in einer Person. Er belebte Vṛndāvana als Pilgerort neu und lebte zuletzt in Puri bei Jagannātha. Auf ihn geht die Gauḍīya-Tradition zurück, aus der ISKCON hervorging.',o:'Navadvīp, Vṛndāvana, Puri'},
+{id:'s_rasa',l:'vis',e:'e5',t:'s',n:'Kṛṣṇas Tanz mit den Gopīs',where:'Vṛndāvana am Ufer der Yamunā',src:'Bhāgavata-Purāṇa 10.29–33; Jayadeva, Gītagovinda (12. Jh.)',w:['krishna','radha'],wo:'Die Gopīs (Hirtenfrauen)',x:'In einer Herbstvollmondnacht spielt Kṛṣṇa Flöte, und die Hirtenfrauen lassen alles stehen und liegen. Er vervielfacht sich, sodass jede mit ihm tanzt. Als sie stolz werden, verschwindet er, und ihre Sehnsucht wird zum Bild der Gottesliebe. Im Bhāgavata hat seine Liebste noch keinen Namen; Jayadevas Gītagovinda macht sie als Rādhā unsterblich.'},
+{id:'s_ramcharitmanas',l:'vis',e:'e5',t:'s',n:'Tulsīdās’ Rāmcaritmānas',where:'Ayodhyā und Vārāṇasī, ab 1574',src:'Rāmcaritmānas (in Avadhī)',w:['rama','sita','hanuman','shiva','parvati'],wo:'Der Dichter Tulsīdās',x:'Tulsīdās erzählt das Rāmāyaṇa in der Volkssprache Avadhī neu, als Werk der Hingabe, in dem Rāma ganz Gott ist. Erzählt wird in einem Rahmen: Śiva berichtet die Geschichte Pārvatī. Das Werk wurde zum meistgelesenen Buch Nordindiens. Die Rām-Līlā-Spiele zu Dussehra stehen in dieser Tradition, die Hanumān Cālīsā wird ebenfalls Tulsīdās zugeschrieben.'},
+
+{id:'radha',l:'dev',e:'e5',t:'g',n:'Rādhā',d:'राधा',s:'Kṛṣṇas Geliebte',x:'Die Hirtin aus Barsānā, Kṛṣṇas große Liebe, nicht seine Ehefrau. Ab Jayadevas Gītagovinda (12. Jh.) steht sie im Zentrum der Kṛṣṇa-Liebe. In der Tradition Caitanyas ist sie Kṛṣṇas eigene Kraft der Wonne, ohne die er nicht vollständig ist. In Barsānā feiert man Holi mit Stöcken (Laṭhmār Holī).',o:'Barsānā, Vṛndāvana',q:'Gītagovinda; Gauḍīya-Theologie'},
+{id:'lalita',l:'dev',e:'e5',t:'g',n:'Lalitā Tripurasundarī',d:'ललिता',s:'Schönste der drei Welten',x:'Die Göttin der tantrischen Śrī-Vidyā, verehrt im Śrī-Yantra und mit tausend Namen (Lalitā-Sahasranāma). Sie besiegt Bhaṇḍa, einen Dämon, der aus der Asche des verbrannten Kāma entstand, und lässt Kāma neu erstehen.',o:'Kāñcīpuram (Kāmākṣī), Śṛṅgeri',q:'Brahmāṇḍa-Purāṇa (Lalitopākhyāna)'},
+{id:'mahavidyas',l:'dev',e:'e5',t:'g',n:'Die zehn Mahāvidyās',k:'Zehn Mahāvidyās',d:'महाविद्या',s:'Tantrische Göttinnen',x:'Als Śiva Satī verbietet, zu Dakṣas Opfer zu gehen, zeigt sie sich in zehn furchterregenden und schönen Gestalten, die ihn aus allen Richtungen umstellen: Kālī, Tārā, Ṣoḍaśī, Bhuvaneśvarī, Bhairavī, Chinnamastā, Dhūmāvatī, Bagalāmukhī, Mātaṅgī und Kamalā. Śiva gibt nach. Besonders verehrt werden sie in Bengalen und Assam.',o:'Kāmākhyā (Assam), Tarapith (Bengalen)',q:'Mahābhāgavata- und Bṛhaddharma-Purāṇa'},
+{id:'gramadevata',l:'dev',e:'e5',t:'g',n:'Dorfgöttinnen',d:'ग्रामदेवता',s:'Grāmadevatā',x:'Jedes Dorf hat seine Schutzgöttin, oft ohne Sanskrit-Texte und mit eigenen Priestern: Māriyamman in Tamil Nadu, Śītalā im Norden (beide gegen Pocken und Fieber), die Schlangengöttin Manasā in Bengalen, Yellammā in Karnataka. Die großen Traditionen deuten sie als Formen der einen Devī, ihre eigenen Geschichten erzählen oft anderes.',o:'Am Dorfrand, am heiligen Baum, als Stein'},
+
+{id:'nataraja',l:'shi',e:'e5',t:'g',n:'Naṭarāja',d:'नटराज',s:'Śiva als König des Tanzes',x:'Im Feuerkranz tanzt Śiva die Welt in Schöpfung und Auflösung, sein Fuß steht auf dem Zwerg der Unwissenheit. Die Chola-Bronzen des 10.–11. Jh. machten das Bild weltberühmt; eine Statue steht heute am CERN in Genf.',o:'Chidambaram (Tamil Nadu)',q:'Chola-Zeit'},
+{id:'murugan',l:'shi',e:'e5',t:'g',n:'Murugan',d:'முருகன்',s:'Der tamilische Skanda',x:'Der jugendliche Gott der tamilischen Hügel verschmilzt mit Skanda. Er hat zwei Frauen: Devasenā, Indras Tochter, und Vaḷḷī, ein Mädchen aus einem Bergvolk. Seine sechs Heiligtümer (Āṟupaṭai Vīṭu) sind Pilgerziele. Zu Thaipusam ziehen Gläubige mit Lasten und Spießen, auch in Malaysia zu den Batu-Höhlen.',a:'Speer (vel), Pfau, Hahn',o:'Palani, Tiruchendur, Batu Caves (Malaysia)',q:'Tamil-Sangam-Dichtung; Tirumurukāṟṟuppaṭai'},
+{id:'ayyappa',l:'shi',e:'e5',t:'g',n:'Ayyappa',d:'അയ്യപ്പൻ',s:'Sohn von Śiva und Mohinī',x:'Der Asketengott von Sabarimala in Kerala heißt auch Hariharaputra, „Sohn von Hari (Viṣṇu) und Hara (Śiva)“. Er tötet die Büffeldämonin Mahiṣī, Mahiṣas Schwester. Pilger halten 41 Tage lang Enthaltsamkeit. 2018 hob Indiens Oberstes Gericht den Ausschluss von Frauen im gebärfähigen Alter auf; die Entscheidung ist bis heute umstritten und wird erneut geprüft.',o:'Sabarimala (Kerala)',q:'Kerala-Tradition'},
+{id:'s_race',l:'shi',e:'e5',t:'s',n:'Der Wettlauf um die Welt',where:'Kailāsa und Palani (Tamil Nadu)',src:'Tamil-Tradition',w:['ganesha','murugan','shiva','parvati'],wo:'Der Weise Nārada, der die Frucht bringt',x:'Nārada bringt eine Wunderfrucht, und die Eltern versprechen sie dem Sohn, der als Erster die Welt umrundet. Murugan fliegt auf seinem Pfau los. Gaṇeśa geht nur einmal um Śiva und Pārvatī herum: Seine Eltern seien seine Welt. Er bekommt die Frucht. Der gekränkte Murugan zieht sich auf den Hügel von Palani zurück, wo er bis heute verehrt wird.'},
+
+/* ===== e6 Moderne ===== */
+{id:'shani',l:'ved',e:'e6',t:'g',n:'Śani',d:'शनि',s:'Saturn, gefürchteter Planet',x:'Einer der neun Planeten (navagraha), Sohn Sūryas und Bruder Yamas, langsam, streng und gerecht. Heute boomt sein Kult: Samstags bekommt er Senföl. In Shani Shingnapur (Maharashtra) haben die Häuser der Legende nach keine Türen, weil er über das Dorf wacht.',a:'Krähe oder Geier, Schwarz, Eisen',o:'Shani Shingnapur',q:'Purāṇen; heutige Volksreligion'},
+{id:'aryasamaj',l:'bra',e:'e6',t:'h',n:'Ārya Samāj',s:'Zurück zu den Veden, 1875',x:'Dayānanda Sarasvatī gründet 1875 eine Reformbewegung: Allein die Veden seien Offenbarung. Götterbilder, Purāṇen und Kastenschranken lehnt er ab. Im Mittelpunkt steht wieder das Feueropfer (havan), und damit kehrt Agni ins Zentrum zurück.',o:'Mumbai, Lahore, Punjab'},
+{id:'ramakrishna',l:'bra',e:'e6',t:'h',n:'Rāmakṛṣṇa & Vivekānanda',k:'Rāmakṛṣṇa',s:'Kālī-Priester und sein Schüler',x:'Rāmakṛṣṇa (1836–1886), Priester im Kālī-Tempel von Dakṣiṇeśvar, erfährt Gott in vielen Formen und lehrt, dass alle Wege zum Einen führen. Sein Schüler Vivekānanda bringt 1893 beim Weltparlament der Religionen in Chicago den Vedānta in den Westen.',o:'Dakṣiṇeśvar (Kolkata), Chicago'},
+{id:'iskcon',l:'vis',e:'e6',t:'h',n:'ISKCON',s:'Hare Krishna, seit 1966',x:'A. C. Bhaktivedanta Swami Prabhupāda gründet 1966 in New York die Internationale Gesellschaft für Krishna-Bewusstsein, in der Linie Caitanyas. Das Hare-Kṛṣṇa-Mantra, vegetarisches Essen und Wagenfeste nach dem Vorbild von Puri verbreiten sich um die Welt.',o:'New York, Māyāpur, weltweit'},
+{id:'s_ayodhya',l:'vis',e:'e6',t:'s',n:'Rāma im Fernsehen und in Ayodhyā',where:'Ayodhyā (Uttar Pradesh)',src:'Zeitgeschichte',w:['rama','sita','hanuman'],wo:'Ramanand Sagar; Gerichte, Parteien, Bewegungen',x:'1987–88 zeigt das Staatsfernsehen Ramanand Sagars Serie „Ramayan“. Zur Sendezeit sind die Straßen leer, und ihre Bilder prägen eine Generation. Zugleich wird der Ort von Rāmas Geburt zum politischen Konflikt: 1992 zerstören Aktivisten die Babri-Moschee, 2019 spricht das Oberste Gericht das Gelände einem Tempel zu, und im Januar 2024 wird dort das Bild des kindlichen Rāma geweiht. Die Vorgänge sind bis heute politisch stark umstritten.'},
+{id:'santoshi',l:'dev',e:'e6',t:'g',n:'Santoṣī Mā',d:'संतोषी माँ',s:'Göttin aus dem Kino, 1975',x:'Der Low-Budget-Film „Jai Santoshi Maa“ (1975) wird ein Riesenerfolg und macht eine wenig bekannte Göttin landesweit populär. Sie gilt als Tochter Gaṇeśas, erschaffen, weil seine Söhne sich eine Schwester wünschten. Frauen fasten ihr zu Ehren 16 Freitage lang und meiden dabei Saures.',q:'Film und Andachtsheft'},
+{id:'bharatmata',l:'dev',e:'e6',t:'g',n:'Bhārat Mātā',d:'भारत माता',s:'Mutter Indien',x:'Die Nation als Göttin: Bankim Chandra Chattopadhyays Lied „Vande Mataram“ (1882) besingt das Land als Mutter im Bild Durgās. Abanindranath Tagores Gemälde von 1905 zeigt sie als vierarmige Asketin. In Vārāṇasī steht seit 1936 ein Tempel, in dem statt einer Figur eine Reliefkarte Indiens verehrt wird.',o:'Vārāṇasī, Haridvār',q:'Ānandamaṭh (1882)'},
+{id:'s_kumbh',l:'dev',e:'e6',t:'s',n:'Kumbh Melā',where:'Prayāgrāj, Haridvār, Ujjain, Nāsik',src:'Purāṇische Legende; Zeitgeschichte',w:['ganga','vishnu'],x:'Beim Quirlen des Ozeans fielen der Legende nach vier Tropfen Nektar auf die Erde. An diesen Orten feiert man reihum die Kumbh Melā; schon der chinesische Pilger Xuanzang beschrieb im 7. Jh. ein großes Badefest in Prayāg. Für die Mahā Kumbh 2025 in Prayāgrāj meldeten die Behörden über 600 Millionen Besuche, sie gilt als größte Menschenansammlung der Geschichte. Seit 2017 ist die Kumbh Melā immaterielles UNESCO-Kulturerbe.'},
+{id:'s_ganeshotsav',l:'shi',e:'e6',t:'s',n:'Gaṇeśa geht auf die Straße',where:'Pune und Mumbai',src:'Zeitgeschichte',w:['ganesha'],wo:'Bal Gangadhar Tilak',x:'1893 macht der Nationalist Bal Gangadhar Tilak aus dem häuslichen Gaṇeśa-Fest in Pune ein öffentliches Fest mit Prozessionen, auch als Ort politischer Versammlung unter britischer Herrschaft. Heute stehen in Mumbai riesige Figuren wie der Lalbaugcha Raja. Nach zehn Tagen werden Millionen Gaṇeśas im Meer und in Flüssen versenkt.'},
+];
+
+/* Beziehungen: [von, zu, Art, Notiz]. evo: früher → später · kid: Elternteil → Kind · ava: Gott → Form · mar: Paar · ally: Verbindung */
+const E=[
+['dyaus','prthivi','mar'],['dyaus','ushas','kid'],
+['aditi','varuna','kid'],['aditi','surya','kid','als Āditya'],['aditi','vamana','kid'],
+['rudra','maruts','kid'],['maruts','indra','ally','Gefolge in der Schlacht'],
+['indra','indra_p','evo','verliert an Rang'],['surya','surya_p','evo'],
+['surya','yama','kid','als Vivasvat'],['surya','shani','kid'],
+['agni','aryasamaj','ally','Feueropfer Havan'],['agni','skanda','kid','trägt Śivas Samen'],['agni','sita','ally','Feuerprobe'],
+['soma','shiva','ally','Somnāth: der Mond verehrt Śiva'],
+['hiranyagarbha','prajapati','evo','Antwort auf „Welchem Gott?“'],['purusha','prajapati','evo','Opfer als Schöpfung'],
+['prajapati','brahma','evo','geht in Brahmā auf'],['prajapati','lakshmi','kid','Śrī entsteigt ihm'],
+['hiranyagarbha','kama','evo','Begehren als erster Same'],
+['brahman','shankara','evo','Advaita-Vedānta'],['brahman','ramakrishna','evo','Vedānta im Westen'],['brahman','mahadevi','evo','die Göttin als Brahman'],
+['vishnu_v','vishnu','evo','vom Nebengott zum Höchsten'],['rudra','shiva','evo','Rudra wird Śiva'],
+['vac','sarasvati','evo','Göttin der Rede'],['sarasvati_r','sarasvati','evo','Fluss wird Göttin'],['vac','mahadevi','evo','Devīsūkta'],
+['prthivi','bhudevi','evo'],
+['s_trivikrama','vamana','evo','wird zum Vāmana-Mythos'],['s_manu','matsya','evo','Fisch wird Matsya'],
+['skanda','murugan','evo','verschmilzt mit Murugan'],['sati','parvati','evo','wiedergeboren'],
+['caitanya','iskcon','evo','Gauḍīya-Linie'],['durga','bharatmata','evo','Vorbild für Mutter Indien'],
+['s_churning','s_kumbh','evo','Nektartropfen'],['s_prahlada','s_bali','ally','Bali ist Prahlādas Enkel'],
+['vishnu','lakshmi','mar'],['vishnu','bhudevi','mar'],['rama','sita','mar'],['krishna','radha','mar','Geliebte'],
+['shiva','parvati','mar'],['shiva','sati','mar'],['brahma','sarasvati','mar'],
+['vishnu','krishna','ava'],['vishnu','rama','ava'],['vishnu','matsya','ava'],['vishnu','kurma','ava'],['vishnu','varaha','ava'],
+['vishnu','narasimha','ava'],['vishnu','vamana','ava'],['vishnu','parashurama','ava'],['vishnu','buddha_av','ava'],['vishnu','kalki','ava'],
+['vishnu','mohini','ava','weibliche Gestalt'],['vishnu','venkateshvara','ava'],
+['krishna','jagannatha','ava','in Puri'],['krishna','vitthala','ava','in Pandharpur'],
+['lakshmi','sita','ava','Verkörperung'],['bhudevi','sita','kid','Tochter der Erde'],
+['shiva','nataraja','ava'],['shiva','hanuman','ava','Anteil Śivas (spätere Tradition)'],
+['mahadevi','durga','ava'],['mahadevi','parvati','ava'],['mahadevi','lakshmi','ava'],['mahadevi','sarasvati','ava'],
+['mahadevi','lalita','ava'],['mahadevi','gramadevata','ava','lokale Formen'],
+['durga','kali','ava','aus ihrer Stirn'],['kali','mahavidyas','ava','erste der zehn'],['sati','mahavidyas','ava','zeigt sich in zehn Gestalten'],
+['trimurti','brahma','ava','Schöpfer'],['trimurti','vishnu','ava','Erhalter'],['trimurti','shiva','ava','Auflöser'],
+['parvati','ganesha','kid'],['shiva','ganesha','kid'],['shiva','skanda','kid'],['parvati','skanda','kid'],['ganga','skanda','kid','trägt den Keim'],
+['shiva','ayyappa','kid'],['mohini','ayyappa','kid'],['ganesha','santoshi','kid','Vater (Film 1975)'],
+['vayu','hanuman','kid'],
+['vayu','pandavas','kid','Bhīma'],['indra_p','pandavas','kid','Arjuna'],['yama','pandavas','kid','Yudhiṣṭhira (über Dharma)'],
+['ashvins','pandavas','kid','Nakula, Sahadeva'],['surya','pandavas','kid','Karṇa'],
+['krishna','pandavas','ally','Freund, Wagenlenker Arjunas'],
+['hanuman','rama','ally','Diener'],['hanuman','pandavas','ally','Halbbruder Bhīmas, Fahne Arjunas'],
+['garuda','vishnu','ally','Reittier'],
+['krishna','kama','kid','Pradyumna ist Kāma'],['lalita','kama','ally','erweckt Kāma neu'],
+['shiva','parashurama','ally','schenkt ihm die Axt'],
+['rama','durga','ally','ruft Durgā vor der Schlacht an (bengalisches Rāmāyaṇa)'],
+['indra_p','murugan','ally','seine Tochter Devasenā heiratet Murugan'],
+['alvars','vishnu','ally','besungen'],['alvars','shiva','ally','besungen'],['alvars','venkateshvara','ally','besungen'],
+['shankara','shiva','ally','Pañcāyatana'],['shankara','vishnu','ally','Pañcāyatana'],['shankara','mahadevi','ally','Pañcāyatana'],
+['shankara','ganesha','ally','Pañcāyatana'],['shankara','surya_p','ally','Pañcāyatana'],
+['kali','ramakrishna','ally','Priester in Dakṣiṇeśvar'],
+['caitanya','krishna','ally','Verehrer'],['caitanya','radha','ally','Rādhā und Kṛṣṇa in einem'],['caitanya','jagannatha','ally','lebt in Puri'],
+['iskcon','krishna','ally','Verehrung'],['iskcon','jagannatha','ally','Ratha Yātrā weltweit'],
+];
+
+/* ---------- Aufbau ---------- */
+const COL=166,NW=152,NH=48,ROW=62,LG=30,AX=162,PT=38,PB=14,TOPPAD=6;
+const byId={};N.forEach(o=>byId[o.id]=o);
+const laneOf={};LANES.forEach(l=>laneOf[l.id]=l);
+const eraOf={};ERAS.forEach(e=>eraOf[e.id]=e);
+const REL={
+ evo:{n:'Entwicklung',c:'--r-evo',from:'lebt fort in',to:'geht hervor aus'},
+ kid:{n:'Eltern → Kind',c:'--r-kid',from:'Kinder',to:'Eltern'},
+ mar:{n:'Paar',c:'--r-mar',from:'Partnerschaft',to:'Partnerschaft'},
+ ava:{n:'Avatāra / Form',c:'--r-ava',from:'Erscheinungsformen',to:'Form oder Aspekt von'},
+ ally:{n:'Verbunden',c:'--r-ally',from:'Verbunden mit',to:'Verbunden mit'},
+ story:{n:'Spielt mit in',c:'--r-story',from:'Beteiligte',to:'Geschichten'},
+};
+// Story-Beteiligungen als Kanten
+const EDGES=E.map(([a,b,t,lab])=>({a,b,t,lab}));
+N.filter(o=>o.t==='s').forEach(s=>(s.w||[]).forEach(id=>EDGES.push({a:s.id,b:id,t:'story'})));
+const bad=EDGES.filter(e=>!byId[e.a]||!byId[e.b]);if(bad.length)console.warn('Fehlende IDs',bad);
+const adj={};N.forEach(o=>adj[o.id]=[]);
+EDGES.forEach((e,i)=>{if(!byId[e.a]||!byId[e.b])return;adj[e.a].push(i);adj[e.b].push(i)});
+
+// Positionen
+let X=AX;LANES.forEach(l=>{l.x=X;l.w=l.cols*COL;X+=l.w+LG});
+const W=X-LG+14;
+let Y=TOPPAD;
+ERAS.forEach(e=>{
+  let rows=1;
+  LANES.forEach(l=>{const n=N.filter(o=>o.l===l.id&&o.e===e.id).length;rows=Math.max(rows,Math.ceil(n/l.cols))});
+  e.y=Y;e.h=PT+rows*ROW-(ROW-NH)+PB+10;Y+=e.h;
+});
+const H=Y+30;
+LANES.forEach(l=>ERAS.forEach(e=>{
+  N.filter(o=>o.l===l.id&&o.e===e.id).forEach((o,i)=>{
+    o.px=l.x+(i%l.cols)*COL+(COL-NW)/2;
+    o.py=e.y+PT+Math.floor(i/l.cols)*ROW;
+  });
+}));
+
+const svg=document.getElementById('g'),NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n}
+svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+const defs=el('defs',{},svg);
+['evo','kid','ava'].forEach(t=>{
+  const m=el('marker',{id:'ar-'+t,viewBox:'0 0 10 10',refX:'9',refY:'5',markerWidth:'7',markerHeight:'7',orient:'auto-start-reverse'},defs);
+  el('path',{d:'M0 1 L10 5 L0 9 z',style:`fill:var(${REL[t].c})`},m);
+});
+// Bänder
+const gB=el('g',{},svg);
+ERAS.forEach((e,i)=>{
+  if(i%2===0)el('rect',{class:'band',x:0,y:e.y,width:W,height:e.h},gB);
+  LANES.forEach(l=>{
+    el('rect',{class:'cell',x:l.x-8,y:e.y+4,width:l.w+16,height:e.h-8,rx:10,style:`--c:${l.c}`},gB);
+    const t=el('text',{class:'celllab',x:l.x+2,y:e.y+24},gB);t.textContent=`${e.n} · ${e.d}`;
+  });
+  const g=el('g',{class:'era',tabindex:0,role:'button','data-era':e.id,'aria-label':`Epoche ${e.n}, ${e.d}`},gB);
+  el('rect',{x:0,y:e.y,width:AX-14,height:e.h,fill:'transparent'},g);
+  let t=el('text',{class:'t',x:22,y:e.y+30},g);t.textContent=e.n;
+  t=el('text',{class:'d',x:22,y:e.y+48},g);t.textContent=e.d;
+  wrap(e.k,20).forEach((ln,j)=>{const tt=el('text',{class:'k',x:22,y:e.y+70+j*15},g);tt.textContent=ln});
+});
+el('line',{class:'axis',x1:10,y1:TOPPAD+8,x2:10,y2:H-26,'marker-end':'url(#ar-evo)'},gB);
+const ht=el('text',{class:'axistxt',x:4,y:H-8},gB);ht.textContent='heute';
+function wrap(s,n){const w=s.split(' '),out=[];let c='';w.forEach(x=>{if((c+' '+x).trim().length>n&&c){out.push(c);c=x}else c=(c+' '+x).trim()});if(c)out.push(c);return out}
+
+// Kanten
+const gE=el('g',{},svg);
+function pth(a,b){
+  const ax=a.px+NW/2,bx=b.px+NW/2;
+  if(Math.abs(a.py-b.py)<2){
+    const mid=(ax+bx)/2,lift=26+Math.min(60,Math.abs(ax-bx)*.12);
+    return `M${ax} ${a.py} Q${mid} ${a.py-lift} ${bx} ${b.py}`;
+  }
+  const down=b.py>a.py,ay=down?a.py+NH:a.py,by=down?b.py:b.py+NH,dy=(by-ay)*.5;
+  return `M${ax} ${ay} C${ax} ${ay+dy} ${bx} ${by-dy} ${bx} ${by}`;
+}
+const edgeEls=EDGES.map(e=>{
+  const A=byId[e.a],B=byId[e.b];if(!A||!B)return null;
+  const p=el('path',{class:'e '+e.t,d:pth(A,B)},gE);
+  if(REL[e.t]&&['evo','kid','ava'].includes(e.t))p.setAttribute('marker-end',`url(#ar-${e.t})`);
+  return p;
+});
+// Knoten
+const gN=el('g',{},svg);
+const nodeEls={};
+N.forEach(o=>{
+  const l=laneOf[o.l];
+  const g=el('g',{class:'n '+o.t,transform:`translate(${o.px},${o.py})`,tabindex:0,role:'button','data-id':o.id,style:`--c:${l.c}`,'aria-label':(o.t==='s'?'Geschichte: ':'')+o.n},gN);
+  const r=o.t==='s'?NH/2:8;
+  el('rect',{class:'bg',width:NW,height:NH,rx:r},g);
+  el('rect',{class:'tint',width:NW,height:NH,rx:r},g);
+  if(o.t==='g')el('rect',{class:'bar',width:5,height:NH,rx:2},g);
+  const px=o.t==='s'?14:12;
+  const t1=el('text',{class:'t1',x:px,y:20},g);t1.textContent=(o.t==='s'?'✦ ':'')+(o.k||o.n);
+  const t2=el('text',{class:'t2',x:px,y:36},g);t2.textContent=o.t==='s'?shortWhere(o.where):(o.s||'');
+  nodeEls[o.id]=g;
+});
+function shortWhere(s){return (s||'').split(/[;(,]/)[0].trim()}
+// Texte einpassen
+function fit(){
+  N.forEach(o=>{
+    const g=nodeEls[o.id],px=o.t==='s'?14:12,max=NW-px-8;
+    const t1=g.querySelector('.t1'),t2=g.querySelector('.t2');
+    if(o.t==='s'&&t1.getComputedTextLength()>max){
+      // Titel auf zwei Zeilen verteilen
+      const w=(o.k||o.n).split(' ');let a='✦ '+w[0],i=1;
+      t1.textContent=a;
+      while(i<w.length){t1.textContent=a+' '+w[i];if(t1.getComputedTextLength()>max)break;a=t1.textContent;i++}
+      t1.textContent=a;t1.setAttribute('y',19);
+      t2.textContent=w.slice(i).join(' ');t2.setAttribute('class','t2 l2');t2.setAttribute('y',34);
+    }
+    let len=t1.getComputedTextLength();
+    if(len>max){t1.style.fontSize='11.5px';len=t1.getComputedTextLength()}
+    if(len>max){
+      let s=t1.textContent;while(s.length>4&&t1.getComputedTextLength()>max){s=s.slice(0,-1);t1.textContent=s.trimEnd()+'…'}
+    }
+    let s2=t2.textContent;
+    while(s2.length>4&&t2.getComputedTextLength()>max){s2=s2.slice(0,-1);t2.textContent=s2.trimEnd()+'…'}
+  });
+}
+
+/* ---------- Zoom & Kopfzeile ---------- */
+const scroll=document.getElementById('scroll'),head=document.getElementById('lanehead');
+let scale=1;
+function layoutHead(){
+  head.style.width=W*scale+'px';
+  head.innerHTML=`<span style="left:6px;width:${(AX-20)*scale}px;--c:var(--muted)">Epoche</span>`+
+    LANES.map(l=>`<span style="left:${(l.x-8)*scale}px;width:${(l.w+8)*scale}px;--c:${l.c}">${l.n}</span>`).join('');
+  head.style.transform=`translateX(${-scroll.scrollLeft}px)`;
+}
+function setScale(ns,cx,cy){
+  ns=Math.min(1.8,Math.max(.32,ns));
+  if(cx==null){cx=scroll.clientWidth/2;cy=scroll.clientHeight/2}
+  const r=ns/scale,sl=scroll.scrollLeft,st=scroll.scrollTop;
+  scale=ns;svg.style.width=W*ns+'px';svg.style.height=H*ns+'px';
+  scroll.scrollLeft=(sl+cx)*r-cx;scroll.scrollTop=(st+cy)*r-cy;
+  layoutHead();
+}
+function fitScale(){return Math.min(1.1,(scroll.clientWidth-4)/W)}
+scroll.addEventListener('scroll',()=>{head.style.transform=`translateX(${-scroll.scrollLeft}px)`},{passive:true});
+document.getElementById('zin').onclick=()=>setScale(scale*1.25);
+document.getElementById('zout').onclick=()=>setScale(scale/1.25);
+document.getElementById('zfit').onclick=()=>{setScale(fitScale());scroll.scrollLeft=0};
+scroll.addEventListener('wheel',ev=>{
+  if(!ev.ctrlKey)return;ev.preventDefault();
+  const r=scroll.getBoundingClientRect();setScale(scale*Math.exp(-ev.deltaY*.0025),ev.clientX-r.left,ev.clientY-r.top);
+},{passive:false});
+let pinch=null;
+scroll.addEventListener('touchstart',ev=>{if(ev.touches.length===2){const[a,b]=ev.touches;pinch={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:scale}}},{passive:true});
+scroll.addEventListener('touchmove',ev=>{
+  if(!pinch||ev.touches.length!==2)return;ev.preventDefault();
+  const[a,b]=ev.touches,d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),r=scroll.getBoundingClientRect();
+  setScale(pinch.s*d/pinch.d,(a.clientX+b.clientX)/2-r.left,(a.clientY+b.clientY)/2-r.top);
+},{passive:false});
+scroll.addEventListener('touchend',ev=>{if(ev.touches.length<2)pinch=null},{passive:true});
+// Ziehen mit der Maus
+let drag=null;
+scroll.addEventListener('pointerdown',ev=>{if(ev.pointerType!=='mouse'||ev.button!==0)return;drag={x:ev.clientX,y:ev.clientY,l:scroll.scrollLeft,t:scroll.scrollTop,m:false}});
+window.addEventListener('pointermove',ev=>{if(!drag)return;const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)drag.m=true;if(drag.m){scroll.scrollLeft=drag.l-dx;scroll.scrollTop=drag.t-dy;scroll.style.cursor='grabbing'}});
+window.addEventListener('pointerup',()=>{if(drag&&drag.m){scroll.dataset.dragged='1';setTimeout(()=>delete scroll.dataset.dragged,0)}drag=null;scroll.style.cursor=''});
+
+/* ---------- Filter ---------- */
+const hidden=new Set();
+document.getElementById('filters').innerHTML=Object.entries(REL).map(([k,r])=>`<button class="chipf" data-f="${k}" aria-pressed="true" style="--c:var(${r.c})"><i></i>${r.n==='Spielt mit in'?'Geschichte':r.n}</button>`).join('');
+document.getElementById('filters').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-f]');if(!b)return;const k=b.dataset.f;
+  if(hidden.has(k)){hidden.delete(k);b.setAttribute('aria-pressed','true')}else{hidden.add(k);b.setAttribute('aria-pressed','false')}
+  svg.classList.toggle('hide-'+k,hidden.has(k));
+});
+
+/* ---------- Auswahl & Panel ---------- */
+const panel=document.getElementById('panel');
+let cur=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function chip(id,note){const o=byId[id];if(!o)return'';const l=laneOf[o.l];return `<button class="chip${o.t==='s'?' st':''}" data-go="${id}" style="--c:${l.c}">${esc(o.n)}${note?` <small>${esc(note)}</small>`:''}</button>`}
+function clearSel(){
+  svg.classList.remove('sel');svg.querySelectorAll('.on,.cur').forEach(n=>n.classList.remove('on','cur'));cur=null;
+}
+function select(id,center){
+  const o=byId[id];if(!o)return;
+  clearSel();cur=id;svg.classList.add('sel');
+  nodeEls[id].classList.add('on','cur');
+  adj[id].forEach(i=>{const e=EDGES[i];if(hidden.has(e.t))return;edgeEls[i]&&edgeEls[i].classList.add('on');nodeEls[e.a].classList.add('on');nodeEls[e.b].classList.add('on')});
+  showNode(o);
+  if(center)centerOn(o);
+  try{history.replaceState(null,'','#'+id)}catch(_){}
+}
+function centerOn(o){
+  const mob=window.matchMedia('(max-width:980px)').matches;
+  scroll.scrollTo({left:(o.px+NW/2)*scale-scroll.clientWidth/2,top:(o.py+NH/2)*scale-scroll.clientHeight*(mob?.3:.5),behavior:'smooth'});
+}
+function relLists(o){
+  const groups={},stories=[];
+  adj[o.id].forEach(i=>{
+    const e=EDGES[i],other=e.a===o.id?e.b:e.a,fromMe=e.a===o.id;
+    if(e.t==='story'){ if(o.t!=='s')stories.push(other); else if(!fromMe) stories.push(other); return }
+    const r=REL[e.t],ph=fromMe?r.from:r.to;
+    (groups[ph]=groups[ph]||[]).push([other,e.lab]);
+  });
+  return {groups,stories};
+}
+function openPanel(){panel.classList.add('open')}
+function showNode(o){
+  const l=laneOf[o.l],er=eraOf[o.e];
+  panel.style.setProperty('--pc',o.t==='s'?'var(--r-story)':l.c);
+  const kind=o.t==='s'?'Geschichte':o.t==='h'?'Mensch · Bewegung':'Gott · Göttin';
+  let h=`<button class="x" data-close aria-label="Schließen">×</button>
+  <div class="kicker">${kind} · ${esc(l.n)}</div>
+  <h2>${esc(o.n)}${o.d?`<span class="deva">${o.d}</span>`:''}</h2>
+  <div class="meta"><button class="chip" data-era="${er.id}" style="--c:var(--muted)">${esc(er.n)} <small>${esc(er.d)}</small></button></div>`;
+  if(o.s&&o.t!=='s')h+=`<p class="sub">${esc(o.s)}</p>`;
+  h+=`<p>${esc(o.x)}</p>`;
+  const {groups,stories}=relLists(o);
+  if(o.t==='s'){
+    h+=`<dl>${o.where?`<dt>Wo</dt><dd>${esc(o.where)}</dd>`:''}${o.src?`<dt>Quelle</dt><dd>${esc(o.src)}</dd>`:''}${o.wo?`<dt>Außerdem</dt><dd>${esc(o.wo)}</dd>`:''}</dl>`;
+    h+=`<h4>Wer spielt mit</h4><div class="starts">${(o.w||[]).map(id=>chip(id)).join('')}</div>`;
+  }else{
+    const dl=[['Merkmale',o.a],['Orte',o.o],['Belegt in',o.q]].filter(x=>x[1]);
+    if(dl.length)h+=`<dl>${dl.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
+  }
+  const gk=Object.keys(groups);
+  if(gk.length){
+    h+=`<h4>Beziehungen</h4><ul class="rel">${gk.map(k=>`<li><span class="ph">${k}:</span>${groups[k].map(([id,lab])=>chip(id,lab)).join('')}</li>`).join('')}</ul>`;
+  }
+  if(stories.length&&o.t!=='s'){
+    h+=`<h4>Geschichten (${stories.length})</h4><div class="starts">${stories.map(id=>chip(id)).join('')}</div>`;
+  }else if(stories.length){
+    h+=`<h4>Verwandte Geschichten</h4><div class="starts">${stories.map(id=>chip(id)).join('')}</div>`;
+  }
+  panel.innerHTML=h;panel.scrollTop=0;openPanel();
+}
+function showEra(id){
+  const e=eraOf[id];clearSel();
+  panel.style.setProperty('--pc','var(--accent)');
+  const items=N.filter(o=>o.e===id);
+  const gods=items.filter(o=>o.t!=='s'),sts=items.filter(o=>o.t==='s');
+  panel.innerHTML=`<button class="x" data-close aria-label="Schließen">×</button>
+  <div class="kicker">Epoche</div><h2>${esc(e.n)}</h2><div class="meta">${esc(e.d)}</div><p>${esc(e.x)}</p>
+  <h4>Gestalten</h4><div class="starts">${gods.map(o=>chip(o.id)).join('')}</div>
+  <h4>Geschichten</h4><div class="starts">${sts.map(o=>chip(o.id)).join('')}</div>`;
+  panel.scrollTop=0;openPanel();
+  scroll.scrollTo({top:e.y*scale-6,behavior:'smooth'});
+}
+function showIntro(){
+  panel.style.setProperty('--pc','var(--accent)');
+  panel.innerHTML=`<div class="intro"><div class="kicker">So liest du die Grafik</div>
+  <h2>3500 Jahre Götter</h2>
+  <ol><li>Von oben nach unten läuft die Zeit, vom Ṛgveda bis heute.</li>
+  <li>Die fünf Spalten sind große Linien. Wer dort steht, gehört zu dieser Familie oder Tradition.</li>
+  <li>Kästen mit Farbbalken sind Götter, Kapseln mit ✦ Geschichten, gestrichelte Kästen Menschen und Bewegungen.</li>
+  <li>Tippe etwas an: Alles, was damit zusammenhängt, leuchtet auf.</li></ol>
+  <div class="rlegend">${Object.entries(REL).map(([k,r])=>`<span><i class="${k==='evo'?'d':k==='story'?'dot':''}" style="--c:var(${r.c})"></i>${k==='story'?'Spielt mit in einer Geschichte':r.n}</span>`).join('')}</div>
+  <h4>Gute Einstiege</h4>
+  <div class="starts">${['s_vrtra','rudra','s_churning','krishna','s_mahisha','s_ganesha_head','hanuman','s_kumbh'].map(id=>chip(id)).join('')}</div>
+  <p class="hint intro-only" style="margin-top:12px">Auch die Namen der Epochen links sind anklickbar.</p></div>`;
+}
+panel.addEventListener('click',ev=>{
+  const g=ev.target.closest('[data-go]');if(g){select(g.dataset.go,true);return}
+  const er=ev.target.closest('[data-era]');if(er){showEra(er.dataset.era);return}
+  if(ev.target.closest('[data-close]')){clearSel();panel.classList.remove('open');showIntro();try{history.replaceState(null,'',location.pathname)}catch(_){}}
+});
+svg.addEventListener('click',ev=>{
+  if(scroll.dataset.dragged)return;
+  const n=ev.target.closest('.n');if(n){select(n.dataset.id,false);return}
+  const er=ev.target.closest('.era');if(er){showEra(er.dataset.era);return}
+  clearSel();if(window.matchMedia('(max-width:980px)').matches)panel.classList.remove('open');showIntro();
+});
+svg.addEventListener('keydown',ev=>{
+  if(ev.key!=='Enter'&&ev.key!==' ')return;
+  const n=ev.target.closest('.n');if(n){ev.preventDefault();select(n.dataset.id,false)}
+  const er=ev.target.closest('.era');if(er){ev.preventDefault();showEra(er.dataset.era)}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&cur){clearSel();panel.classList.remove('open');showIntro()}});
+
+/* ---------- Suche ---------- */
+function key(s){return s.toLowerCase().replace(/ṛ/g,'ri').replace(/[śṣ]/g,'sh').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ')}
+function loose(s){return key(s).replace(/sh/g,'s').replace(/ri/g,'r').replace(/aa/g,'a').replace(/ee/g,'i').replace(/oo/g,'u').replace(/w/g,'v').replace(/\s+/g,' ').trim()}
+N.forEach(o=>{o._k=loose(o.n+' '+o.id.replace(/_/g,' ')+' '+(o.s||'')+' '+(o.wo||''))});
+const q=document.getElementById('q'),res=document.getElementById('results');
+let hits=[],hl=0;
+function renderHits(){
+  res.innerHTML=hits.map((o,i)=>`<button role="option" class="${i===hl?'hl':''}" data-go="${o.id}">${o.t==='s'?'✦ ':''}${esc(o.n)} <small>${esc(eraOf[o.e].n)}</small></button>`).join('');
+  res.classList.toggle('open',hits.length>0);
+}
+q.addEventListener('input',()=>{
+  const v=loose(q.value);if(!v){hits=[];renderHits();return}
+  hits=N.map(o=>{const nk=loose(o.n);const sc=nk.startsWith(v)?0:nk.includes(v)?1:o._k.includes(v)?2:9;return[sc,o]}).filter(x=>x[0]<9).sort((a,b)=>a[0]-b[0]).slice(0,9).map(x=>x[1]);
+  hl=0;renderHits();
+});
+q.addEventListener('keydown',ev=>{
+  if(ev.key==='ArrowDown'){hl=Math.min(hits.length-1,hl+1);renderHits();ev.preventDefault()}
+  else if(ev.key==='ArrowUp'){hl=Math.max(0,hl-1);renderHits();ev.preventDefault()}
+  else if(ev.key==='Enter'&&hits[hl]){go(hits[hl].id)}
+  else if(ev.key==='Escape'){hits=[];renderHits()}
+});
+res.addEventListener('click',ev=>{const b=ev.target.closest('[data-go]');if(b)go(b.dataset.go)});
+document.addEventListener('click',ev=>{if(!ev.target.closest('.search')){hits=[];renderHits()}});
+function go(id){hits=[];renderHits();q.blur();select(id,true)}
+
+/* ---------- Geschichtenliste ---------- */
+document.getElementById('stories').innerHTML=ERAS.map(e=>{
+  const s=N.filter(o=>o.e===e.id&&o.t==='s');
+  return `<div class="er"><h3>${esc(e.n)}<span>${esc(e.d)}</span></h3><div class="list">${s.map(o=>chip(o.id,shortWhere(o.where))).join('')}</div></div>`;
+}).join('');
+document.getElementById('stories').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-go]');if(!b)return;
+  document.querySelector('.wrap').scrollIntoView({behavior:'smooth',block:'start'});
+  select(b.dataset.go,true);
+});
+
+/* ---------- Start ---------- */
+function start(){
+  fit();
+  const s0=window.matchMedia('(max-width:980px)').matches?0.78:Math.max(.86,fitScale());
+  setScale(s0);scroll.scrollLeft=0;scroll.scrollTop=0;
+  showIntro();
+  const h=decodeURIComponent(location.hash.slice(1));
+  if(h&&byId[h])setTimeout(()=>select(h,true),60);
+}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(start);else window.addEventListener('load',start);
+window.addEventListener('resize',()=>layoutHead());
+</script>
+</body>
+</html>
