@@ -1223,8 +1223,8 @@
   </div>
   <div class="page" id="page">
     <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" aria-label="Page">
-      <path class="grid" fill="none" stroke-width="0.15"/>
       <g class="bglayer" id="bgLayer"></g>
+      <path class="grid" fill="none" stroke-width="0.15"/>
       <g class="images" id="imgLayer"></g>
       <g class="texts" id="textLayer"></g>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -1931,8 +1931,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_133';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.10';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_134';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.11';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6808,7 +6808,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pg || !pg.bg) return '';
     const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = data || bgGet(b, want);
     const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
-    const blend = mode === 'file' || !paperDark ? ' style="mix-blend-mode:multiply"' : '';
+    const blend = mode !== 'ui' && (mode === 'file' || !paperDark) ? ' style="mix-blend-mode:multiply"' : '';   // (on screen the grid lies above it)
     const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
     if (!r) return `<rect class="pdfbg" ${box} fill="#fff"${meta}/>`;
     const sz = mode === 'file' ? '' : ` data-sz="${bgRast.L.get(bgKey(b)) === r ? 'L' : 'S'}"`;
@@ -6817,15 +6817,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // the page on screen: the page picture, and a sharp one of the part in view when zoomed in
   const bgLayer = $('bgLayer');
   let bgDetail = null, bgDetailT = 0, bgDetailTask = null;
-  function renderBg() {
+  let bgHtml = '';
+  function renderBg() {                            // only touched when something changed: no flicker while writing
     const pg = pages[cur];
     pageEl.classList.toggle('onpdf', !!(pg && pg.bg));
-    if (!pg || !pg.bg) { bgLayer.innerHTML = ''; bgDetail = null; return; }
-    const d = bgDetail && bgDetail.page === pg && bgDetail.key === bgKey(pg.bg) ? bgDetail : null;
-    const f = v => +(+v).toFixed(3), blend = paperDark ? '' : ' style="mix-blend-mode:multiply"';
-    bgLayer.innerHTML = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none"${blend}/>` : '');
+    if (!pg || !pg.bg) { if (bgHtml) { bgLayer.innerHTML = ''; bgHtml = ''; } bgDetail = null; return; }
+    const d = bgDetail && bgDetail.page === pg && bgDetail.key === bgKey(pg.bg) ? bgDetail : null, f = v => +(+v).toFixed(3);
+    const html = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none"/>` : '');
+    if (html !== bgHtml) { bgLayer.innerHTML = html; bgHtml = html; }
     bgSharpSoon();
   }
+  const preload = url => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => res(); im.src = url; if (im.decode) im.decode().then(res, res); });
   function bgSharpSoon() { clearTimeout(bgDetailT); bgDetailT = setTimeout(bgSharp, 220); }
   async function bgSharp() {
     const pg = pages[cur], b = pg && pg.bg;
@@ -6842,7 +6844,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const MAXPX = 4096 * 4096 * 0.6, sc = Math.min(1, Math.sqrt(MAXPX / (rw * rh * pxPerMm * pxPerMm)));
     const key = bgKey(b), want = { page: pg, key, x: x0, y: y0, w: rw, h: rh, long: longPx * sc };
     if (bgDetail && bgDetail.page === pg && bgDetail.key === key && bgDetail.long >= want.long * 0.95 &&
-        bgDetail.x <= vx0 + 0.5 && bgDetail.y <= vy0 + 0.5 && bgDetail.x + bgDetail.w >= Math.min(b.x + b.w, vx1) - 0.5 && bgDetail.y + bgDetail.h >= Math.min(b.y + b.h, vy1) - 0.5) return;
+        bgDetail.x <= Math.max(b.x, vx0) + 0.5 && bgDetail.y <= Math.max(b.y, vy0) + 0.5 &&
+        bgDetail.x + bgDetail.w >= Math.min(b.x + b.w, vx1) - 0.5 && bgDetail.y + bgDetail.h >= Math.min(b.y + b.h, vy1) - 0.5) return;   // what is in view is covered already
     try { if (bgDetailTask) bgDetailTask.cancel(); } catch (_) {}
     try {
       const r = await renderPdfPage(b, want.long, { x: x0 - b.x, y: y0 - b.y, w: rw, h: rh });
@@ -6850,9 +6853,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const out = await r.done;
       bgDetailTask = null;
       if (pages[cur] !== pg) return;
-      if (bgDetail) URL.revokeObjectURL(bgDetail.url);
-      bgDetail = { ...want, url: URL.createObjectURL(out.blob) };
+      const url = URL.createObjectURL(out.blob);
+      await preload(url);                          // decoded before it replaces the old one: no blank moment
+      if (pages[cur] !== pg) { URL.revokeObjectURL(url); return; }
+      const old = bgDetail;
+      bgDetail = { ...want, url };
       renderBg();
+      if (old) setTimeout(() => URL.revokeObjectURL(old.url), 1000);
     } catch (_) { bgDetailTask = null; }
   }
 
@@ -8981,6 +8988,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       stage.dispatchEvent(new PointerEvent(t, e));
     }, true);
   let linkPend = null, linkReplay = false;
+  const SYS_EDGE = 28;                             // px at the bottom of the screen that belong to the system gestures
   stage.addEventListener('pointerdown', e => {
     if (e.target.closest && e.target.closest('.texted')) return;    // writing in a text box: the browser handles it
     if (linkPend && e.pointerId !== linkPend.id) linkPend = null;   // a second finger: not a tap on a link
@@ -9045,6 +9053,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (e.pointerType === 'touch') {
       if (Math.max(e.width || 0, e.height || 0) > 40) return;
+      if (!touches.size && e.clientY > vh - SYS_EDGE) return;   // the system's own swipe from the bottom (leave the app): not ours
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       tapDown(e);
       if (touches.size === 2) {
