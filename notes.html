@@ -281,7 +281,6 @@
   /* highlighters sit behind the ink and blend like real highlighter ink */
   .hlg { mix-blend-mode: multiply; }
   body.paper-dark .hlg { mix-blend-mode: screen; }
-  body.paper-dark .page.onpdf .hlg { mix-blend-mode: multiply; }
   .bglayer, .pdfbg { pointer-events: none; }
   /* sticky notes: always light paper, so their highlighter ink multiplies */
   body .note .hlg { mix-blend-mode: multiply; }
@@ -1931,8 +1930,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_135';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.12';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_136';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.13';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6799,7 +6798,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           const img = document.createElementNS(NS, 'image');
           ['x', 'y', 'width', 'height', 'class', 'data-bgk', 'data-want', 'style'].forEach(a => { if (el.hasAttribute(a)) img.setAttribute(a, el.getAttribute(a)); });
           img.setAttribute('href', r.url); img.setAttribute('preserveAspectRatio', 'none'); img.dataset.sz = size;
-          if (!paperDark) img.style.mixBlendMode = 'multiply';
+          img.setAttribute('style', bgStyle());
           el.replaceWith(img);
         });
       }
@@ -6810,7 +6809,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pg || !pg.bg) return '';
     const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = data || bgGet(b, want);
     const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
-    const blend = mode === 'file' || !paperDark ? ' style="mix-blend-mode:multiply"' : '';   // the grid shows through the PDF's white, behind its print
+    const blend = ` style="${mode === 'file' ? 'mix-blend-mode:multiply' : bgStyle()}"`;   // the grid shows through the PDF's white, behind its print
     const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
     if (!r) return `<rect class="pdfbg" ${box} fill="#fff"${meta}/>`;
     const sz = mode === 'file' ? '' : ` data-sz="${bgRast.L.get(bgKey(b)) === r ? 'L' : 'S'}"`;
@@ -6820,12 +6819,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const bgLayer = $('bgLayer');
   let bgDetail = null, bgDetailT = 0, bgDetailTask = null;
   let bgHtml = '';
+  // on dark paper the PDF turns dark too: light and dark swap, the colours keep their hue; the grid still shows behind it
+  const bgStyle = () => paperDark ? 'filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen' : 'mix-blend-mode:multiply';
   function renderBg() {                            // only touched when something changed: no flicker while writing
     const pg = pages[cur];
     pageEl.classList.toggle('onpdf', !!(pg && pg.bg));
     if (!pg || !pg.bg) { if (bgHtml) { bgLayer.innerHTML = ''; bgHtml = ''; } bgDetail = null; return; }
     const d = bgDetail && bgDetail.page === pg && bgDetail.key === bgKey(pg.bg) ? bgDetail : null, f = v => +(+v).toFixed(3);
-    const html = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none"${paperDark ? '' : ' style="mix-blend-mode:multiply"'}/>` : '');
+    const html = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none" style="${bgStyle()}"/>` : '');
     if (html !== bgHtml) { bgLayer.innerHTML = html; bgHtml = html; }
     bgSharpSoon();
   }
@@ -7988,7 +7989,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     active.kind = br.highlighter ? 'pen' : br.kind || 'pen';
     liveWrap.style.opacity = br.opacity * (active.kind === 'pencil' ? 0.92 : 1);   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
-    liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note && !(pages[cur] && pages[cur].bg) ? 'screen' : 'multiply') : 'normal';
+    liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
     styleCtx(); stage.classList.add('drawing'); handlesWhileWriting(true);
     feed(x, y);
   }
