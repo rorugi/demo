@@ -1767,8 +1767,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_125';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.2';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_126';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.3';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2339,23 +2339,55 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
   })();
   // ---- Automatic backup: the browser's database (IndexedDB, hundreds of MB), localStorage as fallback ----
+  // The browser may close the connection behind our back (Android does so after a while in the background,
+  // or under storage pressure): then it is opened again and the request tried once more.
   const idb = (() => {
     let dbp = null;
     const open = () => dbp || (dbp = new Promise((res, rej) => {
       try {
         const r = indexedDB.open('notizblock', 1);
         r.onupgradeneeded = () => r.result.createObjectStore('kv');
-        r.onsuccess = () => res(r.result);
-        r.onerror = () => rej(r.error);
-      } catch (e) { rej(e); }
+        r.onsuccess = () => { const db = r.result; db.onclose = () => { dbp = null; }; db.onversionchange = () => { db.close(); dbp = null; }; res(db); };
+        r.onerror = () => { dbp = null; rej(r.error); };
+        r.onblocked = () => { dbp = null; rej(new DOMException('blocked', 'InvalidStateError')); };
+      } catch (e) { dbp = null; rej(e); }
     }));
+    const run = (mode, fn) => new Promise(async (res, rej) => {
+      try {
+        const db = await open();
+        const tx = db.transaction('kv', mode);
+        let out;
+        const q = fn(tx.objectStore('kv'));
+        if (q) q.onsuccess = () => { out = q.result; };
+        tx.oncomplete = () => res(mode === 'readwrite' ? true : out);
+        tx.onerror = tx.onabort = () => rej(tx.error || (q && q.error) || new DOMException('aborted', 'AbortError'));
+      } catch (e) { rej(e); }
+    });
+    const isQuota = e => !!e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
+    const twice = async (mode, fn) => {
+      try { return await run(mode, fn); }
+      catch (e) {
+        if (isQuota(e)) throw e;
+        try { const db = dbp && await dbp; db && db.close(); } catch (_) {}
+        dbp = null;                                // a closed or broken connection: open it again
+        return run(mode, fn);
+      }
+    };
     return {
-      get: async k => { const db = await open(); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
-      set: async (k, v) => { const db = await open(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(true); tx.onerror = tx.onabort = () => rej(tx.error); }); },
-      keys: async () => { const db = await open(); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').getAllKeys(); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
-      del: async k => { const db = await open(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').delete(k); tx.oncomplete = () => res(true); tx.onerror = tx.onabort = () => rej(tx.error); }); }
+      isQuota,
+      get: k => twice('readonly', st => st.get(k)),
+      set: (k, v) => twice('readwrite', st => { st.put(v, k); }),
+      keys: () => twice('readonly', st => st.getAllKeys()),
+      del: k => twice('readwrite', st => { st.delete(k); })
     };
   })();
+  async function storageNote() {                   // e.g. "1.2 GB of 3.4 GB used"
+    try {
+      const e = await navigator.storage.estimate();
+      const f = b => b >= 1e9 ? (b / 1e9).toFixed(1) + ' GB' : Math.round(b / 1e6) + ' MB';
+      return e && e.quota ? ` (${f(e.usage || 0)} of ${f(e.quota)} used)` : '';
+    } catch (_) { return ''; }
+  }
   // ---- Notebooks: several can be open; each one is kept in the browser (record 'nb:<id>'),
   // the list in localStorage. "Saved" only means written to a file: rev counts changes, savedRev is the last saved one.
   const cleanIdx = o => {
@@ -2388,10 +2420,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     m.pages = pages.length;
     const data = { v: 3, pages, cur, setup };
     try { await idb.set('nb:' + m.id, data); }
-    catch (_) {
+    catch (e) {
       if (!store.set('nb:' + m.id, data) && !warnedQuota) {
         warnedQuota = true;
-        toast('This browser has no room left to keep the notebook. Save it to a file.');
+        toast(idb.isQuota(e) ? 'This browser has no room left to keep the notebook' + await storageNote() + '. Save it to a file.'
+          : `The notebook could not be kept in the browser: ${(e && (e.message || e.name)) || 'unknown error'}. Save it to a file.`, 6000);
       }
     }
     saveIdx();
@@ -5189,7 +5222,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     bmp.close && bmp.close();
     const id = await hashBlob(out);
     if (!imgStore.has(id)) {
-      try { await idb.set('img:' + id, { blob: out, w, h }); } catch (_) { toast('This browser has no room left for the image.'); throw new Error('quota'); }
+      try { await idb.set('img:' + id, { blob: out, w, h }); }
+      catch (e) {
+        toast(idb.isQuota(e) ? 'This browser has no room left for the image' + await storageNote() + '.'
+          : `The image could not be stored: ${(e && (e.message || e.name)) || 'unknown error'}. Try again, or reload the page.`, 6000);
+        throw e || new Error('image');
+      }
       imgStore.set(id, { url: URL.createObjectURL(out), w, h, type: out.type, blob: out });
     }
     return id;
