@@ -1939,8 +1939,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_141';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.18';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_142';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.19';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2914,10 +2914,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const scrollMarginPx = () => Math.max(MARGIN, scrollMarginMm * (pxPerMm || estimatePpm()));
   function clampView() {
     const pw = W * S(), ph = H * S(), M = scrollMarginPx();
+    // larger than the screen: it moves until its edge is the margin away from the screen edge; zoomed in, a side that still
+    // fits moves as well, up to the margin at either end (top and bottom too, not only left and right)
+    const zoomed = view.zoom > 1.001;
     const fit = (len, size, t) => {
-      if (len <= size - 2 * MARGIN) return (size - len) / 2;     // fits: centred
-      const lo = size - M - len, hi = M;
-      return lo > hi ? (size - len) / 2 : Math.min(hi, Math.max(lo, t));
+      const a = size - M - len, b = M;
+      if (len <= size - 2 * MARGIN && !zoomed) return (size - len) / 2;   // the whole page in view: centred
+      const lo = Math.min(a, b), hi = Math.max(a, b);
+      return Math.min(hi, Math.max(lo, t));
     };
     view.tx = fit(pw, vw, view.tx);
     view.ty = fit(ph, vh, view.ty);
