@@ -1963,8 +1963,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_151';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.28';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_152';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.29';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7171,15 +7171,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     // the pictures only serve other programs (RRnotes uses the PDF itself): smaller with more pages, none for very many,
     // so that a long PDF doesn't make the file huge (490 pages were over 100 MB) or the tablet run out of memory
     const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg), pg.bg])).values()];
-    const tier = todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 360, q: 0.5 };
+    const tier = todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 540, q: 0.6 };
     let i = 0;
     for (const b of todo) {
       const k = bgKey(b);
       i++;
       if (busyDepth) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
       try {
-        const big = bgRast.L.get(k), small = bgRast.S.get(k);
-        const r = big && tier.px >= 1200 ? big : small && tier.px <= 360 ? small : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
+        const big = bgRast.L.get(k);
+        const r = big && tier.px >= 1200 ? big : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
         pics.set(k, await blobData(r.blob));
       } catch (_) {}
     }
