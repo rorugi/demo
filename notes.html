@@ -1963,8 +1963,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_152';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.29';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_153';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.30';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4274,14 +4274,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
   // ---- Save / open the notebook: one SVG, one <g data-page> per page ----
-  async function notebookSVG(pages = null, setup = null, bms = null) {
+  async function notebookSVG(pages = null, setup = null, bms = null, preview = false) {   // preview: small PDF pictures (web pages draw the PDF themselves)
     if (!bms) bms = pages ? [] : marksOut();
     if (!pages) pages = curPages();
     if (!setup) setup = curSetup();
     const [W, H] = setupDims(setup), GRID_D = buildGrid(setup, W, H);
     await ensureImages(pages);
     await ensureImageData(pages);
-    const bgd = await bgFileData(pages);
+    const bgd = await bgFileData(pages, preview);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
     let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
@@ -4361,9 +4361,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   async function notebookFile(fmt, name) {
     if (fmt === 'html') {                          // the notebook as a web page: the same SVG inside, with its name on top
-      const d = new Date(), svg = await notebookSVG();
+      const d = new Date(), svg = await notebookSVG(null, null, null, true);
       const body = collectionBody([{ name: name + '.html', pages: pages.length, svg }], `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, name);
-      return new File(toParts(collectionPage(body, name, null)), name + '.html', { type: 'text/html' });
+      return new File(toParts(collectionPage(body, name, null, await viewerFor([svg]))), name + '.html', { type: 'text/html' });
     }
     if (fmt === 'svgz') {
       const gz = await new Response(new Blob(toParts(await notebookSVG())).stream().pipeThrough(new CompressionStream('gzip'))).blob();
@@ -4728,13 +4728,116 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       files.map((f, i) => `<section class="notebook" id="nb-${i + 1}" data-file="${escAttr(f.name)}"><h2>${esc(fileBase(f.name))} <a href="#top" aria-label="Back to the list">↑</a></h2>\n${f.svg.replace(/^<\?xml[^>]*>\s*/, '').replace(/nb-grid/g, `nb${i + 1}-grid`).replace(/id="page-/g, `id="nb${i + 1}-page-`)}</section>\n`).join('');
   }
   const COLL_CSS = `body{margin:0;background:#e6e6e1;font:15px/1.4 system-ui,sans-serif;color:#1c1d20}header{max-width:820px;margin:0 auto;padding:24px 16px 8px}h1{font-size:22px;margin:0 0 4px}header p{margin:0 0 12px;opacity:.65;font-size:13px}nav ol{margin:0;padding-left:22px}nav li{margin:4px 0}nav span{opacity:.6;font-size:13px}a{color:#1f6fd1}section{max-width:820px;margin:0 auto;padding:16px}h2{font-size:18px;margin:18px 0 10px}h2 a{text-decoration:none;font-size:15px;margin-left:6px}section svg{display:block;width:100%;height:auto;box-shadow:0 2px 12px rgba(0,0,0,.12)}@media print{body{background:#fff}section{page-break-before:always}header nav{display:none}}`;
-  function collectionPage(body, title, packed) {
-    const head = `<!DOCTYPE html>\n<html lang="en" id="top"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="${VERSION_LABEL} (${VERSION})"><title>${esc(title)}</title><style>${COLL_CSS}</style></head>\n`;
+  // the PDF viewer of a saved web page: PDF.js packed into the page once (works offline), with the PDF.js address as fallback
+  let pdfjsPackP = null;
+  const pdfjsPack = () => pdfjsPackP || (pdfjsPackP = (async () => {
+    const one = async u => {
+      const res = await fetch(u);
+      if (!res.ok) throw new Error('lib');
+      return toBase64(new Uint8Array(await new Response(res.body.pipeThrough(new CompressionStream('gzip'))).arrayBuffer()));
+    };
+    return { m: await one(PDFJS_URL), w: await one(PDFJS_WORKER) };
+  })().catch(() => { pdfjsPackP = null; return null; }));
+  async function viewerFor(svgs) {                 // the viewer's part of the page head, or '' when there is no PDF
+    if (!svgs.some(t => t.includes('<desc class="rr-pdf"'))) return '';
+    if (busyDepth) await busy('Adding the PDF viewer…');
+    const lib = await pdfjsPack(), data = (id, b) => `<script type="application/octet-stream" id="${id}" data-encoding="gzip+base64">${b}<\/script>\n`;
+    return (lib ? data('rrpdfjs', lib.m) + data('rrpdfw', lib.w) : '') +
+      `<script>(${rrViewer})(${JSON.stringify(PDFJS_URL)},${JSON.stringify(PDFJS_WORKER)})<\/script>\n`;
+  }
+  // runs in the saved web page (not in the app): draws the PDF pages sharp from the PDF in the file as they come into view;
+  // the small pictures stay for previews without scripts and until a page is drawn
+  function rrViewer(CDN, CDNW) {
+    const unpack = async id => {
+      const e = document.getElementById(id);
+      if (!e || !window.DecompressionStream) return null;
+      const b = atob(e.textContent.trim()), u = new Uint8Array(b.length);
+      for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+      return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+    };
+    let libP = null;
+    const lib = () => libP || (libP = (async () => {
+      const m = await unpack('rrpdfjs').catch(() => null), w = m && await unpack('rrpdfw').catch(() => null);
+      if (m && w) {
+        try {
+          const L = await import(URL.createObjectURL(new Blob([m], { type: 'text/javascript' })));
+          L.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([w], { type: 'text/javascript' }));
+          return L;
+        } catch (_) {}
+      }
+      const L = await import(CDN);
+      L.GlobalWorkerOptions.workerSrc = CDNW;
+      return L;
+    })());
+    const docs = {};
+    const pdf = id => docs[id] || (docs[id] = (async () => {
+      const d = [...document.querySelectorAll('desc.rr-pdf')].find(e => e.getAttribute('data-pdf') === id);
+      if (!d) throw new Error('pdf');
+      const t = d.textContent.trim(), s = t.indexOf(',') + 1, pad = t.endsWith('==') ? 2 : t.endsWith('=') ? 1 : 0;
+      const u = new Uint8Array((t.length - s) / 4 * 3 - pad), CH = 4 << 20;
+      let o = 0;
+      for (let a = s; a < t.length; a += CH) { const b = atob(t.slice(a, a + CH)); for (let i = 0; i < b.length; i++) u[o++] = b.charCodeAt(i); }
+      return (await lib()).getDocument({ data: u }).promise;
+    })());
+    const go = () => {
+      const els = [...document.querySelectorAll('.pdfbg[data-pdf]')].map(el => {
+        if (el.tagName.toLowerCase() === 'image') return el;
+        const im = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        for (const a of el.attributes) if (a.name !== 'fill') im.setAttribute(a.name, a.value);
+        im.setAttribute('preserveAspectRatio', 'none');
+        im.style.mixBlendMode = 'multiply';
+        el.replaceWith(im);
+        return im;
+      });
+      if (!els.length || !window.IntersectionObserver) return;
+      const seen = new Set(), sharp = [];
+      let running = false;
+      const pump = async () => {
+        if (running) return;
+        const el = els.find(e => seen.has(e) && !e._sharp);
+        if (!el) return;
+        running = true;
+        try {
+          const page = await (await pdf(el.getAttribute('data-pdf'))).getPage(+el.getAttribute('data-pdfpage'));
+          const v1 = page.getViewport({ scale: 1 }), w = el.getBoundingClientRect().width * (window.devicePixelRatio || 1) * 1.5;
+          const vp = page.getViewport({ scale: Math.min(Math.max(w, 600) / v1.width, 2400 / Math.max(v1.width, v1.height)) });
+          const c = document.createElement('canvas');
+          c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+          const g = c.getContext('2d');
+          g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+          await page.render({ canvasContext: g, viewport: vp }).promise;
+          try { page.cleanup(); } catch (_) {}
+          const bl = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.9));
+          c.width = c.height = 0;
+          if (el._small == null) el._small = el.getAttribute('href') || '';
+          el._sharp = URL.createObjectURL(bl);
+          el.setAttribute('href', el._sharp);
+          sharp.push(el);
+          while (sharp.length > 16) {              // only the pages near the view stay sharp: memory stays small
+            const old = sharp.find(e => !seen.has(e));
+            if (!old) break;
+            sharp.splice(sharp.indexOf(old), 1);
+            URL.revokeObjectURL(old._sharp); old._sharp = null;
+            old.setAttribute('href', old._small);
+          }
+        } catch (_) { el._sharp = '-'; }
+        running = false;
+        pump();
+      };
+      const io = new IntersectionObserver(es => { for (const e of es) e.isIntersecting ? seen.add(e.target) : seen.delete(e.target); pump(); }, { rootMargin: '400px 0px' });
+      els.forEach(el => io.observe(el));
+    };
+    window.rrView = go;                            // a packed page calls it after unpacking
+    const start = () => { if (!document.getElementById('rrpack')) go(); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  }
+  function collectionPage(body, title, packed, viewer = '') {
+    const head = `<!DOCTYPE html>\n<html lang="en" id="top"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="${VERSION_LABEL} (${VERSION})"><title>${esc(title)}</title><style>${COLL_CSS}</style>\n${viewer}</head>\n`;
     if (!packed) return head + `<body data-rrnotes-collection="1">\n${body}</body></html>\n`;
     return head + `<body data-rrnotes-collection="1" data-packed="1"><header><h1>${esc(title)}</h1><p id="rrmsg">Unpacking…</p><noscript><p>This file is compressed: open it in a web browser with JavaScript to see the notebooks.</p></noscript></header>\n` +
       `<script type="application/octet-stream" id="rrpack" data-encoding="gzip+base64">${packed}<\/script>\n` +
       `<script>(async()=>{try{const b=atob(document.getElementById('rrpack').textContent.trim()),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);` +
-      `const t=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();document.body.innerHTML=t;if(location.hash){const e=document.querySelector(location.hash);if(e)e.scrollIntoView()}}` +
+      `const t=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();document.body.innerHTML=t;if(window.rrView)rrView();if(location.hash){const e=document.querySelector(location.hash);if(e)e.scrollIntoView()}}` +
       `catch(e){document.getElementById('rrmsg').textContent='This browser cannot unpack the notebooks.'}})()<\/script></body></html>\n`;
   }
   const toBase64 = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
@@ -4766,7 +4869,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
       names.add(name.toLowerCase());
       await busy(`Saving ${m.name}…`);
-      const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup), isCur ? marksOut() : (Array.isArray(rec.marks) ? rec.marks : []));
+      const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup), isCur ? marksOut() : (Array.isArray(rec.marks) ? rec.marks : []), fmt !== 'zip');
       files.push({ name, m, rev: m.rev, svg: svgText, pages: pgs.length, data: fmt === 'zip' ? new Uint8Array(await new Blob(toParts(svgText)).arrayBuffer()) : null });
     }
     if (!files.length) { toast('Nothing to save yet'); return []; }
@@ -4776,7 +4879,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const d = new Date(), title = `RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}`;
       const body = collectionBody(files, `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
       const packed = fmt === 'packed' ? toBase64(new Uint8Array(await new Response(new Blob(toParts(body)).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())) : null;
-      out = new File(toParts(collectionPage(body, title, packed)), fileName + '.html', { type: 'text/html' });
+      out = new File(toParts(collectionPage(body, title, packed, await viewerFor(files.map(f => f.svg)))), fileName + '.html', { type: 'text/html' });
     }
     return [out, files];
   }
@@ -7165,25 +7268,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     out.push(text.slice(at));
     return out;
   }
-  async function bgFileData(list) {
+  async function bgFileData(list, preview = false) {
     const ids = pdfIdsOf(list), pdfs = [], pics = new Map();
     for (const id of ids) { const r = await pdfRec(id); if (r) { await pdfB64Part(id, r.blob); pdfs.push({ id, name: r.name, data: PDF_MARK + id + PDF_MARK_END }); } }
     // the pictures only serve other programs (RRnotes uses the PDF itself): smaller with more pages, none for very many,
     // so that a long PDF doesn't make the file huge (490 pages were over 100 MB) or the tablet run out of memory
     const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg), pg.bg])).values()];
-    const tier = todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 540, q: 0.6 };
+    const tier = preview ? { px: 360, q: 0.55 } : todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 540, q: 0.6 };
     let i = 0;
     for (const b of todo) {
       const k = bgKey(b);
       i++;
       if (busyDepth) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
       try {
-        const big = bgRast.L.get(k);
-        const r = big && tier.px >= 1200 ? big : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
+        const big = bgRast.L.get(k), small = bgRast.S.get(k);
+        const r = big && tier.px >= 1200 ? big : preview && small ? await reencode(small.blob, tier.q) : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
         pics.set(k, await blobData(r.blob));
       } catch (_) {}
     }
     return { pdfs, pics };
+  }
+  async function reencode(blob, q) {               // a picture again as JPEG of lower quality (small previews from the page thumbnails)
+    const bm = await createImageBitmap(blob), c = document.createElement('canvas');
+    c.width = bm.width; c.height = bm.height;
+    c.getContext('2d').drawImage(bm, 0, 0); bm.close();
+    return { blob: await new Promise(res => c.toBlob(res, 'image/jpeg', q)) };
   }
   const incomingPdfs = new Map();                  // PDFs taken out of a file being opened: id in the file -> Blob
   async function takePdfsOut(text) {               // the file's text without the PDFs' base64 (they go to incomingPdfs)
