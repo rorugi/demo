@@ -1457,7 +1457,7 @@
     <div class="imgsizebox">
       <span>One finger in stylus mode<span class="sub" id="fingSub"></span></span>
       <select class="dd" id="fingAct" aria-label="One finger in stylus mode">
-        <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option>
+        <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option><option value="swipe">Swipe between pages</option>
       </select>
       <span>Hold time<span class="sub" id="holdTimeSub"></span></span>
       <div class="seg three" id="holdTimes">
@@ -1939,8 +1939,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_142';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.19';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_143';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.20';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8925,11 +8925,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Finger or stylus mode, and what one finger does in stylus mode ----
   const FING = { off: 'Fingers tap, hold, zoom and turn pages, but leave the page alone', pan: 'Drag to move the page; taps and double taps work as before',
     erase: 'The finger erases (eraser settings); the stylus keeps writing', lasso: 'The finger draws a lasso to select and move ink',
-    hl: 'The finger highlights with your highlighter preset; the stylus keeps its pen' };
+    hl: 'The finger highlights with your highlighter preset; the stylus keeps its pen',
+    swipe: 'Swipe left or right to turn the page; zoomed in, the finger moves the page first' };
   let fingAct = (v => FING[v] ? v : 'off')(store.get('fingAct', 'off'));
   let fpan = null;
   $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct];
   $('fingAct').addEventListener('change', e => { fingAct = e.target.value; store.set('fingAct', fingAct); $('fingSub').textContent = FING[fingAct]; });
+  // "Swipe between pages": a quick sideways swipe turns one page (left: next, right: back), like the quick flick at the edges.
+  // Zoomed in, the page moves with the finger; only when it can't move further that way does the swipe turn the page.
+  function fingSwipe(f, e) {
+    const dx = e.clientX - f.x0, dy = e.clientY - f.y0, dt = performance.now() - f.t0;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < 1.5 * Math.abs(dy) || dt > 700 || nav || animating || pinch) return false;
+    if (Math.abs(view.tx - f.tx0) > Math.abs(dx) * 0.3) return false;   // the page moved: that was moving it, not turning
+    view.tx = f.tx0; view.ty = f.ty0; applyView();
+    const dir = dx < 0 ? 1 : -1;
+    nav = { mode: 'pending', id: e.pointerId, side: dir > 0 ? 'right' : 'left', bottom: false, x0: f.x0, y0: f.y0, lx: e.clientX, ly: e.clientY,
+            lt: performance.now(), t0: f.t0, vx: 0, rdx: 0, moved: Math.abs(dx), quick: true, wide: false };
+    quickTurn(dir);
+    return true;
+  }
   const FING_WAIT = 140;                         // ms a lone finger waits before erasing / selecting / highlighting
   let fpend = null;
   const fingTag = $('fingTag');
@@ -9158,7 +9172,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const q = toMM(e), n = noteAt(q[0], q[1]) || textAt(q[0], q[1]) || imageAt(q[0], q[1]);
         if (n) { startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel); return; }   // selected: a finger drags it right away
         startHold1(e);
-        if (fingAct === 'pan') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty };
+        if (fingAct === 'pan' || fingAct === 'swipe') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty, t0: performance.now(), swipe: fingAct === 'swipe' };
         else if (fingAct !== 'off') {               // erase / lasso / highlight: wait a moment — a second finger means a pinch, not this
           const e0 = { pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 };
           fpend = { id: e.pointerId, e0, pts: [], timer: setTimeout(fingGo, FING_WAIT) };
@@ -9275,7 +9289,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (e.type === 'pointerup') openLink(p.href);
       return;
     }
-    if (fpan && e.pointerId === fpan.id) fpan = null;
+    if (fpan && e.pointerId === fpan.id) {
+      const f = fpan; fpan = null;
+      if (f.swipe && e.type === 'pointerup' && fingSwipe(f, e)) { touches.delete(e.pointerId); return; }
+    }
     if (fpend && e.pointerId === fpend.id) { clearTimeout(fpend.timer); fpend = null; }   // a tap: no erasing, no dot
     if (fingTag && !fingTag.hidden && active && e.pointerId === active.id) fingTag.hidden = true;
     if (mapDrag && e.pointerId === mapDrag.id) { endMapDrag(); return; }
