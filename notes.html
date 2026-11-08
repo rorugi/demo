@@ -284,6 +284,24 @@
   .note [data-nact="move"] { cursor: grab; }
   .sticky-ico .body { fill: var(--nc, transparent); }
   .notepop { width: 248px; }
+  .tsizerow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tsizerow h3 { margin: 0; }
+  .linkurl { width: 100%; box-sizing: border-box; height: 40px; padding: 0 10px; margin: 2px 0 10px; border: 1px solid var(--bar-line); border-radius: 9px;
+    background: var(--panel); color: var(--bar-fg); font: 15px var(--ui); }
+  .holdpop { width: 210px; }
+  .holdanchor { position: fixed; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; }
+  .stage.texting { cursor: text; }
+  .texted { position: absolute; z-index: 30; margin: 0; box-sizing: border-box; outline: none; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
+    -webkit-user-select: text; user-select: text; cursor: text; caret-color: var(--sel); background: transparent; border-radius: 1px;
+    box-shadow: 0 0 0 1.5px var(--sel), 0 0 0 5px color-mix(in srgb, var(--sel) 22%, transparent); -webkit-tap-highlight-color: transparent; }
+  .texted a { color: var(--lc); text-decoration: underline; }
+  .textbar { position: fixed; left: 0; top: 0; z-index: 60; display: flex; gap: 2px; padding: 4px; border-radius: 12px; background: var(--panel); color: var(--bar-fg);
+    border: 1px solid var(--bar-line); box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+  .textbar[hidden] { display: none; }
+  .textbar button { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border: 0; border-radius: 9px; background: transparent; color: inherit;
+    font: 500 14px var(--ui); cursor: pointer; white-space: nowrap; }
+  .textbar button svg { width: 20px; height: 20px; flex: none; }
+  .textbar button:hover, .textbar button:active { background: var(--active); }
   .noteswatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
   .noteswatches button { aspect-ratio: 1; border-radius: 6px; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
   .noteswatches [aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--bar-fg); }
@@ -1138,10 +1156,12 @@
     <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" aria-label="Page">
       <path class="grid" fill="none" stroke-width="0.15"/>
       <g class="images" id="imgLayer"></g>
+      <g class="texts" id="textLayer"></g>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
       <g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
       <g class="images" id="imgOver"></g>
       <g class="imgui" id="imgUi"></g>
+      <g class="imgui" id="textUi"></g>
       <g class="notes" id="noteLayer"></g>
       <g class="sel-layer" id="selLayer"></g>
       <g class="mag-layer" id="magLayer"></g>
@@ -1192,6 +1212,38 @@
 </div>
 
 <!-- sticky note menu: the tool (colour, size, show / hide) or one sticky note (colour, delete) -->
+<!-- text: one box, or the text tool -->
+<div class="pop notepop" id="textPop" role="dialog" aria-label="Text" hidden>
+  <div class="poptitle" id="textPopTitle"></div>
+  <div class="tsizerow"><h3>Size</h3><span class="stepper"><button type="button" id="textSmaller" aria-label="Smaller text">A−</button><output id="textSizeVal">14 pt</output><button type="button" id="textBigger" aria-label="Larger text">A+</button></span></div>
+  <h3>Colour</h3>
+  <div class="noteswatches" id="textSwatches"></div>
+  <button type="button" class="wide-btn subtle" id="textEditBtn" data-tfor="box">Edit text</button>
+  <button type="button" class="wide-btn subtle" id="textPasteBtn" data-tfor="tool">Paste text from the clipboard</button>
+  <button type="button" class="wide-btn" id="textDelete" data-tfor="box">Delete text box</button>
+</div>
+<div class="pop notepop" id="linkPop" role="dialog" aria-label="Link" hidden>
+  <div class="poptitle">Link</div>
+  <input type="url" id="linkUrl" class="linkurl" placeholder="https://…" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Web address">
+  <div class="seg"><button type="button" id="linkRemove">Remove link</button><button type="button" id="linkOk" class="on">Apply</button></div>
+</div>
+<!-- hold one finger: a small menu -->
+<div class="pop holdpop" id="holdPop" role="dialog" aria-label="Insert here" hidden>
+  <div class="menu">
+    <button type="button" id="holdPaste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5h6v3H9z"/><path d="M15 5.5h2.5A1.5 1.5 0 0 1 19 7v12a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V7a1.5 1.5 0 0 1 1.5-1.5H9"/></svg>Paste</button>
+    <button type="button" id="holdText"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7.5V5h14v2.5M12 5v14M9 19h6"/></svg>Text box</button>
+    <button type="button" id="holdSticky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Sticky note</button>
+    <button type="button" id="holdImage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.5l5-5 3.5 3.5 2.5-2.5 5 5"/></svg>Image…</button>
+  </div>
+</div>
+<div class="holdanchor" id="holdAnchor" aria-hidden="true"></div>
+<!-- writing in a text box -->
+<div class="textbar" id="textBar" hidden>
+  <button type="button" id="textLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg>Link</button>
+  <button type="button" id="textOpts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-12 5 12M5.8 14h6.4"/><path d="M15.5 12.5a2.5 2.5 0 1 1 0 5h-.5v-5zM15 12.5V9.8a2 2 0 0 1 2-2"/></svg>Size &amp; colour</button>
+  <button type="button" id="textDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Done</button>
+</div>
+
 <div class="pop notepop" id="notePop" role="dialog" aria-label="Sticky notes" hidden>
   <div class="poptitle" id="notePopTitle" hidden></div>
   <h3>Colour</h3>
@@ -1313,6 +1365,10 @@
       <div class="seg three" id="holdTimes">
         <button type="button" data-v="short">Short</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="long">Long</button>
       </div>
+      <span>Hold one finger still<span class="sub" id="hold1Sub"></span></span>
+      <select class="dd" id="hold1Act" aria-label="Hold one finger still on an empty spot of the page (stylus mode)">
+        <option value="paste">Paste (picture or text)</option><option value="menu">Small menu: paste, text, sticky note, image</option><option value="text">New text box</option><option value="sticky">New sticky note</option><option value="overview">Page overview</option><option value="undo">Undo</option><option value="off">Nothing</option>
+      </select>
       <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
       <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
         <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
@@ -1767,8 +1823,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_126';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.3';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_127';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.4';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1885,6 +1941,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pen: svg('<path class="body" d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><path d="M13 6.5l4.5 4.5"/>', ' class="pen-ico"'),
     nib: svg('<g transform="rotate(45 12 12)"><path class="body" d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>', ' class="pen-ico"'),
     sticky: svg('<path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/>', ' class="sticky-ico"'),
+    text: svg('<path d="M5 7.5V5h14v2.5M12 5v14M9 19h6"/>'),
     image: svg('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.5l5-5 3.5 3.5 2.5-2.5 5 5"/>'),
     marker: svg('<path class="body" d="M14.6 3.4l5.9 5.9-7.6 7.6-5.9-5.9z"/><path d="M7 11l-2.4 4.6 3.7 3.7L13 17"/><path d="M3 21.2h7" stroke-width="2.4"/>', ' class="pen-ico"'),
     eraser: svg('<path d="M14.6 4.2l5.2 5.2a1.5 1.5 0 0 1 0 2.1L12.3 19H7.8l-3.6-3.6a1.5 1.5 0 0 1 0-2.1l8.3-8.3a1.5 1.5 0 0 1 2.1 0z"/><path d="M9.2 8.6l6.2 6.2M7.8 19H20"/>'),
@@ -1952,6 +2009,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     size:   { label: 'Size preset', multi: true, add: true },
     ptype:  { label: 'Pen type preset', multi: true, add: true },
     sticky: { label: 'Sticky notes' },
+    text:   { label: 'Text' },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -2010,7 +2068,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return [
       { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) }, { id: uid(), type: 'pentype' },
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b), use: cleanUse(null, ALL_BUT_KIND) })),
-      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
+      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'text' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
     ];
@@ -2080,6 +2138,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!bars.some(b => b.items.some(i => i.type === 'pentype'))) {
       const m = bars[0].items, k = m.findIndex(i => i.type === 'pen');
       m.splice(k + 1, 0, { id: uid(), type: 'pentype' });
+      store.set('toolbars', bars);
+    }
+  }
+  if (!store.get('txAdded', false)) {          // the text tool arrives once, after the sticky notes
+    store.set('txAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'text'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'sticky' || i.type === 'image');
+      m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'text' });
       store.set('toolbars', bars);
     }
   }
@@ -2329,6 +2395,95 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
   }
   const cleanNotes = list => (Array.isArray(list) ? list : []).map(cleanNote).filter(Boolean);
+  // ---- Text boxes on a page: { id, x, y (mm, top left), w (mm; the height follows the text), fs (pt), color,
+  // runs: [{ t, a }] (text, and a link if any) } — above the images, under the ink ----
+  const textsOf = pg => pg.texts || (pg.texts = []);
+  const TEXT_SIZES = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 60, 72];
+  const TEXT_COLORS = ['#121315', '#5b5f66', '#d92b1e', '#1f6fd1', '#2f9e41', '#f08a10', '#a92fb4', '#8a5a2b'];
+  const PT = 25.4 / 72, TEXT_PAD = 1.2, TEXT_LH = 1.3, LINK_C = '#1f5fcf';
+  const TEXT_FONT = "Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+  // a link: web, mail or phone; "example.com" becomes https://example.com; anything else is refused
+  function cleanUrl(u) {
+    if (typeof u !== 'string') return '';
+    u = u.trim();
+    if (!u || u.length > 2000 || /\s/.test(u)) return '';
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(u)) return u;
+    if (/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+([/?#:]|$)/i.test(u)) return 'https://' + u;
+    return '';
+  }
+  function cleanRuns(list) {
+    const out = [];
+    let n = 0;
+    for (const r of Array.isArray(list) ? list : []) {
+      if (!r || typeof r.t !== 'string') continue;
+      let t = r.t.replace(/\r\n?/g, '\n').replace(/\t/g, '    ').replace(/[\u0000-\u0009\u000b-\u001f\u007f\u2028\u2029]/g, '');
+      t = t.slice(0, Math.max(0, 20000 - n));
+      if (!t) continue;
+      n += t.length;
+      const a = r.a ? cleanUrl(r.a) : '', last = out[out.length - 1];
+      if (last && (last.a || '') === a) last.t += t; else out.push(a ? { t, a } : { t });
+    }
+    return out;
+  }
+  const runsText = runs => runs.map(r => r.t).join('');
+  function cleanText(o) {
+    if (!o || typeof o !== 'object') return null;
+    const runs = cleanRuns(o.runs);
+    if (!runsText(runs).trim()) return null;
+    const t = { id: typeof o.id === 'string' && o.id ? o.id : Math.random().toString(36).slice(2, 9),
+      x: isFinite(o.x) ? +o.x : 10, y: isFinite(o.y) ? +o.y : 10, w: +o.w >= 8 && +o.w <= 2000 ? +o.w : 80,
+      fs: +o.fs >= 4 && +o.fs <= 200 ? +o.fs : 14, color: okC(o.color) ? o.color : '#121315', runs };
+    return t;
+  }
+  const cleanTexts = list => (Array.isArray(list) ? list : []).map(cleanText).filter(Boolean);
+  const copyTexts = list => (list || []).map(t => ({ ...t, runs: t.runs.map(r => ({ ...r })) }));
+  const textCfg = (c => ({ fs: c && +c.fs >= 4 && +c.fs <= 200 ? +c.fs : 14, color: c && okC(c.color) ? c.color : '#121315' }))(store.get('textCfg', null));
+  // text is laid out here (measured once per font): lines, and where each piece sits, so screen, files and PDF agree
+  const measureCtx = document.createElement('canvas').getContext('2d'), MEAS = 100, layoutCache = new Map();
+  let textBase = 0;                              // baseline below the middle of a line, in em
+  function textLayout(t) {
+    const key = t.w + '|' + t.fs + '|' + JSON.stringify(t.runs);
+    let L = layoutCache.get(key);
+    if (L) return L;
+    if (layoutCache.size > 600) layoutCache.clear();
+    measureCtx.font = `${MEAS}px ${TEXT_FONT}`;
+    if (!textBase) {
+      const m = measureCtx.measureText('Hg');
+      textBase = m.fontBoundingBoxAscent ? (m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 / MEAS : 0.345;
+    }
+    const fmm = t.fs * PT, lh = fmm * TEXT_LH, em = Math.max(1, (t.w - 2 * TEXT_PAD) / fmm);
+    const wOf = s => measureCtx.measureText(s).width / MEAS;
+    const lines = [[]];
+    let x = 0;
+    const newLine = () => { const ln = lines[lines.length - 1]; while (ln.length && /^ +$/.test(ln[ln.length - 1].s)) { ln.pop(); } lines.push([]); x = 0; };
+    const add = (s, a, w) => { lines[lines.length - 1].push({ s, a, x, w }); x += w; };
+    for (const r of t.runs) for (const m of r.t.matchAll(/\n| +|[^ \n]+/g)) {
+      const s = m[0], a = r.a || '';
+      if (s === '\n') { lines.push([]); x = 0; continue; }
+      const w = wOf(s);
+      if (s[0] === ' ') { if (x + w <= em || x === 0) add(s, a, w); else newLine(); continue; }
+      if (x > 0 && x + w > em) newLine();
+      if (w <= em) { add(s, a, w); continue; }
+      for (const ch of s) { const cw = wOf(ch); if (x > 0 && x + cw > em) newLine(); add(ch, a, cw); }   // a word longer than the line
+    }
+    // pieces with the same link side by side become one segment
+    const out = lines.map(ln => {
+      const segs = [];
+      for (const p of ln) {
+        const last = segs[segs.length - 1];
+        if (last && last.a === p.a) { last.s += p.s; last.w = p.x + p.w - last.x; } else segs.push({ ...p });
+      }
+      segs.forEach(sg => { sg.x *= fmm; sg.w *= fmm; });
+      return segs;
+    });
+    L = { lines: out, fmm, lh, base: TEXT_PAD + lh / 2 + textBase * fmm, h: 2 * TEXT_PAD + out.length * lh };
+    layoutCache.set(key, L);
+    return L;
+  }
+  const textH = t => textLayout(t).h;
+  const textLayer = $('textLayer'), textUi = $('textUi'), textPop = $('textPop');
+  let ted = null;                                  // writing in a box: { t, el, page, before, isNew, orig, timer }
+  let textEdit = { kind: 'tool' };                 // what the text menu changes: the tool, or one box
   let notesShown = store.get('notesShown', true) !== false;
   const noteCfg = (c => ({ color: c && NOTE_COLORS[c.color] ? c.color : 'yellow', size: c && NOTE_SIZES[c.size] ? c.size : 'm' }))(store.get('noteCfg', null));
   (function loadNotebook() {
@@ -2450,7 +2605,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (typeof closeMag === 'function' && mag) closeMag();
     undoStack.length = redoStack.length = 0;
     if (nb && Array.isArray(nb.pages) && nb.pages.length) {
-      pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images) }));
+      pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts) }));
       cur = Math.min(pages.length - 1, Math.max(0, nb.cur | 0));
       compactPages(pages);
       applySetup(cleanSetup(nb.setup), true);
@@ -2495,14 +2650,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     backupReady = true;
     await writeCurrent();
   }
-  const hasInk = () => pages.some(p => p.strokes.length || (p.notes && p.notes.length) || (p.images && p.images.length));
+  const hasInk = () => pages.some(p => p.strokes.length || (p.notes && p.notes.length) || (p.images && p.images.length) || (p.texts && p.texts.length));
 
   // ---- Undo / redo: snapshots of every page's stroke list (strokes themselves never change) ----
   const undoStack = [], redoStack = [];
   // a snapshot also remembers which strokes were selected, so undo/redo keep the selection
   // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
   const copyNotes = list => (list || []).map(n => ({ ...n, strokes: n.strokes.slice() }));
-  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })) })), cur,
+  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })), texts: copyTexts(p.texts) })), cur,
     selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null,
     selImg: sel && sel.page === cur ? sel.imgs.map(m => imagesOf(pages[cur]).indexOf(m)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
@@ -2513,7 +2668,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
   }
   function restore(s) {
-    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); return e.page; });
+    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); e.page.texts = copyTexts(e.texts); return e.page; });
     if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
     const again = (s.selIdx || []).map(i => pages[cur].strokes[i]).filter(Boolean);
@@ -2524,6 +2679,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!$('overview').hidden) buildOverview();
   }
   function undo() {
+    if (ted) commitTextEdit();
     if (active || !undoStack.length) return;
     markChanged();
     redoStack.push(snapshot());
@@ -2531,6 +2687,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
   }
   function redo() {
+    if (ted) commitTextEdit();
     if (active || !redoStack.length) return;
     markChanged();
     undoStack.push(snapshot());
@@ -2538,13 +2695,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
   }
   document.addEventListener('keydown', e => {
-    if (!(e.ctrlKey || e.metaKey) || e.target.closest('input')) return;
+    if (!(e.ctrlKey || e.metaKey) || e.target.closest('input, textarea, [contenteditable]')) return;
     const k = e.key.toLowerCase();
     if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
     else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
   });
 
   function renderPage() {
+    if (ted && ted.page !== pages[cur]) commitTextEdit();   // another page: the writing is done
     if (objSel && !objOnPage(objSel)) objSel = null;
     pageInk.innerHTML = inkMarkup(pages[cur].strokes, false, true);
     renderImages();
@@ -2619,6 +2777,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (notesShown && pages[cur] && pages[cur].notes && pages[cur].notes.length && Math.abs(noteHandle() - noteH) > 0.2) renderNotes();
     if (active && active.pts) { redrawActive(); drawTip([]); }
     placeSelbar();
+    if (ted) placeTextEd();
     clearTimeout(selRedrawT);                    // the selection's glow and corner buttons are sized in screen px: redraw after zooming
     selRedrawT = setTimeout(() => { if (objSel && !active) objSel.src ? renderImages() : renderNotes(); }, 150);
   }
@@ -2668,6 +2827,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'space': return `<span class="space" ${a} aria-hidden="true"></span>`;
       case 'eraser': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Eraser" title="Eraser · tap again for size">${ICON.eraser}</button>`;
       case 'sticky': return `<button type="button" class="eraser" ${a} aria-pressed="false">${ICON.sticky}</button>`;
+      case 'text': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Text: tap the page for a text box, tap again for size and colour" title="Text · tap the page to write, tap again for size and colour">${ICON.text}</button>`;
       case 'image': return `<button type="button" ${a} aria-label="Insert an image">${ICON.image}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
@@ -2932,6 +3092,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'lasso': el.setAttribute('aria-pressed', String(tool === 'lasso')); stage.classList.toggle('selecting', tool === 'lasso'); break;
+        case 'text': el.setAttribute('aria-pressed', String(tool === 'text')); stage.classList.toggle('texting', tool === 'text'); break;
         case 'sticky':
           el.setAttribute('aria-pressed', String(tool === 'sticky'));
           el.style.setProperty('--nc', notesShown ? NOTE_COLORS[noteCfg.color] : 'transparent');
@@ -2996,6 +3157,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         break;
       case 'image':
         openPop === imgAddPop ? closePops() : showPop(imgAddPop, el);
+        break;
+      case 'text':
+        if (tool === 'text') { openPop === textPop && textEdit.kind === 'tool' ? closePops() : (textEdit = { kind: 'tool' }, renderTextPop(), showPop(textPop, el)); }
+        else { if (sel) clearSelection(); tool = 'text'; closePops(); updateToolbarState(); toast('Tap the page to write. Tap a text box to change it.', 1800); }
         break;
       case 'sticky':
         if (tool === 'sticky') { openPop === notePop && noteEdit.kind === 'tool' ? closePops() : (noteEdit = { kind: 'tool' }, renderNotePop(), showPop(notePop, el)); }
@@ -3310,7 +3475,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pages[cur].strokes.length && !notesOf(pages[cur]).length && !imagesOf(pages[cur]).length) return;
     if (!(await ask(`Clear page ${cur + 1}?`, 'Everything written on this page is removed. Undo brings it back.', 'Clear page'))) return;
     remember();
-    pages[cur].strokes = []; pages[cur].notes = []; pages[cur].images = [];
+    pages[cur].strokes = []; pages[cur].notes = []; pages[cur].images = []; pages[cur].texts = [];
     renderPage(); scheduleSave();
   });
 
@@ -3879,6 +4044,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridUse}`;
       if (p.images && p.images.some(m => !m.over)) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
+      if (p.texts && p.texts.length) s += `<g class="texts">${textsMarkup(p, 'file')}</g>\n`;
       s += `<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">\n`;
       s += inkMarkup(p.strokes, true);
       s += `\n</g>\n`;
@@ -4022,7 +4188,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           el, x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), h: parseFloat(el.getAttribute('data-h')), rot: +el.getAttribute('data-rot') || 0,
           crop: el.hasAttribute('data-crop') ? el.getAttribute('data-crop').split(' ').map(Number) : null, op: parseFloat(el.getAttribute('data-op')) || 0, lock: el.getAttribute('data-lock') === '1', over: el.getAttribute('data-over') === '1',
           ink: [...el.querySelectorAll('.imgink path')].map(pathData)
-        }))
+        })),
+        texts: [...g.querySelectorAll('[data-text]')].map(el => {
+          let runs = [];
+          try { runs = JSON.parse(el.getAttribute('data-runs') || '[]'); } catch (_) {}
+          return { x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), w: parseFloat(el.getAttribute('data-w')), fs: parseFloat(el.getAttribute('data-fs')), color: el.getAttribute('data-color'), runs };
+        })
       }));
       // embedded pictures go into the browser's store, the pages keep a reference
       for (const pg of newPages) {
@@ -4249,7 +4420,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return out;
   }
-  const hasContent = pgs => pgs.some(p => (p.strokes && p.strokes.length) || (p.notes && p.notes.length) || (p.images && p.images.length));
+  const hasContent = pgs => pgs.some(p => (p.strokes && p.strokes.length) || (p.notes && p.notes.length) || (p.images && p.images.length) || (p.texts && p.texts.length));
   // ---- Notebook collections: a web page (all notebooks as sections, each the very same SVG as a saved notebook),
   // the same web page packed (gzip + base64, unpacks itself in a browser), or a ZIP of SVG files ----
   const allDlg = $('allDlg');
@@ -4304,7 +4475,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (const m of nbIdx.loaded) {
       const isCur = m.id === nbIdx.current, rec = isCur ? { pages, setup } : await readNotebook(m.id);
       if (!rec || !Array.isArray(rec.pages)) continue;
-      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images) }));
+      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts) }));
       if (!hasContent(pgs) && !m.savedName) continue;            // empty and never saved: nothing to keep
       let base = (m.name || 'Notebook').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Notebook', name = base + '.svg', i = 2;
       while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
@@ -4446,7 +4617,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       eraserMode,
       zoomLocked,
       scribbleErase: scribbleOn,
-      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, fingerInStylusMode: fingAct, holdTime, selectionColor: selColor, selectionGlowPx: selGlow,
+      handles: handleMode, imageMaxPx: imgMax, stylusButton: penBtn, twoFingerDoubleTap: tap2Act, oneFingerDoubleTap: tap1Act, holdPenAtEnd: holdAct, fingerInStylusMode: fingAct, fingerHold: hold1Act, holdTime, selectionColor: selColor, selectionGlowPx: selGlow,
       pageMap: { enabled: mmCfg.on, display: mmCfg.mode === 'on' ? 'always' : 'auto-fade', corner: mmCfg.corner, size: mmCfg.size },
       pageFlip: { enabled: flipOn, leftEdge: flipL, rightEdge: flipR, style: flipStyle === 'flat' ? 'flat' : 'notebook', zoomOut: flipZoom, riffle: riffleOn, slider: sliderStyle === 'flat' ? 'flat' : 'notebook' },
       paper: paperPref,
@@ -4491,6 +4662,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (Object.values(SEL_COLORS).includes(o.selectionColor)) { selColor = o.selectionColor; store.set('selColor', selColor); applySelColor(); }
     if (+o.selectionGlowPx >= 0 && +o.selectionGlowPx <= 24) { selGlow = +o.selectionGlowPx; store.set('selGlow', selGlow); applySelColor(); }
     if (HOLD_TIMES[o.holdTime]) setHoldTime(o.holdTime);
+    if (HOLD1[o.fingerHold]) { hold1Act = o.fingerHold; store.set('hold1', hold1Act); $('hold1Act').value = hold1Act; $('hold1Sub').textContent = HOLD1[hold1Act]; }
     if (FING[o.fingerInStylusMode]) { fingAct = o.fingerInStylusMode; store.set('fingAct', fingAct); $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct]; }
     if (TAP1[o.oneFingerDoubleTap]) { tap1Act = o.oneFingerDoubleTap; store.set('tap1', tap1Act); $('tap1Act').value = tap1Act; $('tap1Sub').textContent = TAP1[tap1Act]; }
     if (HOLD[o.holdPenAtEnd]) { holdAct = o.holdPenAtEnd; store.set('penHold', holdAct); $('holdAct').value = holdAct; $('holdSub').textContent = HOLD[holdAct]; }
@@ -4664,6 +4836,46 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!window.CompressionStream) return null;
     return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
   }
+  // text boxes in the PDF: the built-in Helvetica (WinAnsi), each piece stretched to the width it has on screen
+  const HELV = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
+    1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,
+    333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+  const WIN = { '€': 128, '‚': 130, 'ƒ': 131, '„': 132, '…': 133, '†': 134, '‡': 135, 'ˆ': 136, '‰': 137, 'Š': 138, '‹': 139, 'Œ': 140, 'Ž': 142,
+    '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '–': 150, '—': 151, '˜': 152, '™': 153, 'š': 154, '›': 155, 'œ': 156, 'ž': 158, 'Ÿ': 159 };
+  function winAnsi(ch) {
+    const c = ch.codePointAt(0);
+    if ((c >= 32 && c < 127) || (c >= 160 && c <= 255)) return c;
+    return WIN[ch] || 63;                          // anything else: ?
+  }
+  function helvW(ch, code) {
+    if (code >= 32 && code < 127) return HELV[code - 32];
+    if (ch === 'ß') return 611;
+    const b = ch.normalize('NFD')[0], k = b.codePointAt(0);
+    return k >= 32 && k < 127 ? HELV[k - 32] : code === 133 ? 1000 : code === 151 ? 1000 : 556;
+  }
+  function pdfTextOps(pg, links) {
+    let o = '';
+    for (const t of pg.texts || []) {
+      const L = textLayout(t), col = hexRgb(t.color), lcol = hexRgb(LINK_C);
+      L.lines.forEach((segs, i) => {
+        const y = t.y + L.base + i * L.lh;
+        for (const sg of segs) {
+          if (!sg.s.trim()) continue;
+          const x = t.x + TEXT_PAD + sg.x;
+          let hex = '', w = 0;
+          for (const ch of sg.s) { const code = winAnsi(ch); hex += code.toString(16).padStart(2, '0'); w += helvW(ch, code); }
+          const nat = w / 1000 * L.fmm, tz = nat > 0 ? Math.max(60, Math.min(140, sg.w / nat * 100)) : 100;
+          o += `BT /F1 ${pdfNum(L.fmm)} Tf ${pdfNum(tz)} Tz ${sg.a ? lcol : col} rg 1 0 0 -1 ${pdfNum(x)} ${pdfNum(y)} Tm <${hex}> Tj ET\n`;
+          if (sg.a) {
+            const uy = y + L.fmm * 0.12;
+            o += `q 0 J ${lcol} RG ${pdfNum(L.fmm * 0.06)} w ${pdfNum(x)} ${pdfNum(uy)} m ${pdfNum(x + sg.w)} ${pdfNum(uy)} l S Q\n`;
+            links.push({ x0: x, y0: y - L.fmm * 0.9, x1: x + sg.w, y1: y + L.fmm * 0.25, url: sg.a });
+          }
+        }
+      });
+    }
+    return o;
+  }
   async function buildPdf(list, withGrid, title, withNotes) {
     const k = 72 / 25.4, wPt = pdfNum(W * k), hPt = pdfNum(H * k);
     const gstates = new Map();                    // "opacity|blend" -> name
@@ -4716,8 +4928,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return `q ${st.o < 1 || st.h ? `/${gs(st.o, st.h)} gs ` : ''}${hexRgb(fileColor(st.c, st.k))} RG ${pdfNum(st.w)} w ${path} S Q\n`;
       }).join('');
     }).join('');
-    const streams = list.map(pg => {
-      let c = `q ${pdfNum(k)} 0 0 ${pdfNum(-k)} 0 ${hPt} cm 1 J 1 j\n` + gridOps + imageOps(pg);
+    const pageLinks = list.map(() => []), anyText = list.some(pg => pg.texts && pg.texts.length);
+    const streams = list.map((pg, pi) => {
+      let c = `q ${pdfNum(k)} 0 0 ${pdfNum(-k)} 0 ${hPt} cm 1 J 1 j\n` + gridOps + imageOps(pg) + pdfTextOps(pg, pageLinks[pi]);
       const order = [...pg.strokes.filter(s => s.h), ...pg.strokes.filter(s => !s.h)];   // highlighters underneath
       const inkOps = strokes => {
         let o = '';
@@ -4759,7 +4972,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const xlist = [...xobj.values()];
     let next = 3 + gstates.size;
     xlist.forEach(xo => { xo.obj = next++; if (xo.smask) xo.mobj = next++; });
-    const nG = gstates.size, gBase = 3, pBase = next, infoId = pBase + list.length * 2;
+    const nG = gstates.size, gBase = 3, pBase = next, infoId = pBase + list.length * 2, fontId = infoId + 1;
+    let annId = fontId + 1;                       // links: one annotation each, after the font
+    const annIds = pageLinks.map(l => l.map(() => annId++));
     put('%PDF-1.4\n'); put(new Uint8Array([37, 226, 227, 207, 211, 10]));
     obj(1, () => put('<< /Type /Catalog /Pages 2 0 R >>'));
     obj(2, () => put(`<< /Type /Pages /Kids [${list.map((_, i) => `${pBase + i * 2} 0 R`).join(' ')}] /Count ${list.length} >>`));
@@ -4778,10 +4993,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       });
     });
     const gsRes = (nG ? `/ExtGState << ${[...gstates.values()].map((nm, i) => `/${nm} ${gBase + i} 0 R`).join(' ')} >>` : '') +
-      (xobj.size ? ` /XObject << ${xlist.map(xo => `/${xo.name} ${xo.obj} 0 R`).join(' ')} >>` : '');
+      (xobj.size ? ` /XObject << ${xlist.map(xo => `/${xo.name} ${xo.obj} 0 R`).join(' ')} >>` : '') +
+      (anyText ? ` /Font << /F1 ${fontId} 0 R >>` : '');
     for (let i = 0; i < list.length; i++) {
       const pid = pBase + i * 2, cid = pid + 1;
-      obj(pid, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${wPt} ${hPt}] /Resources << ${gsRes} >> /Contents ${cid} 0 R >>`));
+      obj(pid, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${wPt} ${hPt}] /Resources << ${gsRes} >> /Contents ${cid} 0 R${annIds[i].length ? ` /Annots [${annIds[i].map(a => a + ' 0 R').join(' ')}]` : ''} >>`));
       const raw = streams[i], z = await deflate(raw);
       obj(cid, () => {
         if (z) { put(`<< /Length ${z.length} /Filter /FlateDecode >>\nstream\n`); put(z); }
@@ -4792,7 +5008,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pdfStr = t => '(' + String(t).replace(/[\\()]/g, m => '\\' + m).replace(/[^\x20-\x7e]/g, '?') + ')';
     const d = new Date(), pad = v => String(v).padStart(2, '0');
     obj(infoId, () => put(`<< /Title ${pdfStr(title)} /Producer ${pdfStr(VERSION_LABEL)} /CreationDate (D:${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}) >>`));
-    const xref = size, n = infoId + 1;
+    obj(fontId, () => put('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'));
+    const uri = u => '(' + u.replace(/[^\x21-\x7e]/g, c => encodeURIComponent(c)).replace(/[\\()]/g, m => '\\' + m) + ')';
+    pageLinks.forEach((l, i) => l.forEach((ln, j) => obj(annIds[i][j], () => put(`<< /Type /Annot /Subtype /Link /Border [0 0 0] /Rect [${[ln.x0 * k, H * k - ln.y1 * k, ln.x1 * k, H * k - ln.y0 * k].map(pdfNum).join(' ')}] /A << /S /URI /URI ${uri(ln.url)} >> >>`))));
+    const xref = size, n = annId;
     put(`xref\n0 ${n}\n0000000000 65535 f \n`);
     for (let i = 1; i < n; i++) put(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
     put(`trailer\n<< /Size ${n} /Root 1 0 R /Info ${infoId} 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
@@ -4826,7 +5045,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   if (!store.get('hndV2', false)) { handleMode = 'selected'; store.set('handleMode', handleMode); store.set('hndV2', true); }   // new default once
   const nearIds = new Set(), nearUntil = new Map();
   function applyNear() {
-    document.querySelectorAll('#noteLayer [data-nid], #imgUi [data-iid]').forEach(g => g.classList.toggle('near', nearIds.has(g.dataset.nid || g.dataset.iid)));
+    document.querySelectorAll('#noteLayer [data-nid], #imgUi [data-iid], #textUi [data-xid]').forEach(g => g.classList.toggle('near', nearIds.has(g.dataset.nid || g.dataset.iid || g.dataset.xid)));
   }
   function setNear(ids) {
     const now = performance.now();
@@ -4849,6 +5068,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const [x, y] = toMM(hoverEv), M = 12, ids = new Set();
       if (notesShown) for (const n of notesOf(pages[cur])) if (!n.folded && x > n.x - M && y > n.y - M && x < n.x + noteW(n) + M && y < n.y + noteHt(n) + M) ids.add(n.id);
       for (const m of imagesOf(pages[cur])) if (x > m.x - M && y > m.y - M && x < m.x + m.w + M && y < m.y + m.h + M) ids.add(m.id);
+      for (const t of textsOf(pages[cur])) if (x > t.x - M && y > t.y - M && x < t.x + t.w + M && y < t.y + textH(t) + M) ids.add(t.id);
       setNear(ids);
     });
   }
@@ -4934,12 +5154,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // Peek: a finger held on a sticky note fades it to 10 % until the finger lifts
   function fadeNote(n, on) {
     // the picture or the note itself fades; its corner buttons stay fully visible
-    const g = n.src ? null : noteLayer.querySelector(`[data-nid="${n.id}"]`);
-    const els = n.src ? [imgEl(n.id)] : g ? [...g.querySelectorAll(':scope > svg, :scope > rect:not(.objsel), :scope > circle')] : [];
+    const g = n.src || n.runs ? null : noteLayer.querySelector(`[data-nid="${n.id}"]`);
+    const els = n.src ? [imgEl(n.id)] : n.runs ? [textLayer.querySelector(`[data-tid="${n.id}"]`)] : g ? [...g.querySelectorAll(':scope > svg, :scope > rect:not(.objsel), :scope > circle')] : [];
     els.forEach(el => { if (el) { el.style.transition = 'opacity .15s'; el.style.opacity = on ? 0.25 : ''; } });
   }
   // sticky notes and images: size for moving
-  const objW = o => o.src ? o.w : noteW(o), objH = o => o.src ? o.h : noteHt(o);
+  const objW = o => o.src || o.runs ? o.w : noteW(o), objH = o => o.src ? o.h : o.runs ? textH(o) : noteHt(o);
+  const renderObj = o => o.src ? renderImages() : o.runs ? renderTexts() : renderNotes();
   // while held (faded) it can also be moved with the same finger
   // a finger has to rest on a sticky note or image for a moment before it can move it (no accidental shifts)
   // Hold time (Settings → Gestures): how long a finger rests before it counts as a hold; the quick one-page swipe follows it
@@ -4981,7 +5202,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function startPeek(e, n, delay, at, hold = delay > 0, ripple = false) {
     revealHandles(n.id);
-    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold };
+    const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold,
+      t0: performance.now(), wasSel: n === objSel, cx: e.clientX, cy: e.clientY };
     a.timer = setTimeout(() => {
       if (active !== a || a.dead) return;
       a.on = true;
@@ -4996,21 +5218,26 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function peekMove(e) {
     const a = active, n = a.note, [x, y] = toMM(e);
-    if (n.lock || a.dead) return;
+    if (n.lock || a.dead || LIVE_VIEW) return;
     if (!a.moved && Math.hypot(x - a.start[0], y - a.start[1]) < 1.5) return;
     if (!a.on && a.hold) { clearTimeout(a.timer); a.dead = true; return; }   // moved before the hold: leave it where it is
     if (!a.on) { clearTimeout(a.timer); a.on = true; }
     a.moved = true;
     if (n.src) { n.x = Math.max(-n.w + 5, Math.min(W - 5, x - a.off[0])); n.y = Math.max(-n.h + 5, Math.min(H - 5, y - a.off[1])); }
     else { n.x = Math.max(0, Math.min(W - objW(n), x - a.off[0])); n.y = Math.max(0, Math.min(H - objH(n), y - a.off[1])); }
-    if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; n.src ? renderImages() : renderNotes(); if (active === a) fadeNote(n, true); });
+    if (!noteFrame) noteFrame = requestAnimationFrame(() => { noteFrame = 0; renderObj(n); if (active === a) fadeNote(n, true); });
   }
   function endPeek() {
     const a = active;
     active = null;
     clearTimeout(a.timer);
-    if (a.moved) { remember(a.before); a.note.src ? renderImages() : renderNotes(); mapInkChanged(); scheduleSave(); }
+    if (a.moved) { remember(a.before); renderObj(a.note); mapInkChanged(); scheduleSave(); }
     else if (a.on) fadeNote(a.note, false);
+    if (a.note.runs && a.type === 'touch' && !a.moved && !a.dead && performance.now() - a.t0 < PEEK_HOLD) {   // a tap on a text box
+      const href = linkAt(a.note, a.start);
+      if (href) { openLink(href); return; }        // on a link: it opens
+      if (a.wasSel && !LIVE_VIEW) { startTextEdit(a.note, a.cx, a.cy); return; }   // tapped again: write in it
+    }
     if (a.btnTap && !a.moved) openObjMenu(a.note);   // stylus button tapped on it: its options
     else if (a.type === 'touch' && !a.moved && !a.dead) selectObj(a.note);   // a finger tap, or hold and let go: select it
   }
@@ -5025,7 +5252,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }).join('') : '';
     return `<g class="selglow">${rings}</g><rect class="${cls}" ${r}/>`;
   }
-  const objOnPage = o => !!o && (imagesOf(pages[cur]).includes(o) || notesOf(pages[cur]).includes(o));
+  const objOnPage = o => !!o && (imagesOf(pages[cur]).includes(o) || notesOf(pages[cur]).includes(o) || textsOf(pages[cur]).includes(o));
   function inObj(o, q) {
     if (!o) return false;
     if (o.folded) { const r = dotR(); return Math.hypot(q[0] - o.x - r, q[1] - o.y - r) <= r * 1.6; }
@@ -5046,6 +5273,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !openPop && !document.querySelector('dialog[open]')) deselectObj(); }, true);   // before menus close
   // the options of a sticky note or image, as if its gear was tapped
   function openObjMenu(o, anyAnchor) {               // anyAnchor: without a gear (folded, handles off) next to the object itself
+    if (o.runs) {
+      const g = textUi.querySelector(`[data-xid="${o.id}"] [data-xact="gear"]`) || (anyAnchor && textLayer.querySelector(`[data-tid="${o.id}"]`));
+      if (!g) return;
+      textEdit = { kind: 'box', t: o }; renderTextPop(); showPop(textPop, g); guardTextPop();
+      return;
+    }
     if (o.src) {
       const g = imgUi.querySelector(`[data-iid="${o.id}"] [data-iact="gear"]`) || (anyAnchor && imgEl(o.id));
       if (!g) return;
@@ -5239,13 +5472,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const ar = rec.w / rec.h;
     let w = W * 2 / 3, h = w / ar;
     if (h > H * 2 / 3) { h = H * 2 / 3; w = h * ar; }
-    const cx = Math.max(w / 2, Math.min(W - w / 2, (vw / 2 - view.tx) / S())), cy = Math.max(h / 2, Math.min(H - h / 2, (vh / 2 - view.ty) / S()));
+    const at = nextImgAt; nextImgAt = null;        // pasted where a finger was held, otherwise in the middle of the view
+    if (at) { w *= 0.75; h *= 0.75; }
+    const cx = Math.max(w / 2, Math.min(W - w / 2, at ? at[0] : (vw / 2 - view.tx) / S())), cy = Math.max(h / 2, Math.min(H - h / 2, at ? at[1] : (vh / 2 - view.ty) / S()));
     remember();
     imagesOf(pages[cur]).push({ id: uid(), src: id, x: cx - w / 2, y: cy - h / 2, w, h, rot: 0 });
     renderImages(); mapInkChanged(); scheduleSave();
   }
-  async function insertImageBlob(blob) {
+  let nextImgAt = null;
+  async function insertImageBlob(blob, at) {
     if (!blob || !/^image\//.test(blob.type)) { toast('That is not an image.'); return; }
+    nextImgAt = at || null;
     try { placeImage(await storeImage(blob)); }
     catch (e) { if (!(e && e.message === 'quota')) toast('This image can’t be read here. JPEG, PNG, WebP and GIF work.'); }
   }
@@ -5306,7 +5543,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
   }
   // images under the ink (over = false) or brought to the front, above it (over = true)
-  const imagesMarkup = (pg, mode, over = false) => pg && pg.images && pg.images.length ? pg.images.filter(m => !!m.over === over).map(m => imageMarkup(m, mode)).join('') : '';
+  const imagesMarkup = (pg, mode, over = false) => (pg && pg.images && pg.images.length ? pg.images.filter(m => !!m.over === over).map(m => imageMarkup(m, mode)).join('') : '') +
+    (!over && mode !== 'file' ? textsMarkup(pg, mode) : '');   // text boxes lie on the images, under the ink
   let cropSt = null;                              // { m, F, C, before } while cropping
   function renderImages() {
     const list = imagesOf(pages[cur]);
@@ -5342,6 +5580,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     applyNear();
     if (openPop === imgPop && imgEdit) { const g = imgUi.querySelector(`[data-iid="${imgEdit.id}"] [data-iact="gear"]`); if (g) popAnchor = g; }
     if (openPop === cropPop && cropSt) { const g = imgUi.querySelector(`[data-iid="${cropSt.m.id}"]`); if (g) popAnchor = g; }
+    renderTexts();
   }
   function imageAt(x, y) {
     const list = imagesOf(pages[cur]);
@@ -5489,11 +5728,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     renderImages(); mapInkChanged(); scheduleSave();
   });
   // inserting: camera / gallery, the clipboard, Ctrl+V, drag & drop
-  $('imgPick').addEventListener('click', () => { closePops(); $('imgIn').click(); });
+  let imgPickAt = null;                           // chosen from the hold menu: the picture goes where the finger was
+  $('imgPick').addEventListener('click', () => { closePops(); imgPickAt = null; $('imgIn').click(); });
   $('imgIn').addEventListener('change', async e => {
-    const files = [...(e.target.files || [])];
-    e.target.value = '';
-    for (const f of files) await insertImageBlob(f);
+    const files = [...(e.target.files || [])], at = imgPickAt;
+    e.target.value = ''; imgPickAt = null;
+    for (const f of files) await insertImageBlob(f, at);
   });
   $('imgPaste').addEventListener('click', async () => {
     closePops();
@@ -5507,8 +5747,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
   document.addEventListener('paste', e => {
     if (e.target.closest && e.target.closest('input, textarea')) return;
+    if (e.target.closest && e.target.closest('.texted')) return;   // writing in a text box: the box takes it
     const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type));
-    if (f) { e.preventDefault(); e.stopImmediatePropagation(); insertImageBlob(f); }
+    if (f) { e.preventDefault(); e.stopImmediatePropagation(); insertImageBlob(f); return; }
+    const t = e.clipboardData && e.clipboardData.getData('text/plain');
+    if (t && t.trim() && !LIVE_VIEW) { e.preventDefault(); e.stopImmediatePropagation(); pasteTextAt(t); }
   }, true);
   stage.addEventListener('dragover', e => { if ([...(e.dataTransfer && e.dataTransfer.items || [])].some(i => i.type.startsWith('image/'))) e.preventDefault(); });
   stage.addEventListener('drop', async e => {
@@ -5630,6 +5873,415 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const r = imgStore.get(m.src);
       if (r && !r.data) r.data = await blobData(r.blob);
     }
+  }
+
+  // ---- Text boxes ----
+  // static: thumbnails, page map, magnifier, flipping, print; ui: the page; file: data to reopen it (and links that work in the SVG)
+  function textMarkup(t, mode) {
+    const L = textLayout(t), f = v => +(+v).toFixed(3), file = mode === 'file';
+    const col = file ? t.color : displayColor(t.color, false), lc = file ? LINK_C : displayColor(LINK_C, false);
+    let body = '';
+    L.lines.forEach((segs, i) => {
+      const y = f(t.y + L.base + i * L.lh);
+      for (const sg of segs) {
+        const ts = `<tspan x="${f(t.x + TEXT_PAD + sg.x)}" y="${y}"${sg.a ? ` fill="${lc}" text-decoration="underline"` : ''}>${esc(sg.s)}</tspan>`;
+        body += sg.a && file ? `<a href="${esc(sg.a)}" target="_blank">${ts}</a>` : ts;
+      }
+    });
+    const data = file ? ` data-text="1" data-x="${f(t.x)}" data-y="${f(t.y)}" data-w="${f(t.w)}" data-fs="${t.fs}" data-color="${t.color}" data-runs="${esc(JSON.stringify(t.runs))}"` : '';
+    return `<g class="tbox"${mode === 'ui' ? ` data-tid="${t.id}"` : ''}${data}><text font-family="${esc(TEXT_FONT)}" font-size="${f(L.fmm)}" fill="${col}" xml:space="preserve" style="white-space:pre">${body}</text></g>`;
+  }
+  const textsMarkup = (pg, mode) => pg && pg.texts && pg.texts.length ? pg.texts.map(t => textMarkup(t, mode)).join('') : '';
+  function renderTexts() {
+    if (!pages[cur]) return;
+    const list = textsOf(pages[cur]), r = Math.max(4.5, 44 / S()) / 2;
+    textLayer.innerHTML = list.filter(t => !ted || ted.t !== t).map(t => textMarkup(t, 'ui')).join('');
+    textUi.innerHTML = list.map(t => {
+      if (ted && ted.t === t) return '';
+      const isSel = t === objSel, h = textH(t);
+      if (handleMode === 'selected' && !isSel) return '';
+      const box = isSel ? null : { x: t.x, y: t.y, w: t.w, h };
+      return `<g data-xid="${t.id}"${isSel ? ' class="selobj"' : ''}>${isSel ? selFrame(t.x, t.y, t.w, h) : ''}` +
+        handleChip('data-xact', 'gear', t.x, t.y, r, null, box) + handleChip('data-xact', 'size', t.x + t.w, t.y + h, r, null, box) + '</g>';
+    }).join('');
+    applyNear();
+    if (openPop === textPop && textEdit.kind === 'box') {
+      const g = textUi.querySelector(`[data-xid="${textEdit.t.id}"] [data-xact="gear"]`);
+      if (g) popAnchor = g; else if (ted && ted.t === textEdit.t) popAnchor = textBar;
+    }
+  }
+  function textAt(x, y) {
+    const list = textsOf(pages[cur]);
+    for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (x >= t.x && y >= t.y && x <= t.x + t.w && y <= t.y + textH(t)) return t; }
+    return null;
+  }
+  function linkAt(t, q) {                          // the link under a point of a text box, if any
+    const L = textLayout(t), i = Math.floor((q[1] - t.y - TEXT_PAD) / L.lh), segs = L.lines[i];
+    if (!segs) return '';
+    const x = q[0] - t.x - TEXT_PAD, sg = segs.find(s => s.a && x >= s.x - 0.8 && x <= s.x + s.w + 0.8);
+    return sg ? sg.a : '';
+  }
+  function linkHit(q) { const t = textAt(q[0], q[1]); return t ? linkAt(t, q) : ''; }
+  function openLink(href) {
+    const u = cleanUrl(href);
+    if (!u) return;
+    vibrate(6);
+    try { window.open(u, '_blank', 'noopener'); } catch (_) {}
+  }
+  // handles: drag the corner to change the width, tap the gear for the options
+  let textFrame = 0;
+  function textAction(e, el) {
+    const g = el.closest('[data-xid]'), t = g && textsOf(pages[cur]).find(x => x.id === g.dataset.xid);
+    if (!t) return false;
+    const act = el.dataset.xact;
+    if (act === 'gear') {
+      if (openPop === textPop && textEdit.t === t) closePops();
+      else { textEdit = { kind: 'box', t }; renderTextPop(); showPop(textPop, el); guardTextPop(); }
+      return true;
+    }
+    if (LIVE_VIEW) return true;
+    const a = active = { id: e.pointerId, type: e.pointerType, textDrag: act, t, start: toMM(e), w0: t.w, before: snapshot(), moved: false };
+    if (e.pointerType === 'touch' && t !== objSel) {   // a finger changes an unselected box only after resting on the handle
+      a.wait = true;
+      a.timer = setTimeout(() => { if (active === a && !a.dead) { a.wait = false; vibrate(8); } }, PEEK_HOLD);
+    }
+    return true;
+  }
+  function textDragMove(e) {
+    const a = active, t = a.t, [x] = toMM(e), dx = x - a.start[0];
+    if (a.dead) return;
+    if (!a.moved && Math.abs(dx) < (a.wait ? 1.5 : 0.5)) return;
+    if (a.wait) { clearTimeout(a.timer); a.dead = true; return; }
+    a.moved = true;
+    t.w = Math.max(10, Math.min(W - t.x + 40, a.w0 + dx));
+    if (!textFrame) textFrame = requestAnimationFrame(() => { textFrame = 0; renderTexts(); });
+  }
+  function endTextDrag() {
+    const a = active;
+    active = null;
+    clearTimeout(a.timer);
+    if (a.moved) { remember(a.before); renderTexts(); mapInkChanged(); scheduleSave(); }
+  }
+  // the text tool: tap the page for a new box, tap a box to write in it, drag a box to move it
+  function textDown(e) {
+    const q = toMM(e), t = textAt(q[0], q[1]);
+    active = { id: e.pointerId, type: e.pointerType, textTool: true, start: q, cx: e.clientX, cy: e.clientY, t, moved: false, before: snapshot(),
+      off: t ? [q[0] - t.x, q[1] - t.y] : null, pan: e.pointerType === 'touch' && !t ? { tx0: view.tx, ty0: view.ty } : null };
+  }
+  function textToolMove(e) {
+    const a = active, q = toMM(e);
+    if (!a.moved && Math.hypot(e.clientX - a.cx, e.clientY - a.cy) < (a.type === 'touch' ? 10 : 5)) return;
+    a.moved = true;
+    if (a.t) {
+      const t = a.t;
+      t.x = Math.max(-t.w + 5, Math.min(W - 5, q[0] - a.off[0])); t.y = Math.max(0, Math.min(H - 5, q[1] - a.off[1]));
+      if (!textFrame) textFrame = requestAnimationFrame(() => { textFrame = 0; renderTexts(); });
+    } else if (a.pan) { view.tx = a.pan.tx0 + e.clientX - a.cx; view.ty = a.pan.ty0 + e.clientY - a.cy; clampView(); applyView(); }
+  }
+  function endTextTool(e) {
+    const a = active;
+    active = null;
+    if (a.moved) { if (a.t) { remember(a.before); renderTexts(); mapInkChanged(); scheduleSave(); } return; }
+    if (!e || e.type !== 'pointerup') return;      // cancelled: nothing happens
+    if (a.t) startTextEdit(a.t, a.cx, a.cy);
+    else newTextAt(a.start);
+  }
+  // a new, empty box where the caret goes: the first line sits on the tapped spot
+  function newTextAt(q, runs = [], select = false, centred = false) {
+    if (LIVE_VIEW || q[0] < 0 || q[1] < 0 || q[0] > W || q[1] > H) return null;
+    const before = snapshot(), fmm = textCfg.fs * PT;
+    let w = Math.min(90, W - 10);
+    if (runs.length) {                             // pasted text: as wide as its longest line, within reason
+      measureCtx.font = `${MEAS}px ${TEXT_FONT}`;
+      const longest = Math.max(...runsText(runs).split('\n').map(s => measureCtx.measureText(s).width / MEAS * fmm));
+      w = Math.max(30, Math.min(W * 0.75, longest + 2 * TEXT_PAD + 1));
+    }
+    const t = { id: uid(), x: Math.max(0, Math.min(W - w, centred ? q[0] - w / 2 : q[0] - TEXT_PAD)), y: Math.max(0, Math.min(H - 10, q[1] - TEXT_PAD - fmm * TEXT_LH / 2)), w, fs: textCfg.fs, color: textCfg.color, runs };
+    textsOf(pages[cur]).push(t);
+    if (runs.length) {
+      remember(before);
+      renderTexts(); mapInkChanged(); scheduleSave();
+      if (select) selectObj(t);
+    } else startTextEdit(t, null, null, true, before);
+    return t;
+  }
+  // plain text from the clipboard: web addresses in it become links
+  function textToRuns(s) {
+    const runs = [];
+    let last = 0;
+    for (const m of s.matchAll(/\b(?:https?:\/\/|www\.)[^\s<>"]+[^\s<>".,;:!?)\]}'’”]/gi)) {
+      if (m.index > last) runs.push({ t: s.slice(last, m.index) });
+      runs.push({ t: m[0], a: m[0] });
+      last = m.index + m[0].length;
+    }
+    if (last < s.length) runs.push({ t: s.slice(last) });
+    return cleanRuns(runs);
+  }
+  function pasteTextAt(s, q) {
+    const runs = textToRuns(String(s).replace(/\s+$/, ''));
+    if (!runsText(runs).trim()) return false;
+    const mid = !q;                                // no spot given: in the middle of the view
+    if (mid) q = [Math.max(10, Math.min(W - 10, (vw / 2 - view.tx) / S())), Math.max(10, Math.min(H - 20, (vh / 2 - view.ty) / S()))];
+    const t = newTextAt(q, runs, true, mid);
+    if (t) toast('Text pasted.', 1200);
+    return !!t;
+  }
+  // paste from the clipboard: a picture or text (Settings → Gestures: hold one finger; also the text tool's menu)
+  async function pasteClipboardAt(q, want = 'any') {
+    if (LIVE_VIEW) return;
+    let text = '';
+    try {
+      if (navigator.clipboard && navigator.clipboard.read) {
+        const items = await navigator.clipboard.read();
+        if (want !== 'text') for (const it of items) {
+          const ty = it.types.find(x => x.startsWith('image/'));
+          if (ty) { await insertImageBlob(await it.getType(ty), q); return; }
+        }
+        for (const it of items) if (it.types.includes('text/plain')) { text = await (await it.getType('text/plain')).text(); if (text.trim()) break; }
+      } else if (navigator.clipboard && navigator.clipboard.readText) text = await navigator.clipboard.readText();
+    } catch (_) {
+      try { text = await navigator.clipboard.readText(); }
+      catch (__) { toast('The clipboard can’t be read here. Allow it in the browser’s site settings, or paste with the keyboard.', 4000); return; }
+    }
+    if (text.trim()) { pasteTextAt(text, q); return; }
+    if (clip && want === 'any') { pasteClip(); return; }        // ink copied in the notebook
+    toast(want === 'text' ? 'There is no text in the clipboard.' : 'The clipboard is empty.', 1800);
+  }
+
+  // ---- Writing in a text box: an editable copy lies exactly over it ----
+  const textBar = $('textBar');
+  function runsToHtml(runs) {
+    const h = runs.map(r => { const s = esc(r.t).replace(/\n/g, '<br>'); return r.a ? `<a href="${esc(r.a)}">${s}</a>` : s; }).join('');
+    return runsText(runs).endsWith('\n') ? h + '<br>' : h;
+  }
+  // what the browser made of the editing, back to text and links (any other formatting is dropped)
+  function domToRuns(root) {
+    const runs = [];
+    const add = (t, a) => { if (t) runs.push(a ? { t, a } : { t }); };
+    const ends = () => { const s = runsText(runs); return !s || s.endsWith('\n'); };
+    const BLOCK = /^(DIV|P|LI|H[1-6]|BLOCKQUOTE|PRE|UL|OL)$/;
+    const walk = (node, a) => {
+      for (const n of node.childNodes) {
+        if (n.nodeType === 3) { add(n.nodeValue.replace(/ /g, ' ').replace(/​/g, ''), a); continue; }
+        if (n.nodeType !== 1) continue;
+        if (n.tagName === 'BR') {
+          const p = n.parentNode, lastInBlock = !n.nextSibling && (p === root || BLOCK.test(p.tagName)) && n.previousSibling;
+          if (!lastInBlock || p !== root) { if (!(lastInBlock && BLOCK.test(p.tagName))) add('\n', a); }
+          continue;
+        }
+        const block = BLOCK.test(n.tagName);
+        if (block && !ends()) add('\n', a);
+        walk(n, n.tagName === 'A' && n.getAttribute('href') ? n.getAttribute('href') : a);
+      }
+    };
+    walk(root, '');
+    // a trailing <br> the browser keeps only to show an empty last line
+    if (root.lastChild && root.lastChild.nodeName === 'BR' && runs.length && runs[runs.length - 1].t === '\n' && !root.lastChild.previousSibling) runs.pop();
+    return runs;
+  }
+  function startTextEdit(t, cx, cy, isNew = false, before = null) {
+    if (LIVE_VIEW) return;
+    if (ted) { if (ted.t === t) { if (cx != null) caretAt(cx, cy); return; } commitTextEdit(); }
+    closePops();
+    if (objSel) objSel = null;
+    const el = document.createElement('div');
+    el.className = 'texted'; el.contentEditable = 'true'; el.spellcheck = true;
+    el.setAttribute('autocapitalize', 'sentences'); el.setAttribute('role', 'textbox'); el.setAttribute('aria-multiline', 'true'); el.setAttribute('aria-label', 'Text');
+    el.innerHTML = runsToHtml(t.runs);
+    ted = { t, el, page: pages[cur], before: before || snapshot(), isNew, orig: JSON.stringify(t.runs) };
+    stage.appendChild(el);
+    placeTextEd();
+    renderNotes(); renderImages();
+    el.addEventListener('input', () => {
+      clearTimeout(ted && ted.timer);
+      if (ted) ted.timer = setTimeout(() => { if (ted && ted.el === el) { ted.t.runs = cleanRuns(domToRuns(el)); scheduleSave(); } }, 600);
+      placeTextBar(); keepTextInView();
+    });
+    el.addEventListener('beforeinput', e => {      // Enter: a line break, not a new paragraph
+      if (e.inputType === 'insertParagraph') { e.preventDefault(); document.execCommand('insertLineBreak'); }
+      if (/^format/.test(e.inputType)) e.preventDefault();     // no bold, italic…: text, size and colour come from the box
+    });
+    el.addEventListener('paste', e => {
+      const s = e.clipboardData && e.clipboardData.getData('text/plain');
+      e.preventDefault();
+      if (!s) return;
+      const u = s.trim();
+      if (/^(https?:\/\/|www\.)\S+$/i.test(u) && cleanUrl(u)) document.execCommand('insertHTML', false, `<a href="${esc(cleanUrl(u))}">${esc(u)}</a>`);
+      else document.execCommand('insertText', false, s);
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); commitTextEdit(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); linkFromSelection(); }
+      e.stopPropagation();                         // typing is not a shortcut
+    });
+    el.addEventListener('click', e => e.preventDefault());   // links don't open while writing
+    el.focus({ preventScroll: true });
+    if (cx != null) caretAt(cx, cy); else caretEnd();
+    textBar.hidden = false;
+    placeTextBar(); keepTextInView();
+  }
+  function caretEnd() {
+    const r = document.createRange();
+    r.selectNodeContents(ted.el); r.collapse(false);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+  function caretAt(cx, cy) {
+    let r = null;
+    try {
+      if (document.caretRangeFromPoint) r = document.caretRangeFromPoint(cx, cy);
+      else if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(cx, cy); if (p) { r = document.createRange(); r.setStart(p.offsetNode, p.offset); r.collapse(true); } }
+    } catch (_) {}
+    if (r && ted.el.contains(r.startContainer)) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); } else caretEnd();
+  }
+  function placeTextEd() {
+    if (!ted) return;
+    const t = ted.t, k = S(), fmm = t.fs * PT, st = ted.el.style;
+    st.left = view.tx + t.x * k + 'px'; st.top = view.ty + t.y * k + 'px'; st.width = t.w * k + 'px';
+    st.padding = TEXT_PAD * k + 'px'; st.fontSize = fmm * k + 'px'; st.lineHeight = String(TEXT_LH);
+    st.minHeight = (fmm * TEXT_LH + 2 * TEXT_PAD) * k + 'px'; st.fontFamily = TEXT_FONT;
+    st.color = displayColor(t.color, false); st.setProperty('--lc', displayColor(LINK_C, false));
+    placeTextBar();
+  }
+  function placeTextBar() {
+    if (!ted || textBar.hidden) return;
+    const r = ted.el.getBoundingClientRect(), b = textBar.getBoundingClientRect(), vv = window.visualViewport;
+    const top0 = vv ? vv.offsetTop : 0, bottom = vv ? vv.offsetTop + vv.height : innerHeight;
+    let y = r.top - b.height - 8;
+    if (y < top0 + 4) y = Math.min(r.bottom + 8, bottom - b.height - 4);
+    const x = Math.max(4, Math.min(innerWidth - b.width - 4, r.left));
+    textBar.style.transform = `translate(${Math.round(x)}px, ${Math.round(Math.max(top0 + 4, y))}px)`;
+  }
+  // the keyboard must not cover the line being written: the page moves up a little
+  function keepTextInView() {
+    if (!ted) return;
+    const vv = window.visualViewport, bottom = vv ? vv.offsetTop + vv.height : innerHeight;
+    let r = null;
+    try { const s = getSelection(); if (s.rangeCount && ted.el.contains(s.anchorNode)) { const rr = s.getRangeAt(0).getClientRects(); r = rr[rr.length - 1] || null; } } catch (_) {}
+    const low = (r && r.bottom) || ted.el.getBoundingClientRect().top + 40, over = low + 24 - bottom;
+    if (over > 0) { view.ty -= over; applyView(); }
+  }
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { if (ted) { keepTextInView(); placeTextBar(); } });
+  function commitTextEdit() {
+    const e = ted;
+    if (!e) return;
+    ted = null;
+    clearTimeout(e.timer);
+    const runs = cleanRuns(domToRuns(e.el));
+    e.el.remove(); textBar.hidden = true;
+    if (openPop === textPop || openPop === linkPop) closePops();
+    const list = textsOf(e.page);
+    if (!runsText(runs).trim()) {                    // nothing written: the box goes away
+      e.t.runs = JSON.parse(e.orig);
+      if (list.includes(e.t)) { list.splice(list.indexOf(e.t), 1); if (!e.isNew) remember(e.before); }
+    } else {
+      e.t.runs = runs;
+      if (e.isNew || JSON.stringify(runs) !== e.orig) remember(e.before);
+    }
+    renderTexts(); mapInkChanged(); scheduleSave();
+  }
+  // a tap anywhere else ends the writing (on the page with the text tool, or a finger, that is all the tap does)
+  document.addEventListener('pointerdown', e => {
+    if (!ted || (e.target.closest && e.target.closest('.texted, #textBar, #textPop, #linkPop, dialog'))) return;
+    const onStage = stage.contains(e.target) && !(e.target.closest && e.target.closest('#textUi [data-xact]'));
+    commitTextEdit();
+    if (onStage && (tool === 'text' || e.pointerType === 'touch')) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  textBar.addEventListener('pointerdown', e => { if (e.target.closest('button')) e.preventDefault(); });   // the text keeps its caret and selection
+  $('textDone').addEventListener('click', () => commitTextEdit());
+  $('textOpts').addEventListener('click', () => {
+    if (!ted) return;
+    if (openPop === textPop) { closePops(); return; }
+    textEdit = { kind: 'box', t: ted.t }; renderTextPop(); showPop(textPop, textBar);
+  });
+  // links: select some text, then Link
+  const linkPop = $('linkPop');
+  let linkRange = null;
+  function linkFromSelection() {
+    if (!ted) return;
+    const s = getSelection();
+    if (!s.rangeCount || !ted.el.contains(s.anchorNode)) { toast('Select the words for the link first.', 1800); return; }
+    let r = s.getRangeAt(0);
+    const inA = n => { for (; n && n !== ted.el; n = n.parentNode) if (n.nodeName === 'A') return n; return null; };
+    const a = inA(r.startContainer) || inA(r.endContainer);
+    if (r.collapsed) {
+      if (!a) { toast('Select the words for the link first.', 1800); return; }
+      r = document.createRange(); r.selectNodeContents(a); s.removeAllRanges(); s.addRange(r);
+    }
+    linkRange = r.cloneRange();
+    $('linkUrl').value = a ? a.getAttribute('href') : (cleanUrl(r.toString()) || '');
+    $('linkRemove').hidden = !a;
+    showPop(linkPop, textBar);
+    setTimeout(() => { $('linkUrl').focus(); $('linkUrl').select(); }, 30);
+  }
+  $('textLink').addEventListener('click', linkFromSelection);
+  function linkApply(url) {
+    if (!ted || !linkRange) { closePops(); return; }
+    const r = linkRange;
+    linkRange = null;
+    closePops();
+    ted.el.focus({ preventScroll: true });
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    if (url === null) document.execCommand('unlink');
+    else {
+      const u = cleanUrl(url);
+      if (!u) { toast('That is not a web address (https://…), mail or phone link.', 2500); return; }
+      document.execCommand('createLink', false, u);
+    }
+    s.collapseToEnd();
+    ted.el.dispatchEvent(new Event('input'));
+  }
+  $('linkOk').addEventListener('click', () => linkApply($('linkUrl').value));
+  $('linkRemove').addEventListener('click', () => linkApply(null));
+  $('linkUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); linkApply($('linkUrl').value); } });
+
+  // ---- Options of a text box, or of the text tool (new boxes) ----
+  let textPopGuard = false, textGuardTimer = 0;
+  function guardTextPop() {
+    textPopGuard = true; clearTimeout(textGuardTimer);
+    textGuardTimer = setTimeout(() => { textPopGuard = false; }, 2000);
+    window.addEventListener('pointerup', () => { clearTimeout(textGuardTimer); textGuardTimer = setTimeout(() => { textPopGuard = false; }, 350); }, { once: true, capture: true });
+  }
+  textPop.addEventListener('click', e => { if (textPopGuard) { e.preventDefault(); e.stopPropagation(); } }, true);
+  textPop.addEventListener('pointerdown', e => { if (ted && e.target.closest('button')) e.preventDefault(); });   // writing goes on
+  const textChange = fn => {
+    if (textEdit.kind === 'box') {
+      const t = textEdit.t;
+      if (!t || !textsOf(pages[cur]).includes(t)) { closePops(); return; }
+      remember(); fn(t);
+      if (ted && ted.t === t) placeTextEd();
+      renderTexts(); mapInkChanged(); scheduleSave();
+    } else { fn(textCfg); store.set('textCfg', textCfg); updateToolbarState(); }
+    renderTextPop();
+  };
+  TEXT_COLORS.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.c = c; b.style.setProperty('--c', c); b.setAttribute('aria-label', 'Colour ' + c);
+    b.addEventListener('click', () => textChange(o => { o.color = c; }));
+    $('textSwatches').appendChild(b);
+  });
+  const stepSize = (fs, d) => { const i = TEXT_SIZES.findIndex(v => v >= fs); const j = i < 0 ? TEXT_SIZES.length - 1 : TEXT_SIZES[i] === fs || d < 0 ? i : i - 1; return TEXT_SIZES[Math.max(0, Math.min(TEXT_SIZES.length - 1, j + d))]; };
+  $('textSmaller').addEventListener('click', () => textChange(o => { o.fs = stepSize(o.fs, -1); }));
+  $('textBigger').addEventListener('click', () => textChange(o => { o.fs = stepSize(o.fs, 1); }));
+  $('textPasteBtn').addEventListener('click', () => { closePops(); pasteClipboardAt(null, 'text'); });
+  $('textEditBtn').addEventListener('click', () => { const t = textEdit.t; closePops(); if (t && textsOf(pages[cur]).includes(t)) startTextEdit(t); });
+  $('textDelete').addEventListener('click', () => {
+    const t = textEdit.t, list = textsOf(pages[cur]);
+    closePops();
+    if (!t || !list.includes(t)) return;
+    const before = ted && ted.t === t ? ted.before : snapshot();
+    if (ted && ted.t === t) { ted.el.remove(); textBar.hidden = true; clearTimeout(ted.timer); const isNew = ted.isNew; ted = null; if (isNew) { list.splice(list.indexOf(t), 1); renderTexts(); return; } }
+    if (objSel === t) objSel = null;
+    list.splice(list.indexOf(t), 1);
+    remember(before);
+    renderTexts(); mapInkChanged(); scheduleSave();
+    toast('Text box deleted. Undo brings it back.');
+  });
+  function renderTextPop() {
+    const k = textEdit.kind, o = k === 'box' ? textEdit.t : textCfg;
+    textPop.querySelectorAll('[data-tfor]').forEach(x => { x.hidden = !x.dataset.tfor.split(' ').includes(k) || (x.id === 'textEditBtn' && !!ted); });
+    $('textPopTitle').textContent = k === 'box' ? 'This text box' : 'New text boxes';
+    $('textSizeVal').textContent = o.fs + ' pt';
+    $('textSwatches').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c.toLowerCase() === String(o.color).toLowerCase())));
   }
 
   // ---- Stroke drawing ----
@@ -6374,7 +7026,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('selCopy').addEventListener('click', copySelection);
   $('selPaste').addEventListener('click', pasteClip);
   document.addEventListener('keydown', e => {
-    if (!(e.ctrlKey || e.metaKey) || e.target.closest('input')) return;
+    if (!(e.ctrlKey || e.metaKey) || e.target.closest('input, textarea, [contenteditable]')) return;
     const k = e.key.toLowerCase();
     if (k === 'c' && sel) { e.preventDefault(); copySelection(); }
     else if (k === 'x' && sel) { e.preventDefault(); copySelection(); $('selDel').click(); }
@@ -6613,6 +7265,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!a) return;
     if (a.magsel) { active = null; clearCtx(tctx); return; }
     if (a.noteDrag) { endNoteDrag(); return; }
+    if (a.textDrag) { endTextDrag(); return; }
+    if (a.textTool) { endTextTool(null); return; }
     if (a.imgDrag) { endImgDrag(); return; }
     if (a.peek) { endPeek(); return; }
     if (a.lasso || a.move) {                 // a lasso or move interrupted (e.g. by two fingers)
@@ -7445,7 +8099,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     runTap2();
   }
   function runTap1(x, y) {
-    if (active || pinch || nav || tap1Act === 'off') return;
+    if (active || pinch || nav || tap1Act === 'off' || ted) return;
+    { const q = toMM({ clientX: x, clientY: y }); if (textAt(q[0], q[1])) return; }   // on a text box the second tap writes in it
     if (tap1Act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
     else if (tap1Act === 'redo') { if (redoStack.length) { redo(); toast('Redo', 1000); } else toast('Nothing to redo', 1200); }
     else if (tap1Act === 'overview') openOverview();
@@ -7519,6 +8174,60 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('tap2Sub').textContent = TAP2[tap2Act];
   $('tap2Act').addEventListener('change', e => { tap2Act = e.target.value; store.set('tap2', tap2Act); $('tap2Sub').textContent = TAP2[tap2Act]; });
 
+  // ---- Hold one finger still on an empty spot of the page (stylus mode): Paste by default (Settings → Gestures) ----
+  const HOLD1 = { paste: 'Pastes the picture or text from the clipboard where you hold', menu: 'A small menu where you hold: paste, text box, sticky note, image',
+    text: 'Starts a text box where you hold', sticky: 'Places a sticky note where you hold', overview: 'Opens the page overview', undo: 'Undo', off: 'Does nothing' };
+  let hold1Act = (v => HOLD1[v] ? v : 'paste')(store.get('hold1', 'paste'));
+  let fhold = null;                                // { id, x, y, q, timer, ready } while a finger rests
+  const HOLD1_MS = () => PEEK_HOLD + 250;          // a little longer than the other holds
+  function startHold1(e) {
+    if (hold1Act === 'off' || LIVE_VIEW) return;
+    const q = toMM(e);
+    if (q[0] < 0 || q[1] < 0 || q[0] > W || q[1] > H) return;
+    const h = fhold = { id: e.pointerId, x: e.clientX, y: e.clientY, q, ready: false };
+    h.timer = setTimeout(() => {
+      if (fhold !== h) return;
+      if (active || pinch || nav || touches.size !== 1) { fhold = null; return; }
+      h.ready = true;                              // let go now and it happens (a lifted finger may paste and open pickers)
+      if (fpend && fpend.id === h.id) { clearTimeout(fpend.timer); fpend = null; }
+      if (fpan && fpan.id === h.id) fpan = null;
+      vibrate(10);
+      rippleIn(h.x - 60, h.y - 60, 120, 120, 60, 60);
+    }, HOLD1_MS());
+  }
+  function moveHold1(e) {
+    if (fhold && e.pointerId === fhold.id && Math.hypot(e.clientX - fhold.x, e.clientY - fhold.y) > FING_MOVE) { clearTimeout(fhold.timer); fhold = null; }
+  }
+  function cancelHold1() { if (fhold) { clearTimeout(fhold.timer); fhold = null; } }
+  function endHold1(e) {
+    const h = fhold;
+    if (!h || e.pointerId !== h.id) return false;
+    fhold = null; clearTimeout(h.timer);
+    if (!h.ready || e.type !== 'pointerup') return h.ready;
+    runHold1(h.q, h.x, h.y, hold1Act);
+    return true;
+  }
+  function runHold1(q, x, y, act) {
+    if (act === 'paste') pasteClipboardAt(q);
+    else if (act === 'text') newTextAt(q);
+    else if (act === 'sticky') placeNote({ clientX: x, clientY: y });
+    else if (act === 'overview') openOverview();
+    else if (act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
+    else if (act === 'menu') {
+      holdAt = { q, x, y };
+      const an = $('holdAnchor');
+      an.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      showPop($('holdPop'), an);
+    }
+  }
+  let holdAt = null;
+  for (const [id, act] of [['holdPaste', 'paste'], ['holdText', 'text'], ['holdSticky', 'sticky']])
+    $(id).addEventListener('click', () => { const h = holdAt; closePops(); if (h) runHold1(h.q, h.x, h.y, act); });
+  $('holdImage').addEventListener('click', () => { const h = holdAt; closePops(); imgPickAt = h ? h.q : null; $('imgIn').click(); });
+  $('hold1Act').value = hold1Act;
+  $('hold1Sub').textContent = HOLD1[hold1Act];
+  $('hold1Act').addEventListener('change', e => { hold1Act = e.target.value; store.set('hold1', hold1Act); $('hold1Sub').textContent = HOLD1[hold1Act]; });
+
   // ---- Pointer routing on the desk ----
   // while the desk is zoomed out (turning pages) it no longer covers the screen edges: a finger landing there
   // during page navigation (to carry on after letting go, or for a closer look) still belongs to it
@@ -7533,9 +8242,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (!nav || !e.isTrusted || stage.contains(e.target) || !(e.pointerId === nav.id || (nav.z2 && e.pointerId === nav.z2.id))) return;
       stage.dispatchEvent(new PointerEvent(t, e));
     }, true);
+  let linkPend = null, linkReplay = false;
   stage.addEventListener('pointerdown', e => {
+    if (e.target.closest && e.target.closest('.texted')) return;    // writing in a text box: the browser handles it
+    if (linkPend && e.pointerId !== linkPend.id) linkPend = null;   // a second finger: not a tap on a link
     // a touch or a stroke outside the selected sticky note or image ends its selection (its handles still work)
-    if (objSel && !(e.target.closest && e.target.closest('[data-nact],[data-iact]')) && !inObj(objSel, toMM(e))) deselectObj();
+    if (objSel && !(e.target.closest && e.target.closest('[data-nact],[data-iact],[data-xact]')) && !inObj(objSel, toMM(e))) deselectObj();
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
     if (nav && nav.mode === 'coast') {
@@ -7559,6 +8271,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     try { stage.setPointerCapture(e.pointerId); } catch (_) {}
     if (e.pointerType !== 'pen' && e.button !== 2 && !active && !mapDrag && touches.size === 0 && mmHit(e.clientX, e.clientY)) { startMapDrag(e); return; }
     if (mapDrag) return;
+    if (!linkReplay && !active && !ted && tool !== 'text' && e.button !== 2 && (e.pointerType === 'mouse' || (e.pointerType === 'touch' && !penSeen && !touches.size))) {
+      const href = linkHit(toMM(e));
+      if (href) {
+        linkPend = { id: e.pointerId, e0: e, x: e.clientX, y: e.clientY, href };
+        if (e.pointerType === 'touch') touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        return;
+      }
+    }
     // a sticky note's handles (drag, gear, fold, folded dot) work with stylus, finger and mouse
     const rb = e.pointerType === 'mouse' && e.button === 2;           // the right mouse button acts like the stylus button
     if (rb && (active || mapDrag)) return;
@@ -7567,6 +8287,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (iact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && imageAction(e, iact)) return;
     const nact = !rb && !penHidden && !active && notesShown && e.target.closest && e.target.closest('#noteLayer [data-nact]');
     if (nact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && noteAction(e, nact)) return;
+    const xact = !rb && !penHidden && !active && e.target.closest && e.target.closest('#textUi [data-xact]');
+    if (xact && !(e.pointerType === 'touch' && (touches.size || Math.max(e.width || 0, e.height || 0) > 40)) && textAction(e, xact)) return;
 
     if (e.pointerType === 'pen') {
       if (!penSeen) setStylusMode(true); lastPen = performance.now();
@@ -7574,6 +8296,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (active) return;
       if (pinch && pinch.mode !== 'temp') { clearTimeout(pinch.holdT); pinch = null; }   // temporary zoom stays while the pen writes
       if (riffleOn && !isBtn(e) && offPage(e.clientX, e.clientY)) { startSlide(e); return; }
+      if (tool === 'text' && !isBtn(e)) { textDown(e); return; }
       if (tool === 'lasso' && !isBtn(e)) { startLasso(e); return; }
       if (tool === 'magnifier') { startMagSel(e); return; }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -7589,6 +8312,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (touches.size === 2) {
         if (fpend) { clearTimeout(fpend.timer); fpend = null; }   // a pinch after all: the finger action never started
         fingTag.hidden = true;
+        cancelHold1();
+        if (active && active.type === 'touch' && (active.textTool || active.textDrag)) {   // a pinch after all
+          const a = active; active = null; clearTimeout(a.timer);
+          if (a.moved && (a.textDrag || a.t)) { remember(a.before); renderTexts(); scheduleSave(); }
+        }
         if (active && active.type === 'touch') {
           if (active.peek) { active.dead = true; clearTimeout(active.timer); }   // a pinch: the first finger did not tap the note or image
           finishStroke(null, false);
@@ -7602,8 +8330,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (info && performance.now() - lastPen > PEN_QUIET_MS) { startNav(e, info); return; }
       if (tool === 'lasso' && inSelBox(toMM(e))) { startLasso(e); return; }   // fingers can always move a selection
       if (penSeen) {                                     // fingers don't write, but can peek under a sticky note
-        const q = toMM(e), n = noteAt(q[0], q[1]) || imageAt(q[0], q[1]);
+        if (tool === 'text') { textDown(e); return; }
+        const q = toMM(e), n = noteAt(q[0], q[1]) || textAt(q[0], q[1]) || imageAt(q[0], q[1]);
         if (n) { startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel); return; }   // selected: a finger drags it right away
+        startHold1(e);
         if (fingAct === 'pan') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty };
         else if (fingAct !== 'off') {               // erase / lasso / highlight: wait a moment — a second finger means a pinch, not this
           const e0 = { pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 };
@@ -7612,6 +8342,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
+      if (tool === 'text') { textDown(e); return; }
       tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
       return;
     }
@@ -7621,6 +8352,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const info = edgeInfo(e.clientX, e.clientY);
     if (info && !info.quick && !(tool === 'lasso' && inSelBox(toMM(e)))) startNav(e, info);
     else if (tool === 'sticky') placeNote(e);
+    else if (tool === 'text') textDown(e);
     else tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
   });
 
@@ -7628,12 +8360,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function btnDown(e) {
     const side = !(e.buttons & 32) && e.button !== 5;               // the side button, not the eraser end
     if (side && penBtn === 'grab') {
-      const q = toMM(e), o = noteAt(q[0], q[1]) || imageAt(q[0], q[1]);
+      const q = toMM(e), o = noteAt(q[0], q[1]) || textAt(q[0], q[1]) || imageAt(q[0], q[1]);
       if (o) { startPeek(e, o, 0, q); active.btnTap = true; return; }
     }
     startErase(e); active.byBtn = true;
   }
-  const isInk = a => a.pts && !a.erase && !a.lasso && !a.magsel && !a.move && !a.peek && !a.noteDrag && !a.imgDrag;
+  const isInk = a => a.pts && !a.erase && !a.lasso && !a.magsel && !a.move && !a.peek && !a.noteDrag && !a.imgDrag && !a.textDrag && !a.textTool;
   // The button pressed or let go while the tip stays down: switch between writing and erasing on the spot.
   // Some tablets (e.g. Samsung S Pen) report the held button as "tip up" (buttons 0) without lifting the pen.
   function btnSwitch(e) {
@@ -7653,13 +8385,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (active.erase && active.byBtn && !zero && !isBtn(e) && (e.buttons & 1)) {
       finishStroke(e, true);
-      if (erasing() || tool === 'lasso' || tool === 'magnifier' || tool === 'sticky') { startErase(e); active.byBtn = true; }
+      if (erasing() || tool === 'lasso' || tool === 'magnifier' || tool === 'sticky' || tool === 'text') { startErase(e); active.byBtn = true; }
       else startStroke(e);
       return true;
     }
     return false;
   }
   stage.addEventListener('pointermove', e => {
+    if (linkPend && e.pointerId === linkPend.id) {      // moved away from the link: what the touch would have done anyway
+      if (Math.hypot(e.clientX - linkPend.x, e.clientY - linkPend.y) < 8) return;
+      const p = linkPend;
+      linkPend = null;
+      if (p.e0.pointerType === 'touch') touches.delete(p.id);
+      linkReplay = true;
+      try { stage.dispatchEvent(new PointerEvent('pointerdown', p.e0)); } finally { linkReplay = false; }
+    }
+    if (fhold) moveHold1(e);
     if (e.pointerType === 'pen') { lastPen = performance.now(); mapShy(e.clientX, e.clientY); }
     if (!active && e.buttons === 0 && e.pointerType !== 'touch' && handleMode === 'quiet') hoverNear(e);   // stylus hovering or mouse
     if (mapDrag && e.pointerId === mapDrag.id) { moveMapDrag(e); return; }
@@ -7689,6 +8430,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     const list = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
     if (active.noteDrag) { noteDragMove(e); return; }
+    if (active.textDrag) { textDragMove(e); return; }
+    if (active.textTool) { textToolMove(e); return; }
     if (active.imgDrag) { imgDragMove(e); return; }
     if (active.peek) { peekMove(e); return; }
     if (active.erase) { eraseMove(list.length ? list : [e]); if (active.type === 'touch' && !fingTag.hidden) showFingTag(e); return; }
@@ -7702,6 +8445,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   function onUp(e) {
+    if (linkPend && e.pointerId === linkPend.id) {      // a tap on a link: it opens
+      const p = linkPend;
+      linkPend = null; touches.delete(e.pointerId);
+      if (e.type === 'pointerup') openLink(p.href);
+      return;
+    }
     if (fpan && e.pointerId === fpan.id) fpan = null;
     if (fpend && e.pointerId === fpend.id) { clearTimeout(fpend.timer); fpend = null; }   // a tap: no erasing, no dot
     if (fingTag && !fingTag.hidden && active && e.pointerId === active.id) fingTag.hidden = true;
@@ -7709,10 +8458,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const wasTouch = touches.delete(e.pointerId);
     if (wasTouch && pinch && touches.size < 2) releasePinch();
     if (wasTouch && !touches.size) tapUp();
+    if (fhold && e.pointerId === fhold.id && endHold1(e)) return;
     if (nav && nav.z2 && (e.pointerId === nav.z2.id || e.pointerId === nav.id)) { navZoomEnd(e.pointerId === nav.id); return; }
     if (nav && e.pointerId === nav.id) { navEnd(); return; }
     if (active && e.pointerId === active.id) {
       if (active.noteDrag) endNoteDrag();
+      else if (active.textDrag) endTextDrag();
+      else if (active.textTool) endTextTool(e);
       else if (active.imgDrag) endImgDrag();
       else if (active.peek) endPeek();
       else if (active.lasso) endLasso();
@@ -7735,7 +8487,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (e.pointerType === 'pen' && active && e.pointerId === active.id && (isInk(active) || active.erase)) { active.loose = true; return; }
     onUp(e);
   });
-  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.target.closest('.texted, input, textarea'))) e.preventDefault(); });   // long press selects words while writing
 
   stage.addEventListener('wheel', e => {
     e.preventDefault();
@@ -7767,7 +8519,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${textsMarkup(p, 'static')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
@@ -7996,6 +8748,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'pentype': return `Pen type · ${KINDS[brush().highlighter ? 'pen' : brush().kind || 'pen']}`;
       case 'lasso': return 'Select';
       case 'sticky': return `Sticky notes · ${notesShown ? 'shown' : 'hidden'}`;
+      case 'text': return `Text · ${textCfg.fs} pt`;
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
