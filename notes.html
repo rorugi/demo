@@ -723,6 +723,20 @@
   /* ---------- desk + sheets ---------- */
   /* The desk is its own layer permanently, so zooming out during a flip only moves pixels on the
      GPU instead of redrawing the pages (redrawing caused the flicker). The body clips the screen. */
+  .livechip { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); z-index: 55;
+    display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 10px; border-radius: 999px; background: var(--panel); color: var(--bar-fg);
+    box-shadow: 0 2px 10px rgba(0,0,0,.18); border: 1px solid var(--bar-line); font: 600 13px/1 var(--ui); cursor: pointer; user-select: none; }
+  .livechip[hidden] { display: none; }
+  .livechip .ldot { width: 9px; height: 9px; border-radius: 50%; background: #d92b1e; box-shadow: 0 0 0 3px rgba(217,43,30,.18); animation: ldot 1.6s ease-in-out infinite; }
+  .livechip .ldot.off { background: #9a9a9a; box-shadow: none; animation: none; }
+  @keyframes ldot { 50% { opacity: .35; } }
+  .livechip button { border: 0; background: var(--active); color: inherit; font: inherit; font-weight: 500; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+  .livechip button[data-lc="prev"], .livechip button[data-lc="next"] { padding: 4px 10px; font-size: 18px; line-height: 1; }
+  .livechip button[aria-pressed="true"] { background: var(--bar-fg); color: var(--panel); }
+  .livechip .lpg { font-weight: 500; font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; }
+  .dlg .livelink { width: 100%; box-sizing: border-box; font: 13px/1.3 ui-monospace, monospace; padding: 8px; margin-bottom: 10px; }
+  body.viewer .livetmp { pointer-events: none; }
+  body.viewer #toolbar [data-type="pen"] { display: none; }
   .fingtag { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; padding: 5px 11px; border-radius: 999px;
     background: #c0392b; color: #fff; font: 600 13px/1 var(--ui); box-shadow: 0 2px 8px rgba(0,0,0,.25); white-space: nowrap; }
   .fingtag[hidden] { display: none; }
@@ -1275,6 +1289,7 @@
     <button type="button" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>Save…<small id="saveSum"></small></button>
     <button type="button" id="openBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5V18a1.5 1.5 0 0 0 1.5 1.5h13.2a1.5 1.5 0 0 0 1.45-1.1l1.8-6.4H7.4L5.5 19"/><path d="M3.5 7.5V6A1.5 1.5 0 0 1 5 4.5h4l2 2h6A1.5 1.5 0 0 1 18.5 8v4"/></svg>Open…</button>
     <button type="button" id="nbBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11z"/><path d="M6.5 3.5v17M4.5 7.5h4M4.5 12h4M4.5 16.5h4"/></svg>Notebooks…<small id="nbSum"></small></button>
+    <button type="button" id="liveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg>Share live…</button>
     <button type="button" id="pdfMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M8.5 17.5v-4h1.4a1.3 1.3 0 0 1 0 2.6H8.5M12.5 17.5v-4h1a2 2 0 0 1 0 4zM16.5 13.5h-1.6v4M14.9 15.5h1.3"/></svg>Export PDF…</button>
     <button type="button" id="installBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M12 7.5v7M9 11.5l3 3 3-3M10.5 18.5h3"/></svg>Install app</button>
     <button type="button" id="printMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>Print…</button>
@@ -1427,6 +1442,7 @@
 <div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="appDefs"></defs></svg>
 <div class="fingtag" id="fingTag" hidden>Erasing</div>
+<div class="livechip" id="liveChip" hidden></div>
 <div class="strip" id="strip" hidden><div class="strip-in" id="stripIn"></div></div>
 <div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
@@ -1596,6 +1612,21 @@
   </div>
 </dialog>
 
+<dialog class="dlg" id="liveDlg" aria-labelledby="liveTitle">
+  <h2 id="liveTitle">Share live</h2>
+  <div id="liveOff">
+    <p>Others follow this notebook live in their browser: every stroke as you write it, page turns, notes and pictures. They only watch. Everything is encrypted; the key is part of the link.</p>
+    <div class="row"><button type="button" id="liveClose2" onclick="this.closest('dialog').close()">Cancel</button><button type="button" id="liveStart" class="primary">Start sharing</button></div>
+  </div>
+  <div id="liveOn" hidden>
+    <p>Send this link to the viewers:</p>
+    <input type="text" id="liveLink" readonly class="livelink" aria-label="Viewer link">
+    <div class="row"><button type="button" id="liveCopy">Copy link</button><button type="button" id="liveShare">Share…</button></div>
+    <p id="liveWatch" class="sub"></p>
+    <div class="row"><button type="button" id="liveStop">Stop sharing</button><button type="button" id="liveClose" class="primary">Done</button></div>
+  </div>
+</dialog>
+
 <dialog class="dlg" id="pickDlg" aria-labelledby="pickTitle">
   <h2 id="pickTitle">Open notebooks</h2>
   <p id="pickInfo"></p>
@@ -1732,8 +1763,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_122';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.2.30';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_123';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.0';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1760,6 +1791,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const ERASER_SIZES = [1, 2, 4, 8, 15];
 
   const $ = id => document.getElementById(id);
+  // opened as a live viewer (notes.html#live=<session>.<key>): shows someone else's notebook, keeps nothing here
+  const LIVE_VIEW = (m => m ? { sid: m[1], key: m[2] } : null)(/[#&]live=([A-Za-z0-9]{12,40})\.([A-Za-z0-9_-]{16,64})/.exec(location.hash));
   const root = document.documentElement;
   const NS = 'http://www.w3.org/2000/svg';
   const stage = $('stage'), pageEl = $('page'), sheetB = $('sheetB');
@@ -1769,8 +1802,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), gestPop = $('gestPop'), eraserPop = $('eraserPop');
 
   const store = {
-    get(k, d) { try { const v = localStorage.getItem('notizblock.' + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
-    set(k, v) { try { localStorage.setItem('notizblock.' + k, JSON.stringify(v)); return true; } catch (_) { return false; } }
+    mem: LIVE_VIEW ? new Map() : null,            // a live viewer changes nothing in this browser's own RRnotes
+    get(k, d) { if (this.mem && this.mem.has(k)) return this.mem.get(k); try { const v = localStorage.getItem('notizblock.' + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
+    set(k, v) { if (this.mem) { this.mem.set(k, v); return true; } try { localStorage.setItem('notizblock.' + k, JSON.stringify(v)); return true; } catch (_) { return false; } }
   };
   const vibrate = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
   let toastTimer = 0;
@@ -2028,7 +2062,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // stylus mode: the stylus writes and fingers don't (they tap, hold, turn pages, or do what Gestures says);
   // finger mode: fingers write too. The stylus switches to stylus mode by itself; the mode button switches either way.
-  let penSeen = store.get('stylusMode', false) === true;
+  let penSeen = LIVE_VIEW || store.get('stylusMode', false) === true;   // a viewer: fingers turn pages and zoom
   if (!store.get('imAdded', false)) {          // the mode button arrives once, before Undo
     store.set('imAdded', true);
     if (!bars.some(b => b.items.some(i => i.type === 'inmode'))) {
@@ -2045,6 +2079,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       store.set('toolbars', bars);
     }
   }
+  if (LIVE_VIEW) bars = [cleanBar({ items: ['pages', 'sep', 'zoom', 'real', 'fs', 'lock'].map(t => ({ id: uid(), type: t })) }, true)];   // a viewer only looks (the pen stays hidden)
   const allItems = () => bars.flatMap(b => b.items);
   { const ids = new Set(); allItems().forEach(i => { while (ids.has(i.id)) i.id = uid(); ids.add(i.id); }); }
   const itemById = id => allItems().find(i => i.id === id);
@@ -2358,6 +2393,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     saveIdx();
   }
   function scheduleSave() {
+    if (LIVE_VIEW) return;
+    if (typeof lvDirty === 'function') lvDirty();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       if (!backupReady) { scheduleSave(); return; }      // don't overwrite a notebook before it was read
@@ -2408,6 +2445,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     saveIdx();
   }
   async function loadBackup() {
+    if (LIVE_VIEW) { startViewer(); return; }
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (_) {}   // ask the browser not to clear it
     let nb = null;
     if (!nbIdx.loaded.length) {
@@ -2479,6 +2517,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     mapInkChanged();
     $('allPagesSum').textContent = `${cur + 1} / ${pages.length}`;
     updateToolbarState();
+    if (typeof lvNav === 'function') { lvNav(); viewerPaged(); }
   }
 
   // ---- View: fit scale × zoom, plus pan offset in CSS px ----
@@ -5626,6 +5665,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     p.push([a.sx, a.sy]);
     if (a.pr) a.pr.push(a.f || 1);
     drawIncrement();
+    if (lv) lvKick();                              // shared live: the stroke goes out while it is written
   }
   // after the points changed (straightened, smoothed): each point takes the width of the nearest old point
   function resyncPr(a, oldPts, oldPr) {
@@ -5989,6 +6029,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let zeroPressure = false;                      // the tablet reports pressure while the button is held (so hovering can be told apart)
   let eraseSkip = null;                          // { st, at }: a stroke not erased until the eraser has moved away
   function startErase(e, spare) {
+    if (LIVE_VIEW) return;
     const q = toMM(e);
     eraseSkip = spare ? { st: spare, at: q } : null;
     clearCtx(lctx);
@@ -6150,6 +6191,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const inSelBox = q => sel && sel.page === cur && q[0] >= sel.box[0] && q[0] <= sel.box[2] && q[1] >= sel.box[1] && q[1] <= sel.box[3];
 
   function startLasso(e) {
+    if (LIVE_VIEW) return;
     const q = toMM(e);
     clearCtx(lctx); clearCtx(tctx);
     liveWrap.style.opacity = 1; liveWrap.style.mixBlendMode = 'normal';
@@ -6495,6 +6537,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
   function startStroke(e, over) {
+    if (LIVE_VIEW) return;
     const [x, y] = toMM(e);
     if (x < 0 || y < 0 || x > W || y > H) return;
     const br = over || effBrush();          // the pen, with an active size / colour button applied (or the finger's highlighter)
@@ -8044,6 +8087,256 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     line.appendChild(b);
     sub.parentNode.insertBefore(line, sub);
   });
+  // ==== Live sharing: the notebook on this device, followed live in other browsers ====
+  // A small relay (live.php next to notes.html) passes encrypted changes on; the key stays after the # of the
+  // viewer link and never reaches the server. Viewers get the whole notebook first, then every change:
+  // finished strokes, the stroke being written (point by point), erasing, moving, notes, pictures, the page.
+  const LIVE_URL = 'live.php';
+  const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+  const unb64 = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+  const b64u = u8 => b64(u8).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const unb64u = s => unb64(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4));
+  const liveKey = raw => crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+  async function liveEnc(key, obj) {               // JSON → gzip → AES-GCM → base64 (first byte: 1 = gzipped)
+    let bytes = new TextEncoder().encode(JSON.stringify(obj)), flag = 0;
+    if (window.CompressionStream) { bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()); flag = 1; }
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes));
+    const out = new Uint8Array(13 + ct.length); out[0] = flag; out.set(iv, 1); out.set(ct, 13);
+    return b64(out);
+  }
+  async function liveDec(key, s) {
+    const u = unb64(s);
+    let bytes = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.subarray(1, 13) }, key, u.subarray(13)));
+    if (u[0] === 1) bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  const liveReq = async (sid, q, body) => {
+    const r = await fetch(`${LIVE_URL}?s=${sid}&${q}`, body === undefined ? { cache: 'no-store' } : { method: 'POST', body, cache: 'no-store' });
+    if (!r.ok) throw new Error('live ' + r.status);
+    return q.startsWith('a=img') && body === undefined ? r.text() : r.json();
+  };
+  const liveChip = $('liveChip');
+  const pageImgIds = list => { const s = new Set(); list.forEach(pg => (pg.images || []).forEach(m => s.add(m.src))); return s; };
+
+  // ---- sharing (this device writes) ----
+  var lv = null;                                   // { sid, raw, key, link, seq, sent: WeakMap, order, setupSig, imgs:Set, dirty, nav, busy, viewers: Map }
+  async function liveStart() {
+    const sid = b64u(crypto.getRandomValues(new Uint8Array(12))).replace(/[^A-Za-z0-9]/g, '').slice(0, 16).padEnd(16, 'x');
+    const raw = crypto.getRandomValues(new Uint8Array(16));
+    const s = { sid, raw, key: await liveKey(raw), seq: 0, sent: new WeakMap(), order: [], setupSig: '', imgs: new Set(), dirty: false, nav: false, busy: false,
+      viewers: new Map(), lastSnap: 0, changedSinceSnap: false, stroke: null, err: 0 };
+    s.link = location.origin + location.pathname + '#live=' + sid + '.' + b64u(raw);
+    lv = s;
+    try { await liveSnap(); }
+    catch (_) { lv = null; liveUi(); toast('Live sharing needs live.php on the web server, next to notes.html.', 5000); return; }
+    liveUi();
+    liveListen(s);
+    toast('Live sharing is on. Send the link to the viewers.');
+  }
+  function liveStop() { lv = null; liveUi(); toast('Live sharing stopped.'); }
+  async function liveUploadImages(ids) {
+    for (const id of ids) {
+      if (!lv || lv.imgs.has(id)) continue;
+      const rec = imgStore.get(id);
+      if (!rec || !rec.blob) continue;
+      const d = await liveEnc(lv.key, { w: rec.w, h: rec.h, type: rec.type, b: b64(new Uint8Array(await rec.blob.arrayBuffer())) });
+      await liveReq(lv.sid, 'a=img&id=' + id, d);
+      lv.imgs.add(id);
+    }
+  }
+  const pageSig = pg => JSON.stringify(Object.fromEntries(Object.entries(pg).filter(([k]) => k !== 'strokes')));
+  function markSent(i) { const pg = pages[i]; lv.sent.set(pg, { refs: pg.strokes.slice(), sig: pageSig(pg) }); }   // stroke objects are never changed in place
+  async function liveSnap() {                     // the whole notebook; the relay forgets what came before it
+    await liveUploadImages(pageImgIds(pages));
+    const d = await liveEnc(lv.key, { t: 'snap', setup, cur, pages });
+    const r = await liveReq(lv.sid, 'a=snap', JSON.stringify({ d }));
+    lv.seq = r.n;                                  // viewers further back start over from this snapshot
+    pages.forEach((_, i) => markSent(i));
+    lv.order = pages.slice(); lv.setupSig = JSON.stringify(setup); lv.lastSnap = Date.now(); lv.changedSinceSnap = false;
+  }
+  function lvDirty() { if (lv) { lv.dirty = true; lv.changedSinceSnap = true; lvKick(); } }
+  function lvNav() { if (lv) { lv.nav = true; lvKick(); } }
+  function lvKick() { if (lv && !lv.kick) lv.kick = setTimeout(() => { if (lv) { lv.kick = 0; liveSend(); } }, 120); }
+  async function liveSend() {
+    const s = lv;
+    if (!s || s.busy) return;
+    s.busy = true;
+    try {
+      while (lv === s) {
+        const structural = pages.length !== s.order.length || pages.some((p, i) => p !== s.order[i]) || JSON.stringify(setup) !== s.setupSig;
+        if (structural || (s.changedSinceSnap && Date.now() - s.lastSnap > 60000)) { s.dirty = false; await liveSnap(); s.nav = true; continue; }
+        const msgs = [];
+        if (s.dirty) {
+          s.dirty = false;
+          const imgs = new Set();
+          pages.forEach((pg, i) => {
+            const was = s.sent.get(pg), n = pg.strokes.length;
+            if (was && was.sig === pageSig(pg) && n >= was.refs.length && was.refs.every((st, j) => pg.strokes[j] === st)) {
+              if (n > was.refs.length) msgs.push({ t: 'add', i, st: pg.strokes.slice(was.refs.length) });
+            } else { msgs.push({ t: 'page', i, p: pg }); (pg.images || []).forEach(m => imgs.add(m.src)); }
+            markSent(i);
+          });
+          if (imgs.size) await liveUploadImages(imgs);
+        }
+        if (s.nav) { s.nav = false; msgs.push({ t: 'nav', cur, n: pages.length }); }
+        const a = active;                          // the stroke being written right now
+        if (a && a.pts && a.pts.length > 1 && !a.erase && !a.lasso && !a.move && !a.magsel && !a.note && !a.img) {
+          if (!s.stroke || s.stroke.a !== a) s.stroke = { a, k: 0, id: uid() };
+          if (a.pts.length > s.stroke.k) {
+            msgs.push({ t: 'live', id: s.stroke.id, i: cur, k: s.stroke.k, pts: a.pts.slice(s.stroke.k).map(q => [+q[0].toFixed(2), +q[1].toFixed(2)]), c: a.color, kd: a.k ? 1 : 0, w: a.width, o: a.opacity, h: a.h ? 1 : 0 });
+            s.stroke.k = a.pts.length;
+          }
+        }
+        if (!msgs.length) break;
+        const r = await liveReq(s.sid, 'a=push', JSON.stringify({ f: 'h', d: await liveEnc(s.key, msgs) }));
+        s.seq = Math.max(s.seq, r.n); s.err = 0;
+      }
+    } catch (_) {
+      if (lv === s) { s.err++; s.dirty = true; setTimeout(() => { if (lv === s) liveSend(); }, Math.min(10000, 1000 * s.err)); }
+    } finally { s.busy = false; liveUi(); }
+    if (lv === s && active && active.pts && s.stroke && active.pts.length > s.stroke.k) lvKick();   // still writing
+  }
+  async function liveListen(s) {                  // who is watching (viewers say hello now and then)
+    let after = s.seq;
+    while (lv === s) {
+      try {
+        const r = await liveReq(s.sid, `a=pull&after=${after}&not=h`);
+        if (r.reset) { after = s.seq; continue; }
+        after = r.n;
+        for (const [, from] of r.r || []) if (from.startsWith('v')) s.viewers.set(from, Date.now());
+        liveUi();
+      } catch (_) { await new Promise(res => setTimeout(res, 3000)); }
+    }
+  }
+  const watching = () => { if (!lv) return 0; const t = Date.now(); return [...lv.viewers.values()].filter(x => t - x < 70000).length; };
+
+  // ---- viewing (#live=… in the address) ----
+  var lvw = null;                                  // { sid, key, n, follow, hostCur, hostN, tmp, vid }
+  async function startViewer() {
+    const v = lvw = { sid: LIVE_VIEW.sid, key: await liveKey(unb64u(LIVE_VIEW.key)), n: 0, follow: true, hostCur: 0, hostN: 1, tmp: null, vid: 'v' + uid().slice(0, 10), state: 'Connecting…' };
+    document.body.classList.add('viewer');
+    liveUi();
+    const hello = async () => { try { await liveReq(v.sid, 'a=push', JSON.stringify({ f: v.vid, d: await liveEnc(v.key, { t: 'hello' }) })); } catch (_) {} };
+    hello(); setInterval(hello, 30000);
+    const loadSnap = async () => {
+      for (;;) {
+        try {
+          const r = await liveReq(v.sid, 'a=snap');
+          if (r.none) { v.state = 'Waiting for the notebook…'; liveUi(); await new Promise(res => setTimeout(res, 2000)); continue; }
+          v.n = r.n; viewerApply(await liveDec(v.key, r.d)); v.state = ''; liveUi(); return;
+        } catch (_) { v.state = 'Can’t reach the notebook. Is the link complete?'; liveUi(); await new Promise(res => setTimeout(res, 3000)); }
+      }
+    };
+    await loadSnap();
+    for (;;) {
+      try {
+        const r = await liveReq(v.sid, `a=pull&after=${v.n}&not=${v.vid}`);
+        if (r.reset) { await loadSnap(); continue; }
+        for (const [n, from, d] of r.r || []) {
+          v.n = n;
+          if (from !== 'h') continue;
+          const msgs = await liveDec(v.key, d);
+          msgs.forEach(viewerApply);
+        }
+        v.n = Math.max(v.n, r.n);
+        if (v.state) { v.state = ''; liveUi(); }
+      } catch (_) { v.state = 'Reconnecting…'; liveUi(); await new Promise(res => setTimeout(res, 2500)); }
+    }
+  }
+  async function viewerImages() {                 // pictures come from the relay, once each
+    const ids = [...pageImgIds(pages)].filter(id => !imgStore.has(id));
+    for (const id of ids) {
+      try {
+        const o = await liveDec(lvw.key, await liveReq(lvw.sid, 'a=img&id=' + id));
+        const blob = new Blob([unb64(o.b)], { type: o.type });
+        imgStore.set(id, { url: URL.createObjectURL(blob), w: o.w, h: o.h, type: o.type, blob });
+      } catch (_) {}
+    }
+    if (ids.length) renderPage();
+  }
+  function viewerTmp(m) {                          // the stroke the writer is drawing right now
+    const v = lvw;
+    if (!v.tmp || v.tmp.id !== m.id) v.tmp = { id: m.id, i: m.i, pts: [], m };
+    v.tmp.pts = v.tmp.pts.slice(0, m.k).concat(m.pts);   // (a gap after a reload is simply bridged)
+    clearTimeout(v.tmpT); v.tmpT = setTimeout(() => { v.tmp = null; pageInk.querySelector('.livetmp')?.remove(); }, 4000);
+    drawTmp();
+  }
+  function drawTmp() {
+    let el = pageInk.querySelector('.livetmp');
+    const t = lvw.tmp;
+    if (!t || t.i !== cur || t.pts.length < 2) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElementNS(NS, 'path'); el.setAttribute('class', 'livetmp'); el.setAttribute('fill', 'none'); el.setAttribute('stroke-linecap', 'round'); el.setAttribute('stroke-linejoin', 'round'); pageInk.appendChild(el); }
+    el.setAttribute('d', 'M' + t.pts.map(q => q[0] + ' ' + q[1]).join('L'));
+    el.setAttribute('stroke', displayColor(t.m.c, !!t.m.kd)); el.setAttribute('stroke-width', t.m.w); el.setAttribute('stroke-opacity', t.m.h ? Math.min(0.5, t.m.o) : t.m.o);
+  }
+  function viewerApply(m) {
+    const v = lvw;
+    if (m.t === 'snap') {
+      v.hostCur = m.cur; v.hostN = m.pages.length;
+      const keep = v.follow ? m.cur : Math.min(cur, m.pages.length - 1);
+      showNotebook({ v: 3, pages: m.pages, cur: keep, setup: m.setup });
+      viewerImages();
+    } else if (m.t === 'page' || m.t === 'add') {
+      if (!pages[m.i]) return;
+      if (m.t === 'page') pages[m.i] = m.p; else pages[m.i].strokes.push(...m.st);
+      if (v.tmp && v.tmp.i === m.i) { v.tmp = null; }
+      if (m.i === cur) renderPage();
+      if (m.t === 'page') viewerImages();
+    } else if (m.t === 'nav') {
+      v.hostCur = m.cur; v.hostN = m.n;
+      if (v.follow && cur !== m.cur && pages[m.cur]) { cur = m.cur; renderPage(); }
+    } else if (m.t === 'live') viewerTmp(m);
+    liveUi();
+  }
+  function viewerPaged() {                         // the viewer turned a page itself: stop following
+    if (lvw && cur !== lvw.hostCur && lvw.follow && !lvw.applying) { lvw.follow = false; liveUi(); }
+    if (lvw && lvw.tmp) drawTmp();
+  }
+  async function viewerSaveCopy() {
+    const name = `RRnotes live ${new Date().toLocaleDateString()}`.replace(/[\\/:*?"<>|]+/g, '-');
+    const file = await notebookFile('html', name);
+    await saveBlob(file, file.name, 'RRnotes notebook (web page)', 'text/html', '.html');
+  }
+
+  // ---- the little status chip, and the dialog ----
+  function liveUi() {
+    if (lvw) {
+      const v = lvw;
+      liveChip.hidden = false;
+      liveChip.innerHTML = `<span class="ldot${v.state ? ' off' : ''}"></span><span class="ltxt">${esc(v.state || 'Live')}</span>` +
+        `<button type="button" data-lc="prev" aria-label="Previous page">‹</button><span class="lpg">${cur + 1} / ${pages.length}</span><button type="button" data-lc="next" aria-label="Next page">›</button>` +
+        `<button type="button" data-lc="follow" aria-pressed="${v.follow}">${v.follow ? 'Following' : 'Follow'}</button><button type="button" data-lc="save">Save copy</button>`;
+      return;
+    }
+    liveChip.hidden = !lv;
+    if (lv) { const n = watching(); liveChip.innerHTML = `<span class="ldot${lv.err ? ' off' : ''}"></span><span class="ltxt">${lv.err ? 'Live · reconnecting' : `Live · ${n} ${n === 1 ? 'viewer' : 'viewers'}`}</span>`; }
+    if ($('liveDlg').open) renderLiveDlg();
+  }
+  liveChip.addEventListener('click', e => {
+    const b = e.target.closest('[data-lc]');
+    if (!lvw) { $('liveBtn').click(); return; }
+    if (!b) return;
+    const k = b.dataset.lc;
+    if (k === 'prev' && cur > 0) { cur--; renderPage(); }
+    if (k === 'next' && cur < pages.length - 1) { cur++; renderPage(); }
+    if (k === 'follow') { lvw.follow = !lvw.follow; if (lvw.follow && pages[lvw.hostCur]) { cur = lvw.hostCur; renderPage(); } }
+    if (k === 'save') viewerSaveCopy();
+    liveUi();
+  });
+  function renderLiveDlg() {
+    $('liveOff').hidden = !!lv; $('liveOn').hidden = !lv;
+    if (lv) { $('liveLink').value = lv.link; const n = watching(); $('liveWatch').textContent = lv.err ? 'Can’t reach live.php right now, trying again…' : n ? `${n} ${n === 1 ? 'viewer is' : 'viewers are'} following.` : 'Nobody is following yet.'; }
+  }
+  $('liveBtn').addEventListener('click', () => { closePops(); renderLiveDlg(); $('liveDlg').showModal(); });
+  $('liveStart').addEventListener('click', () => liveStart());
+  $('liveStop').addEventListener('click', () => liveStop());
+  $('liveClose').addEventListener('click', () => $('liveDlg').close());
+  $('liveCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(lv.link); toast('Link copied.'); } catch (_) { $('liveLink').select(); } });
+  $('liveShare').addEventListener('click', async () => { try { await navigator.share({ title: 'RRnotes live', url: lv.link }); } catch (_) {} });
+  if (!navigator.share) $('liveShare').hidden = true;
+  setInterval(() => { if (lv) liveUi(); }, 20000);
+
   applyPaper();
   layout();
   loadBackup();
