@@ -1959,8 +1959,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_149';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.26';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_150';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.27';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2667,6 +2667,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const textH = t => textLayout(t).h;
   // ---- "busy": a small panel while something takes a while; frac 0…1 shows a bar, without it the bar just runs ----
   let busyDepth = 0;
+  const saveFailText = err => err && (err.name === 'RangeError' || /memory|allocation|string length/i.test(err.message || ''))
+    ? 'Saving failed: this notebook is too large for the memory of this device. Save the PDF pages as a separate notebook, or save on a computer.'
+    : `Saving failed: ${(err && (err.message || err.name)) || 'unknown error'}`;
   const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
   async function busy(text, frac) {
     const el = $('busy'), bar = $('busyBar');
@@ -4348,13 +4351,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (fmt === 'html') {                          // the notebook as a web page: the same SVG inside, with its name on top
       const d = new Date(), svg = await notebookSVG();
       const body = collectionBody([{ name: name + '.html', pages: pages.length, svg }], `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, name);
-      return new File([collectionPage(body, name, null)], name + '.html', { type: 'text/html' });
+      return new File(toParts(collectionPage(body, name, null)), name + '.html', { type: 'text/html' });
     }
     if (fmt === 'svgz') {
-      const gz = await new Response(new Blob([await notebookSVG()]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
+      const gz = await new Response(new Blob(toParts(await notebookSVG())).stream().pipeThrough(new CompressionStream('gzip'))).blob();
       return new File([gz], name + '.svgz', { type: 'image/svg+xml' });
     }
-    return new File([await notebookSVG()], name + '.svg', { type: 'image/svg+xml' });
+    return new File(toParts(await notebookSVG()), name + '.svg', { type: 'image/svg+xml' });
   }
   async function saveOrShare(share) {
     const fmt = saveFmt();
@@ -4365,7 +4368,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const m = nbMeta(), rev = m.rev;                 // what is written now; later changes stay unsaved
     let file;
     try { file = await busyWhile(`Saving ${name}…`, () => notebookFile(fmt, name)); }
-    catch (err) { toast(`Saving failed: ${(err && (err.message || err.name)) || 'unknown error'}`, 6000); return; }
+    catch (err) { toast(saveFailText(err), 8000); return; }
     let saved;
     if (share) saved = await shareFiles([file]) ? file.name : null;
     else saved = fmt === 'html' ? await saveBlob(file, file.name, 'RRnotes notebook (web page)', 'text/html', '.html')
@@ -4400,6 +4403,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function parseNotebook(text) {
     let newPages, newSetup, newMarks = [];
     {
+      text = await takePdfsOut(text);
       const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
       if (doc.querySelector('parsererror')) throw new Error('parse');
       if (doc.querySelector('desc.rr-pdf') && busyDepth) await busy('Reading the PDF…');
@@ -4519,6 +4523,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           imgSize.set(src, b ? b.size : 0);
         }
         n += imgSize.get(src); all.add(src);
+      }
+      for (const id of new Set((rec.pages || []).filter(pg => pg.bg && pg.bg.pdf).map(pg => pg.bg.pdf))) {   // its PDFs too
+        const key = 'pdf:' + id;
+        if (!imgSize.has(key)) {
+          let b = pdfStore.has(id) && pdfStore.get(id).blob;
+          if (!b) { try { const v = await idb.get(key); b = v && v.blob; } catch (_) {} }
+          imgSize.set(key, b ? b.size : 0);
+        }
+        n += imgSize.get(key); all.add(key);
       }
       nbMem.set(m.id, n);
       total += new Blob([JSON.stringify(rec)]).size;
@@ -4716,7 +4729,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function saveAll(share, fmt = 'zip', fileName = `RRnotes_${stamp()}`) {
     let out, files;
     try { [out, files] = await busyWhile('Saving all notebooks…', () => buildAll(fmt, fileName)); }
-    catch (err) { toast(`Saving failed: ${(err && (err.message || err.name)) || 'unknown error'}`, 6000); return; }
+    catch (err) { toast(saveFailText(err), 8000); return; }
     if (!out) return;
     let saved;
     if (share) saved = await shareFiles([out]) ? out.name : null;
@@ -4742,7 +4755,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       names.add(name.toLowerCase());
       await busy(`Saving ${m.name}…`);
       const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup), isCur ? marksOut() : (Array.isArray(rec.marks) ? rec.marks : []));
-      files.push({ name, m, rev: m.rev, svg: svgText, pages: pgs.length, data: enc.encode(svgText) });
+      files.push({ name, m, rev: m.rev, svg: svgText, pages: pgs.length, data: fmt === 'zip' ? new Uint8Array(await new Blob(toParts(svgText)).arrayBuffer()) : null });
     }
     if (!files.length) { toast('Nothing to save yet'); return []; }
     let out;
@@ -4750,8 +4763,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     else {
       const d = new Date(), title = `RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}`;
       const body = collectionBody(files, `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-      const packed = fmt === 'packed' ? toBase64(await streamBytes(enc.encode(body), new CompressionStream('gzip'))) : null;
-      out = new File([collectionPage(body, title, packed)], fileName + '.html', { type: 'text/html' });
+      const packed = fmt === 'packed' ? toBase64(new Uint8Array(await new Response(new Blob(toParts(body)).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())) : null;
+      out = new File(toParts(collectionPage(body, title, packed)), fileName + '.html', { type: 'text/html' });
     }
     return [out, files];
   }
@@ -4764,12 +4777,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         out.push({ name: f.name, text: f.data[0] === 0x1f && f.data[1] === 0x8b ? dec.decode(await streamBytes(f.data, new DecompressionStream('gzip'))) : dec.decode(f.data) });
       return out;
     }
-    let doc = new DOMParser().parseFromString(dec.decode(buf), 'text/html');
+    let doc = new DOMParser().parseFromString(await takePdfsOut(dec.decode(buf)), 'text/html');
     const pack = doc.getElementById('rrpack');
     if (pack) {
       const b = atob(pack.textContent.trim()), u = new Uint8Array(b.length);
       for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
-      doc = new DOMParser().parseFromString(`<body>${dec.decode(await streamBytes(u, new DecompressionStream('gzip')))}</body>`, 'text/html');
+      doc = new DOMParser().parseFromString(`<body>${await takePdfsOut(dec.decode(await streamBytes(u, new DecompressionStream('gzip'))))}</body>`, 'text/html');
     }
     const ser = new XMLSerializer();
     return [...doc.querySelectorAll('svg[data-notizblock]')].map((el, i) => {
@@ -6899,6 +6912,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const g = c.getContext('2d');
     g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
     const task = page.render({ canvasContext: g, viewport: vp, background: 'rgb(255,255,255)' });
+    task.promise.then(() => { try { page.cleanup(); } catch (_) {} }, () => { try { page.cleanup(); } catch (_) {} });
     return { task, done: task.promise.then(() => new Promise(res => c.toBlob(bl => res({ blob: bl, w: c.width, h: c.height }), region ? 'image/png' : 'image/jpeg', quality))) };
   }
   async function bgPump() {
@@ -7071,7 +7085,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const sizes = [];
     for (const [i, n] of list.entries()) {
       if (i % 10 === 0) await busy(`Reading page sizes ${i + 1} of ${list.length}…`, i / list.length);
-      const v = (await p.doc.getPage(n)).getViewport({ scale: 1 }); sizes.push([v.width * 25.4 / 72, v.height * 25.4 / 72]);
+      const pgx = await p.doc.getPage(n), v = pgx.getViewport({ scale: 1 }); sizes.push([v.width * 25.4 / 72, v.height * 25.4 / 72]);
+      try { pgx.cleanup(); } catch (_) {}
     }
     const fit = (n, i, PW, PH) => {               // the PDF page fitted into the notebook page, centred
       const [w0, h0] = sizes[i], k = Math.min(PW / w0, PH / h0), w = w0 * k, h = h0 * k;
@@ -7109,33 +7124,92 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     toast('PDF background removed from this page. Undo brings it back.', 2200);
   });
   // saved files: the PDF itself once (to open it again), and each page as a picture (so other programs show it)
+  // in saved files the PDF goes in as base64 made piece by piece into a Blob (a long PDF as one string can crash a tablet);
+  // the text only holds a marker for it, which toParts() swaps for the Blob when the file is made
+  const PDF_MARK = String.fromCharCode(1) + 'RRPDF:', PDF_MARK_END = String.fromCharCode(1);
+  const pdfParts = new Map();                      // pdf id -> Blob "data:application/pdf;base64,…"
+  async function pdfB64Part(id, blob) {
+    if (pdfParts.has(id)) return pdfParts.get(id);
+    const parts = ['data:application/pdf;base64,'], CH = 3 * 1024 * 1024;   // a multiple of 3: no padding in between
+    for (let o = 0; o < blob.size; o += CH) {
+      if (busyDepth && blob.size > 15e6) await busy(`Packing the PDF ${Math.round(o / 1e6)} of ${Math.round(blob.size / 1e6)} MB…`, o / blob.size);
+      parts.push(b64(new Uint8Array(await blob.slice(o, o + CH).arrayBuffer())));
+    }
+    const part = new Blob(parts, { type: 'text/plain' });
+    pdfParts.set(id, part);
+    return part;
+  }
+  function toParts(text) {                         // a file's text with its PDFs put back in (strings and Blobs, for new Blob/File)
+    if (text.indexOf(PDF_MARK) < 0) return [text];
+    const out = [];
+    let at = 0;
+    for (;;) {
+      const a = text.indexOf(PDF_MARK, at);
+      if (a < 0) break;
+      const b = text.indexOf(PDF_MARK_END, a + PDF_MARK.length);
+      out.push(text.slice(at, a), pdfParts.get(text.slice(a + PDF_MARK.length, b)) || '');
+      at = b + 1;
+    }
+    out.push(text.slice(at));
+    return out;
+  }
   async function bgFileData(list) {
     const ids = pdfIdsOf(list), pdfs = [], pics = new Map();
-    for (const id of ids) { const r = await pdfRec(id); if (r) pdfs.push({ id, name: r.name, data: await blobData(r.blob) }); }
+    for (const id of ids) { const r = await pdfRec(id); if (r) { await pdfB64Part(id, r.blob); pdfs.push({ id, name: r.name, data: PDF_MARK + id + PDF_MARK_END }); } }
     // the pictures only serve other programs (RRnotes uses the PDF itself): smaller with more pages, none for very many,
     // so that a long PDF doesn't make the file huge (490 pages were over 100 MB) or the tablet run out of memory
     const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg), pg.bg])).values()];
-    const tier = todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : null;
-    if (!tier) return { pdfs, pics, noPics: true };
+    const tier = todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 360, q: 0.5 };
     let i = 0;
     for (const b of todo) {
       const k = bgKey(b);
       i++;
       if (busyDepth) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
       try {
-        const big = bgRast.L.get(k);
-        const r = big && tier.px >= 1200 ? big : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
+        const big = bgRast.L.get(k), small = bgRast.S.get(k);
+        const r = big && tier.px >= 1200 ? big : small && tier.px <= 360 ? small : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
         pics.set(k, await blobData(r.blob));
       } catch (_) {}
     }
     return { pdfs, pics };
   }
+  const incomingPdfs = new Map();                  // PDFs taken out of a file being opened: id in the file -> Blob
+  async function takePdfsOut(text) {               // the file's text without the PDFs' base64 (they go to incomingPdfs)
+    const open = '<desc class="rr-pdf"', out = [];
+    let at = 0;
+    for (;;) {
+      const a = text.indexOf(open, at);
+      if (a < 0) break;
+      const gt = text.indexOf('>', a), end = text.indexOf('</desc>', gt);
+      if (gt < 0 || end < 0) break;
+      const tag = text.slice(a, gt + 1), id = (/data-pdf="([^"]*)"/.exec(tag) || [])[1];
+      let i = text.indexOf('base64,', gt) + 7;
+      if (id && i > 6 && i < end) {
+        if (busyDepth) await busy('Reading the PDF…');
+        const parts = [], CH = 4 * 1024 * 1024;  // a multiple of 4: whole base64 groups
+        for (; i < end; i += CH) {
+          const bin = atob(text.slice(i, Math.min(end, i + CH)).replace(/\s+/g, ''));
+          const u = new Uint8Array(bin.length);
+          for (let k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k);
+          parts.push(u);
+        }
+        incomingPdfs.set(id, new Blob(parts, { type: 'application/pdf' }));
+      }
+      out.push(text.slice(at, gt + 1));             // the tag stays (without its content)
+      at = end;
+    }
+    if (!out.length) return text;
+    out.push(text.slice(at));
+    return out.join('');
+  }
   async function readFilePdfs(doc) {               // PDFs inside an opened file go into the browser's store: old id -> id now
     const map = new Map();
     for (const el of doc.querySelectorAll('desc.rr-pdf')) {
+      const old = el.getAttribute('data-pdf');
       try {
-        const blob = await (await fetch(el.textContent.trim())).blob();
-        map.set(el.getAttribute('data-pdf'), await storePdf(new Blob([blob], { type: 'application/pdf' }), el.getAttribute('data-name') || ''));
+        let blob = incomingPdfs.get(old);
+        if (!blob && el.textContent.trim()) blob = await (await fetch(el.textContent.trim())).blob();
+        if (blob) map.set(old, await storePdf(new Blob([blob], { type: 'application/pdf' }), el.getAttribute('data-name') || ''));
       } catch (_) {}
     }
     return map;
