@@ -200,7 +200,7 @@ const TRAD = [
   {id:"mr", name:"Marathi", font:"Tiro", lang:"mr"},
 ];
 const ALL = TRAD.map(t => t.id);
-let on = new Set(["hi","sa","no"]);
+let on = new Set(["sa"]);
 
 // Where the fonts draw a form differently (Tiro outlines compared with HarfBuzz; Uttara checked by eye).
 // Shape 0 = the Tiro Hindi form. Tiro Marathi uses the Sanskrit form for ल श and the digits, the Hindi form otherwise.
@@ -357,13 +357,13 @@ function buildKey(){
   });
 }
 
-// State: orientation and traditions, kept in the URL hash (#o=portrait&t=hi.sa.no)
+// State: orientation and traditions, kept in the URL hash (#o=portrait&t=hi.sa.no; default: Sanskrit only)
 let portrait = false;
 function save(){
   const h = new URLSearchParams();
   if (portrait) h.set("o", "portrait");
   const t = ALL.filter(f => on.has(f)).join(".");
-  if (t !== "hi.sa.no") h.set("t", t);
+  if (t !== "sa") h.set("t", t);
   try { history.replaceState(null, "", h.toString() ? "#" + h.toString().replace(/%2E/g, ".") : location.pathname); } catch(e){}
 }
 function render(){
