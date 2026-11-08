@@ -1,6 +1,7 @@
 // RRnotes service worker: keeps a copy of the app so it always starts, also offline.
 // The app page comes from the network when online (so updates arrive by themselves), otherwise from the copy.
 const CACHE = 'rrnotes-v1';
+const LIB = 'rrnotes-lib';      // the PDF viewer and PDF writer (fixed versions from the CDN), loaded the first time a PDF is used
 const CORE = ['./notes.html', './notes.webmanifest', './notes-icon-192.png', './notes-icon-512.png', './notes-icon-maskable-512.png', './notes-icon-180.png', './notes-icon-32.png'];
 
 self.addEventListener('install', e => {
@@ -9,7 +10,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k.startsWith('rrnotes-') && k !== CACHE).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k.startsWith('rrnotes-') && k !== CACHE && k !== LIB).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -17,6 +18,10 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (url.hostname === 'cdn.jsdelivr.net' && /^\/npm\/(pdfjs-dist|pdf-lib)@[\d.]+\//.test(url.pathname)) {   // versioned: never changes, keep it
+    e.respondWith(caches.open(LIB).then(async c => (await c.match(req)) || fetch(req).then(res => { if (res.ok) c.put(req, res.clone()); return res; })));
+    return;
+  }
   if (url.origin !== location.origin) return;
   // "Update" in About: always ask the server, and keep what it sends as the new copy
   if (url.searchParams.has('check') && /\/notes(\.html)?$/.test(url.pathname)) {

@@ -281,6 +281,8 @@
   /* highlighters sit behind the ink and blend like real highlighter ink */
   .hlg { mix-blend-mode: multiply; }
   body.paper-dark .hlg { mix-blend-mode: screen; }
+  body.paper-dark .page.onpdf .hlg { mix-blend-mode: multiply; }
+  .bglayer, .pdfbg { pointer-events: none; }
   /* sticky notes: always light paper, so their highlighter ink multiplies */
   body .note .hlg { mix-blend-mode: multiply; }
   .note [data-nact] { cursor: pointer; }
@@ -1222,6 +1224,7 @@
   <div class="page" id="page">
     <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" aria-label="Page">
       <path class="grid" fill="none" stroke-width="0.15"/>
+      <g class="bglayer" id="bgLayer"></g>
       <g class="images" id="imgLayer"></g>
       <g class="texts" id="textLayer"></g>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -1405,6 +1408,7 @@
   <h3>Eraser size</h3>
   <div class="esizes" id="esizes"></div>
   <button type="button" class="wide-btn" id="clearPage">Clear this page</button>
+  <button type="button" class="wide-btn subtle" id="bgRemove" hidden>Remove the PDF from this page</button>
 </div>
 
 <!-- settings menu -->
@@ -1426,6 +1430,7 @@
   <div class="menu">
     <button type="button" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>Save…<small id="saveSum"></small></button>
     <button type="button" id="openBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5V18a1.5 1.5 0 0 0 1.5 1.5h13.2a1.5 1.5 0 0 0 1.45-1.1l1.8-6.4H7.4L5.5 19"/><path d="M3.5 7.5V6A1.5 1.5 0 0 1 5 4.5h4l2 2h6A1.5 1.5 0 0 1 18.5 8v4"/></svg>Open…</button>
+    <button type="button" id="pdfOpenBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h8l4 4v15H6z"/><path d="M14 2.5v4h4"/><path d="M9 13.5h6M9 16.5h4"/></svg><span>Open PDF…<span class="sub">Write on its pages</span></span></button>
     <button type="button" id="nbBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11z"/><path d="M6.5 3.5v17M4.5 7.5h4M4.5 12h4M4.5 16.5h4"/></svg>Notebooks…<small id="nbSum"></small></button>
     <button type="button" id="pdfMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M8.5 17.5v-4h1.4a1.3 1.3 0 0 1 0 2.6H8.5M12.5 17.5v-4h1a2 2 0 0 1 0 4zM16.5 13.5h-1.6v4M14.9 15.5h1.3"/></svg>Export PDF…</button>
     <button type="button" id="installBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M12 7.5v7M9 11.5l3 3 3-3M10.5 18.5h3"/></svg>Install app</button>
@@ -1548,6 +1553,7 @@
 <!-- No image type in "accept": with one, Chrome on Android opens the photo picker, which can't reach Downloads.
      The content is checked after choosing, so any file can be picked. -->
 <input type="file" id="fileIn" hidden>
+<input type="file" id="pdfIn" accept="application/pdf,.pdf" hidden>
 <input type="file" id="zipIn" accept=".zip,application/zip,.html,.htm,text/html" hidden>
 <!-- images: with an image type Chrome on Android offers the camera and the photo gallery -->
 <input type="file" id="imgIn" accept="image/*" hidden>
@@ -1742,6 +1748,21 @@
   </div>
 </dialog>
 
+<dialog class="dlg" id="pdfOpenDlg" aria-labelledby="pdfOpenTitle">
+  <h2 id="pdfOpenTitle">Open PDF</h2>
+  <p id="pdfOpenInfo"></p>
+  <div class="opts">
+    <label class="check"><input type="radio" name="pdfWhere" value="new" checked><span>New notebook<span class="sub">The pages take the size of the PDF</span></span></label>
+    <label class="check"><input type="radio" name="pdfWhere" value="add"><span>Add to this notebook<span class="sub">The PDF pages are fitted into this notebook's pages</span></span></label>
+    <label class="numfield savename"><span class="lbl">Pages</span><input type="text" id="pdfPages" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Pages to take"></label>
+    <label class="numfield savename" id="pdfPosRow"><span class="lbl">Insert</span><select class="dd" id="pdfPos" aria-label="Where the pages go"><option value="after">After this page</option><option value="end">At the end</option><option value="start">At the beginning</option></select></label>
+  </div>
+  <div class="row">
+    <button type="button" id="pdfOpenCancel">Cancel</button>
+    <button type="button" id="pdfOpenGo" class="primary">Open</button>
+  </div>
+</dialog>
+
 <dialog class="dlg" id="allDlg" aria-labelledby="allTitle">
   <h2 id="allTitle">Save all notebooks</h2>
   <p id="allInfo"></p>
@@ -1910,8 +1931,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_132';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.9';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_133';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.10';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2549,6 +2570,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const cleanMarks = (list, pgs) => (Array.isArray(list) ? list : []).map(o => o && Number.isInteger(+o.p) && pgs[+o.p] ? {
     id: typeof o.id === 'string' && o.id ? o.id : uid(), page: pgs[+o.p], label: typeof o.label === 'string' ? o.label.slice(0, 80) : '',
     color: okC(o.color) ? o.color : '#d92b1e', x: isFinite(o.x) ? +o.x : 0, y: isFinite(o.y) ? +o.y : 0, z: +o.z >= 0.1 && +o.z <= 20 ? +o.z : 1 } : null).filter(Boolean);
+  // ---- PDF backgrounds: a page may lie on a page of a PDF { pdf (stored PDF), n (its page, from 1), x, y, w, h (mm on the page) }.
+  // The PDF itself is kept once in the browser ('pdf:<id>') and in saved files; it moves with its page and can't be written on.
+  const cleanBg = b => b && typeof b === 'object' && typeof b.pdf === 'string' && /^[A-Za-z0-9_-]{4,64}$/.test(b.pdf) && Number.isInteger(+b.n) && +b.n >= 1 &&
+    [b.x, b.y, b.w, b.h].every(v => isFinite(v)) && +b.w > 1 && +b.h > 1 ? { pdf: b.pdf, n: +b.n, x: +b.x, y: +b.y, w: +b.w, h: +b.h } : null;
+  const pdfStore = new Map();                     // id -> { blob, name, doc (promise of the PDF.js document) }
   const cleanTexts = list => (Array.isArray(list) ? list : []).map(cleanText).filter(Boolean);
   const copyTexts = list => (list || []).map(t => ({ ...t, runs: t.runs.map(r => ({ ...r })) }));
   const textCfg = (c => ({ fs: c && +c.fs >= 4 && +c.fs <= 200 ? +c.fs : 14, color: c && okC(c.color) ? c.color : '#121315' }))(store.get('textCfg', null));
@@ -2732,7 +2758,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (typeof closeMag === 'function' && mag) closeMag();
     undoStack.length = redoStack.length = 0;
     if (nb && Array.isArray(nb.pages) && nb.pages.length) {
-      pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts) }));
+      pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts), ...(cleanBg(p.bg) ? { bg: cleanBg(p.bg) } : {}) }));
       marks = cleanMarks(nb.marks, pages);
       cur = Math.min(pages.length - 1, Math.max(0, nb.cur | 0));
       compactPages(pages);
@@ -2778,14 +2804,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     backupReady = true;
     await writeCurrent();
   }
-  const hasInk = () => pages.some(p => p.strokes.length || (p.notes && p.notes.length) || (p.images && p.images.length) || (p.texts && p.texts.length));
+  const hasInk = () => pages.some(p => p.strokes.length || (p.notes && p.notes.length) || (p.images && p.images.length) || (p.texts && p.texts.length) || p.bg);
 
   // ---- Undo / redo: snapshots of every page's stroke list (strokes themselves never change) ----
   const undoStack = [], redoStack = [];
   // a snapshot also remembers which strokes were selected, so undo/redo keep the selection
   // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
   const copyNotes = list => (list || []).map(n => ({ ...n, strokes: n.strokes.slice() }));
-  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })), texts: copyTexts(p.texts) })), cur, marks: marks.map(m => ({ ...m })),
+  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })), texts: copyTexts(p.texts), bg: p.bg })), cur, marks: marks.map(m => ({ ...m })),
     selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null,
     selImg: sel && sel.page === cur ? sel.imgs.map(m => imagesOf(pages[cur]).indexOf(m)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
@@ -2796,7 +2822,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     updateToolbarState();
   }
   function restore(s) {
-    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); e.page.texts = copyTexts(e.texts); return e.page; });
+    pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); e.page.texts = copyTexts(e.texts); if (e.bg) e.page.bg = e.bg; else delete e.page.bg; return e.page; });
     if (s.marks) marks = s.marks.map(m => ({ ...m }));
     if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
@@ -2832,6 +2858,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   function renderPage() {
     if (ted && ted.page !== pages[cur]) commitTextEdit();   // another page: the writing is done
+    renderBg();
     if (objSel && !objOnPage(objSel)) objSel = null;
     pageInk.innerHTML = inkMarkup(pages[cur].strokes, false, true);
     renderImages();
@@ -2908,6 +2935,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active && active.pts) { redrawActive(); drawTip([]); }
     placeSelbar();
     if (ted) placeTextEd();
+    if (pages[cur] && pages[cur].bg) bgSharpSoon();
     clearTimeout(selRedrawT);                    // the selection's glow and corner buttons are sized in screen px: redraw after zooming
     selRedrawT = setTimeout(() => { if (objSel && !active) objSel.src ? renderImages() : renderNotes(); }, 150);
   }
@@ -3606,6 +3634,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     saveItems(); updateToolbarState(); closePops();
   });
   function renderEraserPop() {
+    $('bgRemove').hidden = !(pages[cur] && pages[cur].bg);
     esizesEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === eraserSize)));
     $('eraseMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === eraserMode)));
   }
@@ -4182,13 +4211,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const [W, H] = setupDims(setup), GRID_D = buildGrid(setup, W, H);
     await ensureImages(pages);
     await ensureImageData(pages);
+    const bgd = await bgFileData(pages);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
     let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
-    s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}</defs>\n`;
+    s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}${bgd.pdfs.map(d => `<desc class="rr-pdf" data-pdf="${d.id}" data-name="${esc(d.name)}">${d.data}</desc>`).join('')}</defs>\n`;
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridUse}`;
+      if (p.bg) s += `<g class="pdfbg">${bgMarkup(p, 'file', bgd.pics.get(bgKey(p.bg)) || '')}</g>\n`;
       if (p.images && p.images.some(m => !m.over)) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
       if (p.texts && p.texts.length) s += `<g class="texts">${textsMarkup(p, 'file')}</g>\n`;
       s += `<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">\n`;
@@ -4314,6 +4345,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     {
       const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
       if (doc.querySelector('parsererror')) throw new Error('parse');
+      const pdfMap = await readFilePdfs(doc);
       const rootEl = doc.documentElement, A = n => rootEl.getAttribute(n);
       try { newMarks = JSON.parse(A('data-bookmarks') || '[]'); } catch (_) {}
       newSetup = cleanSetup(A('data-page-width') ? {      // files before v18 are A4 with 5 mm squares
@@ -4326,6 +4358,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const readPath = p => cleanStroke(pathData(p));
       newPages = groups.map(g => ({
         strokes: [...g.querySelectorAll('[class~="ink"] path')].map(readPath).filter(Boolean),
+        ...(el => el && pdfMap.get(el.getAttribute('data-pdf')) ? { bg: { pdf: pdfMap.get(el.getAttribute('data-pdf')), n: +el.getAttribute('data-pdfpage'),
+          x: parseFloat(el.getAttribute('x')), y: parseFloat(el.getAttribute('y')), w: parseFloat(el.getAttribute('width')), h: parseFloat(el.getAttribute('height')) } } : {})(g.querySelector('[data-pdfpage]')),
         notes: cleanNotes([...g.querySelectorAll('[data-sticky]')].map(el => ({
           x: parseFloat(el.getAttribute('data-x')), y: parseFloat(el.getAttribute('data-y')), size: parseFloat(el.getAttribute('data-size')), h: parseFloat(el.getAttribute('data-h')),
           color: el.getAttribute('data-color'), folded: el.getAttribute('data-folded') === '1',
@@ -4367,6 +4401,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     e.target.value = '';
     if (!file) return;
     const head = new Uint8Array(await file.slice(0, 512).arrayBuffer());
+    if (isPdfHead(head) || /\.pdf$/i.test(file.name)) { openPdfFile(file); return; }   // a PDF: written on as page backgrounds
     if (isZip(head) || /\.html?$/i.test(file.name) || /<!doctype html|data-rrnotes-collection/i.test(new TextDecoder().decode(head))) { loadAll(file); return; }
     let newPages, newSetup, newMarks;
     try {
@@ -4567,7 +4602,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     return out;
   }
-  const hasContent = pgs => pgs.some(p => (p.strokes && p.strokes.length) || (p.notes && p.notes.length) || (p.images && p.images.length) || (p.texts && p.texts.length));
+  const hasContent = pgs => pgs.some(p => (p.strokes && p.strokes.length) || (p.notes && p.notes.length) || (p.images && p.images.length) || (p.texts && p.texts.length) || p.bg);
   // ---- Notebook collections: a web page (all notebooks as sections, each the very same SVG as a saved notebook),
   // the same web page packed (gzip + base64, unpacks itself in a browser), or a ZIP of SVG files ----
   const allDlg = $('allDlg');
@@ -4622,7 +4657,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (const m of nbIdx.loaded) {
       const isCur = m.id === nbIdx.current, rec = isCur ? { pages, setup } : await readNotebook(m.id);
       if (!rec || !Array.isArray(rec.pages)) continue;
-      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts) }));
+      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts), ...(cleanBg(p.bg) ? { bg: cleanBg(p.bg) } : {}) }));
       if (!hasContent(pgs) && !m.savedName) continue;            // empty and never saved: nothing to keep
       let base = (m.name || 'Notebook').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Notebook', name = base + '.svg', i = 2;
       while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
@@ -4946,7 +4981,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const name = $('pdfName').value.trim().replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-') || `RRnotes_${stamp()}`;
     pdfDlg.close();
     try {
-      const blob = await buildPdf(list, grid, name, withNotes);
+      let blob = await buildPdf(list, grid, name, withNotes);
+      if (list.some(pg => pg.bg)) {
+        if (list.filter(pg => pg.bg).length > 3) toast('Adding the PDF pages…', 1500);
+        try { blob = await withPdfBackgrounds(blob, list, name); }
+        catch (_) { toast('The PDF pages could not be added: the PDF tool loads once from the internet. Check the connection.', 5000); return; }
+      }
       if (share) shareFiles([new File([blob], name + '.pdf', { type: 'application/pdf' })]);
       else saveBlob(blob, name + '.pdf', 'PDF document', 'application/pdf', '.pdf');
     } catch (err) { toast('The PDF could not be created.'); }
@@ -5693,7 +5733,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
   }
   // images under the ink (over = false) or brought to the front, above it (over = true)
-  const imagesMarkup = (pg, mode, over = false) => (pg && pg.images && pg.images.length ? pg.images.filter(m => !!m.over === over).map(m => imageMarkup(m, mode)).join('') : '') +
+  const imagesMarkup = (pg, mode, over = false) => (!over && mode !== 'file' ? bgMarkup(pg, mode) : '') + (pg && pg.images && pg.images.length ? pg.images.filter(m => !!m.over === over).map(m => imageMarkup(m, mode)).join('') : '') +
     (!over && mode !== 'file' ? textsMarkup(pg, mode) : '');   // text boxes lie on the images, under the ink
   let cropSt = null;                              // { m, F, C, before } while cropping
   function renderImages() {
@@ -6003,13 +6043,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function gcImages() {
     try {
       const used = new Set();
-      pages.forEach(pg => (pg.images || []).forEach(m => used.add(m.src)));
+      pages.forEach(pg => { (pg.images || []).forEach(m => used.add(m.src)); if (pg.bg) used.add(pg.bg.pdf); });
       for (const m of nbIdx.loaded) {
         if (m.id === nbIdx.current) continue;
         const nb = await readNotebook(m.id);
-        (nb && nb.pages || []).forEach(pg => (pg.images || []).forEach(x => used.add(x.src)));
+        (nb && nb.pages || []).forEach(pg => { (pg.images || []).forEach(x => used.add(x.src)); if (pg.bg && pg.bg.pdf) used.add(pg.bg.pdf); });
       }
       for (const k of await idb.keys()) {
+        if (typeof k === 'string' && k.startsWith('pdf:') && !used.has(k.slice(4))) { await idb.del(k); pdfStore.delete(k.slice(4)); continue; }
         if (typeof k !== 'string' || !k.startsWith('img:') || used.has(k.slice(4))) continue;
         await idb.del(k);
         const r = imgStore.get(k.slice(4));
@@ -6653,6 +6694,316 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const l = shownMarks().filter(m => m.page === pg);
     return l.length ? `<span class="bmthumb ${bmThumb}">${l.map(m => ribbon(m.color)).join('')}</span>` : '';
   };
+
+  // ---- PDF backgrounds: PDF.js draws the pages (loaded the first time a PDF is used, then kept by the app's offline copy);
+  // pdf-lib builds the annotated PDF with the original pages. Neither is needed for anything else.
+  const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+  const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+  const PDFLIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js';
+  let pdfjsP = null, pdflibP = null;
+  const pdfjs = () => pdfjsP || (pdfjsP = import(PDFJS_URL).then(m => { m.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; return m; }).catch(e => { pdfjsP = null; throw e; }));
+  const pdflib = () => pdflibP || (pdflibP = import(PDFLIB_URL).catch(e => { pdflibP = null; throw e; }));
+  const PDF_WARN_MB = 50, PDF_WARN_PAGES = 500;
+  async function storePdf(blob, name = '') {      // kept once, by its content
+    const id = 'p' + await hashBlob(blob);
+    if (!pdfStore.has(id)) {
+      try { await idb.set('pdf:' + id, { blob, name }); }
+      catch (e) { toast(idb.isQuota(e) ? 'This browser has no room left for the PDF' + await storageNote() + '.' : 'The PDF could not be stored.', 5000); throw e; }
+      pdfStore.set(id, { blob, name, doc: null });
+    }
+    return id;
+  }
+  async function pdfRec(id) {
+    if (!pdfStore.has(id)) {
+      let r = null;
+      try { r = await idb.get('pdf:' + id); } catch (_) {}
+      if (!r || !r.blob) return null;
+      pdfStore.set(id, { blob: r.blob, name: r.name || '', doc: null });
+    }
+    return pdfStore.get(id);
+  }
+  async function pdfDoc(id) {
+    const r = await pdfRec(id);
+    if (!r) return null;
+    if (!r.doc) r.doc = (async () => { const lib = await pdfjs(); return lib.getDocument({ data: new Uint8Array(await r.blob.arrayBuffer()), isEvalSupported: false }).promise; })()
+      .catch(e => { r.doc = null; throw e; });
+    return r.doc;
+  }
+  const pdfIdsOf = list => { const s = new Set(); list.forEach(pg => { if (pg.bg) s.add(pg.bg.pdf); }); return s; };
+  // pictures of the PDF pages: small ones (page overview) are kept, large ones (the page, turning, sliding) for the pages used lately
+  const BG_PX = { S: 360, L: 1600 }, BG_KEEP = 60;
+  const bgKey = b => b.pdf + ':' + b.n;
+  const bgRast = { S: new Map(), L: new Map() };  // key -> { url, blob, w, h } (large ones: most recently used last)
+  let bgQueue = [], bgBusy = false, bgRefresh = 0, libWarned = false;
+  const bgFailed = new Set(), bgDone = new Set();
+  function bgGet(b, size) {
+    const k = bgKey(b), m = bgRast[size], r = m.get(k);
+    if (r) { if (size === 'L') { m.delete(k); m.set(k, r); } return r; }
+    const qk = size + k;
+    if (LIVE_VIEW && !pdfStore.has(b.pdf)) return null;   // a viewer: the PDF is still on its way
+    if (!bgFailed.has(qk) && !bgQueue.some(q => q.qk === qk)) { bgQueue.push({ b, size, qk }); bgPump(); }
+    return size === 'L' ? bgRast.S.get(k) || null : null;   // meanwhile the small one, if there is one
+  }
+  async function renderPdfPage(b, longPx, region) {   // region: { x, y, w, h } in mm of the background box, drawn at longPx for the whole page
+    const doc = await pdfDoc(b.pdf);
+    if (!doc) throw new Error('pdf');
+    const page = await doc.getPage(b.n), vp1 = page.getViewport({ scale: 1 });
+    const scale = longPx / Math.max(vp1.width, vp1.height);
+    let vp = page.getViewport({ scale }), cw = Math.ceil(vp.width), ch = Math.ceil(vp.height);
+    if (region) {                                  // only a part: the view moves so that part starts at 0, 0
+      const kx = vp.width / b.w, ky = vp.height / b.h;
+      vp = page.getViewport({ scale, offsetX: -region.x * kx, offsetY: -region.y * ky });
+      cw = Math.ceil(region.w * kx); ch = Math.ceil(region.h * ky);
+    }
+    const c = document.createElement('canvas'); c.width = Math.max(1, cw); c.height = Math.max(1, ch);
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    const task = page.render({ canvasContext: g, viewport: vp, background: 'rgb(255,255,255)' });
+    return { task, done: task.promise.then(() => new Promise(res => c.toBlob(bl => res({ blob: bl, w: c.width, h: c.height }), region ? 'image/png' : 'image/jpeg', 0.9))) };
+  }
+  async function bgPump() {
+    if (bgBusy || !bgQueue.length) return;
+    bgBusy = true;
+    // the page on screen first, then its neighbours; small pictures before large ones further away
+    const dist = q => { const i = pages.findIndex(pg => pg.bg && bgKey(pg.bg) === bgKey(q.b)); return (i < 0 ? 9999 : Math.abs(i - cur)) * (q.size === 'L' ? 3 : 1); };
+    bgQueue.sort((p, q) => dist(p) - dist(q));
+    const q = bgQueue.shift(), k = bgKey(q.b);
+    try {
+      const out = await (await renderPdfPage(q.b, BG_PX[q.size])).done, m = bgRast[q.size];
+      m.set(k, { ...out, url: URL.createObjectURL(out.blob) });
+      if (q.size === 'L') while (m.size > BG_KEEP) { const [k0, r0] = m.entries().next().value; URL.revokeObjectURL(r0.url); m.delete(k0); }
+      bgChanged(q.size + k);
+    } catch (e) {
+      bgFailed.add(q.qk);
+      if (!libWarned) { libWarned = true; toast(navigator.onLine === false ? 'PDF pages need the PDF viewer, which loads once from the internet. Connect and try again.' : 'A PDF page could not be shown.', 5000); }
+    }
+    bgBusy = false;
+    if (bgQueue.length) setTimeout(bgPump, 0);
+  }
+  // a picture is ready: the places that wait for it get it (no full redraw of the overview or the turning pages)
+  function bgChanged(qk) {
+    bgDone.add(qk);
+    if (bgRefresh) return;
+    bgRefresh = setTimeout(() => {
+      bgRefresh = 0;
+      const done = [...bgDone]; bgDone.clear();
+      if (done.some(d => pages[cur] && pages[cur].bg && d.slice(1) === bgKey(pages[cur].bg))) renderBg();
+      for (const d of done) {
+        const size = d[0], k = d.slice(1), r = bgRast[size].get(k);
+        if (!r) continue;
+        document.querySelectorAll(`.pdfbg[data-bgk="${k}"]`).forEach(el => {
+          if (el.closest('#bgLayer')) return;
+          if (el.tagName === 'image' && (el.dataset.sz === 'L' || el.dataset.want !== 'L' || size !== 'L')) return;
+          const img = document.createElementNS(NS, 'image');
+          ['x', 'y', 'width', 'height', 'class', 'data-bgk', 'data-want', 'style'].forEach(a => { if (el.hasAttribute(a)) img.setAttribute(a, el.getAttribute(a)); });
+          img.setAttribute('href', r.url); img.setAttribute('preserveAspectRatio', 'none'); img.dataset.sz = size;
+          if (!paperDark) img.style.mixBlendMode = 'multiply';
+          el.replaceWith(img);
+        });
+      }
+    }, 60);
+  }
+  // the background in a page's markup: under everything, the grid shows through (the PDF's white multiplies with the paper)
+  function bgMarkup(pg, mode, data) {
+    if (!pg || !pg.bg) return '';
+    const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = data || bgGet(b, want);
+    const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
+    const blend = mode === 'file' || !paperDark ? ' style="mix-blend-mode:multiply"' : '';
+    const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
+    if (!r) return `<rect class="pdfbg" ${box} fill="#fff"${meta}/>`;
+    const sz = mode === 'file' ? '' : ` data-sz="${bgRast.L.get(bgKey(b)) === r ? 'L' : 'S'}"`;
+    return `<image class="pdfbg" href="${mode === 'file' ? r : r.url}" ${box} preserveAspectRatio="none"${blend}${meta}${sz}/>`;
+  }
+  // the page on screen: the page picture, and a sharp one of the part in view when zoomed in
+  const bgLayer = $('bgLayer');
+  let bgDetail = null, bgDetailT = 0, bgDetailTask = null;
+  function renderBg() {
+    const pg = pages[cur];
+    pageEl.classList.toggle('onpdf', !!(pg && pg.bg));
+    if (!pg || !pg.bg) { bgLayer.innerHTML = ''; bgDetail = null; return; }
+    const d = bgDetail && bgDetail.page === pg && bgDetail.key === bgKey(pg.bg) ? bgDetail : null;
+    const f = v => +(+v).toFixed(3), blend = paperDark ? '' : ' style="mix-blend-mode:multiply"';
+    bgLayer.innerHTML = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none"${blend}/>` : '');
+    bgSharpSoon();
+  }
+  function bgSharpSoon() { clearTimeout(bgDetailT); bgDetailT = setTimeout(bgSharp, 220); }
+  async function bgSharp() {
+    const pg = pages[cur], b = pg && pg.bg;
+    if (!b || nav || !$('overview').hidden) return;
+    const k = S(), dpr = devicePixelRatio || 1;
+    // the part of the background in view (mm, in the box), with a little margin
+    const vx0 = -view.tx / k, vy0 = -view.ty / k, vx1 = (vw - view.tx) / k, vy1 = (vh - view.ty) / k, m = 8;
+    const x0 = Math.max(b.x, vx0 - m), y0 = Math.max(b.y, vy0 - m), x1 = Math.min(b.x + b.w, vx1 + m), y1 = Math.min(b.y + b.h, vy1 + m);
+    if (x1 <= x0 || y1 <= y0) return;
+    const pxPerMm = k * dpr, base = BG_PX.L / Math.max(b.w, b.h);
+    if (pxPerMm <= base * 1.15) { if (bgDetail) { bgDetail = null; renderBg(); } return; }   // the page picture is sharp enough
+    const longPx = Math.max(b.w, b.h) * pxPerMm;
+    let rw = x1 - x0, rh = y1 - y0;
+    const MAXPX = 4096 * 4096 * 0.6, sc = Math.min(1, Math.sqrt(MAXPX / (rw * rh * pxPerMm * pxPerMm)));
+    const key = bgKey(b), want = { page: pg, key, x: x0, y: y0, w: rw, h: rh, long: longPx * sc };
+    if (bgDetail && bgDetail.page === pg && bgDetail.key === key && bgDetail.long >= want.long * 0.95 &&
+        bgDetail.x <= vx0 + 0.5 && bgDetail.y <= vy0 + 0.5 && bgDetail.x + bgDetail.w >= Math.min(b.x + b.w, vx1) - 0.5 && bgDetail.y + bgDetail.h >= Math.min(b.y + b.h, vy1) - 0.5) return;
+    try { if (bgDetailTask) bgDetailTask.cancel(); } catch (_) {}
+    try {
+      const r = await renderPdfPage(b, want.long, { x: x0 - b.x, y: y0 - b.y, w: rw, h: rh });
+      bgDetailTask = r.task;
+      const out = await r.done;
+      bgDetailTask = null;
+      if (pages[cur] !== pg) return;
+      if (bgDetail) URL.revokeObjectURL(bgDetail.url);
+      bgDetail = { ...want, url: URL.createObjectURL(out.blob) };
+      renderBg();
+    } catch (_) { bgDetailTask = null; }
+  }
+
+  // ---- Opening a PDF: a new notebook in its size, or its pages added to this notebook (fitted in) ----
+  const pdfOpenDlg = $('pdfOpenDlg');
+  let pdfPending = null;                           // { file, blob, doc, n, size: [w, h] mm of page 1 }
+  $('pdfOpenBtn').addEventListener('click', () => { closePops(); $('pdfIn').click(); });
+  $('pdfIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) openPdfFile(f); });
+  const isPdfHead = head => head[0] === 0x25 && head[1] === 0x50 && head[2] === 0x44 && head[3] === 0x46;   // %PDF
+  async function openPdfFile(file) {
+    if (LIVE_VIEW) return;
+    if (file.size > PDF_WARN_MB * 1e6 && !(await ask('Large PDF', `${file.name} is ${Math.round(file.size / 1e6)} MB. It is kept in the browser and in every saved notebook file, which then also become this large. Open it anyway?`, 'Open'))) return;
+    toast('Opening the PDF…', 1500);
+    let lib, doc;
+    try { lib = await pdfjs(); }
+    catch (_) { toast('The PDF viewer could not be loaded. It comes from the internet the first time: check the connection.', 5000); return; }
+    try { doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise; }
+    catch (e) { toast(e && e.name === 'PasswordException' ? 'This PDF is protected with a password. Open an unprotected copy.' : `${file.name} can't be read as a PDF.`, 5000); return; }
+    if (doc.numPages > PDF_WARN_PAGES && !(await ask('Many pages', `${file.name} has ${doc.numPages} pages. That many pages can make the notebook slow. Open it anyway?`, 'Open'))) return;
+    const vp = (await doc.getPage(1)).getViewport({ scale: 1 }), mm = v => v * 25.4 / 72;
+    pdfPending = { file, doc, n: doc.numPages, size: [mm(vp.width), mm(vp.height)] };
+    $('pdfOpenTitle').textContent = file.name.replace(/\.pdf$/i, '');
+    $('pdfOpenInfo').textContent = `${doc.numPages} ${doc.numPages === 1 ? 'page' : 'pages'} · ${Math.round(pdfPending.size[0])} × ${Math.round(pdfPending.size[1])} mm`;
+    $('pdfPages').value = '';
+    $('pdfPages').placeholder = doc.numPages > 1 ? `All (1–${doc.numPages}), or e.g. 1-3, 7` : 'All';
+    $('pdfPos').options[0].textContent = `After this page (${cur + 1})`;
+    pdfOpenDlg.querySelector('input[value="new"]').checked = true;
+    pdfWhere();
+    pdfOpenDlg.showModal();
+  }
+  function pdfWhere() { $('pdfPosRow').hidden = pdfOpenDlg.querySelector('input[name="pdfWhere"]:checked').value !== 'add'; }
+  pdfOpenDlg.querySelectorAll('input[name="pdfWhere"]').forEach(r => r.addEventListener('change', pdfWhere));
+  $('pdfOpenCancel').addEventListener('click', () => { pdfOpenDlg.close(); pdfPending = null; });
+  function parseRange(t, n) {                      // "1-3, 7" -> [1, 2, 3, 7]; empty -> all
+    t = t.trim();
+    if (!t || /^all$/i.test(t)) return Array.from({ length: n }, (_, i) => i + 1);
+    const out = [];
+    for (const part of t.split(/[,;\s]+/).filter(Boolean)) {
+      const m = /^(\d+)(?:\s*[-–]\s*(\d+))?$/.exec(part);
+      if (!m) return null;
+      let a = +m[1], b = m[2] ? +m[2] : a;
+      if (a > b) [a, b] = [b, a];
+      for (let i = Math.max(1, a); i <= Math.min(n, b); i++) out.push(i);
+    }
+    return out.length ? out : null;
+  }
+  $('pdfPages').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('pdfOpenGo').click(); } });
+  $('pdfOpenGo').addEventListener('click', async () => {
+    const p = pdfPending;
+    if (!p) return;
+    const list = parseRange($('pdfPages').value, p.n);
+    if (!list) { toast(`Enter page numbers between 1 and ${p.n}, like 1-3, 7.`, 2500); return; }
+    const where = pdfOpenDlg.querySelector('input[name="pdfWhere"]:checked').value, pos = $('pdfPos').value;
+    pdfOpenDlg.close(); pdfPending = null;
+    let id;
+    try { id = await storePdf(p.file, p.file.name); } catch (_) { return; }
+    pdfStore.get(id).doc = Promise.resolve(p.doc);
+    const sizes = [];
+    for (const n of list) { const v = (await p.doc.getPage(n)).getViewport({ scale: 1 }); sizes.push([v.width * 25.4 / 72, v.height * 25.4 / 72]); }
+    const fit = (n, i, PW, PH) => {               // the PDF page fitted into the notebook page, centred
+      const [w0, h0] = sizes[i], k = Math.min(PW / w0, PH / h0), w = w0 * k, h = h0 * k;
+      return { pdf: id, n, x: (PW - w) / 2, y: (PH - h) / 2, w, h };
+    };
+    if (where === 'new') {
+      const [w, h] = p.size, near = (a, b) => Math.abs(a - b) < 1.5;
+      let st = { ...setup, size: 'custom', orient: w > h ? 'landscape' : 'portrait', cw: Math.round(w * 10) / 10, ch: Math.round(h * 10) / 10 };
+      for (const [nm, [a, b]] of Object.entries(SIZES)) if ((near(w, a) && near(h, b)) || (near(w, b) && near(h, a))) st = { ...setup, size: nm, orient: w > h ? 'landscape' : 'portrait' };
+      st = cleanSetup(st);
+      const [PW, PH] = setupDims(st);
+      const pgs = list.map((n, i) => ({ strokes: [], bg: fit(n, i, PW, PH) }));
+      dropBlank();
+      const meta = newMeta(p.file.name.replace(/\.pdf$/i, ''));
+      Object.assign(meta, { pages: pgs.length, rev: 1 });
+      await addNotebook(meta, { pages: pgs, cur: 0, setup: st });
+      toast(`${pgs.length} PDF ${pgs.length === 1 ? 'page' : 'pages'} · write on them as on any page`, 2500);
+    } else {
+      remember();
+      const add = list.map((n, i) => ({ strokes: [], bg: fit(n, i, W, H) }));
+      const at = pos === 'start' ? 0 : pos === 'end' ? pages.length : cur + 1;
+      pages.splice(at, 0, ...add);
+      cur = at;
+      renderPage(); scheduleSave();
+      toast(`${add.length} PDF ${add.length === 1 ? 'page' : 'pages'} added`, 2000);
+    }
+  });
+  // removing the background of a page (Eraser menu); Undo brings it back
+  $('bgRemove').addEventListener('click', async () => {
+    closePops();
+    const pg = pages[cur];
+    if (!pg || !pg.bg) return;
+    remember(); delete pg.bg;
+    renderPage(); scheduleSave();
+    toast('PDF background removed from this page. Undo brings it back.', 2200);
+  });
+  // saved files: the PDF itself once (to open it again), and each page as a picture (so other programs show it)
+  async function bgFileData(list) {
+    const ids = pdfIdsOf(list), pdfs = [], pics = new Map();
+    for (const id of ids) { const r = await pdfRec(id); if (r) pdfs.push({ id, name: r.name, data: await blobData(r.blob) }); }
+    const todo = list.filter(pg => pg.bg);
+    let i = 0;
+    for (const pg of todo) {
+      const k = bgKey(pg.bg);
+      if (pics.has(k)) continue;
+      if (todo.length > 6 && ++i % 5 === 1) toast(`Preparing PDF pages ${i}/${todo.length}…`, 1500);
+      try {
+        const r = bgRast.L.get(k) || await (await renderPdfPage(pg.bg, 1400)).done;
+        pics.set(k, await blobData(r.blob));
+      } catch (_) {}
+    }
+    return { pdfs, pics };
+  }
+  async function readFilePdfs(doc) {               // PDFs inside an opened file go into the browser's store: old id -> id now
+    const map = new Map();
+    for (const el of doc.querySelectorAll('desc.rr-pdf')) {
+      try {
+        const blob = await (await fetch(el.textContent.trim())).blob();
+        map.set(el.getAttribute('data-pdf'), await storePdf(new Blob([blob], { type: 'application/pdf' }), el.getAttribute('data-name') || ''));
+      } catch (_) {}
+    }
+    return map;
+  }
+  // PDF export with backgrounds: the original pages, and the notebook's own page (grid, ink, notes…) on top
+  async function withPdfBackgrounds(annotBlob, list, title) {
+    if (!list.some(pg => pg.bg)) return annotBlob;
+    const L = await pdflib();
+    const out = await L.PDFDocument.create(), ann = await L.PDFDocument.load(await annotBlob.arrayBuffer());
+    const k = 72 / 25.4, wPt = W * k, hPt = H * k;
+    const annPages = await out.embedPdf(ann, list.map((_, i) => i));
+    const srcEmb = new Map();                      // pdf id -> Map(page n -> embedded page) (each source once, all its pages at once)
+    for (const id of pdfIdsOf(list)) {
+      const need = [...new Set(list.filter(pg => pg.bg && pg.bg.pdf === id).map(pg => pg.bg.n))];
+      try {
+        const r = await pdfRec(id), src = await L.PDFDocument.load(await r.blob.arrayBuffer(), { ignoreEncryption: true });
+        const emb = await out.embedPdf(src, need.map(n => n - 1));
+        srcEmb.set(id, new Map(need.map((n, j) => [n, emb[j]])));
+      } catch (_) {}
+    }
+    for (let i = 0; i < list.length; i++) {
+      const pg = list[i], page = out.addPage([wPt, hPt]), b = pg.bg;
+      if (b) {
+        const e = srcEmb.get(b.pdf) && srcEmb.get(b.pdf).get(b.n), box = { x: b.x * k, y: hPt - (b.y + b.h) * k, width: b.w * k, height: b.h * k };
+        if (e) page.drawPage(e, box);
+        else {                                     // could not be copied: its picture instead
+          try { const r = bgRast.L.get(bgKey(b)) || await (await renderPdfPage(b, 2000)).done; page.drawImage(await out.embedJpg(await r.blob.arrayBuffer()), box); } catch (_) {}
+        }
+      }
+      page.drawPage(annPages[i], { x: 0, y: 0, width: wPt, height: hPt });
+    }
+    out.setTitle(title); out.setProducer(VERSION_LABEL); out.setCreator('RRnotes');
+    return new Blob([await out.save()], { type: 'application/pdf' });
+  }
 
   // ---- Stroke drawing ----
   let active = null;               // pen: { id, type, pts, sx, sy, color, width, opacity } · eraser: { erase: true, … }
@@ -7626,7 +7977,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     active.kind = br.highlighter ? 'pen' : br.kind || 'pen';
     liveWrap.style.opacity = br.opacity * (active.kind === 'pencil' ? 0.92 : 1);   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
-    liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
+    liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note && !(pages[cur] && pages[cur].bg) ? 'screen' : 'multiply') : 'normal';
     styleCtx(); stage.classList.add('drawing'); handlesWhileWriting(true);
     feed(x, y);
   }
@@ -8906,7 +9257,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
-      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${textsMarkup(p, 'static')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${bgMarkup(p, 'thumb')}${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${textsMarkup(p, 'static')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button>${thumbMarks(p)}</div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
@@ -8933,7 +9284,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const del = e.target.closest('.del');
     if (!del) return;
     const i = +del.closest('.thumb').dataset.i;
-    if ((pages[i].strokes.length || notesOf(pages[i]).length || imagesOf(pages[i]).length || textsOf(pages[i]).length) && !(await ask(`Delete page ${i + 1}?`, 'The page and everything on it is removed. Undo brings it back.', 'Delete'))) return;
+    if ((pages[i].strokes.length || notesOf(pages[i]).length || imagesOf(pages[i]).length || textsOf(pages[i]).length || pages[i].bg) && !(await ask(`Delete page ${i + 1}?`, 'The page and everything on it is removed. Undo brings it back.', 'Delete'))) return;
     remember();
     pages.splice(i, 1);
     if (!pages.length) pages.push({ strokes: [] });
@@ -9344,13 +9695,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       lv.imgs.add(id);
     }
   }
+  // PDFs used as page backgrounds go to the relay once, in parts of 6 MB
+  const LIVE_PART = 6e6;
+  async function liveUploadPdfs(ids) {
+    for (const id of ids) {
+      if (!lv || lv.imgs.has(id)) continue;
+      const r = await pdfRec(id);
+      if (!r) continue;
+      const bytes = new Uint8Array(await r.blob.arrayBuffer()), n = Math.max(1, Math.ceil(bytes.length / LIVE_PART));
+      for (let k = 0; k < n; k++) {
+        const d = await liveEnc(lv.key, { n, k, b: b64(bytes.subarray(k * LIVE_PART, (k + 1) * LIVE_PART)) });
+        await liveReq(lv.sid, 'a=img&id=' + encodeURIComponent(id + 'c' + k), d, lv.tok);
+      }
+      lv.imgs.add(id);
+    }
+  }
   const pageSig = pg => JSON.stringify(Object.fromEntries(Object.entries(pg).filter(([k]) => k !== 'strokes')));
   function markSent(i) { const pg = pages[i]; lv.sent.set(pg, { refs: pg.strokes.slice(), sig: pageSig(pg) }); }   // stroke objects are never changed in place
   async function liveSnap(pass) {                 // the whole notebook; the relay forgets what came before it
     const d = await liveEnc(lv.key, { t: 'snap', setup, cur, pages, marks: marksOut() });
-    if (lv.seq) await liveUploadImages(pageImgIds(pages));        // pictures first, so viewers find them
+    if (lv.seq) { await liveUploadImages(pageImgIds(pages)); await liveUploadPdfs(pdfIdsOf(pages)); }   // pictures first, so viewers find them
     const r = await liveReq(lv.sid, 'a=snap', d, lv.tok, pass);   // (the first one also opens the session)
     await liveUploadImages(pageImgIds(pages));
+    await liveUploadPdfs(pdfIdsOf(pages));
     lv.seq = r.n;                                  // viewers further back start over from this snapshot
     pages.forEach((_, i) => markSent(i));
     lv.order = pages.slice(); lv.setupSig = JSON.stringify(setup); lv.marksSig = JSON.stringify(marksOut()); lv.lastSnap = Date.now(); lv.changedSinceSnap = false;
@@ -9369,15 +9736,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const msgs = [];
         if (s.dirty) {
           s.dirty = false;
-          const imgs = new Set();
+          const imgs = new Set(), pdfsNow = new Set();
           pages.forEach((pg, i) => {
             const was = s.sent.get(pg), n = pg.strokes.length;
             if (was && was.sig === pageSig(pg) && n >= was.refs.length && was.refs.every((st, j) => pg.strokes[j] === st)) {
               if (n > was.refs.length) msgs.push({ t: 'add', i, st: pg.strokes.slice(was.refs.length) });
-            } else { msgs.push({ t: 'page', i, p: pg }); (pg.images || []).forEach(m => imgs.add(m.src)); }
+            } else { msgs.push({ t: 'page', i, p: pg }); (pg.images || []).forEach(m => imgs.add(m.src)); if (pg.bg) pdfsNow.add(pg.bg.pdf); }
             markSent(i);
           });
           if (imgs.size) await liveUploadImages(imgs);
+          if (pdfsNow.size) await liveUploadPdfs(pdfsNow);
         }
         if (s.nav) { s.nav = false; msgs.push({ t: 'nav', cur, n: pages.length }); }
         const a = active;                          // the stroke being written right now
@@ -9443,7 +9811,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       } catch (_) { v.state = 'Reconnecting…'; liveUi(); await new Promise(res => setTimeout(res, 2500)); }
     }
   }
+  async function viewerPdfs() {                   // PDFs of the page backgrounds, once each
+    for (const id of pdfIdsOf(pages)) {
+      if (pdfStore.has(id) || (lvw.pdfBusy || (lvw.pdfBusy = new Set())).has(id)) continue;
+      lvw.pdfBusy.add(id);
+      try {
+        const first = await liveDec(lvw.key, await liveReq(lvw.sid, 'a=img&id=' + encodeURIComponent(id + 'c0')));
+        const parts = [unb64(first.b)];
+        for (let k = 1; k < first.n; k++) parts.push(unb64((await liveDec(lvw.key, await liveReq(lvw.sid, 'a=img&id=' + encodeURIComponent(id + 'c' + k)))).b));
+        pdfStore.set(id, { blob: new Blob(parts, { type: 'application/pdf' }), name: '', doc: null });
+        bgFailed.forEach(k => { if (k.slice(1).startsWith(id + ':')) bgFailed.delete(k); });
+        renderPage();
+      } catch (_) { setTimeout(() => { if (lvw) { lvw.pdfBusy.delete(id); viewerPdfs(); } }, 3000); continue; }
+      lvw.pdfBusy.delete(id);
+    }
+  }
   async function viewerImages() {                 // pictures come from the relay, once each
+    viewerPdfs();
     const ids = [...pageImgIds(pages)].filter(id => !imgStore.has(id));
     for (const id of ids) {
       try {
