@@ -1936,8 +1936,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_138';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.15';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_139';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.16';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -9313,11 +9313,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // the overview shows sticky notes or not, on its own (independent of the page)
   let ovNotes = store.get('ovNotes', true) !== false;
   $('ovNotesBtn').addEventListener('click', () => { ovNotes = !ovNotes; store.set('ovNotes', ovNotes); buildOverview(); });
-  $('ovAfterBtn').addEventListener('click', () => {   // an empty page right after the current one, and open it
+  $('ovAfterBtn').addEventListener('click', () => {   // an empty page right after the current one; the overview stays open
     remember();
     pages.splice(cur + 1, 0, { strokes: [] });
-    scheduleSave();
-    ovPick ? moveNoteTo(cur + 1) : goTo(cur + 1);
+    if (ovPick) { moveNoteTo(cur + 1); return; }
+    cur++;                                         // the new page becomes the current one: another tap adds the next after it
+    renderPage(); scheduleSave(); buildOverview();
+    const t = ovGrid.querySelector('.thumb.cur');
+    if (t) t.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
   // preview size of the pages: slider, two-finger pinch or Ctrl + wheel
   let ovSize = (v => v >= 70 && v <= 420 ? v : 118)(+store.get('ovZoom', 118));
