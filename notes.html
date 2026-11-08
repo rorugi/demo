@@ -321,13 +321,14 @@
   .bmbar.tl { left: 0; align-items: flex-start; }
   .bmbar.tr { right: 0; align-items: flex-end; }
   .bmtag { --n: 13px; max-width: 170px; min-width: 52px; height: 36px; border: 0; border-radius: 0; background: var(--c); color: var(--fg); cursor: pointer;
-    font: 600 14px var(--ui); letter-spacing: .02em; display: flex; align-items: center; transition: transform .15s, opacity .15s; opacity: .9; }
+    font: 600 14px var(--ui); letter-spacing: .02em; display: flex; align-items: center; transition: transform .15s, opacity .15s; opacity: .6; }
   .bmbar.tl .bmtag { padding: 0 calc(var(--n) + 10px) 0 calc(env(safe-area-inset-left, 0px) + 12px); justify-content: flex-start;
     clip-path: polygon(0 0, 100% 0, calc(100% - var(--n)) 50%, 100% 100%, 0 100%); transform-origin: left center; }
   .bmbar.tr .bmtag { padding: 0 calc(env(safe-area-inset-right, 0px) + 12px) 0 calc(var(--n) + 10px); justify-content: flex-end;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--n) 50%); transform-origin: right center; }
   .bmtag span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .bmtag.here { opacity: 1; height: 40px; font-size: 15px; }
+  .bmtag.here { opacity: .78; height: 40px; font-size: 15px; }
+  .bmtag:hover, .bmtag:active { opacity: 1; }
   .bmbar.tl .bmtag.here { padding-left: calc(env(safe-area-inset-left, 0px) + 18px); }
   .bmbar.tr .bmtag.here { padding-right: calc(env(safe-area-inset-right, 0px) + 18px); }
   .bmtag:active { transform: scaleX(1.06); }
@@ -1905,8 +1906,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_130';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.7';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_131';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.8';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
