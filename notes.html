@@ -1124,8 +1124,7 @@
   .overview .ovtitles { display: grid; gap: 2px; min-width: 0; }
   .overview header .ovchip { display: flex; align-items: center; gap: 6px; padding: 0 12px; background: transparent; color: var(--bar-fg); border: 1px solid var(--bar-line); font-weight: 500; }
   .overview header .ovchip svg { width: 18px; height: 18px; }
-  .overview header #ovAfterBtn { background: var(--panel); color: var(--ink, #1a1b1e); border-color: var(--bar-fg); font-weight: 600; opacity: 1; }
-  body.paper-dark .overview header #ovAfterBtn { color: var(--bar-fg); }
+  .overview header #ovAfterBtn { background: var(--panel); color: var(--bar-fg); border-color: var(--bar-fg); font-weight: 600; }
   .overview header .ovchip .body { fill: transparent; }
   .overview header .ovchip[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
   .overview header .ovchip[aria-pressed="true"] .body { fill: #e8dd4d; }
@@ -1936,8 +1935,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_139';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.16';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_140';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.17';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
