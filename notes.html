@@ -1124,6 +1124,8 @@
   .overview .ovtitles { display: grid; gap: 2px; min-width: 0; }
   .overview header .ovchip { display: flex; align-items: center; gap: 6px; padding: 0 12px; background: transparent; color: var(--bar-fg); border: 1px solid var(--bar-line); font-weight: 500; }
   .overview header .ovchip svg { width: 18px; height: 18px; }
+  .overview header #ovAfterBtn { background: var(--panel); color: var(--ink, #1a1b1e); border-color: var(--bar-fg); font-weight: 600; opacity: 1; }
+  body.paper-dark .overview header #ovAfterBtn { color: var(--bar-fg); }
   .overview header .ovchip .body { fill: transparent; }
   .overview header .ovchip[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
   .overview header .ovchip[aria-pressed="true"] .body { fill: #e8dd4d; }
@@ -1605,6 +1607,7 @@
     <button type="button" id="ovDone">Done</button></div>
     <div class="ovtools">
     <label class="ovzoom" title="Preview size"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><input type="range" id="ovZoom" min="70" max="420" step="10" aria-label="Preview size"><svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/></svg></label>
+    <button type="button" class="ovchip" id="ovAfterBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M12 10.5v6M9 13.5h6"/></svg><span id="ovAfterLbl">New page after 1</span></button>
     <button type="button" class="ovchip" id="ovNotesBtn" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Sticky notes</button>
     </div>
   </header>
@@ -1933,8 +1936,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_137';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.14';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_138';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.15';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -9310,6 +9313,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // the overview shows sticky notes or not, on its own (independent of the page)
   let ovNotes = store.get('ovNotes', true) !== false;
   $('ovNotesBtn').addEventListener('click', () => { ovNotes = !ovNotes; store.set('ovNotes', ovNotes); buildOverview(); });
+  $('ovAfterBtn').addEventListener('click', () => {   // an empty page right after the current one, and open it
+    remember();
+    pages.splice(cur + 1, 0, { strokes: [] });
+    scheduleSave();
+    ovPick ? moveNoteTo(cur + 1) : goTo(cur + 1);
+  });
   // preview size of the pages: slider, two-finger pinch or Ctrl + wheel
   let ovSize = (v => v >= 70 && v <= 420 ? v : 118)(+store.get('ovZoom', 118));
   function setOvSize(v, keep) {
@@ -9322,6 +9331,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('ovZoom').addEventListener('input', e => setOvSize(+e.target.value));
   const DEL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   function buildOverview() {
+    $('ovAfterLbl').textContent = `New page after ${cur + 1}`;
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
