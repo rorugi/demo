@@ -313,14 +313,24 @@
   .bmadd { display: flex; align-items: center; justify-content: center; gap: 8px; }
   .bmadd svg { width: 20px; height: 20px; }
   .seg.four { grid-template-columns: repeat(4, 1fr); }
-  .bmbar { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 74px); z-index: 28; display: flex; flex-direction: column; gap: 5px; max-height: 60vh; overflow-y: auto; pointer-events: auto; }
+  /* bookmarks at the screen edge: flags with a notch, flush with the edge */
+  .bmbar { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 74px); z-index: 28; display: flex; flex-direction: column; gap: 6px;
+    max-height: 64vh; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; pointer-events: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
+  .bmbar::-webkit-scrollbar { display: none; }
   .bmbar[hidden] { display: none; }
-  .bmbar.tl { left: calc(env(safe-area-inset-left, 0px) + 10px); align-items: flex-start; }
-  .bmbar.tr { right: calc(env(safe-area-inset-right, 0px) + 10px); align-items: flex-end; }
-  .bmtag { max-width: 150px; min-width: 34px; height: 30px; padding: 0 11px; border: 0; border-radius: 8px; background: var(--c); color: var(--fg); cursor: pointer;
-    font: 600 12.5px var(--ui); box-shadow: 0 2px 8px rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center; opacity: .88; }
+  .bmbar.tl { left: 0; align-items: flex-start; }
+  .bmbar.tr { right: 0; align-items: flex-end; }
+  .bmtag { --n: 13px; max-width: 170px; min-width: 52px; height: 36px; border: 0; border-radius: 0; background: var(--c); color: var(--fg); cursor: pointer;
+    font: 600 14px var(--ui); letter-spacing: .02em; display: flex; align-items: center; transition: transform .15s, opacity .15s; opacity: .9; }
+  .bmbar.tl .bmtag { padding: 0 calc(var(--n) + 10px) 0 calc(env(safe-area-inset-left, 0px) + 12px); justify-content: flex-start;
+    clip-path: polygon(0 0, 100% 0, calc(100% - var(--n)) 50%, 100% 100%, 0 100%); transform-origin: left center; }
+  .bmbar.tr .bmtag { padding: 0 calc(env(safe-area-inset-right, 0px) + 12px) 0 calc(var(--n) + 10px); justify-content: flex-end;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--n) 50%); transform-origin: right center; }
   .bmtag span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .bmtag.here { opacity: 1; box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--c), 0 2px 8px rgba(0,0,0,.18); }
+  .bmtag.here { opacity: 1; height: 40px; font-size: 15px; }
+  .bmbar.tl .bmtag.here { padding-left: calc(env(safe-area-inset-left, 0px) + 18px); }
+  .bmbar.tr .bmtag.here { padding-right: calc(env(safe-area-inset-right, 0px) + 18px); }
+  .bmtag:active { transform: scaleX(1.06); }
   .bmthumb { position: absolute; display: flex; gap: 1px; pointer-events: none; z-index: 2; }
   .thumb .paper .bmthumb svg.ribbon { position: static; inset: auto; width: 15px; height: 20px; display: block; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
   .bmthumb.tl { left: 6%; top: -3px; }
@@ -331,6 +341,7 @@
   .linkurl { width: 100%; box-sizing: border-box; height: 40px; padding: 0 10px; margin: 2px 0 10px; border: 1px solid var(--bar-line); border-radius: 9px;
     background: var(--panel); color: var(--bar-fg); font: 15px var(--ui); }
   .holdpop { width: 210px; }
+  .holdpop button.hot { background: var(--active); }
   .holdanchor { position: fixed; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; }
   .stage.texting { cursor: text; }
   .texted { position: absolute; z-index: 30; margin: 0; box-sizing: border-box; outline: none; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
@@ -1889,8 +1900,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_128';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.5';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_129';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.6';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8536,16 +8547,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (fpan && fpan.id === h.id) fpan = null;
       vibrate(10);
       rippleIn(h.x - 60, h.y - 60, 120, 120, 60, 60);
+      if (hold1Act === 'menu') { h.menu = true; runHold1(h.q, h.x, h.y, 'menu'); }   // the menu right away: slide onto an entry and lift, or tap it later
     }, HOLD1_MS());
   }
+  const holdHot = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest('#holdPop button'); };
   function moveHold1(e) {
-    if (fhold && e.pointerId === fhold.id && Math.hypot(e.clientX - fhold.x, e.clientY - fhold.y) > FING_MOVE) { clearTimeout(fhold.timer); fhold = null; }
+    if (!fhold || e.pointerId !== fhold.id) return;
+    if (fhold.menu) {                              // the finger slides over the menu: the entry under it lights up
+      const b = holdHot(e.clientX, e.clientY);
+      $('holdPop').querySelectorAll('button').forEach(x => x.classList.toggle('hot', x === b));
+      return;
+    }
+    if (Math.hypot(e.clientX - fhold.x, e.clientY - fhold.y) > FING_MOVE) { clearTimeout(fhold.timer); fhold = null; }
   }
   function cancelHold1() { if (fhold) { clearTimeout(fhold.timer); fhold = null; } }
   function endHold1(e) {
     const h = fhold;
     if (!h || e.pointerId !== h.id) return false;
     fhold = null; clearTimeout(h.timer);
+    if (h.menu) {                                  // lifted on an entry: that one; elsewhere the menu stays open
+      $('holdPop').querySelectorAll('.hot').forEach(x => x.classList.remove('hot'));
+      const b = e.type === 'pointerup' && holdHot(e.clientX, e.clientY);
+      if (b) b.click();
+      return true;
+    }
     if (!h.ready || e.type !== 'pointerup') return h.ready;
     runHold1(h.q, h.x, h.y, hold1Act);
     return true;
@@ -8557,6 +8582,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     else if (act === 'overview') openOverview();
     else if (act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
     else if (act === 'menu') {
+      if (openPop === $('holdPop')) return;
       holdAt = { q, x, y };
       const an = $('holdAnchor');
       an.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
