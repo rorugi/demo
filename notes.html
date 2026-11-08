@@ -291,7 +291,10 @@
   .bmpop { width: 356px; }
   .bmlist { display: grid; gap: 6px; margin-bottom: 4px; max-height: min(52vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
   .bmnone { font: 13px/1.4 var(--ui); opacity: .7; padding: 6px 2px 2px; }
-  .bmrow { display: grid; grid-template-columns: 38px 1fr 42px; gap: 6px; align-items: center; }
+  .bmhint { font: 12px/1.3 var(--ui); opacity: .55; padding: 0 2px; }
+  .bmrow { display: grid; grid-template-columns: 38px 1fr 42px; gap: 6px; align-items: center; transition: transform .15s; }
+  .bmrow.lifted { transition: none; position: relative; z-index: 2; filter: drop-shadow(0 4px 10px rgba(0,0,0,.28)); }
+  .bmbox { touch-action: none; -webkit-user-select: none; user-select: none; }
   .bmrow > button, .bmbox button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; display: grid; place-items: center; }
   .bmset, .bmgo { height: 38px; border-radius: 9px; }
   .bmset:hover, .bmgo:hover { background: var(--active); }
@@ -1930,8 +1933,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_136';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.13';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_137';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.14';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6612,7 +6615,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           (bmColOpen === m.id ? `<div class="bmcols">${COLORS.map(c => `<button type="button" data-bact="pick" data-c="${c}" style="--c:${c}" aria-label="Colour ${c}" aria-pressed="${c.toLowerCase() === m.color.toLowerCase()}"></button>`).join('')}` +
             `<button type="button" class="bmcustom" data-bact="custom" aria-expanded="${pk.open && pickTo && pickTo.mark === m}">Custom colour</button></div>` : '') +
           '</div>';
-      }).join('') : '<div class="bmnone">No bookmarks yet. Go to a page and spot you want to come back to, then add one.</div>';
+      }).join('') + (list.length > 1 ? '<div class="bmhint">Hold a bookmark, then drag it to reorder.</div>' : '') : '<div class="bmnone">No bookmarks yet. Go to a page and spot you want to come back to, then add one.</div>';
       if (bmColOpen && pk.open && pickTo && pickTo.mark && pickTo.mark.id === bmColOpen) {   // the pen's own colour picker, lent to this bookmark
         const row = bmList.querySelector(`[data-bm="${bmColOpen}"] .bmcols`);
         if (row) { row.after(pickerEl); pickerEl.hidden = false; pickerFrom(pickTo.mark.color); paintPicker(); }
@@ -6629,7 +6632,58 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<span>${esc(m.label || String(pnum(m)))}</span></button>`).join('');
     updateToolbarState();
   }
+  // reordering: hold a bookmark's box a moment, then drag it up or down
+  let bmDrag = null;                               // { m, row, y0, timer, on, rows, h, from, to }
+  bmList.addEventListener('pointerdown', e => {
+    const box = e.target.closest('.bmbox'), row = box && box.closest('[data-bm]');
+    if (!row || e.target.closest('.bmcol, .bmdel, input') || bmEditing || e.button > 0) return;
+    const m = marks.find(x => x.id === row.dataset.bm);
+    if (!m || shownMarks().length < 2) return;
+    const d = bmDrag = { m, row, id: e.pointerId, y0: e.clientY, x0: e.clientX, on: false };
+    d.timer = setTimeout(() => {
+      if (bmDrag !== d) return;
+      d.on = true; vibrate(8);
+      d.rows = [...bmList.querySelectorAll('.bmrow')]; d.from = d.to = d.rows.indexOf(row);
+      d.h = row.getBoundingClientRect().height + 6;
+      row.classList.add('lifted');
+      try { bmList.setPointerCapture(e.pointerId); } catch (_) {}
+    }, 320);
+  });
+  bmList.addEventListener('pointermove', e => {
+    const d = bmDrag;
+    if (!d || e.pointerId !== d.id) return;
+    if (!d.on) { if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) > 8) { clearTimeout(d.timer); bmDrag = null; } return; }
+    e.preventDefault();
+    const dy = e.clientY - d.y0;
+    d.to = Math.max(0, Math.min(d.rows.length - 1, d.from + Math.round(dy / d.h)));
+    d.row.style.transform = `translateY(${dy}px)`;
+    d.rows.forEach((r, i) => {                   // the others make room
+      if (r === d.row) return;
+      const shift = d.from < d.to && i > d.from && i <= d.to ? -d.h : d.from > d.to && i < d.from && i >= d.to ? d.h : 0;
+      r.style.transform = shift ? `translateY(${shift}px)` : '';
+    });
+  });
+  const bmDrop = e => {
+    const d = bmDrag;
+    if (!d || e.pointerId !== d.id) return;
+    clearTimeout(d.timer); bmDrag = null;
+    if (!d.on) return;
+    bmSkipClick = true; setTimeout(() => { bmSkipClick = false; }, 50);
+    if (d.to !== d.from) {
+      remember();
+      const list = shownMarks(), moved = list.splice(d.from, 1)[0];
+      list.splice(d.to, 0, moved);
+      marks = list.concat(marks.filter(x => !list.includes(x)));
+      scheduleSave();
+    }
+    renderMarks();
+  };
+  let bmSkipClick = false;
+  bmList.addEventListener('pointerup', bmDrop);
+  bmList.addEventListener('pointercancel', bmDrop);
+  bmList.addEventListener('contextmenu', e => { if (e.target.closest('.bmbox')) e.preventDefault(); });
   bmList.addEventListener('click', e => {
+    if (bmSkipClick) { e.stopPropagation(); return; }
     const b = e.target.closest('[data-bact]'), row = e.target.closest('[data-bm]');
     const m = row && marks.find(x => x.id === row.dataset.bm);
     if (!b || !m) return;
