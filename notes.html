@@ -80,6 +80,9 @@
   button { font-family: var(--ui); }
   button:focus-visible { outline: 2px solid var(--bar-fg); outline-offset: 1px; }
 
+  /* a toolbar without background: the buttons alone, with a soft halo so they stay readable on ink */
+  .toolbar.bare { background: transparent !important; border-color: transparent !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .toolbar.bare .tbline > * { filter: drop-shadow(0 0 1.5px var(--panel)) drop-shadow(0 0 3px var(--panel)); }
   /* ---------- floating toolbar ---------- */
   .toolbar {
     scale: var(--tbk, 1);                         /* toolbar size: small 1, medium 1.5, large 2 */
@@ -1869,6 +1872,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     </div>
     <label class="tbsize"><span>Size</span><input type="range" id="tbSize" min="80" max="200" step="10" value="100" aria-label="Toolbar size in percent"><output id="tbSizeVal" for="tbSize">100 %</output></label>
     <label class="numfield" id="tbLetterRow">Handle letter<input type="text" id="tbLetter" maxlength="2" autocomplete="off" autocapitalize="characters" aria-label="Letter shown on the toolbar handle" placeholder="≡" style="max-width:60px;text-align:center;margin-left:auto"></label>
+    <label class="toggle" for="tbBg"><span>Background<span class="sub">Off: only the buttons float over the page</span></span><span class="switch"><input type="checkbox" id="tbBg"><i></i></span></label>
     <label class="toggle" id="tbShowRow" for="tbShow"><span>Show this toolbar<span class="sub">When off it is hidden but keeps its buttons</span></span><span class="switch"><input type="checkbox" id="tbShow"><i></i></span></label>
   </div>
   <p id="tbHint">Drag the handle to move a button.</p>
@@ -1906,8 +1910,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_131';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.8';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_132';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.9';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2183,6 +2187,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       enabled: main ? true : !(b && b.enabled === false),
       min: !!(b && b.min),
       scale: b && +b.scale >= 0.8 && +b.scale <= 2 ? Math.round(+b.scale * 10) / 10 : 1,   // toolbar size, 80–200 %
+      bare: !!(b && b.bare),                                 // no background: only the buttons float over the page
       letter: main ? '' : cleanLetter(b && b.letter)
     };
   }
@@ -3626,6 +3631,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       el.setAttribute('aria-orientation', b.orient === 'v' ? 'vertical' : 'horizontal');
       el.hidden = !b.enabled;
       el.style.setProperty('--tbk', barK(b));
+      el.classList.toggle('bare', !!b.bare);
       if (!b.pos) { el.style.left = el.style.top = el.style.transform = el.style.right = el.style.bottom = el.style.transformOrigin = ''; return; }
       el.style.transformOrigin = '0 0';
       const w = el.offsetWidth * barK(b), h = el.offsetHeight * barK(b);
@@ -3967,6 +3973,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ).join('') + `<button type="button" class="new" id="tbNew">+ New toolbar</button>`;
     const main = edBar === bars[0];
     $('tbOrient').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.o === edBar.orient)));
+    $('tbBg').checked = !edBar.bare;
     $('tbSize').value = Math.round(barK(edBar) * 100); $('tbSizeVal').textContent = Math.round(barK(edBar) * 100) + ' %';
     $('tbShowRow').hidden = main;
     $('tbShow').checked = edBar.enabled;
@@ -4001,6 +4008,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const el = barEl(edBar); if (el) el.style.setProperty('--tbk', edBar.scale);
   });
   $('tbSize').addEventListener('change', () => { saveItems(); renderToolbar(); });
+  $('tbBg').addEventListener('change', e => { edBar.bare = !e.target.checked; saveItems(); renderToolbar(); });
   $('tbLetter').addEventListener('input', e => {
     edBar.letter = cleanLetter(e.target.value);
     saveItems(); renderToolbar(); renderTbList();
@@ -4742,6 +4750,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         enabled: b.enabled,
         minimized: b.min,
         sizePercent: Math.round(barK(b) * 100),
+        background: !b.bare,
         letter: b.letter || '',
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
@@ -4785,7 +4794,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
-    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter, scale: +t.sizePercent / 100 }, main);
+    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false }, main);
     let newBars = null;
     // toolbars from files before v45 are ignored
     if (+o.formatVersion >= 3 && Array.isArray(o.toolbars) && o.toolbars.length) newBars = o.toolbars.map((t, i) => fileBar(t || {}, i === 0));
