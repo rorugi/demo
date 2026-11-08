@@ -1959,8 +1959,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_148';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.25';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_149';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.26';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6884,7 +6884,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!bgFailed.has(qk) && !bgQueue.some(q => q.qk === qk)) { bgQueue.push({ b, size, qk }); bgPump(); }
     return size === 'L' ? bgRast.S.get(k) || null : null;   // meanwhile the small one, if there is one
   }
-  async function renderPdfPage(b, longPx, region) {   // region: { x, y, w, h } in mm of the background box, drawn at longPx for the whole page
+  async function renderPdfPage(b, longPx, region, quality = 0.9) {   // region: { x, y, w, h } in mm of the background box, drawn at longPx for the whole page
     const doc = await pdfDoc(b.pdf);
     if (!doc) throw new Error('pdf');
     const page = await doc.getPage(b.n), vp1 = page.getViewport({ scale: 1 });
@@ -6899,7 +6899,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const g = c.getContext('2d');
     g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
     const task = page.render({ canvasContext: g, viewport: vp, background: 'rgb(255,255,255)' });
-    return { task, done: task.promise.then(() => new Promise(res => c.toBlob(bl => res({ blob: bl, w: c.width, h: c.height }), region ? 'image/png' : 'image/jpeg', 0.9))) };
+    return { task, done: task.promise.then(() => new Promise(res => c.toBlob(bl => res({ blob: bl, w: c.width, h: c.height }), region ? 'image/png' : 'image/jpeg', quality))) };
   }
   async function bgPump() {
     if (bgBusy || !bgQueue.length) return;
@@ -6946,7 +6946,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // the background in a page's markup: under everything, the grid shows through (the PDF's white multiplies with the paper)
   function bgMarkup(pg, mode, data) {
     if (!pg || !pg.bg) return '';
-    const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = data || bgGet(b, want);
+    const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = mode === 'file' ? data || null : bgGet(b, want);   // (files: a picture given, or none)
     const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
     const blend = ` style="${mode === 'file' ? 'mix-blend-mode:multiply' : bgStyle()}"`;   // the grid shows through the PDF's white, behind its print
     const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
@@ -7112,15 +7112,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function bgFileData(list) {
     const ids = pdfIdsOf(list), pdfs = [], pics = new Map();
     for (const id of ids) { const r = await pdfRec(id); if (r) pdfs.push({ id, name: r.name, data: await blobData(r.blob) }); }
-    const todo = list.filter(pg => pg.bg);
+    // the pictures only serve other programs (RRnotes uses the PDF itself): smaller with more pages, none for very many,
+    // so that a long PDF doesn't make the file huge (490 pages were over 100 MB) or the tablet run out of memory
+    const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg), pg.bg])).values()];
+    const tier = todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : null;
+    if (!tier) return { pdfs, pics, noPics: true };
     let i = 0;
-    for (const pg of todo) {
-      const k = bgKey(pg.bg);
-      if (pics.has(k)) continue;
+    for (const b of todo) {
+      const k = bgKey(b);
       i++;
       if (busyDepth) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
       try {
-        const r = bgRast.L.get(k) || await (await renderPdfPage(pg.bg, 1400)).done;
+        const big = bgRast.L.get(k);
+        const r = big && tier.px >= 1200 ? big : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
         pics.set(k, await blobData(r.blob));
       } catch (_) {}
     }
