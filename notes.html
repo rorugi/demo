@@ -284,6 +284,48 @@
   .note [data-nact="move"] { cursor: grab; }
   .sticky-ico .body { fill: var(--nc, transparent); }
   .notepop { width: 248px; }
+  .bmpop { width: 356px; }
+  .bmlist { display: grid; gap: 6px; margin-bottom: 4px; max-height: min(52vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
+  .bmnone { font: 13px/1.4 var(--ui); opacity: .7; padding: 6px 2px 2px; }
+  .bmrow { display: grid; grid-template-columns: 38px 1fr 42px; gap: 6px; align-items: center; }
+  .bmrow > button, .bmbox button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; display: grid; place-items: center; }
+  .bmset, .bmgo { height: 38px; border-radius: 9px; }
+  .bmset:hover, .bmgo:hover { background: var(--active); }
+  .bmset svg { width: 21px; height: 21px; opacity: .75; }
+  .bmgo { background: var(--active) !important; }
+  .bmgo svg { width: 22px; height: 22px; }
+  .bmrow.here .bmbox { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--c); }
+  .bmbox { display: flex; align-items: center; gap: 4px; min-width: 0; height: 38px; padding: 0 4px 0 6px; border-radius: 9px; background: var(--c); color: var(--fg); }
+  .bmcol { width: 24px; height: 24px; flex: none; border-radius: 50% !important; background: var(--c) !important; box-shadow: inset 0 0 0 2px var(--fg), 0 0 0 1px rgba(0,0,0,.15); }
+  .bmlabel { flex: 1; min-width: 0; height: 100%; justify-content: start !important; display: flex !important; align-items: center; gap: 6px; font: 600 14px var(--ui); text-align: left; }
+  .bmlabel { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .bmlabel.empty { font-weight: 500; opacity: .85; }
+  .bmlabel small { font: 500 11.5px var(--ui); opacity: .75; }
+  .bmlabel-in { flex: 1; min-width: 0; height: 28px; border: 0; border-radius: 6px; padding: 0 7px; font: 600 14px var(--ui); background: rgba(255,255,255,.92); color: #1a1b1e; }
+  .bmdel { width: 28px; height: 28px; flex: none; border-radius: 7px; }
+  .bmdel svg { width: 17px; height: 17px; }
+  .bmdel:hover { background: rgba(0,0,0,.12) !important; }
+  .bmcols { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; padding: 4px 0 2px; }
+  .bmcols button { aspect-ratio: 1; border-radius: 6px; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .bmcols [aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--bar-fg); }
+  .bmcols .bmcustom { grid-column: 1 / -1; aspect-ratio: auto; height: 32px; background: var(--active); color: var(--bar-fg); font: 500 13px var(--ui); box-shadow: none; }
+  .bmrow + #picker, .bmrow #picker { grid-column: 1 / -1; }
+  .bmadd { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .bmadd svg { width: 20px; height: 20px; }
+  .seg.four { grid-template-columns: repeat(4, 1fr); }
+  .bmbar { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 74px); z-index: 28; display: flex; flex-direction: column; gap: 5px; max-height: 60vh; overflow-y: auto; pointer-events: auto; }
+  .bmbar[hidden] { display: none; }
+  .bmbar.tl { left: calc(env(safe-area-inset-left, 0px) + 10px); align-items: flex-start; }
+  .bmbar.tr { right: calc(env(safe-area-inset-right, 0px) + 10px); align-items: flex-end; }
+  .bmtag { max-width: 150px; min-width: 34px; height: 30px; padding: 0 11px; border: 0; border-radius: 8px; background: var(--c); color: var(--fg); cursor: pointer;
+    font: 600 12.5px var(--ui); box-shadow: 0 2px 8px rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center; opacity: .88; }
+  .bmtag span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .bmtag.here { opacity: 1; box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--c), 0 2px 8px rgba(0,0,0,.18); }
+  .bmthumb { position: absolute; display: flex; gap: 1px; pointer-events: none; z-index: 2; }
+  .thumb .paper .bmthumb svg.ribbon { position: static; inset: auto; width: 15px; height: 20px; display: block; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .bmthumb.tl { left: 6%; top: -3px; }
+  .bmthumb.tr { right: 26px; top: -3px; }
+  .bmthumb.b { left: 6%; bottom: -12px; }
   .tsizerow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .tsizerow h3 { margin: 0; }
   .linkurl { width: 100%; box-sizing: border-box; height: 40px; padding: 0 10px; margin: 2px 0 10px; border: 1px solid var(--bar-line); border-radius: 9px;
@@ -301,6 +343,11 @@
   .textbar button { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border: 0; border-radius: 9px; background: transparent; color: inherit;
     font: 500 14px var(--ui); cursor: pointer; white-space: nowrap; }
   .textbar button svg { width: 20px; height: 20px; flex: none; }
+  .textbar .ticon { width: 38px; padding: 0; justify-content: center; font: 17px/1 Georgia, 'Times New Roman', serif; position: relative; }
+  .textbar .ticon[aria-pressed="true"] { background: var(--bar-fg); color: var(--panel); }
+  .textbar .tcola { font: 700 17px/1 var(--ui); margin-top: -5px; }
+  .textbar .tcolbar { position: absolute; left: 10px; right: 10px; bottom: 7px; height: 4px; border-radius: 2px; background: var(--tc, currentColor); }
+  @media (max-width: 560px) { .textbar .tlabel { display: none; } }
   .textbar button:hover, .textbar button:active { background: var(--active); }
   .noteswatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
   .noteswatches button { aspect-ratio: 1; border-radius: 6px; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
@@ -1212,6 +1259,17 @@
 </div>
 
 <!-- sticky note menu: the tool (colour, size, show / hide) or one sticky note (colour, delete) -->
+<!-- bookmarks -->
+<div class="pop bmpop" id="bmPop" role="dialog" aria-label="Bookmarks" hidden>
+  <div class="poptitle">Bookmarks</div>
+  <div class="bmlist" id="bmList"></div>
+  <button type="button" class="wide-btn subtle bmadd" id="bmAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.5-6 4.5z"/><path d="M12 7.5v6M9 10.5h6"/></svg>Add bookmark</button>
+  <h3>Bookmark box on the screen</h3>
+  <div class="seg three" id="bmShowSeg"><button type="button" data-v="off">Off</button><button type="button" data-v="tl">Top left</button><button type="button" data-v="tr">Top right</button></div>
+  <h3>On the page thumbnails</h3>
+  <div class="seg four" id="bmThumbSeg"><button type="button" data-v="off">Off</button><button type="button" data-v="tl">Top left</button><button type="button" data-v="tr">Top right</button><button type="button" data-v="b">Bottom</button></div>
+</div>
+<div class="bmbar" id="bmBox" hidden></div>
 <!-- text: one box, or the text tool -->
 <div class="pop notepop" id="textPop" role="dialog" aria-label="Text" hidden>
   <div class="poptitle" id="textPopTitle"></div>
@@ -1221,6 +1279,11 @@
   <button type="button" class="wide-btn subtle" id="textEditBtn" data-tfor="box">Edit text</button>
   <button type="button" class="wide-btn subtle" id="textPasteBtn" data-tfor="tool">Paste text from the clipboard</button>
   <button type="button" class="wide-btn" id="textDelete" data-tfor="box">Delete text box</button>
+</div>
+<div class="pop notepop" id="tcolPop" role="dialog" aria-label="Text colour" hidden>
+  <div class="poptitle">Colour of the selected text</div>
+  <div class="noteswatches" id="tcolSwatches"></div>
+  <button type="button" class="wide-btn subtle" id="tcolBox">Colour of the box</button>
 </div>
 <div class="pop notepop" id="linkPop" role="dialog" aria-label="Link" hidden>
   <div class="poptitle">Link</div>
@@ -1239,8 +1302,11 @@
 <div class="holdanchor" id="holdAnchor" aria-hidden="true"></div>
 <!-- writing in a text box -->
 <div class="textbar" id="textBar" hidden>
+  <button type="button" id="textB" class="ticon" aria-label="Bold" aria-pressed="false"><b>B</b></button>
+  <button type="button" id="textI" class="ticon" aria-label="Italic" aria-pressed="false"><i>I</i></button>
+  <button type="button" id="textCol" class="ticon" aria-label="Text colour"><span class="tcola">A</span><span class="tcolbar" id="textColBar"></span></button>
   <button type="button" id="textLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg>Link</button>
-  <button type="button" id="textOpts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-12 5 12M5.8 14h6.4"/><path d="M15.5 12.5a2.5 2.5 0 1 1 0 5h-.5v-5zM15 12.5V9.8a2 2 0 0 1 2-2"/></svg>Size &amp; colour</button>
+  <button type="button" id="textOpts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-12 5 12M5.8 14h6.4"/><path d="M15.5 12.5a2.5 2.5 0 1 1 0 5h-.5v-5zM15 12.5V9.8a2 2 0 0 1 2-2"/></svg><span class="tlabel">Box</span></button>
   <button type="button" id="textDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Done</button>
 </div>
 
@@ -1823,8 +1889,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_127';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.4';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_128';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.5';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -1941,6 +2007,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pen: svg('<path class="body" d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/><path d="M13 6.5l4.5 4.5"/>', ' class="pen-ico"'),
     nib: svg('<g transform="rotate(45 12 12)"><path class="body" d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>', ' class="pen-ico"'),
     sticky: svg('<path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/>', ' class="sticky-ico"'),
+    bookmark: svg('<path d="M6 3.5h12v17l-6-4.5-6 4.5z"/>'),
     text: svg('<path d="M5 7.5V5h14v2.5M12 5v14M9 19h6"/>'),
     image: svg('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.5l5-5 3.5 3.5 2.5-2.5 5 5"/>'),
     marker: svg('<path class="body" d="M14.6 3.4l5.9 5.9-7.6 7.6-5.9-5.9z"/><path d="M7 11l-2.4 4.6 3.7 3.7L13 17"/><path d="M3 21.2h7" stroke-width="2.4"/>', ' class="pen-ico"'),
@@ -2010,6 +2077,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ptype:  { label: 'Pen type preset', multi: true, add: true },
     sticky: { label: 'Sticky notes' },
     text:   { label: 'Text' },
+    bookmark: { label: 'Bookmarks' },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -2068,7 +2136,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return [
       { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) }, { id: uid(), type: 'pentype' },
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b), use: cleanUse(null, ALL_BUT_KIND) })),
-      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'text' }, { id: uid(), type: 'image' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
+      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'text' }, { id: uid(), type: 'image' }, { id: uid(), type: 'bookmark' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
     ];
@@ -2146,6 +2214,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!bars.some(b => b.items.some(i => i.type === 'text'))) {
       const m = bars[0].items, k = m.findIndex(i => i.type === 'sticky' || i.type === 'image');
       m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'text' });
+      store.set('toolbars', bars);
+    }
+  }
+  if (!store.get('bmAdded', false)) {          // the bookmarks button arrives once, after the image button
+    store.set('bmAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'bookmark'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'image' || i.type === 'text');
+      m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'bookmark' });
       store.set('toolbars', bars);
     }
   }
@@ -2396,7 +2472,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const cleanNotes = list => (Array.isArray(list) ? list : []).map(cleanNote).filter(Boolean);
   // ---- Text boxes on a page: { id, x, y (mm, top left), w (mm; the height follows the text), fs (pt), color,
-  // runs: [{ t, a }] (text, and a link if any) } — above the images, under the ink ----
+  // runs: [{ t, a, b, i, c }] (text; link, bold, italic, own colour if any) } — above the images, under the ink ----
   const textsOf = pg => pg.texts || (pg.texts = []);
   const TEXT_SIZES = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 60, 72];
   const TEXT_COLORS = ['#121315', '#5b5f66', '#d92b1e', '#1f6fd1', '#2f9e41', '#f08a10', '#a92fb4', '#8a5a2b'];
@@ -2420,12 +2496,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       t = t.slice(0, Math.max(0, 20000 - n));
       if (!t) continue;
       n += t.length;
-      const a = r.a ? cleanUrl(r.a) : '', last = out[out.length - 1];
-      if (last && (last.a || '') === a) last.t += t; else out.push(a ? { t, a } : { t });
+      const o = { t };
+      const a = r.a ? cleanUrl(r.a) : '';
+      if (a) o.a = a;
+      if (r.b) o.b = true;
+      if (r.i) o.i = true;
+      if (okC(r.c)) o.c = r.c.toLowerCase();
+      const last = out[out.length - 1];
+      if (last && sameStyle(last, o)) last.t += t; else out.push(o);
     }
     return out;
   }
   const runsText = runs => runs.map(r => r.t).join('');
+  const sameStyle = (p, q) => (p.a || '') === (q.a || '') && !!p.b === !!q.b && !!p.i === !!q.i && (p.c || '') === (q.c || '');
+  const textFont = (b, i, px) => `${i ? 'italic ' : ''}${b ? '700 ' : ''}${px}px ${TEXT_FONT}`;
   function cleanText(o) {
     if (!o || typeof o !== 'object') return null;
     const runs = cleanRuns(o.runs);
@@ -2435,6 +2519,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       fs: +o.fs >= 4 && +o.fs <= 200 ? +o.fs : 14, color: okC(o.color) ? o.color : '#121315', runs };
     return t;
   }
+  // ---- Bookmarks, kept per notebook: { id, page (the page itself: it stays with it when pages move), label, color,
+  // x, y (mm, the middle of the view), z (zoom) } ----
+  let marks = [];
+  const marksOut = (pgs = pages, list = marks) => list.filter(m => pgs.includes(m.page))
+    .map(m => ({ id: m.id, p: pgs.indexOf(m.page), label: m.label, color: m.color, x: +(+m.x).toFixed(1), y: +(+m.y).toFixed(1), z: +(+m.z).toFixed(3) }));
+  const cleanMarks = (list, pgs) => (Array.isArray(list) ? list : []).map(o => o && Number.isInteger(+o.p) && pgs[+o.p] ? {
+    id: typeof o.id === 'string' && o.id ? o.id : uid(), page: pgs[+o.p], label: typeof o.label === 'string' ? o.label.slice(0, 80) : '',
+    color: okC(o.color) ? o.color : '#d92b1e', x: isFinite(o.x) ? +o.x : 0, y: isFinite(o.y) ? +o.y : 0, z: +o.z >= 0.1 && +o.z <= 20 ? +o.z : 1 } : null).filter(Boolean);
   const cleanTexts = list => (Array.isArray(list) ? list : []).map(cleanText).filter(Boolean);
   const copyTexts = list => (list || []).map(t => ({ ...t, runs: t.runs.map(r => ({ ...r })) }));
   const textCfg = (c => ({ fs: c && +c.fs >= 4 && +c.fs <= 200 ? +c.fs : 14, color: c && okC(c.color) ? c.color : '#121315' }))(store.get('textCfg', null));
@@ -2452,26 +2544,39 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       textBase = m.fontBoundingBoxAscent ? (m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 / MEAS : 0.345;
     }
     const fmm = t.fs * PT, lh = fmm * TEXT_LH, em = Math.max(1, (t.w - 2 * TEXT_PAD) / fmm);
-    const wOf = s => measureCtx.measureText(s).width / MEAS;
+    let fontNow = '';
+    const wOf = (s, r) => { const f = textFont(r.b, r.i, MEAS); if (f !== fontNow) { measureCtx.font = f; fontNow = f; } return measureCtx.measureText(s).width / MEAS; };
     const lines = [[]];
     let x = 0;
     const newLine = () => { const ln = lines[lines.length - 1]; while (ln.length && /^ +$/.test(ln[ln.length - 1].s)) { ln.pop(); } lines.push([]); x = 0; };
-    const add = (s, a, w) => { lines[lines.length - 1].push({ s, a, x, w }); x += w; };
-    for (const r of t.runs) for (const m of r.t.matchAll(/\n| +|[^ \n]+/g)) {
-      const s = m[0], a = r.a || '';
-      if (s === '\n') { lines.push([]); x = 0; continue; }
-      const w = wOf(s);
-      if (s[0] === ' ') { if (x + w <= em || x === 0) add(s, a, w); else newLine(); continue; }
+    const add = (s, r, w) => { lines[lines.length - 1].push({ s, a: r.a || '', b: !!r.b, i: !!r.i, c: r.c || '', x, w }); x += w; };
+    // words, spaces and line breaks; a word may change style in the middle and still wraps as one
+    const toks = [];
+    let glue = false;                                  // the last token was a word that touches the next run
+    for (const r of t.runs) {
+      const ms = [...r.t.matchAll(/\n| +|[^ \n]+/g)];
+      ms.forEach((m, k) => {
+        const s = m[0], word = !/[ \n]/.test(s[0]);
+        if (k === 0 && word && glue) toks[toks.length - 1].parts.push({ s, r });
+        else toks.push({ parts: [{ s, r }] });
+        glue = word && k === ms.length - 1;
+      });
+    }
+    for (const tk of toks) {
+      const s0 = tk.parts[0].s;
+      if (s0 === '\n') { lines.push([]); x = 0; continue; }
+      const ws = tk.parts.map(p => wOf(p.s, p.r)), w = ws.reduce((u, v) => u + v, 0);
+      if (s0[0] === ' ') { if (x + w <= em || x === 0) add(s0, tk.parts[0].r, w); else newLine(); continue; }
       if (x > 0 && x + w > em) newLine();
-      if (w <= em) { add(s, a, w); continue; }
-      for (const ch of s) { const cw = wOf(ch); if (x > 0 && x + cw > em) newLine(); add(ch, a, cw); }   // a word longer than the line
+      if (w <= em) { tk.parts.forEach((p, k) => add(p.s, p.r, ws[k])); continue; }
+      for (const p of tk.parts) for (const ch of p.s) { const cw = wOf(ch, p.r); if (x > 0 && x + cw > em) newLine(); add(ch, p.r, cw); }   // longer than the line
     }
     // pieces with the same link side by side become one segment
     const out = lines.map(ln => {
       const segs = [];
       for (const p of ln) {
         const last = segs[segs.length - 1];
-        if (last && last.a === p.a) { last.s += p.s; last.w = p.x + p.w - last.x; } else segs.push({ ...p });
+        if (last && sameStyle(last, p)) { last.s += p.s; last.w = p.x + p.w - last.x; } else segs.push({ ...p });
       }
       segs.forEach(sg => { sg.x *= fmm; sg.w *= fmm; });
       return segs;
@@ -2573,7 +2678,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const m = nbMeta();
     if (!m) return;
     m.pages = pages.length;
-    const data = { v: 3, pages, cur, setup };
+    const data = { v: 3, pages, cur, setup, marks: marksOut() };
     try { await idb.set('nb:' + m.id, data); }
     catch (e) {
       if (!store.set('nb:' + m.id, data) && !warnedQuota) {
@@ -2606,10 +2711,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     undoStack.length = redoStack.length = 0;
     if (nb && Array.isArray(nb.pages) && nb.pages.length) {
       pages = nb.pages.map(p => ({ strokes: (Array.isArray(p.strokes) ? p.strokes : []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts) }));
+      marks = cleanMarks(nb.marks, pages);
       cur = Math.min(pages.length - 1, Math.max(0, nb.cur | 0));
       compactPages(pages);
       applySetup(cleanSetup(nb.setup), true);
-    } else { pages = [{ strokes: [] }]; cur = 0; }
+    } else { pages = [{ strokes: [] }]; cur = 0; marks = []; }
     view.zoom = 1;
     layout();
     renderPage();
@@ -2657,7 +2763,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // a snapshot also remembers which strokes were selected, so undo/redo keep the selection
   // pages keep their identity (the magnifier and other views hold on to them); only their strokes are restored
   const copyNotes = list => (list || []).map(n => ({ ...n, strokes: n.strokes.slice() }));
-  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })), texts: copyTexts(p.texts) })), cur,
+  const snapshot = () => ({ pages: pages.map(p => ({ page: p, strokes: p.strokes.slice(), notes: copyNotes(p.notes), images: (p.images || []).map(m => ({ ...m, crop: m.crop && m.crop.slice() })), texts: copyTexts(p.texts) })), cur, marks: marks.map(m => ({ ...m })),
     selIdx: sel && sel.page === cur ? sel.items.map(st => pages[cur].strokes.indexOf(st)).filter(i => i >= 0) : null,
     selImg: sel && sel.page === cur ? sel.imgs.map(m => imagesOf(pages[cur]).indexOf(m)).filter(i => i >= 0) : null });
   function remember(snap = snapshot()) {
@@ -2669,6 +2775,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function restore(s) {
     pages = s.pages.map(e => { e.page.strokes = e.strokes.slice(); e.page.notes = copyNotes(e.notes); e.page.images = e.images.map(m => ({ ...m, crop: m.crop && m.crop.slice() })); e.page.texts = copyTexts(e.texts); return e.page; });
+    if (s.marks) marks = s.marks.map(m => ({ ...m }));
     if (typeof magInkChanged === 'function') magInkChanged();   // the magnifier shows the restored ink too
     cur = Math.min(s.cur, pages.length - 1);
     const again = (s.selIdx || []).map(i => pages[cur].strokes[i]).filter(Boolean);
@@ -2713,6 +2820,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('allPagesSum').textContent = `${cur + 1} / ${pages.length}`;
     updateToolbarState();
     if (typeof lvNav === 'function') { lvNav(); viewerPaged(); }
+    renderMarks();
   }
 
   // ---- View: fit scale × zoom, plus pan offset in CSS px ----
@@ -2829,6 +2937,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'sticky': return `<button type="button" class="eraser" ${a} aria-pressed="false">${ICON.sticky}</button>`;
       case 'text': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Text: tap the page for a text box, tap again for size and colour" title="Text · tap the page to write, tap again for size and colour">${ICON.text}</button>`;
       case 'image': return `<button type="button" ${a} aria-label="Insert an image">${ICON.image}</button>`;
+      case 'bookmark': return `<button type="button" ${a} aria-label="Bookmarks" title="Bookmarks">${ICON.bookmark}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
       case 'undo': return `<button type="button" ${a} aria-label="Undo" title="Undo">${ICON.undo}</button>`;
@@ -3155,6 +3264,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'pentype':
         if (openPop === ptPop) closePops(); else { renderPtPop(); showPop(ptPop, el); }
         break;
+      case 'bookmark': openMarks(el); break;
       case 'image':
         openPop === imgAddPop ? closePops() : showPop(imgAddPop, el);
         break;
@@ -3203,7 +3313,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const a = popAnchor.getBoundingClientRect(), tb = tbEl.getBoundingClientRect();
     const pw = openPop.offsetWidth, ph = openPop.offsetHeight, iw = window.innerWidth, ih = window.innerHeight;
     let x, y;
-    if (tbEl.classList.contains('vertical')) {
+    if (popAnchor.id === 'holdAnchor') {           // the hold menu: right next to the finger, the first entry closest to it
+      x = a.left + 18; if (x + pw > iw - 8) x = a.left - pw - 18;
+      y = a.top - 28;
+    } else if (popAnchor.closest('#textBar')) {     // menus of the text being written: under (or over) the little bar
+      const r = textBar.getBoundingClientRect();
+      x = a.left - 12; y = r.bottom + 6; if (y + ph > ih - 8) y = r.top - ph - 6;
+    } else if (tbEl.classList.contains('vertical')) {
       x = tb.right + 8; if (x + pw > iw - 8) x = tb.left - pw - 8;
       y = a.top - 12;
     } else {
@@ -3220,6 +3336,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function closePops() {
     if (openPop && openPop.id === 'cropPop' && typeof endCrop === 'function') { const p = openPop; openPop = null; p.hidden = true; endCrop(true); popAnchor = null; return; }
+    if (openPop === bmPop) { if (pickTo) closeBmPicker(); bmColOpen = null; }
     if (openPop) openPop.hidden = true;
     if (openPop === penPop) { penEdit = { kind: 'pen' }; pk.open = false; }
     openPop = popAnchor = null;
@@ -3296,7 +3413,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('pkDot').style.setProperty('--c', hex);
     if (!keepHex) { $('pkHex').value = hex.toUpperCase(); $('pkHex').classList.remove('bad'); }
   }
+  let pickTo = null;                             // the picker lent to something else (a bookmark): where the colour goes
   function applyPicked(hex, keepHex) {
+    if (pickTo) { pickTo(hex); paintPicker(keepHex); return; }
     ed().color = hex;
     ed().pickedOnDark = paperDark;             // remember which paper the colour was chosen for
     penChanged();
@@ -3383,6 +3502,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     penChanged();
   });
   function renderPenPop(keepInput) {
+    if (pickTo) closeBmPicker();
     const br = { ...brush(), ...ed() };       // preview with the pen's other properties
     const k = penEdit.kind;
     penPop.querySelectorAll('[data-for]').forEach(x => { x.hidden = !x.dataset.for.split(' ').includes(k); });
@@ -4030,14 +4150,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
   // ---- Save / open the notebook: one SVG, one <g data-page> per page ----
-  async function notebookSVG(pages = null, setup = null) {
+  async function notebookSVG(pages = null, setup = null, bms = null) {
+    if (!bms) bms = pages ? [] : marksOut();
     if (!pages) pages = curPages();
     if (!setup) setup = curSetup();
     const [W, H] = setupDims(setup), GRID_D = buildGrid(setup, W, H);
     await ensureImages(pages);
     await ensureImageData(pages);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
-    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}">\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
+    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
     s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}</defs>\n`;
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
@@ -4164,11 +4285,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // reads a notebook SVG; pictures go into the browser's store
   async function parseNotebook(text) {
-    let newPages, newSetup;
+    let newPages, newSetup, newMarks = [];
     {
       const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
       if (doc.querySelector('parsererror')) throw new Error('parse');
       const rootEl = doc.documentElement, A = n => rootEl.getAttribute(n);
+      try { newMarks = JSON.parse(A('data-bookmarks') || '[]'); } catch (_) {}
       newSetup = cleanSetup(A('data-page-width') ? {      // files before v18 are A4 with 5 mm squares
         size: A('data-page-size'), orient: A('data-page-orient'),
         cw: parseFloat(A('data-page-width')), ch: parseFloat(A('data-page-height')),
@@ -4206,7 +4328,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         pg.images = out.filter(Boolean);
       }
     }
-    return { pages: newPages, cur: 0, setup: newSetup };
+    return { pages: newPages, cur: 0, setup: newSetup, marks: newMarks };
   }
   const isZip = buf => buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 3 && buf[3] === 4;
   // an empty, unchanged notebook on screen is simply replaced
@@ -4221,9 +4343,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!file) return;
     const head = new Uint8Array(await file.slice(0, 512).arrayBuffer());
     if (isZip(head) || /\.html?$/i.test(file.name) || /<!doctype html|data-rrnotes-collection/i.test(new TextDecoder().decode(head))) { loadAll(file); return; }
-    let newPages, newSetup;
+    let newPages, newSetup, newMarks;
     try {
-      ({ pages: newPages, setup: newSetup } = await parseNotebook(await readNotebookText(file)));
+      ({ pages: newPages, setup: newSetup, marks: newMarks } = await parseNotebook(await readNotebookText(file)));
     } catch (err) {
       toast(`${file.name} isn't an RRnotes notebook. Choose an SVG saved from RRnotes.`);
       return;
@@ -4231,7 +4353,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     dropBlank();
     const meta = newMeta(fileBase(file.name));
     Object.assign(meta, { savedName: file.name, savedAt: Date.now(), pages: newPages.length });
-    await addNotebook(meta, { pages: newPages, cur: 0, setup: newSetup });
+    await addNotebook(meta, { pages: newPages, cur: 0, setup: newSetup, marks: newMarks });
     addRecent(file.name);
     if (nbDlg.open) renderNbDlg();
     toast(`Opened ${file.name} · ${pages.length} ${pages.length === 1 ? 'page' : 'pages'}`);
@@ -4480,7 +4602,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       let base = (m.name || 'Notebook').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Notebook', name = base + '.svg', i = 2;
       while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
       names.add(name.toLowerCase());
-      const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup));
+      const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup), isCur ? marksOut() : (Array.isArray(rec.marks) ? rec.marks : []));
       files.push({ name, m, rev: m.rev, svg: svgText, pages: pgs.length, data: enc.encode(svgText) });
     }
     if (!files.length) { toast('Nothing to save yet'); return; }
@@ -4856,7 +4978,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function pdfTextOps(pg, links) {
     let o = '';
     for (const t of pg.texts || []) {
-      const L = textLayout(t), col = hexRgb(t.color), lcol = hexRgb(LINK_C);
+      const L = textLayout(t), lcol = hexRgb(LINK_C);
       L.lines.forEach((segs, i) => {
         const y = t.y + L.base + i * L.lh;
         for (const sg of segs) {
@@ -4864,11 +4986,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           const x = t.x + TEXT_PAD + sg.x;
           let hex = '', w = 0;
           for (const ch of sg.s) { const code = winAnsi(ch); hex += code.toString(16).padStart(2, '0'); w += helvW(ch, code); }
-          const nat = w / 1000 * L.fmm, tz = nat > 0 ? Math.max(60, Math.min(140, sg.w / nat * 100)) : 100;
-          o += `BT /F1 ${pdfNum(L.fmm)} Tf ${pdfNum(tz)} Tz ${sg.a ? lcol : col} rg 1 0 0 -1 ${pdfNum(x)} ${pdfNum(y)} Tm <${hex}> Tj ET\n`;
+          const nat = w / 1000 * L.fmm * (sg.b ? 1.06 : 1), tz = nat > 0 ? Math.max(60, Math.min(140, sg.w / nat * 100)) : 100;
+          const col = hexRgb(sg.c || (sg.a ? LINK_C : t.color)), face = 1 + (sg.b ? 1 : 0) + (sg.i ? 2 : 0);
+          o += `BT /F${face} ${pdfNum(L.fmm)} Tf ${pdfNum(tz)} Tz ${col} rg 1 0 0 -1 ${pdfNum(x)} ${pdfNum(y)} Tm <${hex}> Tj ET\n`;
           if (sg.a) {
             const uy = y + L.fmm * 0.12;
-            o += `q 0 J ${lcol} RG ${pdfNum(L.fmm * 0.06)} w ${pdfNum(x)} ${pdfNum(uy)} m ${pdfNum(x + sg.w)} ${pdfNum(uy)} l S Q\n`;
+            o += `q 0 J ${col} RG ${pdfNum(L.fmm * 0.06)} w ${pdfNum(x)} ${pdfNum(uy)} m ${pdfNum(x + sg.w)} ${pdfNum(uy)} l S Q\n`;
             links.push({ x0: x, y0: y - L.fmm * 0.9, x1: x + sg.w, y1: y + L.fmm * 0.25, url: sg.a });
           }
         }
@@ -4973,7 +5096,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let next = 3 + gstates.size;
     xlist.forEach(xo => { xo.obj = next++; if (xo.smask) xo.mobj = next++; });
     const nG = gstates.size, gBase = 3, pBase = next, infoId = pBase + list.length * 2, fontId = infoId + 1;
-    let annId = fontId + 1;                       // links: one annotation each, after the font
+    let annId = fontId + 4;                       // four faces: regular, bold, oblique, bold oblique                       // links: one annotation each, after the font
     const annIds = pageLinks.map(l => l.map(() => annId++));
     put('%PDF-1.4\n'); put(new Uint8Array([37, 226, 227, 207, 211, 10]));
     obj(1, () => put('<< /Type /Catalog /Pages 2 0 R >>'));
@@ -4994,7 +5117,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
     const gsRes = (nG ? `/ExtGState << ${[...gstates.values()].map((nm, i) => `/${nm} ${gBase + i} 0 R`).join(' ')} >>` : '') +
       (xobj.size ? ` /XObject << ${xlist.map(xo => `/${xo.name} ${xo.obj} 0 R`).join(' ')} >>` : '') +
-      (anyText ? ` /Font << /F1 ${fontId} 0 R >>` : '');
+      (anyText ? ` /Font << /F1 ${fontId} 0 R /F2 ${fontId + 1} 0 R /F3 ${fontId + 2} 0 R /F4 ${fontId + 3} 0 R >>` : '');
     for (let i = 0; i < list.length; i++) {
       const pid = pBase + i * 2, cid = pid + 1;
       obj(pid, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${wPt} ${hPt}] /Resources << ${gsRes} >> /Contents ${cid} 0 R${annIds[i].length ? ` /Annots [${annIds[i].map(a => a + ' 0 R').join(' ')}]` : ''} >>`));
@@ -5008,7 +5131,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pdfStr = t => '(' + String(t).replace(/[\\()]/g, m => '\\' + m).replace(/[^\x20-\x7e]/g, '?') + ')';
     const d = new Date(), pad = v => String(v).padStart(2, '0');
     obj(infoId, () => put(`<< /Title ${pdfStr(title)} /Producer ${pdfStr(VERSION_LABEL)} /CreationDate (D:${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}) >>`));
-    obj(fontId, () => put('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'));
+    ['Helvetica', 'Helvetica-Bold', 'Helvetica-Oblique', 'Helvetica-BoldOblique'].forEach((f, k) =>
+      obj(fontId + k, () => put(`<< /Type /Font /Subtype /Type1 /BaseFont /${f} /Encoding /WinAnsiEncoding >>`)));
     const uri = u => '(' + u.replace(/[^\x21-\x7e]/g, c => encodeURIComponent(c)).replace(/[\\()]/g, m => '\\' + m) + ')';
     pageLinks.forEach((l, i) => l.forEach((ln, j) => obj(annIds[i][j], () => put(`<< /Type /Annot /Subtype /Link /Border [0 0 0] /Rect [${[ln.x0 * k, H * k - ln.y1 * k, ln.x1 * k, H * k - ln.y0 * k].map(pdfNum).join(' ')}] /A << /S /URI /URI ${uri(ln.url)} >> >>`))));
     const xref = size, n = annId;
@@ -5750,8 +5874,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (e.target.closest && e.target.closest('.texted')) return;   // writing in a text box: the box takes it
     const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type));
     if (f) { e.preventDefault(); e.stopImmediatePropagation(); insertImageBlob(f); return; }
-    const t = e.clipboardData && e.clipboardData.getData('text/plain');
-    if (t && t.trim() && !LIVE_VIEW) { e.preventDefault(); e.stopImmediatePropagation(); pasteTextAt(t); }
+    const t = e.clipboardData && e.clipboardData.getData('text/plain'), h = e.clipboardData && e.clipboardData.getData('text/html');
+    if (((t && t.trim()) || h) && !LIVE_VIEW) { e.preventDefault(); e.stopImmediatePropagation(); pasteTextAt(t, null, h); }
   }, true);
   stage.addEventListener('dragover', e => { if ([...(e.dataTransfer && e.dataTransfer.items || [])].some(i => i.type.startsWith('image/'))) e.preventDefault(); });
   stage.addEventListener('drop', async e => {
@@ -5884,7 +6008,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     L.lines.forEach((segs, i) => {
       const y = f(t.y + L.base + i * L.lh);
       for (const sg of segs) {
-        const ts = `<tspan x="${f(t.x + TEXT_PAD + sg.x)}" y="${y}"${sg.a ? ` fill="${lc}" text-decoration="underline"` : ''}>${esc(sg.s)}</tspan>`;
+        const fill = sg.c ? (file ? sg.c : displayColor(sg.c, false)) : sg.a ? lc : '';
+        const ts = `<tspan x="${f(t.x + TEXT_PAD + sg.x)}" y="${y}"${fill ? ` fill="${fill}"` : ''}${sg.b ? ' font-weight="700"' : ''}${sg.i ? ' font-style="italic"' : ''}${sg.a ? ' text-decoration="underline"' : ''}>${esc(sg.s)}</tspan>`;
         body += sg.a && file ? `<a href="${esc(sg.a)}" target="_blank">${ts}</a>` : ts;
       }
     });
@@ -5993,7 +6118,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let w = Math.min(90, W - 10);
     if (runs.length) {                             // pasted text: as wide as its longest line, within reason
       measureCtx.font = `${MEAS}px ${TEXT_FONT}`;
-      const longest = Math.max(...runsText(runs).split('\n').map(s => measureCtx.measureText(s).width / MEAS * fmm));
+      const longest = Math.max(...runsText(runs).split('\n').map(s => measureCtx.measureText(s).width / MEAS * fmm)) * 1.08;   // (bold is wider)
       w = Math.max(30, Math.min(W * 0.75, longest + 2 * TEXT_PAD + 1));
     }
     const t = { id: uid(), x: Math.max(0, Math.min(W - w, centred ? q[0] - w / 2 : q[0] - TEXT_PAD)), y: Math.max(0, Math.min(H - 10, q[1] - TEXT_PAD - fmm * TEXT_LH / 2)), w, fs: textCfg.fs, color: textCfg.color, runs };
@@ -6017,8 +6142,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (last < s.length) runs.push({ t: s.slice(last) });
     return cleanRuns(runs);
   }
-  function pasteTextAt(s, q) {
-    const runs = textToRuns(String(s).replace(/\s+$/, ''));
+  function pasteTextAt(s, q, html) {
+    let runs = html ? htmlToRuns(html) : [];
+    if (!runsText(runs).trim()) runs = textToRuns(String(s || '').replace(/\s+$/, ''));
     if (!runsText(runs).trim()) return false;
     const mid = !q;                                // no spot given: in the middle of the view
     if (mid) q = [Math.max(10, Math.min(W - 10, (vw / 2 - view.tx) / S())), Math.max(10, Math.min(H - 20, (vh / 2 - view.ty) / S()))];
@@ -6029,7 +6155,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // paste from the clipboard: a picture or text (Settings → Gestures: hold one finger; also the text tool's menu)
   async function pasteClipboardAt(q, want = 'any') {
     if (LIVE_VIEW) return;
-    let text = '';
+    let text = '', html = '';
     try {
       if (navigator.clipboard && navigator.clipboard.read) {
         const items = await navigator.clipboard.read();
@@ -6037,13 +6163,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           const ty = it.types.find(x => x.startsWith('image/'));
           if (ty) { await insertImageBlob(await it.getType(ty), q); return; }
         }
-        for (const it of items) if (it.types.includes('text/plain')) { text = await (await it.getType('text/plain')).text(); if (text.trim()) break; }
+        for (const it of items) if (it.types.includes('text/plain') || it.types.includes('text/html')) {
+          if (it.types.includes('text/html')) html = await (await it.getType('text/html')).text();
+          if (it.types.includes('text/plain')) text = await (await it.getType('text/plain')).text();
+          if (text.trim() || html) break;
+        }
       } else if (navigator.clipboard && navigator.clipboard.readText) text = await navigator.clipboard.readText();
     } catch (_) {
       try { text = await navigator.clipboard.readText(); }
       catch (__) { toast('The clipboard can’t be read here. Allow it in the browser’s site settings, or paste with the keyboard.', 4000); return; }
     }
-    if (text.trim()) { pasteTextAt(text, q); return; }
+    if (text.trim() || html) { if (pasteTextAt(text, q, html)) return; }
     if (clip && want === 'any') { pasteClip(); return; }        // ink copied in the notebook
     toast(want === 'text' ? 'There is no text in the clipboard.' : 'The clipboard is empty.', 1800);
   }
@@ -6051,32 +6181,70 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Writing in a text box: an editable copy lies exactly over it ----
   const textBar = $('textBar');
   function runsToHtml(runs) {
-    const h = runs.map(r => { const s = esc(r.t).replace(/\n/g, '<br>'); return r.a ? `<a href="${esc(r.a)}">${s}</a>` : s; }).join('');
+    const h = runs.map(r => {
+      let s = esc(r.t).replace(/\n/g, '<br>');
+      if (r.c) s = `<font color="${r.c}">${s}</font>`;
+      if (r.i) s = `<i>${s}</i>`;
+      if (r.b) s = `<b>${s}</b>`;
+      return r.a ? `<a href="${esc(r.a)}">${s}</a>` : s;
+    }).join('');
     return runsText(runs).endsWith('\n') ? h + '<br>' : h;
   }
+  const NO_COLOR = '#010203';                     // "the box's colour": marks text that has no colour of its own
+  function cssHex(v) {                             // any CSS colour → #rrggbb (or '' if none)
+    if (!v || /^(inherit|initial|unset|currentcolor|transparent)$/i.test(v)) return '';
+    measureCtx.fillStyle = '#000'; measureCtx.fillStyle = v;
+    const c = String(measureCtx.fillStyle);
+    if (/^#[0-9a-f]{6}$/i.test(c)) return c.toLowerCase() === NO_COLOR ? '' : c.toLowerCase();
+    const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/.exec(c);
+    if (!m || (m[4] !== undefined && +m[4] < 0.3)) return '';
+    return '#' + [m[1], m[2], m[3]].map(x => Math.round(+x).toString(16).padStart(2, '0')).join('');
+  }
+  // pasted from a web page or another app: text, line breaks, bold, italic, colours and links stay; nothing else
+  function htmlToRuns(html) {
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      doc.querySelectorAll('script, style, head, title, meta, template, noscript, svg, img').forEach(n => n.remove());
+      const runs = domToRuns(doc.body, true);
+      while (runs.length && !runs[0].t.trim()) runs.shift();
+      if (runs.length) runs[0].t = runs[0].t.replace(/^\s+/, '');
+      return cleanRuns(runs);
+    } catch (_) { return []; }
+  }
   // what the browser made of the editing, back to text and links (any other formatting is dropped)
-  function domToRuns(root) {
+  function domToRuns(root, collapse = false) {
     const runs = [];
-    const add = (t, a) => { if (t) runs.push(a ? { t, a } : { t }); };
+    const add = (t, st) => { if (t) runs.push({ t, ...st }); };
     const ends = () => { const s = runsText(runs); return !s || s.endsWith('\n'); };
-    const BLOCK = /^(DIV|P|LI|H[1-6]|BLOCKQUOTE|PRE|UL|OL)$/;
-    const walk = (node, a) => {
+    const BLOCK = /^(DIV|P|LI|H[1-6]|BLOCKQUOTE|PRE|UL|OL|TR|TABLE|SECTION|ARTICLE|HEADER|FOOTER)$/;
+    const walk = (node, st, pre) => {
       for (const n of node.childNodes) {
-        if (n.nodeType === 3) { add(n.nodeValue.replace(/ /g, ' ').replace(/​/g, ''), a); continue; }
-        if (n.nodeType !== 1) continue;
-        if (n.tagName === 'BR') {
-          const p = n.parentNode, lastInBlock = !n.nextSibling && (p === root || BLOCK.test(p.tagName)) && n.previousSibling;
-          if (!lastInBlock || p !== root) { if (!(lastInBlock && BLOCK.test(p.tagName))) add('\n', a); }
-          continue;
+        if (n.nodeType === 3) {
+          let t = n.nodeValue.replace(/\u00a0/g, ' ').replace(/\u200b/g, '');
+          if (collapse && !pre) { t = t.replace(/\s+/g, ' '); if (ends() && t[0] === ' ') t = t.slice(1); }
+          add(t, st); continue;
         }
-        const block = BLOCK.test(n.tagName);
-        if (block && !ends()) add('\n', a);
-        walk(n, n.tagName === 'A' && n.getAttribute('href') ? n.getAttribute('href') : a);
+        if (n.nodeType !== 1) continue;
+        const tag = n.tagName;
+        if (tag === 'BR') { add('\n', st); continue; }
+        const s2 = { ...st }, css = n.style || {};
+        if (tag === 'B' || tag === 'STRONG' || /^H[1-6]$/.test(tag)) s2.b = true;
+        if (tag === 'I' || tag === 'EM') s2.i = true;
+        if (css.fontWeight) s2.b = css.fontWeight === 'bold' || css.fontWeight === 'bolder' || +css.fontWeight >= 600;
+        if (css.fontStyle) s2.i = /italic|oblique/.test(css.fontStyle);
+        const col = tag === 'FONT' && n.getAttribute('color') ? cssHex(n.getAttribute('color')) : css.color ? cssHex(css.color) : null;
+        if (col !== null) { if (col) s2.c = col; else delete s2.c; }
+        if (tag === 'A' && n.getAttribute('href')) { const u = cleanUrl(n.getAttribute('href')); if (u) s2.a = u; }
+        Object.keys(s2).forEach(k => { if (!s2[k]) delete s2[k]; });
+        const block = BLOCK.test(tag);
+        if (block && !ends()) add('\n', {});
+        walk(n, s2, pre || tag === 'PRE');
+        if (collapse && block && !ends()) add('\n', {});
       }
     };
-    walk(root, '');
-    // a trailing <br> the browser keeps only to show an empty last line
-    if (root.lastChild && root.lastChild.nodeName === 'BR' && runs.length && runs[runs.length - 1].t === '\n' && !root.lastChild.previousSibling) runs.pop();
+    walk(root, {}, false);
+    // line breaks at the very end only keep an empty line on screen: dropped
+    while (runs.length) { const r = runs[runs.length - 1], t = r.t.replace(/\n+$/, ''); if (t) { r.t = t; break; } runs.pop(); }
     return runs;
   }
   function startTextEdit(t, cx, cy, isNew = false, before = null) {
@@ -6099,25 +6267,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
     el.addEventListener('beforeinput', e => {      // Enter: a line break, not a new paragraph
       if (e.inputType === 'insertParagraph') { e.preventDefault(); document.execCommand('insertLineBreak'); }
-      if (/^format/.test(e.inputType)) e.preventDefault();     // no bold, italic…: text, size and colour come from the box
+      if (/^format(Underline|StrikeThrough|Superscript|Subscript|Indent|Outdent|Justify|SetBlockTextDirection|BackColor|FontName)/.test(e.inputType)) e.preventDefault();   // bold, italic, colour and links only
     });
     el.addEventListener('paste', e => {
-      const s = e.clipboardData && e.clipboardData.getData('text/plain');
+      const s = e.clipboardData && e.clipboardData.getData('text/plain'), h = e.clipboardData && e.clipboardData.getData('text/html');
       e.preventDefault();
+      const fromHtml = h ? htmlToRuns(h) : [];
+      if (runsText(fromHtml).trim()) { document.execCommand('insertHTML', false, runsToHtml(fromHtml)); return; }
       if (!s) return;
       const u = s.trim();
       if (/^(https?:\/\/|www\.)\S+$/i.test(u) && cleanUrl(u)) document.execCommand('insertHTML', false, `<a href="${esc(cleanUrl(u))}">${esc(u)}</a>`);
       else document.execCommand('insertText', false, s);
     });
     el.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && /^[uU]$/.test(e.key)) { e.preventDefault(); e.stopPropagation(); return; }   // no underline: that means a link
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); commitTextEdit(); }
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); linkFromSelection(); }
       e.stopPropagation();                         // typing is not a shortcut
     });
     el.addEventListener('click', e => e.preventDefault());   // links don't open while writing
     el.focus({ preventScroll: true });
+    try { document.execCommand('styleWithCSS', false, false); } catch (_) {}
     if (cx != null) caretAt(cx, cy); else caretEnd();
     textBar.hidden = false;
+    barState();
     placeTextBar(); keepTextInView();
   }
   function caretEnd() {
@@ -6168,7 +6341,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearTimeout(e.timer);
     const runs = cleanRuns(domToRuns(e.el));
     e.el.remove(); textBar.hidden = true;
-    if (openPop === textPop || openPop === linkPop) closePops();
+    if (openPop === textPop || openPop === linkPop || openPop === $('tcolPop')) closePops();
     const list = textsOf(e.page);
     if (!runsText(runs).trim()) {                    // nothing written: the box goes away
       e.t.runs = JSON.parse(e.orig);
@@ -6181,13 +6354,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // a tap anywhere else ends the writing (on the page with the text tool, or a finger, that is all the tap does)
   document.addEventListener('pointerdown', e => {
-    if (!ted || (e.target.closest && e.target.closest('.texted, #textBar, #textPop, #linkPop, dialog'))) return;
+    if (!ted || (e.target.closest && e.target.closest('.texted, #textBar, #textPop, #linkPop, #tcolPop, dialog'))) return;
     const onStage = stage.contains(e.target) && !(e.target.closest && e.target.closest('#textUi [data-xact]'));
     commitTextEdit();
     if (onStage && (tool === 'text' || e.pointerType === 'touch')) { e.stopPropagation(); e.preventDefault(); }
   }, true);
   textBar.addEventListener('pointerdown', e => { if (e.target.closest('button')) e.preventDefault(); });   // the text keeps its caret and selection
   $('textDone').addEventListener('click', () => commitTextEdit());
+  // bold, italic and colour for the selected words (or for what is typed next)
+  const fmtCmd = (cmd, v) => { if (!ted) return; ted.el.focus({ preventScroll: true }); document.execCommand(cmd, false, v); ted.el.dispatchEvent(new Event('input')); barState(); };
+  $('textB').addEventListener('click', () => fmtCmd('bold'));
+  $('textI').addEventListener('click', () => fmtCmd('italic'));
+  function barState() {
+    if (!ted) return;
+    let b = false, i = false, c = '';
+    try { b = document.queryCommandState('bold'); i = document.queryCommandState('italic'); c = cssHex(document.queryCommandValue('foreColor')); } catch (_) {}
+    $('textB').setAttribute('aria-pressed', String(b)); $('textI').setAttribute('aria-pressed', String(i));
+    $('textColBar').style.setProperty('--tc', c && c !== '#000000' ? c : displayColor(ted.t.color, false));
+  }
+  document.addEventListener('selectionchange', () => { if (ted) barState(); });
+  const tcolPop = $('tcolPop');
+  tcolPop.addEventListener('pointerdown', e => { if (e.target.closest('button')) e.preventDefault(); });   // the selection stays
+  COLORS.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.c = c; b.style.setProperty('--c', c); b.setAttribute('aria-label', 'Colour ' + c);
+    b.addEventListener('click', () => { closePops(); fmtCmd('foreColor', c); });
+    $('tcolSwatches').appendChild(b);
+  });
+  $('tcolBox').addEventListener('click', () => { closePops(); fmtCmd('foreColor', NO_COLOR); });
+  $('textCol').addEventListener('click', () => { if (openPop === tcolPop) closePops(); else showPop(tcolPop, $('textCol')); });
   $('textOpts').addEventListener('click', () => {
     if (!ted) return;
     if (openPop === textPop) { closePops(); return; }
@@ -6283,6 +6478,154 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('textSizeVal').textContent = o.fs + ' pt';
     $('textSwatches').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c.toLowerCase() === String(o.color).toLowerCase())));
   }
+
+  // ---- Bookmarks: the list (toolbar button), a small box on the screen, ribbons on the page thumbnails ----
+  const BM_ICON = '<path d="M6 3.5h12v17l-6-4.5-6 4.5z"/>';
+  const BM_COLORS = ['#d92b1e', '#1f6fd1', '#2f9e41', '#f08a10', '#a92fb4', '#0e9bb8', '#d6336c', '#4b5059'];
+  let bmShow = (v => ['off', 'tl', 'tr'].includes(v) ? v : 'off')(store.get('bmShow', 'off'));
+  let bmThumb = (v => ['off', 'tl', 'tr', 'b'].includes(v) ? v : 'tl')(store.get('bmThumb', 'tl'));
+  const bmPop = $('bmPop'), bmList = $('bmList'), bmBox = $('bmBox'), pickerEl = $('picker');
+  let bmColOpen = null, bmEditing = null;          // the bookmark whose colours are open / whose label is being typed
+  const shownMarks = () => marks.filter(m => pages.includes(m.page));
+  const inkOn = c => { const [r, g, b] = hexToRgb(c); return 0.299 * r + 0.587 * g + 0.114 * b > 0.62 ? '#1a1b1e' : '#ffffff'; };
+  const hereNow = () => ({ page: pages[cur], x: (vw / 2 - view.tx) / S(), y: (vh / 2 - view.ty) / S(), z: view.zoom });
+  function addMark() {
+    if (LIVE_VIEW) return;
+    remember();
+    const used = new Set(marks.map(m => m.color)), color = BM_COLORS.find(c => !used.has(c)) || BM_COLORS[marks.length % BM_COLORS.length];
+    marks.push({ id: uid(), label: '', color, ...hereNow() });
+    scheduleSave(); renderMarks();
+  }
+  function setMark(m) {                            // this bookmark now points here
+    remember();
+    Object.assign(m, hereNow());
+    scheduleSave(); renderMarks();
+    toast(`Bookmark set to page ${cur + 1}.`, 1400);
+  }
+  function goMark(m) {
+    const i = pages.indexOf(m.page);
+    if (i < 0) return;
+    closePops();
+    const z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, m.z)), s = view.fit * z;
+    const to = { zoom: z, tx: vw / 2 - m.x * s, ty: vh / 2 - m.y * s };
+    if (i !== cur) {
+      cur = i; renderPage(); scheduleSave();
+      Object.assign(view, to); clampView(); applyView();
+    } else {                                       // on this page: glide there
+      const was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+      Object.assign(view, to); clampView();
+      const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+      Object.assign(view, was);
+      zoomBack(b);
+    }
+  }
+  function delMark(m) {
+    remember();
+    marks = marks.filter(x => x !== m);
+    scheduleSave(); renderMarks();
+    toast('Bookmark deleted. Undo brings it back.', 1800);
+  }
+  const ribbon = (c, cls = '') => `<svg class="ribbon${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h12v19l-6-4.8-6 4.8z" fill="${c}" stroke="rgba(0,0,0,.25)" stroke-width="1"/></svg>`;
+  function renderMarks() {
+    const list = shownMarks(), pnum = m => pages.indexOf(m.page) + 1;
+    // the list in the menu
+    if (!bmPop.hidden) {
+      if (bmList.contains(pickerEl)) $('customColorBox').after(pickerEl);   // lent picker: keep it out of the redraw
+      bmList.innerHTML = list.length ? list.map(m => {
+        const fg = inkOn(m.color), lbl = m.label || `Page ${pnum(m)}`;
+        return `<div class="bmrow${m.page === pages[cur] ? ' here' : ''}" data-bm="${m.id}">` +
+          `<button type="button" class="bmset" data-bact="set" aria-label="Set this bookmark to the current page, position and zoom" title="Set to here (page, position and zoom)">${svg('<circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>')}</button>` +
+          `<div class="bmbox" style="--c:${m.color};--fg:${fg}">` +
+          `<button type="button" class="bmcol" data-bact="color" aria-label="Colour" aria-expanded="${bmColOpen === m.id}"></button>` +
+          (bmEditing === m.id ? `<input type="text" class="bmlabel-in" data-bact="label-in" maxlength="80" value="${esc(m.label)}" placeholder="Page ${pnum(m)}" aria-label="Label">`
+            : `<button type="button" class="bmlabel${m.label ? '' : ' empty'}" data-bact="label" aria-label="Label: ${esc(lbl)}. Tap to change">${esc(lbl)}${m.label ? `<small>p. ${pnum(m)}</small>` : ''}</button>`) +
+          `<button type="button" class="bmdel" data-bact="del" aria-label="Delete bookmark">${svg('<path d="M7 7l10 10M17 7L7 17"/>')}</button></div>` +
+          `<button type="button" class="bmgo" data-bact="go" aria-label="Go to ${esc(lbl)}" title="Go to the bookmark">${svg('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/>')}</button>` +
+          (bmColOpen === m.id ? `<div class="bmcols">${COLORS.map(c => `<button type="button" data-bact="pick" data-c="${c}" style="--c:${c}" aria-label="Colour ${c}" aria-pressed="${c.toLowerCase() === m.color.toLowerCase()}"></button>`).join('')}` +
+            `<button type="button" class="bmcustom" data-bact="custom" aria-expanded="${pk.open && pickTo && pickTo.mark === m}">Custom colour</button></div>` : '') +
+          '</div>';
+      }).join('') : '<div class="bmnone">No bookmarks yet. Go to a page and spot you want to come back to, then add one.</div>';
+      if (bmColOpen && pk.open && pickTo && pickTo.mark && pickTo.mark.id === bmColOpen) {   // the pen's own colour picker, lent to this bookmark
+        const row = bmList.querySelector(`[data-bm="${bmColOpen}"] .bmcols`);
+        if (row) { row.after(pickerEl); pickerEl.hidden = false; pickerFrom(pickTo.mark.color); paintPicker(); }
+      }
+      if (bmEditing) { const inp = bmList.querySelector('.bmlabel-in'); if (inp && document.activeElement !== inp) { inp.focus(); inp.select(); } }
+      $('bmShowSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === bmShow)));
+      $('bmThumbSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === bmThumb)));
+      if (openPop === bmPop) placePop();
+    }
+    // the box on the screen
+    bmBox.hidden = bmShow === 'off' || !list.length;
+    bmBox.className = 'bmbar ' + bmShow;
+    if (!bmBox.hidden) bmBox.innerHTML = list.map(m => `<button type="button" class="bmtag${m.page === pages[cur] ? ' here' : ''}" data-bm="${m.id}" style="--c:${m.color};--fg:${inkOn(m.color)}" title="${esc(m.label || 'Page ' + pnum(m))}">` +
+      `<span>${esc(m.label || String(pnum(m)))}</span></button>`).join('');
+    updateToolbarState();
+  }
+  bmList.addEventListener('click', e => {
+    const b = e.target.closest('[data-bact]'), row = e.target.closest('[data-bm]');
+    const m = row && marks.find(x => x.id === row.dataset.bm);
+    if (!b || !m) return;
+    const act = b.dataset.bact;
+    if (act === 'set') setMark(m);
+    else if (act === 'go') goMark(m);
+    else if (act === 'del') delMark(m);
+    else if (act === 'label') { bmEditing = m.id; renderMarks(); }
+    else if (act === 'color') { bmColOpen = bmColOpen === m.id ? null : m.id; if (pickTo && pickTo.mark) closeBmPicker(); renderMarks(); }
+    else if (act === 'pick') { remember(); m.color = b.dataset.c; scheduleSave(); if (pickTo) closeBmPicker(); bmColOpen = null; renderMarks(); }
+    else if (act === 'custom') {
+      if (pickTo && pickTo.mark === m) closeBmPicker();
+      else {
+        let snap = snapshot(), first = true;
+        pickTo = hex => { if (first) { remember(snap); first = false; } m.color = hex; scheduleSave(); renderMarksSoon(); };
+        pickTo.mark = m; pk.open = true;
+      }
+      renderMarks();
+    }
+  });
+  let bmFrame = 0;
+  const renderMarksSoon = () => { if (!bmFrame) bmFrame = requestAnimationFrame(() => { bmFrame = 0; paintMarks(); }); };
+  function paintMarks() {                          // colours only, while the picker is dragged (the picker keeps its place)
+    shownMarks().forEach(m => {
+      const fg = inkOn(m.color);
+      bmList.querySelectorAll(`[data-bm="${m.id}"] .bmbox`).forEach(el => { el.style.setProperty('--c', m.color); el.style.setProperty('--fg', fg); });
+      bmBox.querySelectorAll(`[data-bm="${m.id}"]`).forEach(el => { el.style.setProperty('--c', m.color); el.style.setProperty('--fg', fg); });
+    });
+  }
+  function closeBmPicker() {                      // the picker goes back into the pen menu
+    pickTo = null; pk.open = false;
+    pickerEl.hidden = true;
+    $('customColorBox').after(pickerEl);
+  }
+  function endLabel(save) {
+    const inp = bmList.querySelector('.bmlabel-in'), m = marks.find(x => x.id === bmEditing);
+    bmEditing = null;
+    if (save && inp && m && inp.value.trim() !== m.label) { remember(); m.label = inp.value.trim().slice(0, 80); scheduleSave(); }
+    renderMarks();
+  }
+  bmList.addEventListener('keydown', e => {
+    if (!e.target.classList.contains('bmlabel-in')) return;
+    if (e.key === 'Enter') { e.preventDefault(); endLabel(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endLabel(false); }
+  });
+  bmList.addEventListener('focusout', e => { if (e.target.classList.contains('bmlabel-in') && bmEditing) setTimeout(() => { if (bmEditing) endLabel(true); }, 0); });
+  $('bmAdd').addEventListener('click', addMark);
+  $('bmShowSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; bmShow = b.dataset.v; store.set('bmShow', bmShow); renderMarks(); });
+  $('bmThumbSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; bmThumb = b.dataset.v; store.set('bmThumb', bmThumb); renderMarks(); if (!$('overview').hidden) buildOverview(); });
+  bmBox.addEventListener('click', e => { const b = e.target.closest('[data-bm]'), m = b && marks.find(x => x.id === b.dataset.bm); if (m) goMark(m); });
+  function openMarks(anchor) {
+    if (openPop === bmPop) { closePops(); return; }
+    bmColOpen = bmEditing = null;
+    bmPop.hidden = false;                          // (rendered before it is placed)
+    renderMarks();
+    showPop(bmPop, anchor);
+    renderMarks();
+  }
+  // ribbons on a page thumbnail in the overview
+  const thumbMarks = pg => {
+    if (bmThumb === 'off') return '';
+    const l = shownMarks().filter(m => m.page === pg);
+    return l.length ? `<span class="bmthumb ${bmThumb}">${l.map(m => ribbon(m.color)).join('')}</span>` : '';
+  };
 
   // ---- Stroke drawing ----
   let active = null;               // pen: { id, type, pts, sx, sy, color, width, opacity } · eraser: { erase: true, … }
@@ -8520,7 +8863,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
       `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
       `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${textsMarkup(p, 'static')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
-      `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button></div>` +
+      `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button>${thumbMarks(p)}</div>` +
       `<span class="num">${i + 1}</span></div>`
     ).join('') + `<div class="thumb add" role="button" aria-label="Add a page"><div class="paper">+</div><span class="num">New page</span></div>`;
     const m = typeof nbMeta === 'function' && nbMeta();
@@ -8546,7 +8889,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const del = e.target.closest('.del');
     if (!del) return;
     const i = +del.closest('.thumb').dataset.i;
-    if ((pages[i].strokes.length || notesOf(pages[i]).length || imagesOf(pages[i]).length) && !(await ask(`Delete page ${i + 1}?`, 'The page and everything on it is removed. Undo brings it back.', 'Delete'))) return;
+    if ((pages[i].strokes.length || notesOf(pages[i]).length || imagesOf(pages[i]).length || textsOf(pages[i]).length) && !(await ask(`Delete page ${i + 1}?`, 'The page and everything on it is removed. Undo brings it back.', 'Delete'))) return;
     remember();
     pages.splice(i, 1);
     if (!pages.length) pages.push({ strokes: [] });
@@ -8749,6 +9092,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'lasso': return 'Select';
       case 'sticky': return `Sticky notes · ${notesShown ? 'shown' : 'hidden'}`;
       case 'text': return `Text · ${textCfg.fs} pt`;
+      case 'bookmark': return `Bookmarks · ${shownMarks().length}`;
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
@@ -8959,13 +9303,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pageSig = pg => JSON.stringify(Object.fromEntries(Object.entries(pg).filter(([k]) => k !== 'strokes')));
   function markSent(i) { const pg = pages[i]; lv.sent.set(pg, { refs: pg.strokes.slice(), sig: pageSig(pg) }); }   // stroke objects are never changed in place
   async function liveSnap(pass) {                 // the whole notebook; the relay forgets what came before it
-    const d = await liveEnc(lv.key, { t: 'snap', setup, cur, pages });
+    const d = await liveEnc(lv.key, { t: 'snap', setup, cur, pages, marks: marksOut() });
     if (lv.seq) await liveUploadImages(pageImgIds(pages));        // pictures first, so viewers find them
     const r = await liveReq(lv.sid, 'a=snap', d, lv.tok, pass);   // (the first one also opens the session)
     await liveUploadImages(pageImgIds(pages));
     lv.seq = r.n;                                  // viewers further back start over from this snapshot
     pages.forEach((_, i) => markSent(i));
-    lv.order = pages.slice(); lv.setupSig = JSON.stringify(setup); lv.lastSnap = Date.now(); lv.changedSinceSnap = false;
+    lv.order = pages.slice(); lv.setupSig = JSON.stringify(setup); lv.marksSig = JSON.stringify(marksOut()); lv.lastSnap = Date.now(); lv.changedSinceSnap = false;
   }
   function lvDirty() { if (lv) { lv.dirty = true; lv.changedSinceSnap = true; lvKick(); } }
   function lvNav() { if (lv) { lv.nav = true; lvKick(); } }
@@ -8976,7 +9320,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     s.busy = true;
     try {
       while (lv === s) {
-        const structural = pages.length !== s.order.length || pages.some((p, i) => p !== s.order[i]) || JSON.stringify(setup) !== s.setupSig;
+        const structural = pages.length !== s.order.length || pages.some((p, i) => p !== s.order[i]) || JSON.stringify(setup) !== s.setupSig || JSON.stringify(marksOut()) !== s.marksSig;
         if (structural || s.force || (s.changedSinceSnap && Date.now() - s.lastSnap > 60000)) { s.dirty = false; s.force = false; await liveSnap(); s.nav = true; continue; }
         const msgs = [];
         if (s.dirty) {
@@ -9086,7 +9430,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (m.t === 'snap') {
       v.hostCur = m.cur; v.hostN = m.pages.length;
       const keep = v.follow ? m.cur : Math.min(cur, m.pages.length - 1);
-      showNotebook({ v: 3, pages: m.pages, cur: keep, setup: m.setup });
+      showNotebook({ v: 3, pages: m.pages, cur: keep, setup: m.setup, marks: m.marks });
       viewerImages();
     } else if (m.t === 'page' || m.t === 'add') {
       if (!pages[m.i]) return;
