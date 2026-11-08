@@ -332,10 +332,15 @@
   .bmbar.tr .bmtag.here { padding-right: calc(env(safe-area-inset-right, 0px) + 18px); }
   .bmtag:active { transform: scaleX(1.06); }
   .bmthumb { position: absolute; display: flex; gap: 1px; pointer-events: none; z-index: 2; }
-  .thumb .paper .bmthumb svg.ribbon { position: static; inset: auto; width: 15px; height: 20px; display: block; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
-  .bmthumb.tl { left: 6%; top: -3px; }
-  .bmthumb.tr { right: 26px; top: -3px; }
-  .bmthumb.b { left: 6%; bottom: -12px; }
+  .bmthumb svg.ribbon, .thumb .paper .bmthumb svg.ribbon, .stile > .bmthumb svg.ribbon { position: static; inset: auto; width: 21px; height: 28px; display: block; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.3)); }
+  .bmthumb.tl { left: 6%; top: -4px; }
+  .bmthumb.tr { right: 28px; top: -4px; }
+  .bmthumb.b { left: 6%; bottom: -16px; }
+  .stile > .bmthumb.tr, .page .bmthumb.tr { right: 6%; }
+  .stile > .bmthumb svg.ribbon, .page .pbm .bmthumb svg.ribbon { width: 30px; height: 40px; }
+  .stile > .bmthumb.b, .page .pbm .bmthumb.b { bottom: -22px; }
+  .pbm { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 3; }
+  .page.turning .pbm { opacity: 1; }
   .tsizerow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .tsizerow h3 { margin: 0; }
   .linkurl { width: 100%; box-sizing: border-box; height: 40px; padding: 0 10px; margin: 2px 0 10px; border: 1px solid var(--bar-line); border-radius: 9px;
@@ -1207,7 +1212,7 @@
       <path class="grid" fill="none" stroke-width="0.15"/>
       <g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
     </svg>
-    <span class="pnum"></span>
+    <span class="pnum"></span><span class="pbm"></span>
     <div class="shade"></div>
   </div>
   <div class="page" id="page">
@@ -1224,7 +1229,7 @@
       <g class="sel-layer" id="selLayer"></g>
       <g class="mag-layer" id="magLayer"></g>
     </svg>
-    <span class="pnum"></span>
+    <span class="pnum"></span><span class="pbm"></span>
     <div class="shade"></div>
   </div>
   <div class="livewrap" id="liveWrap">
@@ -1900,8 +1905,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_129';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.6';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_130';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.7';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6632,8 +6637,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     renderMarks();
   }
   // ribbons on a page thumbnail in the overview
+  // (the same ribbons hang on the pages while you turn or slide through them)
   const thumbMarks = pg => {
-    if (bmThumb === 'off') return '';
+    if (bmThumb === 'off' || !pg) return '';
     const l = shownMarks().filter(m => m.page === pg);
     return l.length ? `<span class="bmthumb ${bmThumb}">${l.map(m => ribbon(m.color)).join('')}</span>` : '';
   };
@@ -7823,6 +7829,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sh.classList.toggle('cover', !!kind);
     sh.querySelector('.ink').innerHTML = kind === 'front' ? frontCover() : kind ? '' : i < pages.length ? imagesMarkup(pages[i]) + inkMarkup(pages[i].strokes) + imagesMarkup(pages[i], undefined, true) + notesMarkup(pages[i]) : '';
     sh.querySelector('.pnum').textContent = kind ? '' : i < pages.length ? i + 1 : 'new';
+    sh.querySelector('.pbm').innerHTML = kind ? '' : thumbMarks(pages[i]);
     sh.style.zIndex = z;
     sh.hidden = false;
   }
@@ -7856,6 +7863,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const sheets = [pageEl];
     pageEl.style.zIndex = 10 + maxN;
     pageEl.querySelector('.pnum').textContent = cur + 1;
+    pageEl.querySelector('.pbm').innerHTML = thumbMarks(pages[cur]);
     for (let k = 1; k < maxN; k++) { const sh = sheetAt(k - 1); fillSheet(sh, cur + dir * k, 10 + maxN - k); sheets.push(sh); }
     fillSheet(sheetAt(maxN - 1), cur + dir * maxN, 10, cover ? 'back' : null);
     sheets.forEach(sh => { sh.classList.add('turning'); sh.classList.toggle('from-left', dir < 0); });
@@ -8252,7 +8260,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         el = document.createElement('div');
         el.className = 'stile' + (i < 0 || i >= pages.length ? ' cover' : '');
         el.style.width = g.pw + 'px'; el.style.height = g.ph + 'px';
-        el.innerHTML = tileMarkup(i) + `<span class="snum">${i < 0 ? '' : i >= pages.length ? 'New page' : i + 1}</span>`;
+        el.innerHTML = tileMarkup(i) + `<span class="snum">${i < 0 ? '' : i >= pages.length ? 'New page' : i + 1}</span>` + (i >= 0 ? thumbMarks(pages[i]) : '');
         $('stripIn').appendChild(el); st.tiles.set(i, el);
       }
       const d = Math.abs(i - c), sc = 1 + 0.1 * Math.max(0, 1 - d);      // the page in the middle grows to 110 %
