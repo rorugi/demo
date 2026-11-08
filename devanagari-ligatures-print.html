@@ -34,9 +34,9 @@ body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-si
 .bar button:hover{border-color:var(--sa)}
 .bar button:focus-visible,.bar a:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
 
-.sheet{max-width:210mm;margin:0 auto 32px;background:#fff;padding:12mm 12mm 10mm;box-shadow:0 2px 14px rgba(0,0,0,.12)}
+.sheet{max-width:210mm;margin:0 auto 32px;background:#fff;padding:12mm 10mm 10mm 20mm;box-shadow:0 2px 14px rgba(0,0,0,.12)}
 header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1.5px solid var(--fg);padding-bottom:6px;margin-bottom:2mm}
-h1{margin:0;font-size:22px;line-height:1.2;font-weight:600}
+h1{margin:0;font-size:22px;line-height:1.2;font-weight:600;white-space:nowrap}
 h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
 .key{display:flex;gap:14px;font-size:13px;white-space:nowrap}
 .key span{display:inline-flex;align-items:center;gap:6px}
@@ -49,7 +49,7 @@ h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
 .cell{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1mm 1mm 1.4mm;display:grid;justify-items:center;position:relative;break-inside:avoid}
 .cell .n{position:absolute;left:4px;top:2px;font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
 .duo{display:flex;gap:2.5mm;align-items:center;justify-content:center}
-.duo span{font-size:29px;line-height:1.38;white-space:nowrap}
+.duo span{font-size:29px;line-height:1.32;white-space:nowrap}
 .duo .sa{color:var(--sa)}
 .duo .no{font-family:"Uttara",serif;color:var(--no)}
 .nw .duo{gap:2mm}
@@ -58,10 +58,11 @@ h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
 .tier .k b{font-weight:400;font-size:15px;margin-right:3px}
 .tier .k .no{font-family:"Uttara",serif;color:var(--no)}
 .tier .k .sa{color:var(--sa)}
-.tier .k .hi{color:var(--fg)}
+.tier .k .hi{color:#000}
 .intro{margin:-1mm 0 2mm;font-size:11.5px;color:var(--muted)}
-.cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3}
-.cap .dv{font-family:var(--f-hi);font-size:13.5px;color:var(--fg)}
+.cap{font-size:11.5px;color:#000;white-space:nowrap;line-height:1.3}
+.cap .dv{font-family:var(--f-hi);font-size:13.5px;color:#000}
+.duo .hi,.key .hi{color:#000}
 footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
 
 @media (max-width:640px){
@@ -69,7 +70,7 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
   .grid{grid-template-columns:repeat(3,1fr)}
   header{flex-direction:column;align-items:flex-start}
 }
-@page{size:A4 portrait;margin:9mm 10mm}
+@page{size:A4 portrait;margin:9mm 10mm 9mm 20mm}
 @media print{
   body{background:#fff}
   .bar{display:none}
@@ -91,8 +92,8 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
   <header>
     <h1>Devanagari ligatures <small>The most important conjuncts, in order of importance</small></h1>
     <div class="key">
-      <span><b class="hi">क</b>Hindi · Tiro Devanagari Hindi</span>
-      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro Devanagari Sanskrit</span>
+      <span><b class="hi">क</b>Hindi · Tiro</span>
+      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro</span>
     </div>
   </header>
   <div id="tiers1"></div>
@@ -106,8 +107,8 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
   <header>
     <h1>Devanagari ligatures <small>Continued: further forms, and northern letter shapes</small></h1>
     <div class="key">
-      <span><b class="hi">क</b>Hindi · Tiro Devanagari Hindi</span>
-      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro Devanagari Sanskrit</span>
+      <span><b class="hi">क</b>Hindi · Tiro</span>
+      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro</span>
     </div>
   </header>
   <div id="tiers2"></div>
