@@ -27,6 +27,8 @@
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
 .hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa);color:var(--sa)} .no{font-family:var(--f-no);color:var(--no)} .mr{font-family:var(--f-mr);color:var(--mr)}
+/* the first selected tradition prints in black; only the differing forms of the others keep their colour */
+.duo .pri,.key .pri{color:#000}
 
 .bar{max-width:297mm;margin:0 auto;padding:14px 4px 10px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
 .bar a{color:var(--muted);text-decoration:none;font-size:14px}
@@ -89,8 +91,9 @@ h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;col
 .vt .duo span{font-size:28px}
 .vt.g3 .duo{gap:1.8mm}
 .vt.g3 .duo span{font-size:24px}
-.cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3;text-align:center}
-.cap .ipa{color:#8a938e}
+.cap{font-size:11.5px;color:#000;white-space:nowrap;line-height:1.3;text-align:center}
+.cap .ipa{color:#000}
+.cap small{color:var(--muted)}
 .cap small{display:block;font-size:10px;line-height:1.15}
 /* the three small sections: smaller letters, one-line captions */
 .xc .duo span,.sig .duo span,.dig .duo span{font-size:25px;line-height:1.1}
@@ -105,7 +108,7 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
 @media (max-width:1150px){ body{overflow-x:auto} }
 /* Portrait: vowels on top in two blocks, consonants, signs and digits below */
 .pt .bar{max-width:210mm}
-.pt .sheet{width:210mm;padding:9mm 12mm 8mm}
+.pt .sheet{width:210mm;padding:9mm 9mm 8mm 20mm}
 .pt header{flex-wrap:wrap}
 .pt h1 small{display:block;margin-left:0}
 .pt .cols{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"v" "c" "x" "s" "d"}
@@ -201,6 +204,7 @@ const TRAD = [
 ];
 const ALL = TRAD.map(t => t.id);
 let on = new Set(["sa"]);
+const primary = () => ALL.find(f => on.has(f));
 
 // Where the fonts draw a form differently (Tiro outlines compared with HarfBuzz; Uttara checked by eye).
 // Shape 0 = the Tiro Hindi form. Tiro Marathi uses the Sanskrit form for ल श and the digits, the Hindi form otherwise.
@@ -229,7 +233,7 @@ function forms(t, tags = ALL){
 }
 function glyphs(list){
   const duo = el("duo");
-  list.forEach(([f, x]) => { const s = document.createElement("span"); s.className = f; s.lang = TRAD.find(t => t.id === f).lang; s.textContent = x; duo.append(s); });
+  list.forEach(([f, x]) => { const s = document.createElement("span"); s.className = f + (f === primary() ? " pri" : ""); s.lang = TRAD.find(t => t.id === f).lang; s.textContent = x; duo.append(s); });
   return duo;
 }
 // A tile, or null when no switched-on tradition has the letter
@@ -351,7 +355,7 @@ function buildKey(){
   const k = $("key"); k.replaceChildren();
   TRAD.filter(t => on.has(t.id)).forEach(t => {
     const s = document.createElement("span");
-    const b = document.createElement("b"); b.className = t.id; b.lang = t.lang; b.textContent = "क";
+    const b = document.createElement("b"); b.className = t.id + (t.id === primary() ? " pri" : ""); b.lang = t.lang; b.textContent = "क";
     const f = document.createElement("i"); f.className = "kf"; f.textContent = "\u00a0· " + t.font;
     s.append(b, t.name, f); k.append(s);
   });
@@ -368,7 +372,7 @@ function save(){
 }
 function render(){
   document.body.classList.toggle("pt", portrait);
-  $("page").textContent = `@page{size:A4 ${portrait ? "portrait" : "landscape"};margin:7mm 9mm}`;
+  $("page").textContent = portrait ? "@page{size:A4 portrait;margin:7mm 9mm 7mm 20mm}" : "@page{size:A4 landscape;margin:7mm 9mm}";
   $("oLand").setAttribute("aria-pressed", !portrait); $("oPort").setAttribute("aria-pressed", portrait);
   document.querySelectorAll(".trad input").forEach(i => i.checked = on.has(i.value));
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();
