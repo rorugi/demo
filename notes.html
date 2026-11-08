@@ -816,6 +816,18 @@
   /* ---------- desk + sheets ---------- */
   /* The desk is its own layer permanently, so zooming out during a flip only moves pixels on the
      GPU instead of redrawing the pages (redrawing caused the flicker). The body clips the screen. */
+  /* something takes a while (saving, opening, a PDF): it says what is going on */
+  .busy { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 12px;
+    min-width: 240px; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 14px; background: var(--panel); color: var(--bar-fg); border: 1px solid var(--bar-line);
+    box-shadow: 0 6px 24px rgba(0,0,0,.22); font: 500 14px/1.3 var(--ui); }
+  .busy[hidden] { display: none; }
+  .busy .spin { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 2.5px solid var(--bar-line); border-top-color: var(--bar-fg); animation: busyspin .8s linear infinite; }
+  @keyframes busyspin { to { transform: rotate(360deg); } }
+  .busy .btxt { display: grid; gap: 6px; flex: 1; min-width: 0; }
+  .busy .bbar { height: 4px; border-radius: 2px; background: var(--bar-line); overflow: hidden; }
+  .busy .bbar i { display: block; height: 100%; width: 0; background: var(--bar-fg); transition: width .2s; }
+  .busy .bbar.any i { width: 30%; animation: busyany 1.1s ease-in-out infinite; }
+  @keyframes busyany { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
   .livechip { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); z-index: 55;
     display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 10px; border-radius: 999px; background: var(--panel); color: var(--bar-fg);
     box-shadow: 0 2px 10px rgba(0,0,0,.18); border: 1px solid var(--bar-line); font: 600 13px/1 var(--ui); cursor: pointer; user-select: none; }
@@ -1608,6 +1620,7 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="appDefs"></defs></svg>
 <div class="fingtag" id="fingTag" hidden>Erasing</div>
 <div class="livechip" id="liveChip" hidden></div>
+<div class="busy" id="busy" role="status" aria-live="polite" hidden><span class="spin" aria-hidden="true"></span><span class="btxt"><span id="busyText"></span><span class="bbar"><i id="busyBar"></i></span></span></div>
 <div class="strip" id="strip" hidden><div class="strip-in" id="stripIn"></div></div>
 <div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
@@ -1946,8 +1959,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_147';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.24';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_148';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.25';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2652,6 +2665,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return L;
   }
   const textH = t => textLayout(t).h;
+  // ---- "busy": a small panel while something takes a while; frac 0…1 shows a bar, without it the bar just runs ----
+  let busyDepth = 0;
+  const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+  async function busy(text, frac) {
+    const el = $('busy'), bar = $('busyBar');
+    el.hidden = false; $('busyText').textContent = text;
+    bar.parentNode.classList.toggle('any', frac == null);
+    bar.style.width = frac == null ? '' : Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%';
+    await nextFrame();                             // let it show before the work goes on
+  }
+  function busyEnd() { $('busy').hidden = true; }
+  async function busyWhile(text, fn) {             // shows "text" while fn runs (nested: the outer one keeps it)
+    busyDepth++;
+    try { await busy(text); return await fn(); }
+    finally { if (--busyDepth === 0) busyEnd(); }
+  }
   const textLayer = $('textLayer'), textUi = $('textUi'), textPop = $('textPop');
   let ted = null;                                  // writing in a box: { t, el, page, before, isNew, orig, timer }
   let textEdit = { kind: 'tool' };                 // what the text menu changes: the tool, or one box
@@ -4334,7 +4363,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     store.set('saveFmt2', fmt);
     saveDlg.close();
     const m = nbMeta(), rev = m.rev;                 // what is written now; later changes stay unsaved
-    const file = await notebookFile(fmt, name);
+    let file;
+    try { file = await busyWhile(`Saving ${name}…`, () => notebookFile(fmt, name)); }
+    catch (err) { toast(`Saving failed: ${(err && (err.message || err.name)) || 'unknown error'}`, 6000); return; }
     let saved;
     if (share) saved = await shareFiles([file]) ? file.name : null;
     else saved = fmt === 'html' ? await saveBlob(file, file.name, 'RRnotes notebook (web page)', 'text/html', '.html')
@@ -4371,6 +4402,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     {
       const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
       if (doc.querySelector('parsererror')) throw new Error('parse');
+      if (doc.querySelector('desc.rr-pdf') && busyDepth) await busy('Reading the PDF…');
       const pdfMap = await readFilePdfs(doc);
       const rootEl = doc.documentElement, A = n => rootEl.getAttribute(n);
       try { newMarks = JSON.parse(A('data-bookmarks') || '[]'); } catch (_) {}
@@ -4430,16 +4462,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (isPdfHead(head) || /\.pdf$/i.test(file.name)) { openPdfFile(file); return; }   // a PDF: written on as page backgrounds
     if (isZip(head) || /\.html?$/i.test(file.name) || /<!doctype html|data-rrnotes-collection/i.test(new TextDecoder().decode(head))) { loadAll(file); return; }
     let newPages, newSetup, newMarks;
+    busyDepth++;
     try {
-      ({ pages: newPages, setup: newSetup, marks: newMarks } = await parseNotebook(await readNotebookText(file)));
-    } catch (err) {
-      toast(`${file.name} isn't an RRnotes notebook. Choose an SVG saved from RRnotes.`);
-      return;
-    }
-    dropBlank();
-    const meta = newMeta(fileBase(file.name));
-    Object.assign(meta, { savedName: file.name, savedAt: Date.now(), pages: newPages.length });
-    await addNotebook(meta, { pages: newPages, cur: 0, setup: newSetup, marks: newMarks });
+      await busy(`Opening ${file.name}…`);
+      try {
+        ({ pages: newPages, setup: newSetup, marks: newMarks } = await parseNotebook(await readNotebookText(file)));
+      } catch (err) {
+        toast(`${file.name} isn't an RRnotes notebook. Choose an SVG saved from RRnotes.`);
+        return;
+      }
+      dropBlank();
+      const meta = newMeta(fileBase(file.name));
+      Object.assign(meta, { savedName: file.name, savedAt: Date.now(), pages: newPages.length });
+      await addNotebook(meta, { pages: newPages, cur: 0, setup: newSetup, marks: newMarks });
+    } finally { if (--busyDepth === 0) busyEnd(); }
     addRecent(file.name);
     if (nbDlg.open) renderNbDlg();
     toast(`Opened ${file.name} · ${pages.length} ${pages.length === 1 ? 'page' : 'pages'}`);
@@ -4678,28 +4714,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const toBase64 = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
   async function saveAll(share, fmt = 'zip', fileName = `RRnotes_${stamp()}`) {
-    await flushSave();
-    const files = [], names = new Set(), enc = new TextEncoder();
-    for (const m of nbIdx.loaded) {
-      const isCur = m.id === nbIdx.current, rec = isCur ? { pages, setup } : await readNotebook(m.id);
-      if (!rec || !Array.isArray(rec.pages)) continue;
-      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts), ...(cleanBg(p.bg) ? { bg: cleanBg(p.bg) } : {}) }));
-      if (!hasContent(pgs) && !m.savedName) continue;            // empty and never saved: nothing to keep
-      let base = (m.name || 'Notebook').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Notebook', name = base + '.svg', i = 2;
-      while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
-      names.add(name.toLowerCase());
-      const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup), isCur ? marksOut() : (Array.isArray(rec.marks) ? rec.marks : []));
-      files.push({ name, m, rev: m.rev, svg: svgText, pages: pgs.length, data: enc.encode(svgText) });
-    }
-    if (!files.length) { toast('Nothing to save yet'); return; }
-    let out;
-    if (fmt === 'zip') out = new File([await makeZip(files.map(f => ({ name: f.name, data: f.data })))], fileName + '.zip', { type: 'application/zip' });
-    else {
-      const d = new Date(), title = `RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}`;
-      const body = collectionBody(files, `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-      const packed = fmt === 'packed' ? toBase64(await streamBytes(enc.encode(body), new CompressionStream('gzip'))) : null;
-      out = new File([collectionPage(body, title, packed)], fileName + '.html', { type: 'text/html' });
-    }
+    let out, files;
+    try { [out, files] = await busyWhile('Saving all notebooks…', () => buildAll(fmt, fileName)); }
+    catch (err) { toast(`Saving failed: ${(err && (err.message || err.name)) || 'unknown error'}`, 6000); return; }
+    if (!out) return;
     let saved;
     if (share) saved = await shareFiles([out]) ? out.name : null;
     else saved = fmt === 'zip' ? await saveBlob(out, out.name, 'RRnotes notebooks (ZIP)', 'application/zip', '.zip')
@@ -4710,6 +4728,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     addRecent(saved);
     if (nbDlg.open) renderNbDlg();
     toast(`${share ? 'Shared' : 'Saved'} ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'} in ${saved}`);
+  }
+  async function buildAll(fmt, fileName) {
+    await flushSave();
+    const files = [], names = new Set(), enc = new TextEncoder();
+    for (const m of nbIdx.loaded) {
+      const isCur = m.id === nbIdx.current, rec = isCur ? { pages, setup } : await readNotebook(m.id);
+      if (!rec || !Array.isArray(rec.pages)) continue;
+      const pgs = isCur ? pages : rec.pages.map(p => ({ strokes: (p.strokes || []).map(cleanStroke).filter(Boolean), notes: cleanNotes(p.notes), images: cleanImages(p.images), texts: cleanTexts(p.texts), ...(cleanBg(p.bg) ? { bg: cleanBg(p.bg) } : {}) }));
+      if (!hasContent(pgs) && !m.savedName) continue;            // empty and never saved: nothing to keep
+      let base = (m.name || 'Notebook').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Notebook', name = base + '.svg', i = 2;
+      while (names.has(name.toLowerCase())) name = `${base} (${i++}).svg`;
+      names.add(name.toLowerCase());
+      await busy(`Saving ${m.name}…`);
+      const svgText = await notebookSVG(pgs, cleanSetup(isCur ? setup : rec.setup), isCur ? marksOut() : (Array.isArray(rec.marks) ? rec.marks : []));
+      files.push({ name, m, rev: m.rev, svg: svgText, pages: pgs.length, data: enc.encode(svgText) });
+    }
+    if (!files.length) { toast('Nothing to save yet'); return []; }
+    let out;
+    if (fmt === 'zip') out = new File([await makeZip(files.map(f => ({ name: f.name, data: f.data })))], fileName + '.zip', { type: 'application/zip' });
+    else {
+      const d = new Date(), title = `RRnotes · ${files.length} ${files.length === 1 ? 'notebook' : 'notebooks'}`;
+      const body = collectionBody(files, `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      const packed = fmt === 'packed' ? toBase64(await streamBytes(enc.encode(body), new CompressionStream('gzip'))) : null;
+      out = new File([collectionPage(body, title, packed)], fileName + '.html', { type: 'text/html' });
+    }
+    return [out, files];
   }
   // the notebooks in a collection file: [{ name, text }] from a ZIP, a web page or a packed web page
   async function collectionEntries(file) {
@@ -4763,10 +4807,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   async function loadAll(file) {
     let entries;
-    try { entries = await collectionEntries(file); }
-    catch (_) { toast(`${file.name} can’t be read as a notebook collection.`); return; }
+    busyDepth++;
     let list = [];
-    for (const f of entries) { try { list.push({ ...f, nb: await parseNotebook(f.text) }); } catch (_) {} }
+    try {
+      await busy(`Opening ${file.name}…`);
+      try { entries = await collectionEntries(file); }
+      catch (_) { toast(`${file.name} can’t be read as a notebook collection.`); return; }
+      let k = 0;
+      for (const f of entries) { await busy(`Reading ${fileBase(f.name)}…`, k++ / entries.length); try { list.push({ ...f, nb: await parseNotebook(f.text) }); } catch (_) {} }
+    } finally { if (--busyDepth === 0) busyEnd(); }
     if (!list.length) { toast(`No RRnotes notebooks found in ${file.name}`); return; }
     if (list.length > 1) { list = await pickNotebooks(file, list); if (!list || !list.length) return; }
     await flushSave();
@@ -5006,18 +5055,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     store.set('pdfGrid', grid); store.set('pdfNotes', withNotes);
     const name = $('pdfName').value.trim().replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-') || `RRnotes_${stamp()}`;
     pdfDlg.close();
+    busyDepth++;
+    await busy(`Creating ${name}.pdf…`);
     try {
       const withBg = list.some(pg => pg.bg);
       let blob = await buildPdf(list, grid && !withBg, name, withNotes);
       if (withBg) {                                // the grid goes under the PDF pages: built on its own
-        if (list.filter(pg => pg.bg).length > 3) toast('Adding the PDF pages…', 1500);
+        await busy('Adding the PDF pages…');
         const gridPdf = grid ? await buildPdf(list.map(() => ({ strokes: [] })), true, name, false) : null;
         try { blob = await withPdfBackgrounds(blob, list, name, gridPdf); }
         catch (_) { toast('The PDF pages could not be added: the PDF tool loads once from the internet. Check the connection.', 5000); return; }
       }
+      if (--busyDepth === 0) busyEnd();
       if (share) shareFiles([new File([blob], name + '.pdf', { type: 'application/pdf' })]);
       else saveBlob(blob, name + '.pdf', 'PDF document', 'application/pdf', '.pdf');
     } catch (err) { toast('The PDF could not be created.'); }
+    finally { if (busyDepth > 0 && --busyDepth === 0) busyEnd(); }
   }
   const pdfNum = v => { const t = (Math.round(v * 1000) / 1000).toString(); return t === '-0' ? '0' : t; };
   const hexRgb = h => hexToRgb(h).map(v => pdfNum(v)).join(' ');
@@ -6961,12 +7014,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function openPdfFile(file) {
     if (LIVE_VIEW) return;
     if (file.size > PDF_WARN_MB * 1e6 && !(await ask('Large PDF', `${file.name} is ${Math.round(file.size / 1e6)} MB. It is kept in the browser and in every saved notebook file, which then also become this large. Open it anyway?`, 'Open'))) return;
-    toast('Opening the PDF…', 1500);
     let lib, doc;
-    try { lib = await pdfjs(); }
-    catch (_) { toast('The PDF viewer could not be loaded. It comes from the internet the first time: check the connection.', 5000); return; }
-    try { doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise; }
-    catch (e) { toast(e && e.name === 'PasswordException' ? 'This PDF is protected with a password. Open an unprotected copy.' : `${file.name} can't be read as a PDF.`, 5000); return; }
+    busyDepth++;
+    try {
+      await busy(`Opening ${file.name}…`);
+      try { lib = await pdfjs(); }
+      catch (_) { toast('The PDF viewer could not be loaded. It comes from the internet the first time: check the connection.', 5000); return; }
+      try { doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise; }
+      catch (e) { toast(e && e.name === 'PasswordException' ? 'This PDF is protected with a password. Open an unprotected copy.' : `${file.name} can't be read as a PDF.`, 5000); return; }
+    } finally { if (--busyDepth === 0) busyEnd(); }
     if (doc.numPages > PDF_WARN_PAGES && !(await ask('Many pages', `${file.name} has ${doc.numPages} pages. That many pages can make the notebook slow. Open it anyway?`, 'Open'))) return;
     const vp = (await doc.getPage(1)).getViewport({ scale: 1 }), mm = v => v * 25.4 / 72;
     pdfPending = { file, doc, n: doc.numPages, size: [mm(vp.width), mm(vp.height)] };
@@ -7003,11 +7059,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!list) { toast(`Enter page numbers between 1 and ${p.n}, like 1-3, 7.`, 2500); return; }
     const where = pdfOpenDlg.querySelector('input[name="pdfWhere"]:checked').value, pos = $('pdfPos').value;
     pdfOpenDlg.close(); pdfPending = null;
+    busyDepth++;
+    try { await pdfAdd(p, list, where, pos); }
+    finally { if (--busyDepth === 0) busyEnd(); }
+  });
+  async function pdfAdd(p, list, where, pos) {
+    await busy('Storing the PDF…');
     let id;
     try { id = await storePdf(p.file, p.file.name); } catch (_) { return; }
     pdfStore.get(id).doc = Promise.resolve(p.doc);
     const sizes = [];
-    for (const n of list) { const v = (await p.doc.getPage(n)).getViewport({ scale: 1 }); sizes.push([v.width * 25.4 / 72, v.height * 25.4 / 72]); }
+    for (const [i, n] of list.entries()) {
+      if (i % 10 === 0) await busy(`Reading page sizes ${i + 1} of ${list.length}…`, i / list.length);
+      const v = (await p.doc.getPage(n)).getViewport({ scale: 1 }); sizes.push([v.width * 25.4 / 72, v.height * 25.4 / 72]);
+    }
     const fit = (n, i, PW, PH) => {               // the PDF page fitted into the notebook page, centred
       const [w0, h0] = sizes[i], k = Math.min(PW / w0, PH / h0), w = w0 * k, h = h0 * k;
       return { pdf: id, n, x: (PW - w) / 2, y: (PH - h) / 2, w, h };
@@ -7033,7 +7098,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       renderPage(); scheduleSave();
       toast(`${add.length} PDF ${add.length === 1 ? 'page' : 'pages'} added`, 2000);
     }
-  });
+  }
   // removing the background of a page (Eraser menu); Undo brings it back
   $('bgRemove').addEventListener('click', async () => {
     closePops();
@@ -7052,7 +7117,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     for (const pg of todo) {
       const k = bgKey(pg.bg);
       if (pics.has(k)) continue;
-      if (todo.length > 6 && ++i % 5 === 1) toast(`Preparing PDF pages ${i}/${todo.length}…`, 1500);
+      i++;
+      if (busyDepth) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
       try {
         const r = bgRast.L.get(k) || await (await renderPdfPage(pg.bg, 1400)).done;
         pics.set(k, await blobData(r.blob));
