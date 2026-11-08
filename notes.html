@@ -1464,7 +1464,7 @@
     <div class="imgsizebox">
       <span>One finger in stylus mode<span class="sub" id="fingSub"></span></span>
       <select class="dd" id="fingAct" aria-label="One finger in stylus mode">
-        <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option><option value="swipe">Swipe between pages</option>
+        <option value="off">Nothing</option><option value="pan">Move the page</option><option value="erase">Erase</option><option value="lasso">Select (lasso)</option><option value="hl">Highlighter</option><option value="swipe">Swipe between pages</option><option value="swipelasso">Swipe pages + lasso</option>
       </select>
       <span>Hold time<span class="sub" id="holdTimeSub"></span></span>
       <div class="seg three" id="holdTimes">
@@ -1946,8 +1946,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_146';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.23';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_147';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.24';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8953,7 +8953,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const FING = { off: 'Fingers tap, hold, zoom and turn pages, but leave the page alone', pan: 'Drag to move the page; taps and double taps work as before',
     erase: 'The finger erases (eraser settings); the stylus keeps writing', lasso: 'The finger draws a lasso to select and move ink',
     hl: 'The finger highlights with your highlighter preset; the stylus keeps its pen',
-    swipe: 'Swipe left or right to turn the page (zoom and place stay); a longer swipe runs through the pages' };
+    swipe: 'Swipe left or right to turn the page (zoom and place stay); a longer swipe runs through the pages',
+    swipelasso: 'Sideways: swipe between pages. Up or down: a lasso. The first 40 px decide' };
   let fingAct = (v => FING[v] ? v : 'off')(store.get('fingAct', 'off'));
   let fpan = null;
   $('fingAct').value = fingAct; $('fingSub').textContent = FING[fingAct];
@@ -8986,8 +8987,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const fingTag = $('fingTag');
   const FING_MOVE = 10;                          // px the finger has to travel: taps, double taps and a resting finger do nothing
   const fingFar = p => p.pts.some(q => Math.hypot(q.clientX - p.e0.clientX, q.clientY - p.e0.clientY) >= FING_MOVE);
+  const MIX_DECIDE = 40;                          // px a finger moves before "swipe pages + lasso" decides
   function fingGo() {
     const p = fpend;
+    if (p && p.mix) { p.ready = true; return; }   // (the movement decides, see pointermove)
     if (p && !fingFar(p)) { p.ready = true; return; }   // not moving yet: wait for it to move
     fpend = null;
     if (!p || active || pinch || nav || touches.size !== 1 || !touches.has(p.id)) return;
@@ -9212,7 +9215,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (fingAct === 'pan' || fingAct === 'swipe') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty, t0: performance.now(), swipe: fingAct === 'swipe' };
         else if (fingAct !== 'off') {               // erase / lasso / highlight: wait a moment — a second finger means a pinch, not this
           const e0 = { pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 };
-          fpend = { id: e.pointerId, e0, pts: [], timer: setTimeout(fingGo, FING_WAIT) };
+          fpend = { id: e.pointerId, e0, pts: [], timer: setTimeout(fingGo, FING_WAIT), mix: fingAct === 'swipelasso', t0: performance.now(), tx0: view.tx, ty0: view.ty };
         }
         return;
       }
@@ -9286,6 +9289,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (fpend && e.pointerId === fpend.id) {
       fpend.pts.push({ pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 });
+      if (fpend.mix) {                             // swipe pages + lasso: the first 40 px say which
+        const p = fpend, dx = e.clientX - p.e0.clientX, dy = e.clientY - p.e0.clientY;
+        if (Math.hypot(dx, dy) < MIX_DECIDE || touches.size !== 1) return;
+        clearTimeout(p.timer); fpend = null;
+        if (Math.abs(dx) >= Math.abs(dy)) {        // sideways: a swipe (it started where the finger came down)
+          fpan = { id: p.id, x0: p.e0.clientX, y0: p.e0.clientY, tx0: p.tx0, ty0: p.ty0, t0: p.t0, swipe: true };
+          swipeToSlide(fpan, e);
+        } else if (!active && !pinch && !nav) {    // up or down: a lasso from where the finger came down
+          startLasso(p.e0);
+          if (active && p.pts.length) { if (active.move) selMove(p.pts[p.pts.length - 1]); else if (active.lasso) lassoMove(p.pts); }
+        }
+        return;
+      }
       if (fpend.ready && fingFar(fpend)) fingGo();   // waited long enough, and now it really moves
       return;
     }
