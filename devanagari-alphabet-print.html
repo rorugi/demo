@@ -44,7 +44,7 @@ h1 small{font-size:13px;font-weight:400;color:var(--muted);margin-left:12px}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key b{font-size:22px;font-weight:400;line-height:1}
 
-.cols{display:grid;grid-template-columns:minmax(0,1fr) 1px 99mm;gap:5mm}
+.cols{display:grid;grid-template-columns:106mm 1px minmax(0,1fr);gap:5mm}
 .vr{background:var(--line);margin-top:3mm}
 section{margin-top:3mm}
 h2{margin:0 0 1.5mm;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:baseline}
@@ -52,7 +52,7 @@ h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;col
 
 .tbl{display:grid;gap:1.4mm}
 .cons{grid-template-columns:19mm repeat(8,1fr)}
-.vow{grid-template-columns:23mm 1fr 1fr}
+.vow{grid-template-columns:22mm 1fr 1fr}
 .sig{grid-template-columns:repeat(8,1fr)}
 .dig{grid-template-columns:repeat(10,1fr)}
 .gh{font-size:11px;font-weight:600;color:var(--fg);text-align:center;border-bottom:1px solid var(--line);padding-bottom:1px;align-self:end}
@@ -67,10 +67,12 @@ h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;col
 .g2 .duo span{font-size:26px}
 .g3 .duo{gap:1.2mm}
 .g3 .duo span{font-size:21px}
-.vow .duo span{font-size:28px}
-.vow .g3 .duo{gap:1.8mm}
-.vow .g3 .duo span{font-size:24px}
-.vow .duo .sep{width:1px;align-self:stretch;background:var(--line);margin:1mm 1.5mm}
+.vt{padding:0;grid-template-columns:1fr 15mm;justify-items:stretch;align-content:stretch}
+.vt .half{display:grid;justify-items:center;align-content:center;padding:1.4mm .5mm 1.1mm}
+.vt .half + .half{border-left:1px solid var(--line)}
+.vt .duo span{font-size:28px}
+.vt.g3 .duo{gap:1.8mm}
+.vt.g3 .duo span{font-size:24px}
 .cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3;text-align:center}
 .cap .ipa{color:#8a938e}
 .cap small{display:block;font-size:10px;line-height:1.15}
@@ -104,6 +106,12 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
   </header>
 
   <div class="cols">
+    <section>
+      <h2>Vowels <small>स्वर · letter | sign on प</small></h2>
+      <div class="tbl vow" id="vow"></div>
+      <p class="note">Before another vowel, i u ṛ ḷ become y v r l: iti + ādi → ityādi, su + āgatam → svāgatam.</p>
+    </section>
+    <div class="vr"></div>
     <div>
       <section>
         <h2>Consonants <small>व्यञ्जन · each carries an inherent a</small></h2>
@@ -118,12 +126,6 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
         <div class="tbl dig" id="dig"></div>
       </section>
     </div>
-    <div class="vr"></div>
-    <section>
-      <h2>Vowels <small>स्वर · letter | sign on प</small></h2>
-      <div class="tbl vow" id="vow"></div>
-      <p class="note">Before another vowel, i u ṛ ḷ become y v r l: iti + ādi → ityādi, su + āgatam → svāgatam.</p>
-    </section>
   </div>
 
   <footer>
@@ -189,14 +191,15 @@ const EX_SA = new Set(["पू"]); // signs on प that Tiro Sanskrit draws diff
 function vowTile(v){
   const [t, ex, iso] = v;
   const fonts = ["hi"]; if (SA.has(t)) fonts.push("sa"); if (NO.has(t)) fonts.push("no");
-  const c = el("cell g" + fonts.length);
-  const duo = el("duo");
-  const add = (f, x) => { const s = document.createElement("span"); s.className = f; s.lang = f === "hi" ? "hi" : "sa"; s.textContent = x; duo.append(s); };
-  fonts.forEach(f => add(f, t));
-  duo.append(el("sep"));
-  add("hi", ex); if (EX_SA.has(ex)) add("sa", ex);
-  const p = el("cap"); p.textContent = iso;
-  c.append(duo, p);
+  const c = el("cell vt g" + fonts.length);
+  const half = (texts, cap) => {
+    const h = el("half"), duo = el("duo");
+    texts.forEach(([f, x]) => { const s = document.createElement("span"); s.className = f; s.lang = f === "hi" ? "hi" : "sa"; s.textContent = x; duo.append(s); });
+    const p = el("cap"); p.textContent = cap;
+    h.append(duo, p); return h;
+  };
+  const exFonts = [["hi", ex]]; if (EX_SA.has(ex)) exFonts.push(["sa", ex]);
+  c.append(half(fonts.map(f => [f, t]), iso), half(exFonts, "p" + iso));
   return c;
 }
 function buildVow(){
