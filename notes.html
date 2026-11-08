@@ -974,6 +974,8 @@
   .corners [data-c="bl"]::after { bottom: 5px; left: 5px; } .corners [data-c="br"]::after { bottom: 5px; right: 5px; }
   .corners button[aria-pressed="true"] { background: var(--active); border-color: var(--bar-fg); }
   .seg.three { grid-template-columns: repeat(3, 1fr); }
+  .seg.six { grid-template-columns: repeat(6, 1fr); }
+  .snapseg button { padding-left: 0; padding-right: 0; font-size: 13px; }
   .seg.small { display: inline-grid; grid-template-columns: 1fr 1fr; }
   .seg.small button { height: 26px; padding: 0 10px; font-size: 12px; }
 
@@ -1275,6 +1277,10 @@
   <input type="range" class="opacity" id="opacity" min="10" max="100" step="5" value="100" aria-label="Opacity" data-for="pen preset" data-part="opacity">
   <h3 data-for="pen preset" data-part="kind">Pen type</h3>
   <select class="dd" id="kindSel" aria-label="Pen type" data-for="pen preset" data-part="kind"></select>
+  <h3 data-for="pen preset" data-part="snap">Straight lines <output id="snapSub"></output></h3>
+  <div class="seg six snapseg" id="snapSeg" data-for="pen preset" data-part="snap" role="group" aria-label="Straight lines">
+    <button type="button" data-snap="" aria-label="Free lines">Off</button><button type="button" data-snap="0" aria-label="Only across">0°</button><button type="button" data-snap="90" aria-label="Across and up/down">90°</button><button type="button" data-snap="45" aria-label="8 directions">45°</button><button type="button" data-snap="30" aria-label="12 directions">30°</button><button type="button" data-snap="22.5" aria-label="16 directions">22.5°</button>
+  </div>
   <label class="hlrow" for="hlToggle" data-for="pen preset" data-part="highlighter"><span>Highlighter<span class="sub">Drawn behind existing ink</span></span><span class="switch"><input type="checkbox" id="hlToggle"><i></i></span></label>
   <h3 data-for="pen">Locked against presets</h3>
   <div class="locks" id="locks" data-for="pen">
@@ -1282,6 +1288,7 @@
     <button type="button" data-lock="width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Thickness</button>
     <button type="button" data-lock="opacity" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Opacity</button>
     <button type="button" data-lock="kind" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Pen type</button>
+    <button type="button" data-lock="snap" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Straight lines</button>
     <button type="button" data-lock="highlighter" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path class="shk" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Highlighter</button>
   </div>
   <div class="locksub" data-for="pen">Closed lock: presets leave it alone. Open lock: they may change it. This menu still changes everything.</div>
@@ -1939,8 +1946,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_145';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.22';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_146';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.23';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2148,13 +2155,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const okC = c => typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c);
   const okO = o => +o >= 0.05 && +o <= 1;
   const uid = () => Math.random().toString(36).slice(2, 9);
+  // straight lines: 0 = only across, 90 = across and up/down, 45 = 8 directions, 30 = 12, 22.5 = 16
+  const SNAPS = [0, 90, 45, 30, 22.5];
   const cleanBrush = (b, fallbackColor = '#121315', preset = false) => ({
     color: b && okC(b.color) ? b.color : fallbackColor,
     width: b && +b.width > 0 && +b.width <= MAX_W ? +b.width : 0.45,
     opacity: b && okO(b.opacity) ? +b.opacity : 1,
     highlighter: !!(b && b.highlighter),
     pickedOnDark: !!(b && b.pickedOnDark),
-    kind: b && PEN_KINDS[b.kind] ? b.kind : 'pen'   // pen type (highlighters always draw evenly)
+    kind: b && PEN_KINDS[b.kind] ? b.kind : 'pen',  // pen type (highlighters always draw evenly)
+    snap: b && SNAPS.includes(+b.snap) && b.snap !== null && b.snap !== '' ? +b.snap : null   // straight lines in these steps (degrees), or free
 
   });
   // stroke size and colour buttons: each applies its part to the current pen
@@ -2167,8 +2177,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
   // Presets: each part (colour, thickness, opacity, pen type, highlighter) can be switched on or off; a part that is off
   // leaves the pen alone. Colour, size and pen type presets are just presets with one part on.
-  const PARTS = ['color', 'width', 'opacity', 'kind', 'highlighter'];
-  const PART_NAMES = { color: 'Colour', width: 'Thickness', opacity: 'Opacity', kind: 'Pen type', highlighter: 'Highlighter' };
+  const PARTS = ['color', 'width', 'opacity', 'kind', 'highlighter', 'snap'];
+  const PART_NAMES = { color: 'Colour', width: 'Thickness', opacity: 'Opacity', kind: 'Pen type', highlighter: 'Highlighter', snap: 'Straight lines' };
   const cleanUse = (u, d) => Object.fromEntries(PARTS.map(k => [k, u && typeof u[k] === 'boolean' ? u[k] : !!(d && d[k])]));
   const ALL_BUT_KIND = { color: true, width: true, opacity: true, highlighter: true };
   function cleanItemData(it, o) {
@@ -3233,6 +3243,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (u.opacity && (b.opacity < 1 || x.length === 0)) x.push(Math.round(b.opacity * 100) + ' %');
     if (u.kind) x.push(KINDS[b.kind] || 'Pen');
     if (u.highlighter && (b.highlighter || x.length === 0)) x.push(b.highlighter ? 'highlighter' : 'no highlighter');
+    if (u.snap) x.push(b.snap === null ? 'free lines' : `straight ${b.snap}°`);
     return x.length ? x.join(' · ') : 'sets nothing';
   };
   const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
@@ -3526,6 +3537,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     toast('Preset saved next to the pen.');
   });
   $('kindSel').addEventListener('change', e => { ed().kind = e.target.value; penChanged(); });
+  $('snapSeg').addEventListener('click', e => { const b = e.target.closest('[data-snap]'); if (!b) return; ed().snap = b.dataset.snap === '' ? null : +b.dataset.snap; penChanged(); });
   $('hlToggle').addEventListener('change', e => {
     const b = ed();
     b.highlighter = e.target.checked;
@@ -3608,6 +3620,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('hlToggle').checked = br.highlighter;
     if (!$('kindSel').options.length) $('kindSel').innerHTML = Object.entries(PEN_KINDS).map(([t, d]) => `<option value="${t}">${d.label}</option>`).join('');
     $('kindSel').value = ed().kind || 'pen';
+    { const v = ed().snap; $('snapSeg').querySelectorAll('[data-snap]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.snap === (v === null || v === undefined ? '' : String(v)))));
+      $('snapSub').textContent = v === null || v === undefined ? '' : v === 0 ? 'only across' : `${v === 90 ? 4 : Math.round(360 / v)} directions`; }
     $('locks').querySelectorAll('[data-lock]').forEach(b => {      // a closed lock when locked, an open one when presets may change it
       const on = !!penLocks()[b.dataset.lock];
       b.setAttribute('aria-pressed', String(on));
@@ -7158,6 +7172,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     (a.raw || (a.raw = [])).push([x, y]);
     penFactor(a, pr, t, x, y);
     if (!p.length) { a.sx = x; a.sy = y; p.push([x, y]); if (KIND_FEEL[a.kind]) a.pr = [a.f || 1]; return; }
+    if (a.snap != null) {                          // straight lines: from where the pen came down, in the nearest allowed direction
+      const p0 = p[0], dx = x - p0[0], dy = y - p0[1], L = Math.hypot(dx, dy);
+      if (L < MIN_D) return;
+      const step = a.snap === 0 ? Math.PI : a.snap * Math.PI / 180, ang = Math.atan2(dy, dx), dir = Math.round(ang / step) * step;
+      const len = L * Math.cos(ang - dir), n = Math.max(2, Math.ceil(Math.abs(len) / 2));   // points along it, for the pen types' widths
+      const f0 = a.pr ? a.pr[0] : 1, f1 = a.f || f0;
+      a.pts = Array.from({ length: n + 1 }, (_, i) => [p0[0] + Math.cos(dir) * len * i / n, p0[1] + Math.sin(dir) * len * i / n]);
+      if (a.pr) a.pr = a.pts.map((_, i) => f0 + (f1 - f0) * i / n);
+      redrawActive();
+      return;
+    }
     a.sx += (x - a.sx) * SMOOTH; a.sy += (y - a.sy) * SMOOTH;
     const l = p[p.length - 1];
     if (Math.hypot(a.sx - l[0], a.sy - l[1]) < MIN_D) return;
@@ -7196,7 +7221,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('holdAct').addEventListener('change', e => { holdAct = e.target.value; store.set('penHold', holdAct); $('holdSub').textContent = HOLD[holdAct]; });
   function holdWatch(e) {                       // (re)start the timer whenever the pen really moves
     const a = active;
-    if (holdAct === 'off' || !a || a.type !== 'pen' || a.sm) return;
+    if (holdAct === 'off' || !a || a.type !== 'pen' || a.sm || a.snap != null) return;   // (a straight line is straight already)
     if (a.hx !== undefined && Math.hypot(e.clientX - a.hx, e.clientY - a.hy) < HOLD_SLOP) return;
     a.hx = e.clientX; a.hy = e.clientY;
     clearTimeout(a.holdT);
@@ -8059,6 +8084,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     // while writing on a sticky note, the live ink is cut at its edge like the finished stroke
     liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + noteW(note)) * S()}px ${vh - view.ty - (note.y + noteHt(note)) * S()}px ${view.tx + note.x * S()}px)` : '';
     active.kind = br.highlighter ? 'pen' : br.kind || 'pen';
+    active.snap = br.snap != null && !note && !img ? br.snap : null;
     liveWrap.style.opacity = br.opacity * (active.kind === 'pencil' ? 0.92 : 1);   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
     liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
@@ -8090,7 +8116,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (a.sm) endSmooth(a, !a.sm.live);
     if (commit && e && e.type === 'pointerup' && !smoothed) {
       const [x, y] = toMM(e), l = a.pts[a.pts.length - 1];
-      if (Math.hypot(x - l[0], y - l[1]) >= MIN_D) { a.pts.push([x, y]); if (a.pr) a.pr.push(a.pr[a.pr.length - 1] || 1); drawIncrement(); }
+      if (a.snap != null) feed(x, y, e.pressure, performance.now());   // a straight line stays straight to the very end
+      else if (Math.hypot(x - l[0], y - l[1]) >= MIN_D) { a.pts.push([x, y]); if (a.pr) a.pr.push(a.pr[a.pr.length - 1] || 1); drawIncrement(); }
     }
     active = null;
     stage.classList.remove('drawing'); handlesWhileWriting(false);
