@@ -821,6 +821,10 @@
     min-width: 240px; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 14px; background: var(--panel); color: var(--bar-fg); border: 1px solid var(--bar-line);
     box-shadow: 0 6px 24px rgba(0,0,0,.22); font: 500 14px/1.3 var(--ui); }
   .busy[hidden] { display: none; }
+  /* busy panel and toast are shown in the top layer (popover), so they stay above open dialogs */
+  .busy[popover], .toast[popover] { inset: auto; margin: 0; overflow: visible; height: auto; }
+  .busy[popover] { left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); }
+  .toast[popover] { left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); border: 0; }
   .busy .spin { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 2.5px solid var(--bar-line); border-top-color: var(--bar-fg); animation: busyspin .8s linear infinite; }
   @keyframes busyspin { to { transform: rotate(360deg); } }
   .busy .btxt { display: grid; gap: 6px; flex: 1; min-width: 0; }
@@ -1615,12 +1619,12 @@
   <div class="magresize" id="magResize" title="Drag to resize" role="button" aria-label="Resize magnifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l14 14M5 5h6M5 5v6M19 19h-6M19 19v-6"/></svg></div>
 </div>
 <div class="riffle" id="riffle" hidden><b id="riffleNum">1 / 1</b><span id="riffleHint"></span></div>
-<div class="toast" id="toast" role="status" hidden></div>
+<div class="toast" id="toast" role="status" popover="manual" hidden></div>
 <div class="tzoom" id="tzoom" aria-live="polite" hidden></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="appDefs"></defs></svg>
 <div class="fingtag" id="fingTag" hidden>Erasing</div>
 <div class="livechip" id="liveChip" hidden></div>
-<div class="busy" id="busy" role="status" aria-live="polite" hidden><span class="spin" aria-hidden="true"></span><span class="btxt"><span id="busyText"></span><span class="bbar"><i id="busyBar"></i></span></span></div>
+<div class="busy" id="busy" role="status" aria-live="polite" popover="manual" hidden><span class="spin" aria-hidden="true"></span><span class="btxt"><span id="busyText"></span><span class="bbar"><i id="busyBar"></i></span></span></div>
 <div class="strip" id="strip" hidden><div class="strip-in" id="stripIn"></div></div>
 <div class="smslide" id="smSlide" hidden><span>None</span><div class="trk"><i id="smFill"></i><b id="smThumb"></b></div><span>Line</span></div>
 
@@ -1959,8 +1963,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_150';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.27';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_151';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.28';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2004,11 +2008,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   };
   const vibrate = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
   let toastTimer = 0;
+  // shows / hides a small panel above everything, also above an open dialog (a dialog sits in the top layer;
+  // showing it again as popover puts it on top of the latest dialog)
+  function onTop(el, show) {
+    el.hidden = !show;
+    if (!el.showPopover) return;
+    try { if (el.matches(':popover-open')) el.hidePopover(); if (show) el.showPopover(); } catch (_) {}
+  }
   function toast(msg, ms = 3200) {
     const t = $('toast');
-    t.textContent = msg; t.hidden = false;
+    t.textContent = msg; onTop(t, true);
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.hidden = true; }, ms);
+    toastTimer = setTimeout(() => onTop(t, false), ms);
   }
 
   // ---- Colour on dark paper ----
@@ -2673,12 +2684,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
   async function busy(text, frac) {
     const el = $('busy'), bar = $('busyBar');
-    el.hidden = false; $('busyText').textContent = text;
+    $('busyText').textContent = text;
+    if (el.hidden || document.querySelector('dialog[open]')) onTop(el, true);
     bar.parentNode.classList.toggle('any', frac == null);
     bar.style.width = frac == null ? '' : Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%';
     await nextFrame();                             // let it show before the work goes on
   }
-  function busyEnd() { $('busy').hidden = true; }
+  function busyEnd() { onTop($('busy'), false); }
   async function busyWhile(text, fn) {             // shows "text" while fn runs (nested: the outer one keeps it)
     busyDepth++;
     try { await busy(text); return await fn(); }
