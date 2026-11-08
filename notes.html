@@ -1223,8 +1223,8 @@
   </div>
   <div class="page" id="page">
     <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" aria-label="Page">
-      <g class="bglayer" id="bgLayer"></g>
       <path class="grid" fill="none" stroke-width="0.15"/>
+      <g class="bglayer" id="bgLayer"></g>
       <g class="images" id="imgLayer"></g>
       <g class="texts" id="textLayer"></g>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -1931,8 +1931,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_134';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.11';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_135';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.12';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4981,10 +4981,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const name = $('pdfName').value.trim().replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-') || `RRnotes_${stamp()}`;
     pdfDlg.close();
     try {
-      let blob = await buildPdf(list, grid, name, withNotes);
-      if (list.some(pg => pg.bg)) {
+      const withBg = list.some(pg => pg.bg);
+      let blob = await buildPdf(list, grid && !withBg, name, withNotes);
+      if (withBg) {                                // the grid goes under the PDF pages: built on its own
         if (list.filter(pg => pg.bg).length > 3) toast('Adding the PDF pages…', 1500);
-        try { blob = await withPdfBackgrounds(blob, list, name); }
+        const gridPdf = grid ? await buildPdf(list.map(() => ({ strokes: [] })), true, name, false) : null;
+        try { blob = await withPdfBackgrounds(blob, list, name, gridPdf); }
         catch (_) { toast('The PDF pages could not be added: the PDF tool loads once from the internet. Check the connection.', 5000); return; }
       }
       if (share) shareFiles([new File([blob], name + '.pdf', { type: 'application/pdf' })]);
@@ -6808,7 +6810,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pg || !pg.bg) return '';
     const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = data || bgGet(b, want);
     const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
-    const blend = mode !== 'ui' && (mode === 'file' || !paperDark) ? ' style="mix-blend-mode:multiply"' : '';   // (on screen the grid lies above it)
+    const blend = mode === 'file' || !paperDark ? ' style="mix-blend-mode:multiply"' : '';   // the grid shows through the PDF's white, behind its print
     const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
     if (!r) return `<rect class="pdfbg" ${box} fill="#fff"${meta}/>`;
     const sz = mode === 'file' ? '' : ` data-sz="${bgRast.L.get(bgKey(b)) === r ? 'L' : 'S'}"`;
@@ -6823,7 +6825,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pageEl.classList.toggle('onpdf', !!(pg && pg.bg));
     if (!pg || !pg.bg) { if (bgHtml) { bgLayer.innerHTML = ''; bgHtml = ''; } bgDetail = null; return; }
     const d = bgDetail && bgDetail.page === pg && bgDetail.key === bgKey(pg.bg) ? bgDetail : null, f = v => +(+v).toFixed(3);
-    const html = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none"/>` : '');
+    const html = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none"${paperDark ? '' : ' style="mix-blend-mode:multiply"'}/>` : '');
     if (html !== bgHtml) { bgLayer.innerHTML = html; bgHtml = html; }
     bgSharpSoon();
   }
@@ -6982,12 +6984,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return map;
   }
   // PDF export with backgrounds: the original pages, and the notebook's own page (grid, ink, notes…) on top
-  async function withPdfBackgrounds(annotBlob, list, title) {
+  async function withPdfBackgrounds(annotBlob, list, title, gridBlob) {
     if (!list.some(pg => pg.bg)) return annotBlob;
     const L = await pdflib();
     const out = await L.PDFDocument.create(), ann = await L.PDFDocument.load(await annotBlob.arrayBuffer());
     const k = 72 / 25.4, wPt = W * k, hPt = H * k;
     const annPages = await out.embedPdf(ann, list.map((_, i) => i));
+    const gridPages = gridBlob ? await out.embedPdf(await L.PDFDocument.load(await gridBlob.arrayBuffer()), list.map((_, i) => i)) : null;
     const srcEmb = new Map();                      // pdf id -> Map(page n -> embedded page) (each source once, all its pages at once)
     for (const id of pdfIdsOf(list)) {
       const need = [...new Set(list.filter(pg => pg.bg && pg.bg.pdf === id).map(pg => pg.bg.n))];
@@ -6999,8 +7002,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     for (let i = 0; i < list.length; i++) {
       const pg = list[i], page = out.addPage([wPt, hPt]), b = pg.bg;
+      if (gridPages) page.drawPage(gridPages[i], { x: 0, y: 0, width: wPt, height: hPt });   // the grid, behind the PDF
       if (b) {
-        const e = srcEmb.get(b.pdf) && srcEmb.get(b.pdf).get(b.n), box = { x: b.x * k, y: hPt - (b.y + b.h) * k, width: b.w * k, height: b.h * k };
+        const e = srcEmb.get(b.pdf) && srcEmb.get(b.pdf).get(b.n), box = { x: b.x * k, y: hPt - (b.y + b.h) * k, width: b.w * k, height: b.h * k, blendMode: L.BlendMode.Multiply };
         if (e) page.drawPage(e, box);
         else {                                     // could not be copied: its picture instead
           try { const r = bgRast.L.get(bgKey(b)) || await (await renderPdfPage(b, 2000)).done; page.drawImage(await out.embedJpg(await r.blob.arrayBuffer()), box); } catch (_) {}
