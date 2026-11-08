@@ -1289,7 +1289,6 @@
     <button type="button" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>Save…<small id="saveSum"></small></button>
     <button type="button" id="openBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5V18a1.5 1.5 0 0 0 1.5 1.5h13.2a1.5 1.5 0 0 0 1.45-1.1l1.8-6.4H7.4L5.5 19"/><path d="M3.5 7.5V6A1.5 1.5 0 0 1 5 4.5h4l2 2h6A1.5 1.5 0 0 1 18.5 8v4"/></svg>Open…</button>
     <button type="button" id="nbBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11z"/><path d="M6.5 3.5v17M4.5 7.5h4M4.5 12h4M4.5 16.5h4"/></svg>Notebooks…<small id="nbSum"></small></button>
-    <button type="button" id="liveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg>Share live…</button>
     <button type="button" id="pdfMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M8.5 17.5v-4h1.4a1.3 1.3 0 0 1 0 2.6H8.5M12.5 17.5v-4h1a2 2 0 0 1 0 4zM16.5 13.5h-1.6v4M14.9 15.5h1.3"/></svg>Export PDF…</button>
     <button type="button" id="installBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M12 7.5v7M9 11.5l3 3 3-3M10.5 18.5h3"/></svg>Install app</button>
     <button type="button" id="printMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>Print…</button>
@@ -1393,6 +1392,10 @@
         <option value="1200">Small · 1200 px</option><option value="2000">Medium · 2000 px</option><option value="3000">Large · 3000 px</option><option value="0">Original</option>
       </select>
     </div>
+  </div>
+  <h3>Sharing</h3>
+  <div class="menu">
+    <button type="button" id="liveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg><span>Share live…<span class="sub">Others follow this notebook in their browser. Needs a relay server.</span></span></button>
   </div>
   <h3>Options</h3>
   <div class="menu">
@@ -1615,7 +1618,7 @@
 <dialog class="dlg" id="liveDlg" aria-labelledby="liveTitle">
   <h2 id="liveTitle">Share live</h2>
   <div id="liveOff">
-    <p>Others follow this notebook live in their browser: every stroke as you write it, page turns, notes and pictures. They only watch. Everything is encrypted; the key is part of the link.</p>
+    <p>Others follow this notebook live in their browser: every stroke as you write it, page turns, notes and pictures. They only watch. Everything is encrypted; the key is part of the link. A relay server is required.</p>
     <div id="livePassRow" hidden><p id="livePassMsg" class="sub"></p><input type="password" id="livePass" class="livelink" autocomplete="current-password" aria-label="Password for live sharing"></div>
     <div class="row"><button type="button" id="liveClose2" onclick="this.closest('dialog').close()">Cancel</button><button type="button" id="liveStart" class="primary">Start sharing</button></div>
   </div>
@@ -1764,8 +1767,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_124';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.1';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_125';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.2';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8138,7 +8141,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     catch (e) {
       lv = null; liveUi();
       if (e.status === 401) { $('livePassRow').hidden = false; $('livePassMsg').textContent = $('livePass').value ? 'Wrong password.' : 'This server asks for a password.'; $('livePass').focus(); }
-      else toast(e.status === 507 ? 'The live server is full right now. Try again later.' : 'Live sharing needs rrlive.php on the web server, next to notes.html.', 5000);
+      else toast(e.status === 507 ? 'The live server is full right now. Try again later.' : 'Live sharing needs a relay server, and none was found.', 5000);
       return;
     } finally { $('liveStart').disabled = false; }
     if ($('livePass').value) { store.set('livePass', $('livePass').value); $('livePass').value = ''; }
