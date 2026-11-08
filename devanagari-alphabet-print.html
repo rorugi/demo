@@ -10,7 +10,7 @@
 <style>
 /* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
 @font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
-/* Printable alphabet: A4 portrait. Consonant table by place and manner of articulation, vowel table short | long with the sign on प, digits.
+/* Printable alphabet: A4 landscape. Left: consonants by place and manner, signs, digits. Right: vowels, letter | sign on प.
    A tile shows the Hindi form; the Sanskrit and northern forms are added only where they differ. */
 :root{
   --fg:#1c2321; --muted:#5d6762; --line:#cfd4cd; --card:#fff;
@@ -26,7 +26,7 @@ html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
 .hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa);color:var(--sa)} .no{font-family:var(--f-no);color:var(--no)}
 
-.bar{max-width:210mm;margin:0 auto;padding:14px 4px 10px;display:flex;gap:16px;align-items:center}
+.bar{max-width:297mm;margin:0 auto;padding:14px 4px 10px;display:flex;gap:16px;align-items:center}
 .bar a{color:var(--muted);text-decoration:none;font-size:14px}
 .bar a:hover{color:var(--sa)}
 .bar button{margin-left:auto;appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:8px 16px;cursor:pointer;
@@ -35,57 +35,54 @@ body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-si
 .bar button:hover{border-color:var(--sa)}
 .bar button:focus-visible,.bar a:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
 
-.sheet{max-width:210mm;margin:0 auto 32px;background:#fff;padding:12mm 12mm 10mm;box-shadow:0 2px 14px rgba(0,0,0,.12)}
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1.5px solid var(--fg);padding-bottom:6px;margin-bottom:2mm}
+.sheet{width:297mm;margin:0 auto 32px;background:#fff;padding:9mm 10mm 8mm;box-shadow:0 2px 14px rgba(0,0,0,.12)}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1.5px solid var(--fg);padding-bottom:5px}
 h1{margin:0;font-size:22px;line-height:1.2;font-weight:600}
 h1 .hi{font-weight:400;margin-left:6px}
-h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+h1 small{font-size:13px;font-weight:400;color:var(--muted);margin-left:12px}
 .key{display:flex;gap:14px;font-size:13px;white-space:nowrap}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key b{font-size:22px;font-weight:400;line-height:1}
 
-section{margin-top:3.5mm;break-inside:avoid}
-h2{margin:0 0 2mm;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:baseline}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 1px 99mm;gap:5mm}
+.vr{background:var(--line);margin-top:3mm}
+section{margin-top:3mm}
+h2{margin:0 0 1.5mm;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:baseline}
 h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted)}
 
-.tbl{display:grid;gap:1.6mm}
-.cons{grid-template-columns:23mm repeat(8,1fr)}
-.vow{grid-template-columns:22mm 1fr 1fr 22mm 1fr 1fr;column-gap:1.6mm}
-.vow .rl.r2{margin-left:2mm}
+.tbl{display:grid;gap:1.4mm}
+.cons{grid-template-columns:19mm repeat(8,1fr)}
+.vow{grid-template-columns:23mm 1fr 1fr}
+.sig{grid-template-columns:repeat(8,1fr)}
 .dig{grid-template-columns:repeat(10,1fr)}
 .gh{font-size:11px;font-weight:600;color:var(--fg);text-align:center;border-bottom:1px solid var(--line);padding-bottom:1px;align-self:end}
 .ch{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2;align-self:end}
 .rl{font-size:12px;font-weight:600;align-self:center;line-height:1.25}
-.rl small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.rl small{display:block;font-weight:400;color:var(--muted);font-size:11px;white-space:nowrap}
 
-.cell{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1.6mm .5mm 1.2mm;display:grid;justify-items:center;align-content:center;min-height:14.5mm}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1.4mm .5mm 1.1mm;display:grid;justify-items:center;align-content:center}
 .cell.empty{border-style:dashed;border-color:#e2e5e0}
-.duo{display:flex;gap:2mm;align-items:center;justify-content:center}
-.duo span{font-size:30px;line-height:1.2;white-space:nowrap}
-.g2 .duo span{font-size:27px}
-.g3 .duo{gap:1.5mm}
-.g3 .duo span{font-size:23px}
-.vow .g3 .duo span,.vow .g2 .duo span{font-size:28px}
-.vow .g3 .duo{gap:2.5mm}
-.cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3}
+.duo{display:flex;gap:1.8mm;align-items:center;justify-content:center}
+.duo span{font-size:29px;line-height:1.2;white-space:nowrap}
+.g2 .duo span{font-size:26px}
+.g3 .duo{gap:1.2mm}
+.g3 .duo span{font-size:21px}
+.vow .duo span{font-size:28px}
+.vow .g3 .duo{gap:1.8mm}
+.vow .g3 .duo span{font-size:24px}
+.vow .duo .sep{width:1px;align-self:stretch;background:var(--line);margin:1mm 1.5mm}
+.cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3;text-align:center}
 .cap .ipa{color:#8a938e}
-.cap .m{font-family:var(--f-hi);font-size:14px;color:var(--fg)}
-.note{font-size:11.5px;color:var(--muted);align-self:center;line-height:1.3;grid-column:span 2;padding-left:1mm}
-footer{margin-top:4mm;padding-top:2mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+.cap small{display:block;font-size:10px;line-height:1.15}
+.note{font-size:11.5px;color:var(--muted);margin:1.5mm 0 0}
+footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
 
-@media (max-width:700px){
-  .sheet{padding:16px 8px;overflow-x:auto}
-  .tbl{min-width:640px}
-  header{flex-direction:column;align-items:flex-start}
-  .key{flex-wrap:wrap}
-}
-@page{size:A4 portrait;margin:9mm 10mm}
+@media (max-width:1150px){ body{overflow-x:auto} .bar{max-width:297mm} }
+@page{size:A4 landscape;margin:7mm 9mm}
 @media print{
   body{background:#fff}
   .bar{display:none}
-  .sheet{max-width:none;margin:0;padding:0;box-shadow:none;overflow:visible}
-  .tbl{min-width:0}
-  header{flex-direction:row;align-items:flex-end}
+  .sheet{width:auto;margin:0;padding:0;box-shadow:none}
 }
 </style>
 </head>
@@ -106,20 +103,28 @@ footer{margin-top:4mm;padding-top:2mm;border-top:1px solid var(--line);font-size
     </div>
   </header>
 
-  <section>
-    <h2>Consonants <small>व्यञ्जन · each carries an inherent a</small></h2>
-    <div class="tbl cons" id="cons"></div>
-  </section>
-
-  <section>
-    <h2>Vowels <small>स्वर · letter at the start of a syllable, sign after a consonant (here on प)</small></h2>
-    <div class="tbl vow" id="vow"></div>
-  </section>
-
-  <section>
-    <h2>Digits <small>अङ्क</small></h2>
-    <div class="tbl dig" id="dig"></div>
-  </section>
+  <div class="cols">
+    <div>
+      <section>
+        <h2>Consonants <small>व्यञ्जन · each carries an inherent a</small></h2>
+        <div class="tbl cons" id="cons"></div>
+      </section>
+      <section>
+        <h2>Signs <small>on प</small></h2>
+        <div class="tbl sig" id="sig"></div>
+      </section>
+      <section>
+        <h2>Digits <small>अङ्क</small></h2>
+        <div class="tbl dig" id="dig"></div>
+      </section>
+    </div>
+    <div class="vr"></div>
+    <section>
+      <h2>Vowels <small>स्वर · letter | sign on प</small></h2>
+      <div class="tbl vow" id="vow"></div>
+      <p class="note">Before another vowel, i u ṛ ḷ become y v r l: iti + ādi → ityādi, su + āgatam → svāgatam.</p>
+    </section>
+  </div>
 
   <footer>
     <span>Tiro Devanagari Hindi and Sanskrit follow the southern (Bombay) style; Uttara shows the northern (Calcutta) style.</span>
@@ -168,35 +173,47 @@ function buildCons(){
   });
 }
 
-// Vowels: rows of [label, short, long]; each vowel is [letter, sign on प, ISO]
+// Vowels: [label, link to its semivowel or source, short, long]; each vowel is [letter, sign on प, ISO]
 const VOW = [
-  ["Guttural", ["अ","प","a"], ["आ","पा","ā"]],
-  ["Palatal", ["इ","पि","i"], ["ई","पी","ī"]],
-  ["Labial", ["उ","पु","u"], ["ऊ","पू","ū"]],
-  ["Retroflex", ["ऋ","पृ","ṛ"], ["ॠ","पॄ","ṝ"]],
-  ["Dental", ["ऌ","पॢ","ḷ"], ["ॡ","पॣ","ḹ"]],
-  ["Palato­guttural", ["ए","पे","e"], ["ऐ","पै","ai"]],
-  ["Labio­guttural", ["ओ","पो","o"], ["औ","पौ","au"]],
-  ["Anusvāra · visarga", ["अं","पं","aṃ"], ["अः","पः","aḥ"]],
-  ["Loanwords", ["ऍ","पॅ","ê"], ["ऑ","पॉ","ô"]],
+  ["Guttural", "", ["अ","प","a"], ["आ","पा","ā"]],
+  ["Palatal", "i ī → y", ["इ","पि","i"], ["ई","पी","ī"]],
+  ["Labial", "u ū → v", ["उ","पु","u"], ["ऊ","पू","ū"]],
+  ["Retroflex", "ṛ ṝ → r", ["ऋ","पृ","ṛ"], ["ॠ","पॄ","ṝ"]],
+  ["Dental", "ḷ ḹ → l", ["ऌ","पॢ","ḷ"], ["ॡ","पॣ","ḹ"]],
+  ["Palato-guttural", "e → ay · ai → āy", ["ए","पे","e"], ["ऐ","पै","ai"]],
+  ["Labio-guttural", "o → av · au → āv", ["ओ","पो","o"], ["औ","पौ","au"]],
+  ["Anusvāra · visarga", "ṃ ← m · ḥ ← s, r", ["अं","पं","aṃ"], ["अः","पः","aḥ"]],
+  ["Loanwords", "", ["ऍ","पॅ","ê"], ["ऑ","पॉ","ô"]],
 ];
-function vowTile(v){ return tile(v[0], p => { txt(p, v[1], "m"); txt(p, " · " + v[2]); }); }
+const EX_SA = new Set(["पू"]); // signs on प that Tiro Sanskrit draws differently
+function vowTile(v){
+  const [t, ex, iso] = v;
+  const fonts = ["hi"]; if (SA.has(t)) fonts.push("sa"); if (NO.has(t)) fonts.push("no");
+  const c = el("cell g" + fonts.length);
+  const duo = el("duo");
+  const add = (f, x) => { const s = document.createElement("span"); s.className = f; s.lang = f === "hi" ? "hi" : "sa"; s.textContent = x; duo.append(s); };
+  fonts.forEach(f => add(f, t));
+  duo.append(el("sep"));
+  add("hi", ex); if (EX_SA.has(ex)) add("sa", ex);
+  const p = el("cap"); p.textContent = iso;
+  c.append(duo, p);
+  return c;
+}
 function buildVow(){
   const g = $("vow");
-  // Two blocks side by side: first five rows left, the rest right
-  const left = VOW.slice(0, 5), right = VOW.slice(5);
-  ["", "short", "long", "", "short", "long"].forEach(h => { const d = el("ch"); d.textContent = h; g.append(d); });
-  for (let i = 0; i < left.length; i++){
-    const [a, b] = [left[i], right[i]];
-    const ra = el("rl"); ra.textContent = a[0]; g.append(ra, vowTile(a[1]), vowTile(a[2]));
-    const rb = el("rl r2");
-    if (b){ rb.textContent = b[0]; g.append(rb, vowTile(b[1]), vowTile(b[2])); }
-    else {
-      rb.textContent = "Halant"; g.append(rb);
-      g.append(tile("प्", p => { txt(p, "p"); }));
-      const n = el("note"); n.textContent = "The virama ् removes the inherent a."; n.style.gridColumn = "span 1"; g.append(n);
-    }
-  }
+  ["", "short", "long"].forEach(h => { const d = el("ch"); d.textContent = h; g.append(d); });
+  VOW.forEach(([name, link, a, b]) => {
+    const r = el("rl"); r.textContent = name;
+    if (link){ const sm = document.createElement("small"); sm.textContent = link; r.append(sm); }
+    g.append(r, vowTile(a), vowTile(b));
+  });
+}
+
+// Signs: [text, transliteration, name]
+const SIG = [["प्","p","virama"],["पं","ṃ","anusvāra"],["पः","ḥ","visarga"],["पँ","m̐","candrabindu"],["ऽ","’","avagraha"],["।","|","daṇḍa"],["॥","||","double daṇḍa"],["ॐ","oṃ","om"]];
+function buildSig(){
+  const g = $("sig");
+  SIG.forEach(([t, tr, n]) => g.append(tile(t, p => { txt(p, tr); const sm = document.createElement("small"); sm.textContent = n; p.append(sm); })));
 }
 
 function buildDig(){
@@ -204,7 +221,7 @@ function buildDig(){
   "०१२३४५६७८९".split("").forEach((d, i) => g.append(tile(d, p => txt(p, String(i)))));
 }
 
-buildCons(); buildVow(); buildDig();
+buildCons(); buildSig(); buildVow(); buildDig();
 // Wait for the web fonts so the printout never falls back to a system font
 $("print").onclick = () => document.fonts.ready.then(() => window.print());
 </script>
