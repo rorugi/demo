@@ -1939,8 +1939,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_143';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.20';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_144';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.21';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8944,6 +8944,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     quickTurn(dir);
     return true;
   }
+  // a longer swipe (farther, or slower and still going): through the pages, as when sliding from the desk
+  function swipeToSlide(f, e) {
+    const dx = e.clientX - f.x0, dy = e.clientY - f.y0, dt = performance.now() - f.t0;
+    if (nav || animating) return false;
+    if (Math.abs(dx) < 1.5 * Math.abs(dy) || dt < 350 || Math.abs(dx) < 60) return false;   // a quick swipe is over before this
+    if (Math.abs(view.tx - f.tx0) > Math.abs(dx) * 0.3) return false;   // zoomed in and the page still moves: keep moving it
+    fpan = null;
+    view.tx = f.tx0; view.ty = f.ty0; applyView();
+    startSlide(e);                                 // from here on the finger moves through the pages
+    nav.slide.src = 'h'; nav.slide.style = flipStyle === 'flat' ? 'flat' : 'book';   // sideways: the pages follow the finger (left: on)
+    nav.held = true; vibrate(6);
+    preLift();
+    return true;
+  }
   const FING_WAIT = 140;                         // ms a lone finger waits before erasing / selecting / highlighting
   let fpend = null;
   const fingTag = $('fingTag');
@@ -9255,6 +9269,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (fpan && e.pointerId === fpan.id && !pinch) {   // stylus mode, one finger moves the page
       if (touches.size > 1) { fpan = null; return; }
       view.tx = fpan.tx0 + e.clientX - fpan.x0; view.ty = fpan.ty0 + e.clientY - fpan.y0; clampView(); applyView();
+      if (fpan.swipe && swipeToSlide(fpan, e)) return;
       return;
     }
     if (nav && nav.z2 && (e.pointerId === nav.id || e.pointerId === nav.z2.id)) { navZoomMove(); return; }   // while zooming, the pages hold still
