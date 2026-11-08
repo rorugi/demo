@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devanagari Alphabet – Print Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
+@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
+/* Printable alphabet: A4 portrait. Consonant table by place and manner of articulation, vowel table short | long with the sign on प, digits.
+   A tile shows the Hindi form; the Sanskrit and northern forms are added only where they differ. */
+:root{
+  --fg:#1c2321; --muted:#5d6762; --line:#cfd4cd; --card:#fff;
+  --sa:#b8670c; --no:#2c5a8c;
+  --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
+  --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-no:"Uttara",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+.hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa);color:var(--sa)} .no{font-family:var(--f-no);color:var(--no)}
+
+.bar{max-width:210mm;margin:0 auto;padding:14px 4px 10px;display:flex;gap:16px;align-items:center}
+.bar a{color:var(--muted);text-decoration:none;font-size:14px}
+.bar a:hover{color:var(--sa)}
+.bar button{margin-left:auto;appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:8px 16px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--fg);display:inline-flex;gap:8px;align-items:center}
+.bar button svg{width:18px;height:18px}
+.bar button:hover{border-color:var(--sa)}
+.bar button:focus-visible,.bar a:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
+
+.sheet{max-width:210mm;margin:0 auto 32px;background:#fff;padding:12mm 12mm 10mm;box-shadow:0 2px 14px rgba(0,0,0,.12)}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1.5px solid var(--fg);padding-bottom:6px;margin-bottom:2mm}
+h1{margin:0;font-size:22px;line-height:1.2;font-weight:600}
+h1 .hi{font-weight:400;margin-left:6px}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+.key{display:flex;gap:14px;font-size:13px;white-space:nowrap}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key b{font-size:22px;font-weight:400;line-height:1}
+
+section{margin-top:3.5mm;break-inside:avoid}
+h2{margin:0 0 2mm;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:baseline}
+h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted)}
+
+.tbl{display:grid;gap:1.6mm}
+.cons{grid-template-columns:23mm repeat(8,1fr)}
+.vow{grid-template-columns:22mm 1fr 1fr 22mm 1fr 1fr;column-gap:1.6mm}
+.vow .rl.r2{margin-left:2mm}
+.dig{grid-template-columns:repeat(10,1fr)}
+.gh{font-size:11px;font-weight:600;color:var(--fg);text-align:center;border-bottom:1px solid var(--line);padding-bottom:1px;align-self:end}
+.ch{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2;align-self:end}
+.rl{font-size:12px;font-weight:600;align-self:center;line-height:1.25}
+.rl small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+
+.cell{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1.6mm .5mm 1.2mm;display:grid;justify-items:center;align-content:center;min-height:14.5mm}
+.cell.empty{border-style:dashed;border-color:#e2e5e0}
+.duo{display:flex;gap:2mm;align-items:center;justify-content:center}
+.duo span{font-size:30px;line-height:1.2;white-space:nowrap}
+.g2 .duo span{font-size:27px}
+.g3 .duo{gap:1.5mm}
+.g3 .duo span{font-size:23px}
+.vow .g3 .duo span,.vow .g2 .duo span{font-size:28px}
+.vow .g3 .duo{gap:2.5mm}
+.cap{font-size:11.5px;color:var(--muted);white-space:nowrap;line-height:1.3}
+.cap .ipa{color:#8a938e}
+.cap .m{font-family:var(--f-hi);font-size:14px;color:var(--fg)}
+.note{font-size:11.5px;color:var(--muted);align-self:center;line-height:1.3;grid-column:span 2;padding-left:1mm}
+footer{margin-top:4mm;padding-top:2mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+
+@media (max-width:700px){
+  .sheet{padding:16px 8px;overflow-x:auto}
+  .tbl{min-width:640px}
+  header{flex-direction:column;align-items:flex-start}
+  .key{flex-wrap:wrap}
+}
+@page{size:A4 portrait;margin:9mm 10mm}
+@media print{
+  body{background:#fff}
+  .bar{display:none}
+  .sheet{max-width:none;margin:0;padding:0;box-shadow:none;overflow:visible}
+  .tbl{min-width:0}
+  header{flex-direction:row;align-items:flex-end}
+}
+</style>
+</head>
+<body>
+<nav class="bar">
+  <a href="devanagari-writing.html">← Devanagari writing</a>
+  <a href="devanagari-ligatures-print.html">Ligature chart</a>
+  <button type="button" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Print</button>
+</nav>
+
+<main class="sheet">
+  <header>
+    <h1>Devanagari alphabet <span class="hi">देवनागरी</span><small>A second or third form appears only where the fonts differ</small></h1>
+    <div class="key">
+      <span><b class="hi">क</b>Hindi · Tiro</span>
+      <span><b class="sa">क</b>Sanskrit · Tiro</span>
+      <span><b class="no">क</b>North · Uttara</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Consonants <small>व्यञ्जन · each carries an inherent a</small></h2>
+    <div class="tbl cons" id="cons"></div>
+  </section>
+
+  <section>
+    <h2>Vowels <small>स्वर · letter at the start of a syllable, sign after a consonant (here on प)</small></h2>
+    <div class="tbl vow" id="vow"></div>
+  </section>
+
+  <section>
+    <h2>Digits <small>अङ्क</small></h2>
+    <div class="tbl dig" id="dig"></div>
+  </section>
+
+  <footer>
+    <span>Tiro Devanagari Hindi and Sanskrit follow the southern (Bombay) style; Uttara shows the northern (Calcutta) style.</span>
+    <span>rorugi.github.io/demo</span>
+  </footer>
+</main>
+
+<script>
+// Which fonts draw a form differently from Tiro Devanagari Hindi (outlines compared with HarfBuzz; northern shapes checked by eye)
+const SA = new Set("ऋ ॠ ल श १ ५ ८ ९".split(" "));
+const NO = new Set("अ आ ओ औ अं अः ऑ ऋ ॠ झ ण ल श १ ५ ८ ९".split(" "));
+const $ = id => document.getElementById(id);
+const el = (cls, html) => { const d = document.createElement("div"); d.className = cls; if (html != null) d.innerHTML = html; return d; };
+
+// A tile: the letter in each font that differs, then a caption built by the caller
+function tile(t, cap){
+  const fonts = ["hi"]; if (SA.has(t)) fonts.push("sa"); if (NO.has(t)) fonts.push("no");
+  const c = el("cell g" + fonts.length);
+  const duo = el("duo");
+  fonts.forEach(f => { const s = document.createElement("span"); s.className = f; s.lang = f === "hi" ? "hi" : "sa"; s.textContent = t; duo.append(s); });
+  const p = el("cap"); cap(p);
+  c.append(duo, p);
+  return c;
+}
+const txt = (p, s, cls) => { const e = document.createElement("span"); if (cls) e.className = cls; e.textContent = s; p.append(e); };
+
+// Consonants: [letter, ISO, IPA] per column; null = empty cell
+const CONS_HEAD = [["Plosives",4],["Nasal",1],["Approx.",1],["Fricatives",2]];
+const CONS_COLS = ["unvoiced","unvoiced aspirated","voiced","voiced aspirated","voiced","voiced","unvoiced","voiced"];
+const CONS = [
+  ["Guttural","kaṇṭhya",[["क","ka","k"],["ख","kha","kʰ"],["ग","ga","g"],["घ","gha","gʱ"],["ङ","ṅa","ŋ"],null,null,["ह","ha","ɦ"]]],
+  ["Palatal","tālavya",[["च","ca","tʃ"],["छ","cha","tʃʰ"],["ज","ja","dʒ"],["झ","jha","dʒʱ"],["ञ","ña","ɲ"],["य","ya","j"],["श","śa","ʃ"],null]],
+  ["Retroflex","mūrdhanya",[["ट","ṭa","ʈ"],["ठ","ṭha","ʈʰ"],["ड","ḍa","ɖ"],["ढ","ḍha","ɖʱ"],["ण","ṇa","ɳ"],["र","ra","r"],["ष","ṣa","ʂ"],null]],
+  ["Dental","dantya",[["त","ta","t̪"],["थ","tha","t̪ʰ"],["द","da","d̪"],["ध","dha","d̪ʱ"],["न","na","n"],["ल","la","l"],["स","sa","s"],null]],
+  ["Labial","oṣṭhya",[["प","pa","p"],["फ","pha","pʰ"],["ब","ba","b"],["भ","bha","bʱ"],["म","ma","m"],["व","va","ʋ"],null,null]],
+];
+function buildCons(){
+  const g = $("cons");
+  g.append(el("ch"));
+  CONS_HEAD.forEach(([h, n]) => { const d = el("gh"); d.textContent = h; d.style.gridColumn = "span " + n; g.append(d); });
+  g.append(el("rl", "<small>Place</small>"));
+  CONS_COLS.forEach(c => { const d = el("ch"); d.textContent = c; g.append(d); });
+  CONS.forEach(([name, skt, cells]) => {
+    const r = el("rl"); r.textContent = name; const sm = document.createElement("small"); sm.textContent = skt; r.append(sm); g.append(r);
+    cells.forEach(c => g.append(c ? tile(c[0], p => { txt(p, c[1] + " "); txt(p, "[" + c[2] + "]", "ipa"); }) : el("cell empty")));
+  });
+}
+
+// Vowels: rows of [label, short, long]; each vowel is [letter, sign on प, ISO]
+const VOW = [
+  ["Guttural", ["अ","प","a"], ["आ","पा","ā"]],
+  ["Palatal", ["इ","पि","i"], ["ई","पी","ī"]],
+  ["Labial", ["उ","पु","u"], ["ऊ","पू","ū"]],
+  ["Retroflex", ["ऋ","पृ","ṛ"], ["ॠ","पॄ","ṝ"]],
+  ["Dental", ["ऌ","पॢ","ḷ"], ["ॡ","पॣ","ḹ"]],
+  ["Palato­guttural", ["ए","पे","e"], ["ऐ","पै","ai"]],
+  ["Labio­guttural", ["ओ","पो","o"], ["औ","पौ","au"]],
+  ["Anusvāra · visarga", ["अं","पं","aṃ"], ["अः","पः","aḥ"]],
+  ["Loanwords", ["ऍ","पॅ","ê"], ["ऑ","पॉ","ô"]],
+];
+function vowTile(v){ return tile(v[0], p => { txt(p, v[1], "m"); txt(p, " · " + v[2]); }); }
+function buildVow(){
+  const g = $("vow");
+  // Two blocks side by side: first five rows left, the rest right
+  const left = VOW.slice(0, 5), right = VOW.slice(5);
+  ["", "short", "long", "", "short", "long"].forEach(h => { const d = el("ch"); d.textContent = h; g.append(d); });
+  for (let i = 0; i < left.length; i++){
+    const [a, b] = [left[i], right[i]];
+    const ra = el("rl"); ra.textContent = a[0]; g.append(ra, vowTile(a[1]), vowTile(a[2]));
+    const rb = el("rl r2");
+    if (b){ rb.textContent = b[0]; g.append(rb, vowTile(b[1]), vowTile(b[2])); }
+    else {
+      rb.textContent = "Halant"; g.append(rb);
+      g.append(tile("प्", p => { txt(p, "p"); }));
+      const n = el("note"); n.textContent = "The virama ् removes the inherent a."; n.style.gridColumn = "span 1"; g.append(n);
+    }
+  }
+}
+
+function buildDig(){
+  const g = $("dig");
+  "०१२३४५६७८९".split("").forEach((d, i) => g.append(tile(d, p => txt(p, String(i)))));
+}
+
+buildCons(); buildVow(); buildDig();
+// Wait for the web fonts so the printout never falls back to a system font
+$("print").onclick = () => document.fonts.ready.then(() => window.print());
+</script>
+</body>
+</html>
