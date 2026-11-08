@@ -3,25 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Veden, Epen und Gītā – eine Zeitleiste</title>
+<title>Veden, Epen und Gītā – eine Zeitleiste der Sanskrit-Literatur</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit&display=swap">
 <style>
-/* Layout: header, legend, horizontally scrollable SVG timeline (time vertical, texts horizontal), sticky info panel, numbered connections, short prose overview */
+/* Layout: header, legend, toolbar, horizontally scrollable timeline (sticky year axis on the left, time vertical, texts horizontal),
+   sticky info panel, numbered connection list, short prose overview */
 :root{
   --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
   --slate:#22302e; --chalk:#eef2e9; --accent:#e9a23b; --ink:#241a08;
   --band:rgba(34,48,46,.045); --grid:rgba(28,35,33,.12);
   --l-s:#2f4a46; --l-b:#557a72; --l-a:#9bb8ad; --l-u:#e3b04b;
-  --e-ram:#a8553f; --e-ram2:#d39a85; --e-mbh:#5f4f80; --e-gita:#e9893b;
+  --e-ram:#a8553f; --e-ram2:#d39a85; --e-mbh:#5f4f80; --e-gita:#e9893b; --e-hv:#8a74ad; --e-pur:#a8456b;
+  --dar:#66782f; --dar2:#b4c27a; --sas:#3f6593; --sas2:#9db6d6; --sra:#7d6550;
   --f-deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
   --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root{
   --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120; --slate:#1c2826;
   --band:rgba(226,231,227,.035); --grid:rgba(226,231,227,.1);
-  --l-s:#3c615b; --l-b:#5f877e; --l-a:#9bb8ad; --e-mbh:#6e5d93; color-scheme:dark}}
+  --l-s:#3c615b; --l-b:#5f877e; --e-mbh:#6e5d93; --dar:#71853a; --sas:#4a72a3; --sra:#8a715b; color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
 main{max-width:980px;margin:0 auto;padding:40px 16px 64px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
@@ -36,23 +38,30 @@ p{margin:0}
 .legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:14px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
-.stage{position:relative}
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--panel);border:1px solid var(--line);border-radius:14px}
-.hint{font-size:13px;color:var(--muted);margin-top:6px}
-svg{display:block;width:100%;min-width:760px;height:auto;font-family:var(--f-ui)}
+/* the timeline breaks out of the text column to use the full window width */
+.stage{position:relative;width:calc(100vw - 32px);max-width:2400px;margin-left:calc(50% - 50vw + 16px)}
+@media (min-width:2432px){.stage{margin-left:calc(50% - 1200px)}}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:8px}
+.toolbar button{font:inherit;font-size:14px;font-weight:600;color:var(--fg);background:var(--panel);border:1px solid var(--line);
+  border-radius:999px;padding:5px 14px;cursor:pointer}
+.toolbar button:hover{border-color:var(--accent)}
+.hint{font-size:13px;color:var(--muted)}
+.scroll{display:flex;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+svg{display:block;flex:none;height:auto;font-family:var(--f-ui)}
+#axis{position:sticky;left:0;z-index:1;background:var(--panel);box-shadow:1px 0 0 var(--line)}
 svg .item{cursor:pointer;outline:none}
 svg .item rect{transition:opacity .15s,stroke-width .15s}
 svg .item:focus-visible rect,svg .item.sel rect{stroke:var(--fg);stroke-width:2.5}
-svg.has-sel .item:not(.sel):not(.rel){opacity:.35}
+svg.has-sel .item:not(.sel):not(.rel){opacity:.3}
 svg .link{fill:none;stroke:var(--fg);stroke-width:1.6;opacity:.75;transition:opacity .15s}
 svg .badge circle{fill:var(--fg)}
 svg .badge text{fill:var(--bg);font-size:11px;font-weight:600}
-svg.has-sel .conn:not(.on){opacity:.12}
-svg .conn.on .link{stroke:var(--accent);stroke-width:2.4;opacity:1}
-svg .conn.on .badge circle{fill:var(--accent)}
-svg .conn.on .badge text{fill:var(--ink)}
+svg.has-sel .conn:not(.on){opacity:.1}
+svg .conn.on .link,svg .dyn .link{stroke:var(--accent);stroke-width:2.4;opacity:1}
+svg .conn.on .badge circle,svg .dyn .badge circle{fill:var(--accent)}
+svg .conn.on .badge text,svg .dyn .badge text{fill:var(--ink)}
 .panel{position:static;bottom:10px;margin-top:12px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
-  border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:46vh;overflow:auto;z-index:2}
+  border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:46vh;overflow:auto;z-index:3;max-width:980px}
 .panel.active{position:sticky}
 .panel .meta{font-size:13px;color:var(--muted);margin-bottom:6px}
 .panel p+p{margin-top:6px}
@@ -60,9 +69,10 @@ svg .conn.on .badge text{fill:var(--ink)}
 .panel .deva{font-family:var(--f-deva);font-size:18px;margin-left:6px;font-weight:400}
 .panel .x{float:right;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:0 0 0 10px}
 .conns{margin:0;padding-left:0;list-style:none;display:grid;gap:8px}
-.conns li{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;cursor:pointer}
-.conns b.n{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;margin-top:2px}
-.conns li:hover b.n{background:var(--accent);color:var(--ink)}
+.conns li{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;cursor:pointer}
+.conns b.n{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;margin-top:1px}
+.conns b.n.dy{background:none;color:var(--fg);border:1.5px dashed var(--fg)}
+.conns li:hover b.n{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .card p{color:var(--muted);font-size:15px}
@@ -74,27 +84,37 @@ svg .conn.on .badge text{fill:var(--ink)}
   <header>
     <a class="back" href="index.html">← Demos</a>
     <h1>Veden, Epen und Gītā</h1>
-    <p class="lead">Wie die vier Veden, das Rāmāyaṇa, das Mahābhārata und die Bhagavad Gītā zeitlich und inhaltlich zusammenhängen. Senkrecht läuft die Zeit von oben nach unten, waagrecht stehen die Texte. Jedes Rechteck ist ein Text oder eine Textschicht.</p>
+    <p class="lead">Die wichtigsten Texte der Sanskrit-Literatur von den Veden bis um 1000 n. Chr. Senkrecht läuft die Zeit von oben nach unten, waagrecht stehen die Texte, nach Gruppen geordnet. Jedes Rechteck ist ein Text oder eine Textschicht.</p>
   </header>
 
   <div class="legend" aria-label="Legende">
-    <span><i style="background:var(--l-s)"></i>Saṃhitā · Hymnen, Formeln</span>
-    <span><i style="background:var(--l-b)"></i>Brāhmaṇa · Ritualerklärung</span>
-    <span><i style="background:var(--l-a)"></i>Āraṇyaka · Waldtexte</span>
-    <span><i style="background:var(--l-u)"></i>Upaniṣad · Philosophie</span>
-    <span><i style="background:var(--e-ram)"></i>Rāmāyaṇa</span>
-    <span><i style="background:var(--e-mbh)"></i>Mahābhārata</span>
+    <span><i style="background:var(--l-s)"></i>Saṃhitā</span>
+    <span><i style="background:var(--l-b)"></i>Brāhmaṇa</span>
+    <span><i style="background:var(--l-a)"></i>Āraṇyaka</span>
+    <span><i style="background:var(--l-u)"></i>Upaniṣad</span>
+    <span><i style="background:var(--e-mbh)"></i>Epen</span>
     <span><i style="background:var(--e-gita)"></i>Bhagavad Gītā</span>
+    <span><i style="background:var(--e-pur)"></i>Purāṇas</span>
+    <span><i style="background:var(--dar)"></i>Darśanas</span>
+    <span><i style="background:var(--sas)"></i>Vedāṅgas und Śāstras</span>
+    <span><i style="background:var(--sra)"></i>Buddhismus, Jainismus</span>
   </div>
 
   <section class="stage">
-    <div class="scroll"><svg id="chart" viewBox="0 0 930 985" role="img" aria-label="Zeitleiste der Veden und Epen"></svg></div>
-    <p class="hint">Tippe auf ein Rechteck oder eine Nummer. Auf dem Handy lässt sich die Grafik seitlich schieben.</p>
+    <div class="toolbar">
+      <button id="fit" type="button">Ganze Grafik zeigen</button>
+      <span class="hint">Tippe auf ein Rechteck oder eine Nummer. Die Grafik lässt sich seitlich schieben.</span>
+    </div>
+    <div class="scroll" id="scroller">
+      <svg id="axis" aria-hidden="true"></svg>
+      <svg id="chart" role="img" aria-label="Zeitleiste der Sanskrit-Literatur"></svg>
+    </div>
     <div class="panel" id="panel" aria-live="polite"></div>
   </section>
 
   <section>
     <h2>Verbindungen</h2>
+    <p class="note" style="margin-bottom:10px">Volle Nummern sind in der Grafik immer eingezeichnet, gestrichelte erscheinen erst, wenn du einen der beiden Texte antippst.</p>
     <ol class="conns" id="conns"></ol>
   </section>
 
@@ -103,20 +123,28 @@ svg .conn.on .badge text{fill:var(--ink)}
     <div class="cards">
       <div class="card"><h3>Drei Ritual-Veden und ein vierter</h3><p>Ṛg-, Yajur- und Sāmaveda dienen demselben Opfer, jeder einem anderen Priester: Der Hotṛ rezitiert die Hymnen, der Adhvaryu führt die Handlungen mit Formeln aus, der Udgātṛ singt. Der Atharvaveda mit Heil- und Schutzsprüchen kam später als vierter hinzu; sein Brahman-Priester überwacht das Ganze.</p></div>
       <div class="card"><h3>Vier Schichten je Veda</h3><p>Auf die Saṃhitā folgen Brāhmaṇas (Ritualerklärung), Āraṇyakas (Waldtexte) und Upaniṣaden. Der Weg führt vom äußeren Opfer zur inneren Erkenntnis von Ātman und Brahman. Die Upaniṣaden heißen daher auch Vedānta, „Ende des Veda“.</p></div>
-      <div class="card"><h3>Śruti und Smṛti</h3><p>Die Veden sind Śruti, „gehört“: ewig und ohne Autor. Die Epen sind Smṛti oder Itihāsa, „erinnert“: von Menschen gedichtet, um vedische Werte in Geschichten zu fassen. Das Mahābhārata nennt sich „fünfter Veda“ und war für alle gedacht, auch für Frauen und Śūdras.</p></div>
-      <div class="card"><h3>Die Gītā als Brücke</h3><p>Die Gītā ist ein Teil des Mahābhārata. Sie deutet das vedische Opfer als selbstloses Handeln, übernimmt aus den Upaniṣaden die Lehre vom Selbst und fügt die Hingabe an Kṛṣṇa (Bhakti) hinzu. Mit Upaniṣaden und Brahmasūtra bildet sie die drei Grundlagen des Vedānta.</p></div>
+      <div class="card"><h3>Śruti und Smṛti</h3><p>Die Veden sind Śruti, „gehört“: ewig und ohne Autor. Alles andere ist Smṛti, „erinnert“: von Menschen verfasst. Dazu gehören die Epen und Purāṇas, aber auch die Lehrbücher. Das Mahābhārata, die Purāṇas und sogar das Nāṭyaśāstra nennen sich „fünfter Veda“ und wollen den Veda allen zugänglich machen.</p></div>
+      <div class="card"><h3>Die Gītā als Brücke</h3><p>Die Gītā ist ein Teil des Mahābhārata. Sie deutet das vedische Opfer als selbstloses Handeln, übernimmt aus den Upaniṣaden die Lehre vom Selbst und fügt die Hingabe an Kṛṣṇa (Bhakti) hinzu. Mit Upaniṣaden und Brahmasūtra bildet sie die drei Grundlagen des Vedānta, die Śaṅkara im 8. Jahrhundert kommentiert.</p></div>
+      <div class="card"><h3>Vedāṅgas und Śāstras</h3><p>Sechs „Glieder des Veda“ sichern, dass er richtig gesprochen, verstanden und angewandt wird: Lautlehre, Ritual (Kalpa), Grammatik, Worterklärung, Metrik und Astronomie. Aus dem Ritual-Teil wachsen die Rechtsbücher bis zur Manusmṛti, aus der Grammatik Pāṇinis Werk. Daneben entstehen Lehrbücher für Staatskunst und Theater.</p></div>
+      <div class="card"><h3>Sechs Darśanas</h3><p>Die klassischen „Sichtweisen“ der Philosophie, die den Veda anerkennen, bilden drei Paare: Mīmāṃsā und Vedānta deuten Ritual und Upaniṣaden, Sāṃkhya und Yoga trennen Bewusstsein und Materie, Nyāya und Vaiśeṣika behandeln Logik und Natur. Jede Schule hat ein Sūtra als Grundtext.</p></div>
+      <div class="card"><h3>Gegenstimmen</h3><p>Buddha und Mahāvīra lehrten im 5. Jahrhundert v. Chr., zur Zeit der späten Upaniṣaden. Sie teilen Begriffe wie Karma, Wiedergeburt und Befreiung, lehnen aber die Autorität des Veda, das Opfer und den Vorrang der Brahmanen ab. Ihre Schriften wurden lange mündlich überliefert.</p></div>
     </div>
   </section>
 
-  <p class="note">Alle Datierungen sind grobe Schätzungen der Forschung und teils umstritten; die Schichten überlappen in Wirklichkeit stärker, als die Rechtecke zeigen. Die traditionelle Sicht datiert die Veden deutlich früher.</p>
+  <p class="note">Alle Datierungen sind grobe Schätzungen der Forschung und teils stark umstritten; lange Rechtecke stehen oft eher für Unsicherheit als für eine lange Entstehungszeit. Die Schichten überlappen in Wirklichkeit stärker, als die Rechtecke zeigen. Die traditionelle Sicht datiert viele Texte deutlich früher.</p>
 </main>
 
 <script>
 const NS = "http://www.w3.org/2000/svg";
 const svg = document.getElementById("chart");
+const axis = document.getElementById("axis");
 const panel = document.getElementById("panel");
-const W = 930, Y0 = 120, K = 0.42;
-const Y = yr => Y0 + (yr + 1600) * K;
+const scroller = document.getElementById("scroller");
+
+/* Time scale */
+const START = -1600, END = 1000, Y0 = 122, K = 0.42;
+const Y = yr => Y0 + (yr - START) * K;
+const H = Math.round(Y(END) + 26), AXW = 96;
 
 function el(tag, attrs, parent, text){
   const n = document.createElementNS(NS, tag);
@@ -137,19 +165,47 @@ function longDate(a, b){
   return `ca. ${a}–${b} n. Chr.`;
 }
 
-/* Columns: x and width */
-const C = { rv:[106,96], yv:[222,96], sv:[338,96], av:[454,96], mbh:[590,212], gita:[598,92], ram:[822,96] };
-
-const heads = [
-  {c:"rv",  deva:"ऋग्वेद",   name:"Ṛgveda",   r1:"Hotṛ",     r2:"rezitiert"},
-  {c:"yv",  deva:"यजुर्वेद",  name:"Yajurveda", r1:"Adhvaryu", r2:"handelt"},
-  {c:"sv",  deva:"सामवेद",   name:"Sāmaveda", r1:"Udgātṛ",   r2:"singt"},
-  {c:"av",  deva:"अथर्ववेद", name:"Atharvaveda", r1:"Brahman", r2:"wacht"},
-  {c:"mbh", deva:"महाभारत",  name:"Mahābhārata", r1:"Vyāsa", r2:"„fünfter Veda“"},
-  {c:"ram", deva:"रामायण",   name:"Rāmāyaṇa", r1:"Vālmīki",  r2:"„erster Dichter“"},
+/* Column layout: groups of columns, left to right */
+const CW = 92, GAP = 16, GGAP = 40, X0 = 14;
+const groups = [
+  {label:"ŚRUTI · „das Gehörte“ · die vier Veden", cols:[
+    {k:"rv", deva:"ऋग्वेद", name:"Ṛgveda", r1:"Hotṛ", r2:"rezitiert"},
+    {k:"yv", deva:"यजुर्वेद", name:"Yajurveda", r1:"Adhvaryu", r2:"handelt"},
+    {k:"sv", deva:"सामवेद", name:"Sāmaveda", r1:"Udgātṛ", r2:"singt"},
+    {k:"av", deva:"अथर्ववेद", name:"Atharvaveda", r1:"Brahman", r2:"wacht"}]},
+  {label:"SMṚTI · Epen und Purāṇas", cols:[
+    {k:"mbh", u:2, deva:"महाभारत", name:"Mahābhārata", r1:"Vyāsa", r2:"„fünfter Veda“"},
+    {k:"ram", deva:"रामायण", name:"Rāmāyaṇa", r1:"Vālmīki", r2:"„erster Dichter“"},
+    {k:"hv", deva:"हरिवंश", name:"Harivaṃśa", r1:"Anhang zum", r2:"Mahābhārata"},
+    {k:"pur", deva:"पुराण", name:"Purāṇas", r1:"„alte", r2:"Geschichten“"}]},
+  {label:"DARŚANAS · philosophische Sūtras", cols:[
+    {k:"ved", deva:"मीमांसा", name:"Mīmāṃsā", r1:"und Vedānta", r2:"Ritual · Brahman"},
+    {k:"sk", deva:"साङ्ख्य", name:"Sāṃkhya", r1:"Puruṣa", r2:"und Prakṛti"},
+    {k:"yoga", deva:"योग", name:"Yoga", r1:"Patañjali", r2:"Praxis"},
+    {k:"nv", deva:"न्याय", name:"Nyāya", r1:"und Vaiśeṣika", r2:"Logik · Atome"}]},
+  {label:"VEDĀṄGAS UND ŚĀSTRAS · Lehrbücher", cols:[
+    {k:"kalpa", deva:"कल्प", name:"Kalpa", r1:"Vedāṅga", r2:"Ritualregeln"},
+    {k:"dharma", deva:"धर्म", name:"Dharma", r1:"Recht", r2:"und Pflichten"},
+    {k:"vyak", deva:"व्याकरण", name:"Grammatik", r1:"Vedāṅga", r2:"Sprache"},
+    {k:"artha", deva:"अर्थ", name:"Artha", r1:"Kauṭilya", r2:"Staatskunst"},
+    {k:"natya", deva:"नाट्य", name:"Nāṭya", r1:"Bharata", r2:"Theater"}]},
+  {label:"ŚRAMAṆA · Gegenstimmen", cols:[
+    {k:"bud", deva:"बौद्ध", name:"Buddhismus", r1:"Pāli-Kanon", r2:"ohne Veda"},
+    {k:"jain", deva:"जैन", name:"Jainismus", r1:"Āgamas", r2:"ohne Veda"}]},
 ];
+const C = {};
+let x = X0;
+groups.forEach(g => {
+  g.x1 = x;
+  g.cols.forEach(c => { const u = c.u || 1, w = u*CW + (u-1)*GAP; C[c.k] = [x, w]; c.x = x; c.w = w; x += w + GAP; });
+  g.x2 = x - GAP;
+  x += GGAP - GAP;
+});
+const W = x - GGAP + GAP + X0;
+C.gita = [C.mbh[0] + 8, 92];
+const L = k => C[k][0], R = k => C[k][0] + C[k][1], CX = k => C[k][0] + C[k][1]/2;
 
-/* Items: id, column, from, to, fill var, light text?, label, sub (works), panel texts */
+/* Items */
 const items = [
   {id:"rv-s", c:"rv", a:-1500, b:-1100, f:"--l-s", t:"Saṃhitā", sub:"1028 Hymnen, 10 Bücher",
    title:"Ṛgveda-Saṃhitā", deva:"ऋग्वेद",
@@ -163,7 +219,7 @@ const items = [
    rel:"Übergang vom äußeren Opfer zur Meditation über seinen Sinn."},
   {id:"rv-u", c:"rv", a:-650, b:-450, f:"--l-u", t:"Upaniṣad", sub:"Aitareya, Kauṣītaki", dark:true,
    title:"Ṛgveda-Upaniṣaden", txt:"Aitareya- und Kauṣītaki-Upaniṣad. Die Aitareya-Upaniṣad beschreibt den Ātman als Ursprung der Welt und enthält den „großen Satz“ prajñānaṃ brahma: Bewusstsein ist Brahman.",
-   rel:"Teil des Vedānta, auf den sich später auch die Gītā stützt."},
+   rel:"Teil des Vedānta, auf den sich später auch Gītā und Brahmasūtra stützen."},
 
   {id:"yv-s", c:"yv", a:-1200, b:-900, f:"--l-s", t:"Saṃhitā", sub:"Schwarz, Weiß",
    title:"Yajurveda-Saṃhitā", deva:"यजुर्वेद",
@@ -171,13 +227,13 @@ const items = [
    rel:"Bettet viele Ṛgveda-Verse in den Ablauf des Opfers ein."},
   {id:"yv-b", c:"yv", a:-900, b:-750, f:"--l-b", t:"Brāhmaṇa", sub:"Śatapatha, Taittirīya",
    title:"Yajurveda-Brāhmaṇas", txt:"Vor allem das Śatapatha-Brāhmaṇa (Weißer YV), das umfangreichste Brāhmaṇa, und das Taittirīya-Brāhmaṇa. Ausführliche Opfertheorie: Durch das Opfer werden Welt und Götter erhalten.",
-   rel:"Die Gītā greift diesen Gedanken auf (3,9–16), deutet aber jedes selbstlose Handeln als Opfer (4,24–33)."},
+   rel:"Die Gītā greift diesen Gedanken auf (3,9–16), deutet aber jedes selbstlose Handeln als Opfer (4,24–33). Kalpasūtras und Mīmāṃsā bauen auf dieser Ritualtheorie auf."},
   {id:"yv-a", c:"yv", a:-750, b:-650, f:"--l-a", t:"Āraṇyaka", sub:"Taittirīya", dark:true,
    title:"Yajurveda-Āraṇyakas", txt:"Taittirīya-Āraṇyaka; die Bṛhadāraṇyaka-Upaniṣad ist zugleich „großes Āraṇyaka“ und Schluss des Śatapatha-Brāhmaṇa.",
    rel:"Zeigt, wie fließend die Schichten ineinander übergehen."},
   {id:"yv-u", c:"yv", a:-650, b:-200, f:"--l-u", t:"Upaniṣad", sub:"Bṛhadāraṇyaka, Taittirīya, Īśā, Kaṭha, Śvetāśvatara", dark:true,
    title:"Yajurveda-Upaniṣaden", txt:"Bṛhadāraṇyaka (die älteste Upaniṣad: Ātman ist Brahman, Lehre von Karma und Wiedergeburt), Taittirīya, Īśā, Kaṭha (Naciketas befragt den Tod) und Śvetāśvatara (ein persönlicher Gott, erste Ansätze der Bhakti).",
-   rel:"Engster Bezug zur Gītā: Gītā 2,19–20 entspricht fast wörtlich Kaṭha-Upaniṣad 1,2,18–19."},
+   rel:"Engster Bezug zur Gītā: Gītā 2,19–20 entspricht fast wörtlich Kaṭha-Upaniṣad 1,2,18–19. Kaṭha und Śvetāśvatara kennen schon Sāṃkhya und Yoga."},
 
   {id:"sv-s", c:"sv", a:-1200, b:-1000, f:"--l-s", t:"Saṃhitā", sub:"~1875 Verse",
    title:"Sāmaveda-Saṃhitā", deva:"सामवेद",
@@ -191,7 +247,7 @@ const items = [
    rel:"Übergang zur Philosophie der Upaniṣaden."},
   {id:"sv-u", c:"sv", a:-700, b:-450, f:"--l-u", t:"Upaniṣad", sub:"Chāndogya, Kena", dark:true,
    title:"Sāmaveda-Upaniṣaden", txt:"Chāndogya-Upaniṣad, mit dem berühmten tat tvam asi („Das bist du“), das Uddālaka seinem Sohn Śvetaketu lehrt; Kena-Upaniṣad: Brahman als Kraft hinter den Göttern.",
-   rel:"Gehört mit der Bṛhadāraṇyaka zu den ältesten Upaniṣaden."},
+   rel:"Gehört mit der Bṛhadāraṇyaka zu den ältesten Upaniṣaden. Die Chāndogya nennt schon „Itihāsa und Purāṇa“ den fünften Veda (7,1,2)."},
 
   {id:"av-s", c:"av", a:-1100, b:-900, f:"--l-s", t:"Saṃhitā", sub:"~730 Hymnen, 20 Bücher",
    title:"Atharvaveda-Saṃhitā", deva:"अथर्ववेद",
@@ -201,17 +257,17 @@ const items = [
    title:"Gopatha-Brāhmaṇa", txt:"Das einzige Brāhmaṇa des Atharvaveda, vergleichsweise spät. Ein eigenes Āraṇyaka fehlt.",
    rel:"Die späte Einordnung spiegelt die späte Anerkennung als vierter Veda."},
   {id:"av-u", c:"av", a:-400, b:-100, f:"--l-u", t:"Upaniṣad", sub:"Muṇḍaka, Praśna, Māṇḍūkya", dark:true,
-   title:"Atharvaveda-Upaniṣaden", txt:"Muṇḍaka (unterscheidet niederes Wissen, wozu sie selbst die vier Veden zählt, vom höheren Wissen um Brahman), Praśna und Māṇḍūkya (die Silbe OM und vier Zustände des Bewusstseins).",
+   title:"Atharvaveda-Upaniṣaden", txt:"Muṇḍaka (unterscheidet niederes Wissen, wozu sie selbst die vier Veden und die Vedāṅgas zählt, vom höheren Wissen um Brahman), Praśna und Māṇḍūkya (die Silbe OM und vier Zustände des Bewusstseins).",
    rel:"Die Relativierung des Veda-Wissens klingt in der Gītā wieder an (2,42–46)."},
 
   {id:"mbh", c:"mbh", a:-400, b:400, f:"--e-mbh", t:"Mahābhārata", sub:"18 Bücher, ~100.000 Strophen", big:true,
    title:"Mahābhārata", deva:"महाभारत",
-   txt:"Über acht Jahrhunderte gewachsen: rund 100.000 Doppelverse in 18 Büchern. Der Bruderkrieg der Pāṇḍavas gegen die Kauravas bei Kurukṣetra, dazu große Lehrteile über Dharma, Politik und Erlösung (Bücher 12 und 13).",
-   rel:"Vyāsa zugeschrieben, der laut Tradition auch den einen Veda in vier geteilt hat. Nennt sich „fünfter Veda“ und war für alle Stände gedacht. Enthält die Gītā und eine Kurzfassung des Rāmāyaṇa."},
+   txt:"Über acht Jahrhunderte gewachsen: rund 100.000 Doppelverse in 18 Büchern. Der Bruderkrieg der Pāṇḍavas gegen die Kauravas bei Kurukṣetra, dazu große Lehrteile über Dharma, Königtum, Sāṃkhya und Erlösung (Bücher 12 und 13).",
+   rel:"Vyāsa zugeschrieben, der laut Tradition auch den einen Veda in vier geteilt hat. Nennt sich „fünfter Veda“ und war für alle Stände gedacht. Enthält die Gītā und eine Kurzfassung des Rāmāyaṇa; der Harivaṃśa ist sein Anhang."},
   {id:"gita", c:"gita", a:-200, b:200, f:"--e-gita", t:"Bhagavad Gītā", sub:"700 Verse, 18 Kapitel", dark:true,
    title:"Bhagavad Gītā", deva:"भगवद्गीता",
    txt:"700 Verse in 18 Kapiteln, Buch 6 des Mahābhārata (Bhīṣmaparvan, Kapitel 23–40). Arjuna zögert vor der Schlacht, Kṛṣṇa lehrt ihn drei Wege: Handeln ohne Anhaften an die Früchte (Karma), Erkenntnis (Jñāna) und Hingabe (Bhakti).",
-   rel:"Sie verbindet vedisches Opfer, Upaniṣaden-Philosophie und Bhakti. Bloße Opfergläubigkeit kritisiert sie: Für den Wissenden ist der Veda wie ein Brunnen, wenn ringsum alles überflutet ist (2,46). Gilt selbst als Upaniṣad."},
+   rel:"Sie verbindet vedisches Opfer, Upaniṣaden-Philosophie, Sāṃkhya und Bhakti. Bloße Opfergläubigkeit kritisiert sie: Für den Wissenden ist der Veda wie ein Brunnen, wenn ringsum alles überflutet ist (2,46). Gilt selbst als Upaniṣad."},
   {id:"ram-c", c:"ram", a:-500, b:-200, f:"--e-ram", t:"Kern", sub:"Bücher 2–6",
    title:"Rāmāyaṇa · Kern", deva:"रामायण",
    txt:"Von Vālmīki, dem „ersten Dichter“ (ādikavi). Rund 24.000 Strophen in sieben Büchern; der Kern sind die Bücher 2–6: Rāmas Verbannung, Sītās Entführung durch Rāvaṇa, der Feldzug nach Laṅkā.",
@@ -219,169 +275,350 @@ const items = [
   {id:"ram-l", c:"ram", a:-200, b:200, f:"--e-ram2", t:"Bücher 1 & 7", sub:"Rāma als Avatar", dark:true,
    title:"Rāmāyaṇa · spätere Bücher", txt:"Buch 1 und 7 rahmen die Erzählung: Rāmas Geburt und Jugend, später Sītās Verstoßung. Hier wird Rāma ausdrücklich als Avatar Viṣṇus verehrt.",
    rel:"Dieselbe Bewegung wie in der Gītā: hin zur Verehrung eines persönlichen Gottes."},
-];
+  {id:"hv", c:"hv", a:100, b:300, f:"--e-hv", t:"Harivaṃśa", sub:"Kṛṣṇas Kindheit, ~16.000 Verse",
+   title:"Harivaṃśa", deva:"हरिवंश",
+   txt:"Anhang (khila) zum Mahābhārata mit rund 16.000 Versen: die Herkunft der Yādavas und Kṛṣṇas Kindheit und Jugend unter den Hirten.",
+   rel:"Ergänzt, was das Mahābhārata über Kṛṣṇa auslässt, und ist die Grundlage der späteren Kṛṣṇa-Erzählungen in den Purāṇas."},
+  {id:"pur-e", c:"pur", a:300, b:700, f:"--e-pur", t:"Frühe Purāṇas", sub:"Vāyu, Viṣṇu, Mārkaṇḍeya",
+   title:"Frühe Purāṇas", deva:"पुराण",
+   txt:"Mythen über Schöpfung, Weltzeitalter und Königsgeschlechter, dazu die Verehrung von Viṣṇu, Śiva und der Göttin. Das Mārkaṇḍeya-Purāṇa enthält das Devī-Māhātmya, den Grundtext der Göttinnenverehrung. Die Tradition zählt 18 „große“ Purāṇas.",
+   rel:"Sie gelten als „fünfter Veda“ und tragen vedische Inhalte in Erzählungen zu allen Ständen. Sie wuchsen über Jahrhunderte weiter."},
+  {id:"pur-b", c:"pur", a:850, b:950, f:"--e-pur", t:"Bhāgavata", sub:"Purāṇa", ds:"um 900", dl:"um 900 n. Chr. (9./10. Jh.)",
+   title:"Bhāgavata-Purāṇa",
+   txt:"Das einflussreichste Purāṇa der Kṛṣṇa-Verehrung. Buch 10 erzählt ausführlich Kṛṣṇas Kindheit und sein Spiel mit den Hirtinnen (Gopīs).",
+   rel:"Führt Harivaṃśa und Gītā weiter: Bhakti, die liebende Hingabe, wird hier zum wichtigsten Weg."},
 
+  {id:"mim", c:"ved", a:-300, b:-200, f:"--dar", t:"Mīmāṃsā", sub:"Jaimini",
+   title:"Mīmāṃsā-Sūtra", deva:"मीमांसासूत्र",
+   txt:"Rund 2700 Sūtras des Jaimini. Sie legen dar, wie die Ritualtexte des Veda auszulegen sind und warum das vedische Gebot (codanā) verbindlich ist.",
+   rel:"Die „frühe“ Mīmāṃsā (pūrva) deutet den Ritual-Teil des Veda; das Brahmasūtra als „späte“ Mīmāṃsā (uttara) deutet die Upaniṣaden."},
+  {id:"bs", c:"ved", a:-200, b:450, f:"--dar", t:"Brahmasūtra", sub:"Bādarāyaṇa, 555 Sūtras",
+   title:"Brahmasūtra", deva:"ब्रह्मसूत्र", dl:"ca. 200 v. Chr. – 200 n. Chr., Endfassung bis um 450",
+   txt:"Rund 555 sehr knappe Merksätze in vier Kapiteln, die die Lehre der Upaniṣaden über Brahman ordnen und gegen andere Schulen verteidigen. Auch Vedānta-Sūtra genannt. Ohne Kommentar kaum verständlich.",
+   rel:"Bādarāyaṇa zugeschrieben, den die Tradition oft mit Vyāsa gleichsetzt. Zusammen mit Upaniṣaden und Gītā einer der drei Grundtexte des Vedānta (prasthāna-trayī)."},
+  {id:"sank", c:"ved", a:700, b:800, f:"--dar2", t:"Śaṅkara", sub:"Kommentare", dark:true, ds:"8. Jh. n.", dl:"8. Jh. n. Chr.",
+   title:"Śaṅkaras Kommentare",
+   txt:"Śaṅkara kommentiert die drei Grundtexte: Upaniṣaden, Gītā und Brahmasūtra. Damit begründet er den Advaita-Vedānta: Ātman und Brahman sind nicht zwei, die Vielheit der Welt ist Schein (māyā).",
+   rel:"Spätere Schulen deuten dieselben drei Texte anders: Rāmānuja (11./12. Jh.) und Madhva (13. Jh.) betonen einen persönlichen Gott."},
+  {id:"sk-e", c:"sk", a:-400, b:200, f:"--dar2", t:"Sāṃkhya", sub:"früh, in Upaniṣaden, Mahābhārata, Gītā", dark:true,
+   title:"Frühes Sāṃkhya", deva:"साङ्ख्य",
+   txt:"Noch ohne eigenes Lehrbuch: Sāṃkhya-Gedanken stehen in der Kaṭha- und Śvetāśvatara-Upaniṣad, ausführlich im Mahābhārata (Mokṣadharma in Buch 12) und in der Gītā (Kapitel 2 und 13).",
+   rel:"Sāṃkhya heißt „Aufzählung“: Es zählt die Bestandteile der Welt auf und trennt reines Bewusstsein (Puruṣa) von der Materie (Prakṛti)."},
+  {id:"skk", c:"sk", a:350, b:450, f:"--dar", t:"Kārikā", sub:"Īśvarakṛṣṇa",
+   title:"Sāṃkhyakārikā",
+   txt:"72 Merkverse des Īśvarakṛṣṇa, das klassische Lehrbuch des Sāṃkhya: 25 Prinzipien (tattvas), die drei Guṇas (sattva, rajas, tamas) und Erlösung durch die Unterscheidung von Puruṣa und Prakṛti.",
+   rel:"Die Guṇa-Lehre kennt man schon aus der Gītā (Kapitel 14, 17 und 18)."},
+  {id:"ys", c:"yoga", a:-200, b:400, f:"--dar", t:"Yogasūtra", sub:"Patañjali, ~195 Sūtras", dl:"ca. 200 v. Chr. – 400 n. Chr., neuere Forschung: um 400",
+   title:"Yogasūtra", deva:"योगसूत्र",
+   txt:"Rund 195 Sūtras in vier Kapiteln. Yoga ist das Zur-Ruhe-Kommen der Bewegungen des Geistes (1,2); dazu der achtgliedrige Weg (aṣṭāṅga) von den ethischen Regeln (yama) bis zur Versenkung (samādhi).",
+   rel:"Baut auf der Sāṃkhya-Lehre von Puruṣa und Prakṛti auf und ergänzt sie um einen besonderen Gott (Īśvara)."},
+  {id:"vai", c:"nv", a:-200, b:100, f:"--dar", t:"Vaiśeṣika", sub:"Kaṇāda",
+   title:"Vaiśeṣika-Sūtra", deva:"वैशेषिक",
+   txt:"Naturphilosophie des Kaṇāda: Die Welt besteht aus Kategorien (padārtha) wie Substanz, Eigenschaft und Bewegung, und alles Stoffliche aus unteilbaren Atomen (paramāṇu).",
+   rel:"Später mit dem Nyāya zu einer gemeinsamen Schule verschmolzen."},
+  {id:"nya", c:"nv", a:100, b:300, f:"--dar", t:"Nyāya", sub:"Akṣapāda Gautama",
+   title:"Nyāya-Sūtra", deva:"न्यायसूत्र",
+   txt:"Lehre vom gültigen Erkennen: Wahrnehmung, Schlussfolgerung, Vergleich und verlässliches Zeugnis, dazu die Regeln der Debatte.",
+   rel:"Auch das Wort des Veda gilt als verlässliches Zeugnis (śabda). Die Methoden prägten alle späteren Schulen, auch die buddhistische Logik."},
+
+  {id:"kal", c:"kalpa", a:-600, b:-300, f:"--sas", t:"Kalpasūtras", sub:"Śrauta, Gṛhya, Śulba",
+   title:"Kalpasūtras", deva:"कल्पसूत्र",
+   txt:"Knappe Regelwerke zum Ritual: Śrautasūtras für die großen Opfer mit drei Feuern, Gṛhyasūtras für die Hausriten von Geburt, Initiation und Hochzeit bis zum Tod, Śulbasūtras für die Geometrie der Altäre (mit frühen Formen des Satzes des Pythagoras).",
+   rel:"Ordnen, was die Brāhmaṇas ausführlich erklärt haben; jede vedische Schule hat ihre eigenen Sūtras. Die Dharmasūtras gehören ebenfalls dazu."},
+  {id:"ds", c:"dharma", a:-500, b:-200, f:"--sas", t:"Dharmasūtras", sub:"Āpastamba, Gautama, Baudhāyana, Vasiṣṭha",
+   title:"Dharmasūtras", deva:"धर्मसूत्र",
+   txt:"Prosa-Regeln über die Pflichten der Stände (varṇa) und Lebensstufen (āśrama), über Reinheit, Buße, Erbrecht und Königtum.",
+   rel:"Teil der Kalpasūtras und Vorläufer der versifizierten Rechtsbücher wie der Manusmṛti."},
+  {id:"manu", c:"dharma", a:-200, b:200, f:"--sas", t:"Manusmṛti", sub:"~2700 Verse, 12 Kapitel",
+   title:"Manusmṛti", deva:"मनुस्मृति",
+   txt:"Rund 2700 Verse in zwölf Kapiteln: Schöpfung, Stände und Lebensstufen, Ehe, Königspflichten, Recht, Buße und Wiedergeburt. Das einflussreichste Rechtsbuch; im 18. Jahrhundert von den Briten als „Hindu-Recht“ übersetzt.",
+   rel:"Teilt viel Stoff mit den Lehrbüchern 12 und 13 des Mahābhārata. Heute wegen seiner Regeln zu Kaste und Frauen stark umstritten."},
+  {id:"yaj", c:"dharma", a:300, b:500, f:"--sas2", t:"Yājñavalkya", sub:"Smṛti", dark:true,
+   title:"Yājñavalkyasmṛti",
+   txt:"Kürzer und systematischer als Manu, gegliedert in Lebensführung, Recht und Buße.",
+   rel:"Grundlage des Kommentars Mitākṣarā (11./12. Jh.), der das Erbrecht großer Teile Indiens bis in die Neuzeit prägte."},
+  {id:"nir", c:"vyak", a:-600, b:-450, f:"--sas", t:"Nirukta", sub:"Yāska",
+   title:"Nirukta", deva:"निरुक्त",
+   txt:"Yāskas Kommentar zu einer Liste schwieriger Veda-Wörter (Nighaṇṭu): erklärt Bedeutung und Herkunft, die älteste Etymologie Indiens.",
+   rel:"Eines der sechs Vedāṅgas. Zeigt, dass die Sprache des Ṛgveda damals schon schwer verständlich war."},
+  {id:"pan", c:"vyak", a:-400, b:-300, f:"--sas", t:"Aṣṭādhyāyī", sub:"Pāṇini", ds:"4. Jh. v.", dl:"ca. 4. Jh. v. Chr.",
+   title:"Pāṇinis Aṣṭādhyāyī", deva:"अष्टाध्यायी",
+   txt:"Rund 4000 knappe Regeln in acht Kapiteln, die die Sanskrit-Sprache vollständig beschreiben, mit Sonderregeln für die vedische Sprache. Eine der großen Leistungen der Sprachwissenschaft.",
+   rel:"Ab Pāṇini gilt sein Sanskrit als Norm: Kunstdichtung und Lehrbücher folgen ihm streng, die Epen nur locker („episches Sanskrit“); die Veden sind in älterem vedischem Sanskrit."},
+  {id:"mbhs", c:"vyak", a:-200, b:-100, f:"--sas2", t:"Mahābhāṣya", sub:"Patañjali", dark:true, ds:"um 150 v.", dl:"um 150 v. Chr.",
+   title:"Mahābhāṣya",
+   txt:"Patañjalis „großer Kommentar“ zu Pāṇini, zusammen mit den Ergänzungen Kātyāyanas. Pāṇini, Kātyāyana und Patañjali gelten als die „drei Weisen“ der Grammatik.",
+   rel:"Ob dieser Patañjali derselbe ist wie der des Yogasūtra, ist umstritten; die meisten Forscher trennen beide."},
+  {id:"art", c:"artha", a:-50, b:300, f:"--sas", t:"Arthaśāstra", sub:"Kauṭilya, 15 Bücher",
+   title:"Arthaśāstra", deva:"अर्थशास्त्र",
+   txt:"Lehrbuch der Staatskunst in 15 Büchern: Verwaltung, Steuern, Recht, Spionage, Diplomatie und Krieg.",
+   rel:"Die Tradition schreibt es Kauṭilya zu, dem Minister des Maurya-Königs Candragupta (um 300 v. Chr.); die Forschung datiert den Text meist später. Dieselben Fragen behandelt das Mahābhārata in den Königspflichten (Buch 12)."},
+  {id:"nat", c:"natya", a:-200, b:200, f:"--sas", t:"Nāṭyaśāstra", sub:"Bharata, 36 Kapitel",
+   title:"Nāṭyaśāstra", deva:"नाट्यशास्त्र",
+   txt:"Handbuch über Theater, Tanz und Musik und Grundlage der indischen Ästhetik: die Lehre vom Rasa, der Grundstimmung, die ein Kunstwerk im Zuschauer weckt.",
+   rel:"Nennt sich selbst Nāṭyaveda, einen „fünften Veda“: Brahmā schuf ihn aus dem Vortrag des Ṛgveda, dem Gesang des Sāmaveda, dem Spiel des Yajurveda und den Gefühlen des Atharvaveda."},
+
+  {id:"pali", c:"bud", a:-450, b:-30, f:"--sra", t:"Pāli-Kanon", sub:"Tipiṭaka, mündlich überliefert",
+   title:"Pāli-Kanon (Tipiṭaka)", deva:"तिपिटक",
+   txt:"Die „drei Körbe“: Ordensregeln (Vinaya), Lehrreden des Buddha (Sutta) und Systematik (Abhidhamma). Lange mündlich überliefert, um 30 v. Chr. in Sri Lanka aufgeschrieben.",
+   rel:"Der Buddha (ca. 5. Jh. v. Chr.) teilt mit den Upaniṣaden Karma, Wiedergeburt und Befreiung, lehnt aber Veda, Opfer und ein ewiges Selbst ab. Im Tevijja-Sutta spottet er über Brahmanen, die den Veda rezitieren, ohne Brahmā je gesehen zu haben."},
+  {id:"jain", c:"jain", a:-450, b:460, f:"--sra", t:"Āgamas", sub:"Śvetāmbara, mündlich überliefert",
+   title:"Jaina-Āgamas", deva:"आगम",
+   txt:"Die Lehren Mahāvīras (ca. 5. Jh. v. Chr.), eines Zeitgenossen des Buddha: Gewaltlosigkeit (ahiṃsā), strenge Askese und eine ewige Welt ohne Schöpfergott. Beim Konzil von Valabhī um 460 n. Chr. aufgeschrieben.",
+   rel:"Lehnt Veda und Tieropfer ab. Die Digambaras erkennen diesen Kanon nicht an; für sie sind die alten Texte verloren."},
+];
+const byId = Object.fromEntries(items.map(i => [i.id, i]));
+const box = id => { const it = byId[id], [x0, w] = C[it.c]; return {x:x0, w, y1:Y(it.a), y2:Y(it.b)}; };
+
+/* Connections: with d → always drawn; without d → drawn as an arc when selected */
+const g = (k) => R(k) + GAP/2; // gutter right of a column
 const conns = [
-  {n:1, from:"rv-s", to:"sv-s", txt:"Der Sāmaveda vertont fast nur Verse aus dem Ṛgveda.",
-   d:`M202 ${Y(-1390)} C300 ${Y(-1430)} 386 ${Y(-1350)} 386 ${Y(-1206)}`, bx:300, by:Y(-1410)},
-  {n:2, from:"rv-s", to:"yv-s", txt:"Der Yajurveda bettet viele Ṛgveda-Verse in seine Opferformeln ein.",
-   d:`M202 ${Y(-1250)} C240 ${Y(-1250)} 270 ${Y(-1245)} 270 ${Y(-1206)}`, bx:236, by:Y(-1285)},
-  {n:3, from:"yv-b", to:"gita", txt:"Opferlehre der Brāhmaṇas → die Gītā deutet selbstloses Handeln als Opfer (3,9–16; 4,24–33).",
-   d:`M318 ${Y(-830)} L328 ${Y(-830)} L328 ${Y(-75)} Q328 ${Y(-60)} 342 ${Y(-60)} L596 ${Y(-60)}`, bx:328, by:Y(-520)},
-  {n:4, from:"yv-u", to:"gita", txt:"Upaniṣaden → Gītā: Ātman und Brahman; Gītā 2,19–20 ≈ Kaṭha-Upaniṣad 1,2,18–19.",
-   d:`M270 ${Y(-200)} L270 ${Y(10)} Q270 ${Y(30)} 290 ${Y(30)} L596 ${Y(30)}`, bx:400, by:Y(30)},
-  {n:5, from:"ram-c", to:"mbh", txt:"Das Mahābhārata erzählt die Rāma-Geschichte in Kurzform nach (Rāmopākhyāna, Buch 3).",
-   d:`M822 ${Y(-222)} L806 ${Y(-222)}`, bx:812, by:Y(-268)},
-];
+  {from:"rv-s", to:"sv-s", txt:"Der Sāmaveda vertont fast nur Verse aus dem Ṛgveda.",
+   d:`M${R("rv")} ${Y(-1390)} C${CX("yv")+30} ${Y(-1430)} ${CX("sv")} ${Y(-1350)} ${CX("sv")} ${Y(-1206)}`, bx:CX("yv")+30, by:Y(-1410)},
+  {from:"rv-s", to:"yv-s", txt:"Der Yajurveda bettet viele Ṛgveda-Verse in seine Opferformeln ein.",
+   d:`M${R("rv")} ${Y(-1250)} C${R("rv")+38} ${Y(-1250)} ${CX("yv")} ${Y(-1245)} ${CX("yv")} ${Y(-1206)}`, bx:R("rv")+28, by:Y(-1290)},
+  {from:"yv-b", to:"gita", txt:"Opferlehre der Brāhmaṇas → die Gītā deutet selbstloses Handeln als Opfer (3,9–16; 4,24–33).",
+   d:`M${R("yv")} ${Y(-830)} L${g("yv")} ${Y(-830)} L${g("yv")} ${Y(-75)} Q${g("yv")} ${Y(-60)} ${g("yv")+14} ${Y(-60)} L${L("gita")-2} ${Y(-60)}`, bx:g("yv"), by:Y(-520)},
+  {from:"yv-u", to:"gita", txt:"Upaniṣaden → Gītā: Ātman und Brahman; Gītā 2,19–20 ≈ Kaṭha-Upaniṣad 1,2,18–19.",
+   d:`M${CX("yv")} ${Y(-200)} L${CX("yv")} ${Y(10)} Q${CX("yv")} ${Y(30)} ${CX("yv")+20} ${Y(30)} L${L("gita")-2} ${Y(30)}`, bx:CX("av"), by:Y(30)},
+  {from:"ram-c", to:"mbh", txt:"Das Mahābhārata erzählt die Rāma-Geschichte in Kurzform nach (Rāmopākhyāna, Buch 3).",
+   d:`M${L("ram")} ${Y(-222)} L${R("mbh")+4} ${Y(-222)}`, bx:L("ram")-GAP/2, by:Y(-268)},
+  {from:"mbh", to:"hv", txt:"Der Harivaṃśa ist als Anhang (khila) an das Mahābhārata angefügt und erzählt Kṛṣṇas Kindheit.",
+   d:`M${R("mbh")} ${Y(250)} L${L("hv")-3} ${Y(250)}`, bx:CX("ram"), by:Y(250)},
+  {from:"hv", to:"pur-b", txt:"Die Kṛṣṇa-Erzählungen des Harivaṃśa leben im Bhāgavata-Purāṇa (Buch 10) weiter.",
+   d:`M${CX("hv")} ${Y(300)} L${CX("hv")} ${Y(880)} Q${CX("hv")} ${Y(900)} ${CX("hv")+18} ${Y(900)} L${L("pur")-3} ${Y(900)}`, bx:CX("hv"), by:Y(600)},
+  {from:"kal", to:"ds", txt:"Die Dharmasūtras sind Teil der Kalpasūtras: Aus den Ritualregeln wächst das Recht.",
+   d:`M${R("kalpa")} ${Y(-400)} L${L("dharma")-3} ${Y(-400)}`, bx:g("kalpa"), by:Y(-448)},
+  {from:"sk-e", to:"ys", txt:"Das Yogasūtra übernimmt die Sāṃkhya-Lehre von Puruṣa und Prakṛti.",
+   d:`M${R("sk")} ${Y(0)} L${L("yoga")-3} ${Y(0)}`, bx:g("sk"), by:Y(-48)},
+  {from:"bs", to:"sank", txt:"Śaṅkara kommentiert das Brahmasūtra und begründet den Advaita-Vedānta.",
+   d:`M${CX("ved")} ${Y(452)} L${CX("ved")} ${Y(694)}`, bx:CX("ved"), by:Y(575)},
+  {from:"pan", to:"mbhs", txt:"Patañjalis Mahābhāṣya kommentiert Pāṇinis Grammatik.",
+   d:`M${CX("vyak")} ${Y(-298)} L${CX("vyak")} ${Y(-205)}`, bx:CX("vyak")+26, by:Y(-252)},
 
-/* Arrow marker */
+  {from:["yv-u","sv-u"], to:"bs", txt:"Das Brahmasūtra fasst die Lehre der Upaniṣaden über Brahman systematisch zusammen."},
+  {from:"gita", to:"bs", txt:"Wo das Brahmasūtra sich auf die „Smṛti“ beruft, lesen die Kommentatoren meist einen Verweis auf die Gītā."},
+  {from:"gita", to:"sank", txt:"Śaṅkaras Gītā-Kommentar ist der älteste erhaltene; Upaniṣaden, Gītā und Brahmasūtra bilden die drei Grundtexte des Vedānta."},
+  {from:"yv-b", to:"mim", txt:"Die Mīmāṃsā deutet die Ritualtexte der Saṃhitās und Brāhmaṇas und begründet, warum das vedische Gebot gilt."},
+  {from:"yv-b", to:"kal", txt:"Die Kalpasūtras fassen die Ritualvorschriften der Brāhmaṇas in knappe Regeln."},
+  {from:"yv-u", to:"sk-e", txt:"Kaṭha- und Śvetāśvatara-Upaniṣad kennen schon Sāṃkhya-Begriffe; die Śvetāśvatara nennt Sāṃkhya und Yoga beim Namen."},
+  {from:"yv-u", to:"ys", txt:"Die Kaṭha-Upaniṣad gibt die älteste Bestimmung von Yoga: das feste Zügeln der Sinne (2,3,11)."},
+  {from:"mbh", to:"sk-e", txt:"Das Mahābhārata (Mokṣadharma, Buch 12) und die Gītā (Kap. 2 und 13) enthalten ausführliche frühe Sāṃkhya-Lehren."},
+  {from:"mbh", to:"manu", txt:"Manusmṛti und die Lehrbücher 12 und 13 des Mahābhārata teilen viel Dharma-Stoff."},
+  {from:"mbh", to:"art", txt:"Die Königspflichten (Rājadharma) im Mahābhārata, Buch 12, behandeln dieselben Fragen wie das Arthaśāstra."},
+  {from:"sv-u", to:"pur-e", txt:"Schon die Chāndogya-Upaniṣad (7,1,2) zählt „Itihāsa und Purāṇa“ als fünften Veda auf."},
+  {from:"rv-s", to:"nir", txt:"Das Nirukta erklärt schwierige Wörter vor allem des Ṛgveda."},
+  {from:["rv-s","yv-s","sv-s","av-s"], to:"nat", txt:"Das Nāṭyaśāstra versteht sich als fünfter Veda, geschaffen aus Elementen aller vier Veden."},
+  {from:"yv-u", to:"pali", txt:"Der Buddha teilt mit den Upaniṣaden Karma, Wiedergeburt und Befreiung, lehnt aber Veda, Opfer und ein ewiges Selbst (Ātman) ab."},
+  {from:"yv-b", to:"jain", txt:"Die Jainas lehnen Veda und Tieropfer ab; ihre Gewaltlosigkeit (ahiṃsā) richtet sich gegen das blutige Opfer."},
+];
+conns.forEach((c, i) => { c.n = i + 1; c.froms = [].concat(c.from); c.tos = [].concat(c.to); });
+
+/* Sizes */
+svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+axis.setAttribute("viewBox", `0 0 ${AXW} ${H}`);
+
+/* Defs: arrow marker */
 const defs = el("defs", {});
 const mk = el("marker", {id:"arr", viewBox:"0 0 10 10", refX:"8", refY:"5", markerWidth:"7", markerHeight:"7", orient:"auto-start-reverse"}, defs);
 el("path", {d:"M0,0 L10,5 L0,10 z", fill:"context-stroke"}, mk);
 
-/* Period bands */
-const bands = [[-1500,-1000,"Frühvedische Zeit"],[-1000,-500,"Spätvedische Zeit"],[-500,400,"Zeit der Epen"]];
+/* Period bands (in both SVGs) and year grid */
+const bands = [[-1500,-1000,"Frühvedische Zeit"],[-1000,-500,"Spätvedische Zeit"],[-500,300,"Epen und Sūtras"],[300,600,"Gupta-Zeit"],[600,1000,"Frühmittelalter"]];
+el("rect", {x:0, y:0, width:AXW, height:H, fill:"var(--panel)"}, axis);
 bands.forEach(([a,b,label],i) => {
-  if (i % 2 === 0) el("rect", {x:0, y:Y(a), width:W, height:Y(b)-Y(a), fill:"var(--band)"});
+  if (i % 2 === 0){
+    el("rect", {x:0, y:Y(a), width:W, height:Y(b)-Y(a), fill:"var(--band)"});
+    el("rect", {x:0, y:Y(a), width:AXW, height:Y(b)-Y(a), fill:"var(--band)"}, axis);
+  }
   const cy = (Y(a)+Y(b))/2;
-  el("text", {x:12, y:cy, transform:`rotate(-90 12 ${cy})`, "text-anchor":"middle", "font-size":12, fill:"var(--muted)", "letter-spacing":".04em"}, null, label.toUpperCase());
+  el("text", {x:12, y:cy, transform:`rotate(-90 12 ${cy})`, "text-anchor":"middle", "font-size":12, fill:"var(--muted)", "letter-spacing":".04em", "font-family":"var(--f-ui)"}, axis, label.toUpperCase());
 });
-
-/* Year grid */
-for (let yr = -1600; yr <= 400; yr += 200){
-  el("line", {x1:96, x2:W-6, y1:Y(yr), y2:Y(yr), stroke:"var(--grid)", "stroke-dasharray": yr===0 ? "" : "3 4"});
+for (let yr = START; yr <= END; yr += 200){
+  el("line", {x1:0, x2:W, y1:Y(yr), y2:Y(yr), stroke:"var(--grid)", "stroke-dasharray": yr===0 ? "" : "3 4"});
+  el("line", {x1:AXW-6, x2:AXW, y1:Y(yr), y2:Y(yr), stroke:"var(--grid)"}, axis);
   const lab = yr < 0 ? `${-yr} v. Chr.` : yr === 0 ? "Zeitenwende" : `${yr} n. Chr.`;
-  el("text", {x:90, y:Y(yr)+4, "text-anchor":"end", "font-size": yr===0?11.5:12, fill:"var(--muted)", "font-weight": yr===0?600:400}, null, lab);
+  el("text", {x:AXW-8, y:Y(yr)+4, "text-anchor":"end", "font-size": yr===0?11.5:12, fill:"var(--muted)", "font-weight": yr===0?600:400, "font-family":"var(--f-ui)"}, axis, lab);
 }
 
-/* Group headers */
-function group(x1, x2, label){
-  el("line", {x1, x2, y1:26, y2:26, stroke:"var(--muted)", "stroke-width":1});
-  el("line", {x1, x2:x1, y1:26, y2:32, stroke:"var(--muted)"});
-  el("line", {x1:x2, x2, y1:26, y2:32, stroke:"var(--muted)"});
-  const t = el("text", {x:(x1+x2)/2, y:20, "text-anchor":"middle", "font-size":12.5, fill:"var(--muted)", "font-weight":600}, null, label);
-}
-group(106, 550, "ŚRUTI · „das Gehörte“ · die vier Veden");
-group(590, 918, "SMṚTI · „das Erinnerte“ · Epen (Itihāsa)");
-
-heads.forEach(h => {
-  const [x,w] = C[h.c], cx = x + w/2;
-  el("text", {x:cx, y:56, "text-anchor":"middle", "font-size":19, fill:"var(--fg)", "font-family":"var(--f-deva)"}, null, h.deva);
-  el("text", {x:cx, y:76, "text-anchor":"middle", "font-size":14, fill:"var(--fg)", "font-weight":600}, null, h.name);
-  el("text", {x:cx, y:93, "text-anchor":"middle", "font-size":11.5, fill:"var(--muted)"}, null, h.r1);
-  el("text", {x:cx, y:107, "text-anchor":"middle", "font-size":11.5, fill:"var(--muted)", "font-style":"italic"}, null, h.r2);
+/* Group and column headers */
+groups.forEach(gr => {
+  el("line", {x1:gr.x1, x2:gr.x2, y1:26, y2:26, stroke:"var(--muted)"});
+  el("line", {x1:gr.x1, x2:gr.x1, y1:26, y2:32, stroke:"var(--muted)"});
+  el("line", {x1:gr.x2, x2:gr.x2, y1:26, y2:32, stroke:"var(--muted)"});
+  el("text", {x:(gr.x1+gr.x2)/2, y:20, "text-anchor":"middle", "font-size":12.5, fill:"var(--muted)", "font-weight":600}, null, gr.label);
+  gr.cols.forEach(h => {
+    const cx = h.x + h.w/2;
+    el("text", {x:cx, y:57, "text-anchor":"middle", "font-size":19, fill:"var(--fg)", "font-family":"var(--f-deva)"}, null, h.deva);
+    el("text", {x:cx, y:77, "text-anchor":"middle", "font-size":14, fill:"var(--fg)", "font-weight":600}, null, h.name);
+    el("text", {x:cx, y:94, "text-anchor":"middle", "font-size":11.5, fill:"var(--muted)"}, null, h.r1);
+    el("text", {x:cx, y:108, "text-anchor":"middle", "font-size":11.5, fill:"var(--muted)", "font-style":"italic"}, null, h.r2);
+  });
 });
 
 /* Items */
 const nodes = {};
 function addItem(it){
-  const [x,w] = C[it.c];
-  const y1 = Y(it.a), y2 = Y(it.b), h = y2 - y1;
-  const g = el("g", {class:"item", tabindex:0, role:"button", "aria-label":`${it.title}, ${longDate(it.a,it.b)}`});
-  el("rect", {x, y:y1+1, width:w, height:h-2, rx:7, fill:`var(${it.f})`, stroke:"var(--panel)", "stroke-width":1}, g);
+  const {x:x0, w, y1, y2} = box(it.id);
+  const gEl = el("g", {class:"item", tabindex:0, role:"button", "aria-label":`${it.title}, ${it.dl || longDate(it.a,it.b)}`});
+  el("rect", {x:x0, y:y1+1, width:w, height:y2-y1-2, rx:7, fill:`var(${it.f})`, stroke:"var(--panel)", "stroke-width":1}, gEl);
   const ink = it.dark ? "var(--ink)" : "#f3f5ef";
-  const cx = x + w/2;
+  const cx = x0 + w/2;
   if (it.big){
-    // Mahābhārata: title in the top band above the inset Gītā, sub lines on the right side
-    el("text", {x:cx, y:y1+24, "text-anchor":"middle", "font-size":15, "font-weight":600, fill:ink}, g, it.t);
-    el("text", {x:cx, y:y1+42, "text-anchor":"middle", "font-size":11.5, fill:ink, opacity:.85}, g, shortDate(it.a,it.b) + " Chr.");
-    el("text", {x:cx, y:y1+60, "text-anchor":"middle", "font-size":11, fill:ink, opacity:.85}, g, it.sub);
-    const rx = 696 + 106/2;
-    ["Krieg bei","Kurukṣetra"].forEach((s,i)=> el("text", {x:rx, y:Y(-60)+i*15, "text-anchor":"middle", "font-size":11, fill:ink, opacity:.8}, g, s));
-    ["Lehrbücher","12 und 13"].forEach((s,i)=> el("text", {x:rx, y:Y(130)+i*15, "text-anchor":"middle", "font-size":11, fill:ink, opacity:.8}, g, s));
-    ["Rāmopākhyāna","(Buch 3)"].forEach((s,i)=> el("text", {x:rx, y:Y(-215)+4+i*15, "text-anchor":"middle", "font-size":11, fill:ink, opacity:.8}, g, s));
+    // Mahābhārata: title band above the inset Gītā, notes in the right half
+    el("text", {x:cx, y:y1+24, "text-anchor":"middle", "font-size":15, "font-weight":600, fill:ink}, gEl, it.t);
+    el("text", {x:cx, y:y1+42, "text-anchor":"middle", "font-size":11.5, fill:ink, opacity:.85}, gEl, shortDate(it.a,it.b) + " Chr.");
+    el("text", {x:cx, y:y1+60, "text-anchor":"middle", "font-size":11, fill:ink, opacity:.85}, gEl, it.sub);
+    const rx = R("gita") + (R("mbh") - R("gita"))/2;
+    const note = (lines, yr) => lines.forEach((s,i) => el("text", {x:rx, y:Y(yr)+4+i*15, "text-anchor":"middle", "font-size":11, fill:ink, opacity:.8}, gEl, s));
+    note(["Rāmopākhyāna","(Buch 3)"], -215);
+    note(["Krieg bei","Kurukṣetra"], -60);
+    note(["Lehrbücher","12 und 13"], 120);
+    note(["Harivaṃśa →"], 238);
   } else {
     let ty = y1 + 19;
-    el("text", {x:cx, y:ty, "text-anchor":"middle", "font-size": it.t.length > 11 ? 12 : 13, "font-weight":600, fill:ink}, g, it.t);
+    el("text", {x:cx, y:ty, "text-anchor":"middle", "font-size": it.t.length > 11 ? 12 : 13, "font-weight":600, fill:ink}, gEl, it.t);
     ty += 15;
-    el("text", {x:cx, y:ty, "text-anchor":"middle", "font-size":10.5, fill:ink, opacity:.85}, g, shortDate(it.a,it.b));
+    el("text", {x:cx, y:ty, "text-anchor":"middle", "font-size":10.5, fill:ink, opacity:.85}, gEl, it.ds || shortDate(it.a,it.b));
     if (it.id === "gita"){
-      el("text", {x:cx, y:ty+24, "text-anchor":"middle", "font-size":17, fill:ink, "font-family":"var(--f-deva)"}, g, "भगवद्गीता");
+      el("text", {x:cx, y:ty+24, "text-anchor":"middle", "font-size":17, fill:ink, "font-family":"var(--f-deva)"}, gEl, "भगवद्गीता");
       ty += 24;
     }
-    const subs = it.sub.split(", ");
-    for (const s of subs){
+    // wrap sub text into lines of ≤ 15 characters, split at ", " and spaces
+    const lines = [];
+    it.sub.split(", ").forEach(part => {
+      let cur = "";
+      part.split(" ").forEach(wd => {
+        if ((cur + " " + wd).trim().length > 15 && cur){ lines.push(cur); cur = wd; }
+        else cur = (cur + " " + wd).trim();
+      });
+      if (cur) lines.push(cur);
+    });
+    for (const s of lines){
       if (ty + 14 + 6 > y2) break;
       ty += 14;
-      el("text", {x:cx, y:ty, "text-anchor":"middle", "font-size":10.5, fill:ink, opacity:.78}, g, s);
+      el("text", {x:cx, y:ty, "text-anchor":"middle", "font-size":10.5, fill:ink, opacity:.78}, gEl, s);
     }
   }
-  g.addEventListener("click", e => { e.stopPropagation(); select(it.id); });
-  g.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); select(it.id); } });
-  nodes[it.id] = g;
+  gEl.addEventListener("click", e => { e.stopPropagation(); select(it.id); });
+  gEl.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); select(it.id); } });
+  nodes[it.id] = gEl;
 }
-// draw Mahābhārata before the inset Gītā
-items.filter(i=>i.id==="mbh").forEach(addItem);
+items.filter(i=>i.id==="mbh").forEach(addItem);   // Mahābhārata first, so the Gītā sits on top
 items.filter(i=>i.id!=="mbh").forEach(addItem);
 
-/* Connections on top */
+/* Static connections on top */
 const connEls = {};
-conns.forEach(c => {
-  const g = el("g", {class:"conn"});
-  el("path", {d:c.d, fill:"none", stroke:"var(--panel)", "stroke-width":6, opacity:.9}, g);
-  el("path", {d:c.d, class:"link", "marker-end":"url(#arr)"}, g);
-  const b = el("g", {class:"badge", style:"cursor:pointer"}, g);
-  el("circle", {cx:c.bx, cy:c.by, r:9.5, stroke:"var(--panel)", "stroke-width":2}, b);
-  el("text", {x:c.bx, y:c.by+4, "text-anchor":"middle"}, b, c.n);
-  b.addEventListener("click", e => { e.stopPropagation(); selectConn(c.n); });
-  connEls[c.n] = g;
+conns.filter(c => c.d).forEach(c => {
+  const gEl = el("g", {class:"conn"});
+  el("path", {d:c.d, fill:"none", stroke:"var(--panel)", "stroke-width":6, opacity:.9}, gEl);
+  el("path", {d:c.d, class:"link", "marker-end":"url(#arr)"}, gEl);
+  badge(gEl, c.bx, c.by, c.n);
+  connEls[c.n] = gEl;
 });
+const dyn = el("g", {class:"dyn"});
+function badge(parent, bx, by, n){
+  const b = el("g", {class:"badge", style:"cursor:pointer"}, parent);
+  el("circle", {cx:bx, cy:by, r:10, stroke:"var(--panel)", "stroke-width":2}, b);
+  el("text", {x:bx, y:by+4, "text-anchor":"middle"}, b, n);
+  b.addEventListener("click", e => { e.stopPropagation(); selectConn(n); });
+}
 
-/* Panel + selection */
-const byId = Object.fromEntries(items.map(i=>[i.id,i]));
+/* Dynamic arcs for connections without a fixed route */
+function arc(fromId, toId){
+  const s = box(fromId), t = box(toId);
+  const right = t.x > s.x;
+  const sx = right ? s.x + s.w : s.x, ex = right ? t.x - 2 : t.x + t.w + 2;
+  const sy = (s.y1 + s.y2)/2, ey = (t.y1 + t.y2)/2;
+  const h = Math.min(320, 50 + Math.abs(ex - sx) * 0.15);
+  const top = Math.max(Y0 + 6, Math.min(sy, ey) - h);
+  const p1x = sx + (ex - sx) * 0.3, p2x = sx + (ex - sx) * 0.7;
+  const d = `M${sx} ${sy} C${p1x} ${top} ${p2x} ${top} ${ex} ${ey}`;
+  const mx = 0.125*sx + 0.375*p1x + 0.375*p2x + 0.125*ex, my = 0.125*sy + 0.75*top + 0.125*ey;
+  return {d, mx, my};
+}
+function drawDyn(c){
+  c.froms.forEach((f, i) => c.tos.forEach(t => {
+    const a = arc(f, t);
+    el("path", {d:a.d, fill:"none", stroke:"var(--panel)", "stroke-width":6, opacity:.9}, dyn);
+    el("path", {d:a.d, class:"link", "stroke-dasharray":"6 4", "marker-end":"url(#arr)"}, dyn);
+    if (i === 0) badge(dyn, a.mx, a.my, c.n);
+  }));
+}
+
+/* Selection and panel */
 const defaultPanel = `<p class="meta">Hinweis</p><p>Tippe auf ein Rechteck, um Inhalt, Datierung und Verbindungen zu sehen. Die Nummern markieren, wo ein Text auf einen anderen zurückgreift.</p>`;
 panel.innerHTML = defaultPanel;
-
+function closeBtn(){ panel.querySelector(".x").onclick = () => { clearSel(); panel.innerHTML = defaultPanel; }; }
 function clearSel(){
   svg.classList.remove("has-sel"); panel.classList.remove("active");
-  Object.values(nodes).forEach(n=>n.classList.remove("sel","rel"));
-  Object.values(connEls).forEach(n=>n.classList.remove("on"));
+  Object.values(nodes).forEach(n => n.classList.remove("sel","rel"));
+  Object.values(connEls).forEach(n => n.classList.remove("on"));
+  dyn.replaceChildren();
 }
-function relatedOf(id){
-  const r = conns.filter(c=>c.from===id||c.to===id);
-  if (id==="gita") r.push({n:0, from:"gita", to:"mbh"});
-  if (id==="mbh") r.push({n:0, from:"gita", to:"mbh"});
-  return r;
+function showConn(c){
+  if (connEls[c.n]) connEls[c.n].classList.add("on"); else drawDyn(c);
+  [...c.froms, ...c.tos].forEach(id => nodes[id].classList.add("rel"));
 }
 function select(id){
   clearSel();
   const it = byId[id];
   svg.classList.add("has-sel"); panel.classList.add("active");
-  nodes[id].classList.add("sel");
-  relatedOf(id).forEach(c => {
-    if (connEls[c.n]) connEls[c.n].classList.add("on");
-    nodes[c.from===id?c.to:c.from].classList.add("rel");
-  });
-  const links = conns.filter(c=>c.from===id||c.to===id).map(c=>`<b>${c.n}</b> ${c.txt}`).join("<br>");
+  const rel = conns.filter(c => c.froms.includes(id) || c.tos.includes(id));
+  rel.forEach(showConn);
+  if (id === "gita") nodes.mbh.classList.add("rel");
+  if (id === "mbh") nodes.gita.classList.add("rel");
+  nodes[id].classList.remove("rel"); nodes[id].classList.add("sel");
+  const links = rel.map(c => `<b>${c.n}</b> ${c.txt}`).join("<br>");
   panel.innerHTML = `<button class="x" aria-label="Schließen">×</button>
-    <h3>${it.title}${it.deva?`<span class="deva">${it.deva}</span>`:""}</h3>
-    <p class="meta">${longDate(it.a,it.b)}</p>
-    <p>${it.txt}</p><p class="rel">${it.rel}</p>${links?`<p class="rel">${links}</p>`:""}`;
-  panel.querySelector(".x").onclick = () => { clearSel(); panel.innerHTML = defaultPanel; };
+    <h3>${it.title}${it.deva ? `<span class="deva">${it.deva}</span>` : ""}</h3>
+    <p class="meta">${it.dl || longDate(it.a, it.b)}</p>
+    <p>${it.txt}</p><p class="rel">${it.rel}</p>${links ? `<p class="rel">${links}</p>` : ""}`;
+  closeBtn();
 }
-function selectConn(n){
+const names = ids => ids.map(i => byId[i].title).join(", ");
+function selectConn(n, scroll){
   clearSel();
-  const c = conns.find(x=>x.n===n);
+  const c = conns[n - 1];
   svg.classList.add("has-sel"); panel.classList.add("active");
-  connEls[n].classList.add("on");
-  nodes[c.from].classList.add("rel"); nodes[c.to].classList.add("rel");
+  showConn(c);
   panel.innerHTML = `<button class="x" aria-label="Schließen">×</button>
-    <h3>Verbindung ${n}: ${byId[c.from].title} → ${byId[c.to].title}</h3><p>${c.txt}</p>`;
-  panel.querySelector(".x").onclick = () => { clearSel(); panel.innerHTML = defaultPanel; };
+    <h3>Verbindung ${n}: ${names(c.froms)} → ${names(c.tos)}</h3><p>${c.txt}</p>`;
+  closeBtn();
+  if (scroll){
+    const xs = [...c.froms, ...c.tos].map(id => { const b = box(id); return b.x + b.w/2; });
+    const mid = (Math.min(...xs) + Math.max(...xs)) / 2, s = scale();
+    scroller.scrollTo({left: Math.max(0, (AXW + mid) * s - scroller.clientWidth / 2), behavior:"smooth"});
+  }
 }
 svg.addEventListener("click", () => { clearSel(); panel.innerHTML = defaultPanel; });
 
+/* Reading size vs. whole chart */
+let fit = false;
+const fitBtn = document.getElementById("fit");
+function scale(){ return fit ? Math.min(1, (scroller.clientWidth - 2) / (AXW + W)) : 1; }
+function applySize(){
+  const s = scale();
+  axis.style.width = (AXW * s) + "px";
+  svg.style.width = (W * s) + "px";
+  fitBtn.textContent = fit ? "Lesegröße" : "Ganze Grafik zeigen";
+}
+fitBtn.onclick = () => { fit = !fit; applySize(); };
+addEventListener("resize", applySize);
+applySize();
+
 /* Connection list */
 const ol = document.getElementById("conns");
+const stage = document.querySelector(".stage");
 conns.forEach(c => {
   const li = document.createElement("li");
-  li.innerHTML = `<b class="n">${c.n}</b><span><strong>${byId[c.from].title} → ${byId[c.to].title}.</strong> ${c.txt}</span>`;
-  li.onclick = () => { selectConn(c.n); document.querySelector(".stage").scrollIntoView({behavior:"smooth"}); };
+  li.innerHTML = `<b class="n${c.d ? "" : " dy"}">${c.n}</b><span><strong>${names(c.froms)} → ${names(c.tos)}.</strong> ${c.txt}</span>`;
+  li.onclick = () => { selectConn(c.n, true); stage.scrollIntoView({behavior:"smooth"}); };
   ol.appendChild(li);
 });
 const li = document.createElement("li");
 li.innerHTML = `<b class="n">⊂</b><span><strong>Bhagavad Gītā im Mahābhārata.</strong> Die Gītā ist kein eigenes Buch, sondern Teil des 6. Buchs; deshalb steht ihr Rechteck innerhalb des Mahābhārata.</span>`;
-li.onclick = () => { select("gita"); document.querySelector(".stage").scrollIntoView({behavior:"smooth"}); };
+li.onclick = () => { select("gita"); stage.scrollIntoView({behavior:"smooth"}); };
 ol.appendChild(li);
 </script>
 </body>
