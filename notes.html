@@ -716,6 +716,10 @@
 
   /* notebooks */
   .nbdlg { width: min(400px, calc(100vw - 24px)); }
+  .nbhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .nbhead h2 { margin: 0; }
+  .seg.nbsort { flex: none; padding: 2px; gap: 2px; }
+  .seg.nbsort button { height: 28px; padding: 0 10px; font-size: 12.5px; }
   .nbdlg h3 { margin: 14px 0 6px; font: 600 10.5px/1 var(--ui); letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
   .nbdlg h3:first-of-type { margin-top: 4px; }
   .nblist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -1746,7 +1750,8 @@
 </dialog>
 
 <dialog class="dlg nbdlg" id="nbDlg" aria-labelledby="nbTitle">
-  <h2 id="nbTitle">Notebooks</h2>
+  <div class="nbhead"><h2 id="nbTitle">Notebooks</h2>
+    <div class="seg nbsort" id="nbSortSeg" role="group" aria-label="Order of the lists"><button type="button" data-v="recent">Recent</button><button type="button" data-v="az">A–Z</button></div></div>
   <p>Open notebooks stay in this browser, which is not a safe place. Only Save writes a notebook to a file.</p>
   <p class="nbmem" id="nbMem"></p>
   <h3>Current</h3>
@@ -1965,8 +1970,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_155';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.32';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_156';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.33';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2835,18 +2840,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const shown = pages;
     ensureImages(pages).then(() => { if (pages === shown) { renderPage(); mapInkChanged(); } });
   }
+  const markOpened = m => { if (m) m.openedAt = Date.now(); };   // the notebook list shows the latest opened first
   async function switchNotebook(id) {
     if (id === nbIdx.current || !nbMeta(id)) return;
     await flushSave();
     const nb = await readNotebook(id);
-    nbIdx.current = id; saveIdx();
+    nbIdx.current = id; markOpened(nbMeta(id)); saveIdx();
     showNotebook(nb);
     toast(`${nbMeta().name}`);
   }
   // adds a notebook (empty, or read from a file) and shows it
   async function addNotebook(meta, nb) {
     await flushSave();
-    nbIdx.loaded.push(meta); nbIdx.current = meta.id;
+    nbIdx.loaded.push(meta); nbIdx.current = meta.id; markOpened(meta);
     showNotebook(nb);
     await writeCurrent();
   }
@@ -2864,6 +2870,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (nb) m.rev = 1;                                       // not known to be in a file
       nbIdx.loaded.push(m); nbIdx.current = m.id;
     } else nb = await readNotebook(nbIdx.current);
+    markOpened(nbMeta());
     if (nb) showNotebook(nb);
     backupReady = true;
     await writeCurrent();
@@ -4567,14 +4574,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('nbMem').textContent = `${nbIdx.loaded.length} ${nbIdx.loaded.length === 1 ? 'notebook uses' : 'notebooks use'} ${fmtBytes(total)} in this browser.`;
     if (nbDlg.open && !nbDlg.querySelector('.nbedit')) renderNbDlg(true);
   }
+  // order of the lists: latest opened first, or by name
+  let nbSort = store.get('nbSort', 'recent') === 'az' ? 'az' : 'recent';
+  const opened = m => m.openedAt || m.modAt || 0;
+  const byOpened = list => list.slice().sort((a, b) => opened(b) - opened(a));
+  const byName = (list, f) => list.slice().sort((a, b) => f(a).localeCompare(f(b), undefined, { numeric: true, sensitivity: 'base' }));
   function renderNbDlg(noMeasure) {
     if (!noMeasure) refreshNbMem();
-    const curM = nbMeta(), others = nbIdx.loaded.filter(m => m !== curM);
+    $('nbSortSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === nbSort)));
+    const curM = nbMeta(), rest = nbIdx.loaded.filter(m => m !== curM);
+    const others = nbSort === 'az' ? byName(rest, m => m.name) : byOpened(rest);
     $('nbCur').innerHTML = curM ? nbRow(curM, true) : '';
     $('nbOpen').innerHTML = others.map(m => nbRow(m, false)).join('');
     $('nbOpenH').hidden = $('nbOpen').hidden = !others.length;
     const open = new Set(nbIdx.loaded.map(m => m.savedName).filter(Boolean));
-    const recent = nbIdx.recent.filter(r => !open.has(r.name));
+    let recent = nbIdx.recent.filter(r => !open.has(r.name));
+    if (nbSort === 'az') recent = byName(recent, r => r.name);
     $('nbRecent').innerHTML = recent.map(r => `<li data-file="${esc(r.name)}"><button type="button" class="nbmain"><span class="nbname">${esc(r.name)}</span><small>Opened or saved ${when(r.at)} · tap to choose it again</small></button></li>`).join('');
     $('nbRecentH').hidden = $('nbRecent').hidden = !recent.length;
   }
@@ -4588,6 +4603,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function openNotebooks() { closePops(); renderNbDlg(); nbDlg.showModal(); }
   $('nbBtn').addEventListener('click', openNotebooks);
   $('nbDone').addEventListener('click', () => nbDlg.close());
+  $('nbSortSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]');
+    if (!b || b.dataset.v === nbSort) return;
+    nbSort = b.dataset.v; store.set('nbSort', nbSort); renderNbDlg(true);
+  });
   $('nbNew').addEventListener('click', async () => {   // a new notebook keeps the current page setup
     await addNotebook(newMeta(), null);
     renderNbDlg();
@@ -4604,9 +4624,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     if (id === nbIdx.current) {
       clearTimeout(saveTimer);
-      const next = nbIdx.loaded.find(x => x !== m);
+      const next = byOpened(nbIdx.loaded.filter(x => x !== m))[0];   // the one opened last before it
       nbIdx.loaded = nbIdx.loaded.filter(x => x !== m);
-      if (next) { nbIdx.current = next.id; showNotebook(await readNotebook(next.id)); saveIdx(); }
+      if (next) { nbIdx.current = next.id; markOpened(next); showNotebook(await readNotebook(next.id)); saveIdx(); }
       else await addNotebook(newMeta(), null);
     } else { nbIdx.loaded = nbIdx.loaded.filter(x => x !== m); saveIdx(); }
     idb.del('nb:' + id).catch(() => {});
