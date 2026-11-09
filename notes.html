@@ -821,7 +821,11 @@
     font: 500 12.5px/1.1 var(--ui); cursor: pointer; text-align: left;
   }
   .addlist button:disabled { opacity: .35; cursor: default; }
-  .addlist .addinfo { grid-column: 1 / -1; justify-content: center; }
+  /* the buttons at the bottom of the toolbar editor stay in view while the list scrolls */
+  .tbdlg { padding-bottom: 0; }
+  .tbdlg > .row { position: sticky; bottom: 0; z-index: 2; background: var(--panel); margin: 0 -18px; padding: 10px 18px 18px; border-top: 1px solid var(--bar-line); }
+  .tbdlg .row .tbinfobtn { display: inline-flex; align-items: center; gap: 6px; }
+  .tbdlg .row .tbinfobtn svg { width: 18px; height: 18px; }
   .tbinfo { width: min(480px, calc(100vw - 24px)); }
   .tbinfolist { list-style: none; margin: 0 0 12px; padding: 0; max-height: min(62vh, 560px); overflow-y: auto; }
   .tbinfolist li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid var(--line, rgba(0,0,0,.08)); }
@@ -1979,6 +1983,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   <div class="row">
     <button type="button" class="left" id="tbReset">Reset</button>
     <button type="button" class="left danger-text" id="tbDelete">Delete toolbar</button>
+    <button type="button" class="left tbinfobtn" id="tbInfoBtn" aria-label="What the buttons do" title="What the buttons do"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1" stroke-width="2.4"/></svg>Info</button>
     <button type="button" class="primary" id="tbDone">Done</button>
   </div>
 </dialog>
@@ -2013,8 +2018,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_164';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.41';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_165';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.42';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4357,8 +4362,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${addIcon(t)}${d.label}</button>`;
-    }).join('') +
-      `<button type="button" class="addinfo" id="tbInfoBtn">${svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1" stroke-width="2.2"/>')}What the buttons do</button>`;
+    }).join('');
   }
   // the explanation of all buttons
   const tbInfoDlg = $('tbInfoDlg');
@@ -4369,6 +4373,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('tbInfoList').scrollTop = 0;
   }
   $('tbInfoDone').addEventListener('click', () => tbInfoDlg.close());
+  $('tbInfoBtn').addEventListener('click', openTbInfo);
   function itemsChanged() { saveItems(); renderToolbar(); renderTbList(); }
   // opens the toolbar editor on one toolbar (the main one from Settings, others from their handle)
   function openCustomize(b) {
@@ -4393,7 +4398,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('tbAddBtn').setAttribute('aria-expanded', String(!tbAddList.hidden));
   });
   tbAddList.addEventListener('click', e => {
-    if (e.target.closest('#tbInfoBtn')) { openTbInfo(); return; }
     const b = e.target.closest('[data-add]');
     if (!b || b.disabled) return;
     const t = b.dataset.add, it = { id: uid(), type: ITEM_TYPES[t].add ? 'preset' : t };
