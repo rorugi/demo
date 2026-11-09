@@ -1156,7 +1156,9 @@
   .overview header #ovDone { margin-left: auto; flex: none; }
   .overview header .ovchip { margin-left: 0; flex: none; }
   /* preview size: a long slider with a big knob, easy to set with a finger */
-  .overview .ovzoom { flex: 1; display: flex; align-items: center; gap: 10px; color: var(--bar-fg); min-width: 0; }
+  .overview .ovtools { flex-wrap: wrap; row-gap: 8px; }
+  .overview .ovchips { display: flex; gap: 12px; margin-left: auto; flex: none; }
+  .overview .ovzoom { flex: 1 1 50%; min-width: 50%; display: flex; align-items: center; gap: 10px; color: var(--bar-fg); min-width: 0; }
   .overview .ovzoom svg { width: 20px; height: 20px; opacity: .6; flex: none; }
   .overview .ovzoom svg.big { width: 26px; height: 26px; }
   .overview .ovzoom input { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 36px; margin: 0; background: transparent; cursor: pointer; }
@@ -1634,8 +1636,8 @@
     <button type="button" id="ovDone">Done</button></div>
     <div class="ovtools">
     <label class="ovzoom" title="Preview size"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><input type="range" id="ovZoom" min="70" max="420" step="10" aria-label="Preview size"><svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/></svg></label>
-    <button type="button" class="ovchip" id="ovAfterBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M12 10.5v6M9 13.5h6"/></svg><span id="ovAfterLbl">New page after 1</span></button>
-    <button type="button" class="ovchip" id="ovNotesBtn" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Sticky notes</button>
+    <div class="ovchips"><button type="button" class="ovchip" id="ovAfterBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M12 10.5v6M9 13.5h6"/></svg><span id="ovAfterLbl">New page after 1</span></button>
+    <button type="button" class="ovchip" id="ovNotesBtn" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/></svg>Sticky notes</button></div>
     </div>
   </header>
   <div class="ov-grid" id="ovGrid"></div>
@@ -1963,8 +1965,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_153';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.30';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_154';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.31';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3740,6 +3742,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
   }
   // drag a toolbar by its first button; a tap without moving calls onTap
+  // a menu opened when the finger lifts: a touch screen sends a late click to the same spot, which would hit
+  // the menu item now lying under the finger (which one depends on where the toolbar is), so that click is dropped
+  let ghostAt = null;
+  document.addEventListener('click', e => {
+    const g = ghostAt;
+    if (!g) return;
+    ghostAt = null;
+    if (performance.now() - g.t < 600 && Math.hypot(e.clientX - g.x, e.clientY - g.y) < 32) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
   function attachDrag(handle, bar, onTap) {
     let drag = null;
     handle.addEventListener('pointerdown', e => {
@@ -3762,7 +3773,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       drag.el.classList.remove('dragging');
       drag = null;
       if (moved) saveItems();
-      else if (onTap) onTap();
+      else if (onTap) { ghostAt = { x: e.clientX, y: e.clientY, t: performance.now() }; onTap(); }
     });
     handle.addEventListener('pointercancel', () => { if (drag) drag.el.classList.remove('dragging'); drag = null; });
   }
