@@ -424,6 +424,7 @@
   select.dd option { color: #1c1d20; background: #fff; }
   .seg.notesizes button { font-size: 12px; padding: 0 2px; white-space: nowrap; }
   .papers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .pssub { font-weight: 400; opacity: .6; }
   .papers button {
     display: grid; justify-items: center; gap: 5px; padding: 6px 0 5px;
     border: 1px solid var(--bar-line); border-radius: 9px; background: transparent; color: var(--bar-fg);
@@ -1495,14 +1496,6 @@
     <button type="button" id="setupBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M5 9h14M5 15h14M12 3v18"/></svg>Page setup…<small id="setupSum"></small></button>
     <button type="button" id="allPagesBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="9" rx="1"/><rect x="13.5" y="3.5" width="7" height="9" rx="1"/><rect x="3.5" y="14.5" width="7" height="6" rx="1"/><rect x="13.5" y="14.5" width="7" height="6" rx="1"/></svg>All pages<small id="allPagesSum"></small></button>
   </div>
-  <h3>Paper</h3>
-  <div class="papers" id="papers">
-    <button type="button" data-p="auto"><i class="auto"></i>Auto</button>
-    <button type="button" data-p="white"><i style="--pc:#fdfdfb"></i>White</button>
-    <button type="button" data-p="cream"><i style="--pc:#f5efdf"></i>Cream</button>
-    <button type="button" data-p="dark"><i style="--pc:#1d1e21"></i>Dark</button>
-    <button type="button" data-p="black"><i style="--pc:#000000"></i>Black</button>
-  </div>
   <h3>Notebook</h3>
   <div class="menu">
     <button type="button" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>Save…<small id="saveSum"></small></button>
@@ -1690,7 +1683,7 @@
 
 <dialog class="dlg" id="setupDlg" aria-labelledby="setupTitle">
   <h2 id="setupTitle">Page setup</h2>
-  <p>Applies to every page of this notebook.</p>
+  <p>Size and grid apply to every page of this notebook.</p>
   <div class="field">
     <span>Page size</span>
     <div class="seg three" id="psSize">
@@ -1715,6 +1708,16 @@
       <button type="button" data-v="squares">Squares</button>
     </div>
     <label class="numfield" id="psMmBox">Spacing<input type="text" inputmode="decimal" id="psMm" aria-label="Grid spacing in millimetres">mm</label>
+  </div>
+  <div class="field">
+    <span>Paper<small class="pssub"> · for all notebooks</small></span>
+    <div class="papers" id="papers">
+      <button type="button" data-p="auto"><i class="auto"></i>Auto</button>
+      <button type="button" data-p="white"><i style="--pc:#fdfdfb"></i>White</button>
+      <button type="button" data-p="cream"><i style="--pc:#f5efdf"></i>Cream</button>
+      <button type="button" data-p="dark"><i style="--pc:#1d1e21"></i>Dark</button>
+      <button type="button" data-p="black"><i style="--pc:#000000"></i>Black</button>
+    </div>
   </div>
   <p class="note" id="psNote">Your ink stays where it is. On a smaller page, ink outside the page is hidden, not deleted.</p>
   <div class="row">
@@ -2018,8 +2021,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_165';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.42';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_166';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.43';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3978,14 +3981,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     root.style.setProperty('--paper', P.paper);
     root.style.setProperty('--grid', P.grid);
     document.body.classList.toggle('paper-dark', paperDark);
-    $('papers').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === paperPref)));
     renderPage();
     if (!$('overview').hidden) buildOverview();
     if (openPop === penPop) renderPenPop(true);
     updateToolbarState();
   }
   function setPaper(p) { paperPref = p; store.set('paper', p); applyPaper(); }
-  $('papers').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setPaper(b.dataset.p)));
+  // the paper colour is chosen in Page setup (with Apply), see renderSetupDlg
   if (darkQuery) {
     const onScheme = () => { if (paperPref === 'auto') applyPaper(); };
     darkQuery.addEventListener ? darkQuery.addEventListener('change', onScheme) : darkQuery.addListener(onScheme);
@@ -4145,11 +4147,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     scheduleSave();
   }
   // dialog: edits a draft, Apply commits it
-  let draft = null;
+  let draft = null, draftPaper = 'auto';
   const setupDlg = $('setupDlg');
   function renderSetupDlg(keepInputs) {
     const seg = (id, v) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
     seg('psSize', draft.size); seg('psOrient', draft.orient); seg('psGrid', draft.grid);
+    $('papers').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === draftPaper)));
     $('psOrient').hidden = draft.size === 'custom';
     $('psCustom').hidden = draft.size !== 'custom';
     $('psMmBox').classList.toggle('off', draft.grid === 'none');
@@ -4161,13 +4164,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   $('setupBtn').addEventListener('click', () => {
     closePops();
-    draft = { ...setup };
+    draft = { ...setup }; draftPaper = paperPref;
     if (draft.size !== 'custom') [draft.cw, draft.ch] = setupDims(draft);   // custom starts from the current size
     renderSetupDlg();
     setupDlg.showModal();
   });
   const segClick = (id, key) => $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draft[key] = b.dataset.v; renderSetupDlg(true); }));
   segClick('psSize', 'size'); segClick('psOrient', 'orient'); segClick('psGrid', 'grid');
+  $('papers').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draftPaper = b.dataset.p; renderSetupDlg(true); }));
   $('psCancel').addEventListener('click', () => setupDlg.close());
   $('psApply').addEventListener('click', () => {
     const num = id => parseFloat($(id).value.replace(',', '.'));
@@ -4182,6 +4186,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       draft.gridMm = g;
     }
     setupDlg.close();
+    if (draftPaper !== paperPref) setPaper(draftPaper);
+    const before = JSON.stringify(cleanSetup(setup)), after = cleanSetup(draft);
+    if (JSON.stringify(after) === before) return;  // only the paper changed: zoom and view stay
     markChanged();
     applySetup(draft);
     toast(`Page setup: ${setupLabel(setup)}`);
@@ -4704,7 +4711,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const state = unsaved(m)
       ? `<small class="unsaved">${m.savedName ? 'Changes not saved to ' + esc(m.savedName) : 'Not saved to a file'}</small>`
       : `<small>${m.savedName ? `Saved ${when(m.savedAt)} · ${esc(m.savedName)}${m.savedZip ? ` in ${esc(m.savedZip)}` : ''}` : 'Empty, nothing to save'}</small>`;
-    const mem = nbMem.has(m.id) ? ` · ${fmtBytes(nbMem.get(m.id))}` : '';
+    const mem = nbMem.has(m.id) ? ` · ${fmtBytes(nbMem.get(m.id))}${nbPdfMem.get(m.id) ? ` (PDF ${fmtBytes(nbPdfMem.get(m.id))})` : ''}` : '';
     return `<li data-id="${m.id}"${isCur ? ' class="cur"' : ''}><button type="button" class="nbmain"${isCur ? ` aria-current="true" title="Tap to rename"` : ` aria-label="Switch to ${esc(m.name)}"`}>` +
       `<span class="nbname">${esc(m.name)}${isCur ? svg('<path d="M15.2 4.3l4.5 4.5L9 19.5l-5.4 1 1-5.4z"/>').replace('<svg ', '<svg class="pen" ') : ''}</span><small>${m.pages} ${m.pages === 1 ? 'page' : 'pages'}${mem} · edited ${when(m.modAt)}</small>${state}</button>` +
       (unsaved(m) ? `<span role="img" aria-label="Not saved to a file" title="Not saved to a file">${ICON_WARN}</span>` : '') +
@@ -4712,9 +4719,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<button type="button" class="nbact" data-act="close" aria-label="Close ${esc(m.name)}" title="Close">${svg('<path d="M6 6l12 12M18 6L6 18"/>')}</button></li>`;
   }
   // ---- How much room each notebook takes in the browser (its record plus its pictures) ----
-  const nbMem = new Map(), imgSize = new Map();
+  const nbMem = new Map(), nbPdfMem = new Map(), imgSize = new Map();   // sizes: only found ones are remembered
+  let pdfTotal = 0;
   async function measureNotebooks() {
     let total = 0;
+    const pdfsAll = new Set();
     const all = new Set();
     for (const m of nbIdx.loaded) {
       const rec = m.id === nbIdx.current ? { v: 3, pages, cur, setup } : await readNotebook(m.id);
@@ -4727,28 +4736,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           const r = imgStore.get(src);
           let b = r && r.blob;
           if (!b) { try { const v = await idb.get('img:' + src); b = v && v.blob; } catch (_) {} }
-          imgSize.set(src, b ? b.size : 0);
+          if (b) imgSize.set(src, b.size);
         }
-        n += imgSize.get(src); all.add(src);
+        n += imgSize.get(src) || 0; all.add(src);
       }
+      let np = 0;
       for (const id of new Set((rec.pages || []).filter(pg => pg.bg && pg.bg.pdf).map(pg => pg.bg.pdf))) {   // its PDFs too
         const key = 'pdf:' + id;
         if (!imgSize.has(key)) {
           let b = pdfStore.has(id) && pdfStore.get(id).blob;
           if (!b) { try { const v = await idb.get(key); b = v && v.blob; } catch (_) {} }
-          imgSize.set(key, b ? b.size : 0);
+          if (b) imgSize.set(key, b.size);
         }
-        n += imgSize.get(key); all.add(key);
+        np += imgSize.get(key) || 0; all.add(key); pdfsAll.add(key);
       }
-      nbMem.set(m.id, n);
+      nbMem.set(m.id, n + np); nbPdfMem.set(m.id, np);
       total += new Blob([JSON.stringify(rec)]).size;
     }
     for (const src of all) total += imgSize.get(src) || 0;     // a picture used twice is stored once
+    pdfTotal = 0;
+    for (const k of pdfsAll) pdfTotal += imgSize.get(k) || 0;
     return total;
   }
   async function refreshNbMem() {
     const total = await measureNotebooks();
-    $('nbMem').textContent = `${nbIdx.loaded.length} ${nbIdx.loaded.length === 1 ? 'notebook uses' : 'notebooks use'} ${fmtBytes(total)} in this browser.`;
+    $('nbMem').textContent = `${nbIdx.loaded.length} ${nbIdx.loaded.length === 1 ? 'notebook uses' : 'notebooks use'} ${fmtBytes(total)} in this browser${pdfTotal ? `, of which PDFs ${fmtBytes(pdfTotal)}` : ''}.`;
     if (nbDlg.open && !nbDlg.querySelector('.nbedit')) renderNbDlg(true);
   }
   // order of the lists: latest opened first, or by name
@@ -7408,9 +7420,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function storePdf(blob, name = '') {      // kept once, by its content
     const id = 'p' + await hashBlob(blob);
     if (!pdfStore.has(id)) {
+      pdfStore.set(id, { blob, name, doc: null });   // known at once (the memory shown in Notebooks counts it while it is stored)
+      imgSize.delete('pdf:' + id);
       try { await idb.set('pdf:' + id, { blob, name }); }
-      catch (e) { toast(idb.isQuota(e) ? 'This browser has no room left for the PDF' + await storageNote() + '.' : 'The PDF could not be stored.', 5000); throw e; }
-      pdfStore.set(id, { blob, name, doc: null });
+      catch (e) { pdfStore.delete(id); toast(idb.isQuota(e) ? 'This browser has no room left for the PDF' + await storageNote() + '.' : 'The PDF could not be stored.', 5000); throw e; }
     }
     return id;
   }
