@@ -623,6 +623,22 @@
   .menu small { margin-left: auto; font-size: 11px; opacity: .55; }
   .ptpop { width: 252px; }
   .tgpop { width: 300px; }
+  .searchpop { width: 340px; }
+  .srchrow { display: flex; gap: 4px; align-items: center; }
+  .srchrow input { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--bar-line); border-radius: 9px; background: var(--panel); color: var(--bar-fg); font: 15px var(--ui); }
+  .srchrow button { flex: none; width: 34px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 9px; background: transparent; color: var(--bar-fg); cursor: pointer; }
+  .srchrow button:disabled { opacity: .3; }
+  .srchrow svg { width: 20px; height: 20px; }
+  .srchinfo { font: 12.5px var(--ui); opacity: .65; margin: 6px 2px 4px; }
+  .srchlist { max-height: min(52vh, 420px); overflow-y: auto; margin: 0 -4px; }
+  @media (max-width: 560px), (max-height: 560px) { .srchlist { max-height: 30vh; } }
+  .srchlist button { display: block; width: 100%; text-align: left; border: 0; border-radius: 8px; background: transparent; color: var(--bar-fg); padding: 7px 8px; font: 13.5px/1.35 var(--ui); cursor: pointer; }
+  .srchlist button[aria-current="true"] { background: var(--active); }
+  .srchlist b { font-weight: 600; margin-right: 6px; }
+  .srchlist small { opacity: .55; margin-right: 6px; font-size: 11.5px; }
+  .srchlist mark { background: rgba(255, 196, 0, .55); color: inherit; border-radius: 2px; padding: 0 1px; }
+  .page .hits rect { fill: rgba(255, 190, 0, .38); }
+  .page .hits rect.now { fill: rgba(255, 140, 0, .5); stroke: #e67700; stroke-width: .35; }
   .tgpop .menu button { padding-top: 7px; padding-bottom: 7px; }
   .ptpop .menu button[aria-pressed="true"] { background: var(--active); font-weight: 600; }
   .ptpop .menu button svg { width: 22px; height: 22px; }
@@ -1279,6 +1295,7 @@
       <g class="bglayer" id="bgLayer"></g>
       <g class="images" id="imgLayer"></g>
       <g class="texts" id="textLayer"></g>
+      <g class="hits" id="hitLayer"></g>
       <g class="sel-halo" id="selHalo" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
       <g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
       <g class="images" id="imgOver"></g>
@@ -1357,6 +1374,16 @@
   <div class="seg four" id="bmThumbSeg"><button type="button" data-v="off">Off</button><button type="button" data-v="tl">Top left</button><button type="button" data-v="tr">Top right</button><button type="button" data-v="b">Bottom</button></div>
 </div>
 <div class="bmbar" id="bmBox" hidden></div>
+<!-- search: text boxes, PDF text and bookmark names -->
+<div class="pop searchpop" id="searchPop" role="dialog" aria-label="Search" hidden>
+  <div class="srchrow">
+    <input type="search" id="srchIn" placeholder="Search this notebook" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search text boxes, PDF pages and bookmarks">
+    <button type="button" id="srchPrev" aria-label="Previous match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button type="button" id="srchNext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+  <div class="srchinfo" id="srchInfo" aria-live="polite">Text boxes, PDF pages and bookmark names</div>
+  <div class="srchlist" id="srchList"></div>
+</div>
 <!-- toggle button: what it switches between -->
 <div class="pop ptpop tgpop" id="togglePop" role="dialog" aria-label="Toggle" hidden>
   <h3>Toggle between</h3>
@@ -2028,8 +2055,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_167';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.44';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_168';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.45';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2154,6 +2181,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nib: svg('<g transform="rotate(45 12 12)"><path class="body" d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>', ' class="pen-ico"'),
     sticky: svg('<path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/>', ' class="sticky-ico"'),
     bookmark: svg('<path d="M6 3.5h12v17l-6-4.5-6 4.5z"/>'),
+    search: svg('<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4l5.1 5.1"/>'),
     eye: svg('<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>'),
     eyeoff: svg('<path d="M2.5 12s3.5-6.5 9.5-6.5c1.6 0 3 .4 4.3 1.1M21.5 12s-3.5 6.5-9.5 6.5c-1.6 0-3-.4-4.3-1.1"/><path d="M9.9 14.1A3 3 0 0 1 14.1 9.9"/><path d="M4 20L20 4"/>'),
     text: svg('<path d="M5 7.5V5h14v2.5M12 5v14M9 19h6"/>'),
@@ -2227,6 +2255,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     text:   { label: 'Text' },
     bookmark: { label: 'Bookmarks' },
     view:   { label: 'View' },
+    search: { label: 'Search' },
     toggle: { label: 'Toggle', multi: true },
     fold:   { label: 'Minimize', multi: true },
     image:  { label: 'Image' },
@@ -2259,6 +2288,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sticky: 'Tap the page to place a sticky note. Tap again (or hold) for its colour and size.',
     text: 'Tap the page to place a text box. Text can be bold, italic, coloured and have links. Tap again (or hold) for size and colour.',
     bookmark: 'Bookmarks to pages with their position and zoom: the list, adding bookmarks and the bookmark options.',
+    search: 'Finds words in the text boxes, in the text of PDF pages and in bookmark names of this notebook, and marks them on the page. Ctrl+F on a keyboard.',
     view: 'Shows or hides the grid, sticky notes, drawings, text and images on the screen, for example to see a plain PDF.',
     toggle: 'Switches between two things with one tap: two notebooks, two pages, two pens or tools, the whole page and a zoomed view, or the plain page. Hold it to choose. Several toggles can each switch something else.',
     fold: 'Hides the buttons before it, back to the previous Minimize button or to the start of the toolbar. Tap again to show them.',
@@ -2435,6 +2465,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!bars.some(b => b.items.some(i => i.type === 'view'))) {
       const m = bars[0].items, k = m.findIndex(i => i.type === 'bookmark' || i.type === 'image');
       m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'view' });
+      store.set('toolbars', bars);
+    }
+  }
+  if (!store.get('srAdded', false)) {           // the search button arrives once, after the view button
+    store.set('srAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'search'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'view');
+      m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'search' });
       store.set('toolbars', bars);
     }
   }
@@ -2748,6 +2786,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Bookmarks, kept per notebook: { id, page (the page itself: it stays with it when pages move), label, color,
   // x, y (mm, the middle of the view), z (zoom) } ----
   let marks = [];
+  // search (see runSearch): its popup, the marks on the page and the state
+  const searchPop = $('searchPop'), srchIn = $('srchIn'), hitLayer = $('hitLayer');
+  const srch = { q: '', hits: [], at: -1, run: 0, busy: false, noPdfText: false };
+  const SRCH_MAX = 500;
   const marksOut = (pgs = pages, list = marks) => list.filter(m => pgs.includes(m.page))
     .map(m => ({ id: m.id, p: pgs.indexOf(m.page), label: m.label, color: m.color, x: +(+m.x).toFixed(1), y: +(+m.y).toFixed(1), z: +(+m.z).toFixed(3) }));
   const cleanMarks = (list, pgs) => (Array.isArray(list) ? list : []).map(o => o && Number.isInteger(+o.p) && pgs[+o.p] ? {
@@ -2979,6 +3021,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!$('overview').hidden) buildOverview();
     const shown = pages;
     ensureImages(pages).then(() => { if (pages === shown) { renderPage(); mapInkChanged(); } });
+    if (srch.q) setTimeout(() => runSearch(srch.q), 0);   // the search now covers this notebook
   }
   const markOpened = m => { if (m) m.openedAt = Date.now(); };   // the notebook list shows the latest opened first
   async function switchNotebook(id) {
@@ -3063,6 +3106,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   document.addEventListener('keydown', e => {
     if (!(e.ctrlKey || e.metaKey) || e.target.closest('input, textarea, [contenteditable]')) return;
     const k = e.key.toLowerCase();
+    if (k === 'f') { e.preventDefault(); openSearch(); return; }
     if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
     else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
   });
@@ -3206,6 +3250,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'image': return `<button type="button" ${a} aria-label="Insert an image">${ICON.image}</button>`;
       case 'bookmark': return `<button type="button" ${a} aria-label="Bookmarks" title="Bookmarks">${ICON.bookmark}</button>`;
       case 'fold': return `<button type="button" class="tbfold" ${a} aria-expanded="${!it.folded}" aria-label="${it.folded ? 'Show the hidden buttons' : 'Minimize: hide the buttons before this one'}">${MIN_ICON}</button>`;
+      case 'search': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Search text boxes, PDF pages and bookmarks">${ICON.search}</button>`;
       case 'toggle': return `<button type="button" class="eraser" ${a} data-mode="${it.mode}" aria-pressed="false" aria-label="Toggle: ${TOGGLES[it.mode].name}. Hold for options">${TOGGLES[it.mode].icon}</button>`;
       case 'view': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="View: show or hide grid, sticky notes, drawings, text and images" title="View · show or hide parts of the page">${ICON.eye}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
@@ -3484,6 +3529,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
+        case 'search': el.setAttribute('aria-pressed', String(!!srch.q)); break;
         case 'toggle':
           if (el.dataset.mode !== it.mode) { el.innerHTML = TOGGLES[it.mode].icon; el.dataset.mode = it.mode; el.setAttribute('aria-label', `Toggle: ${TOGGLES[it.mode].name}. Hold for options`); }
           el.setAttribute('aria-pressed', String(it.mode === 'plain' && !!plainSaved));
@@ -3537,6 +3583,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         break;
       case 'bookmark': openMarks(el); break;
       case 'toggle': runToggle(it); break;
+      case 'search': if (openPop === searchPop) closePops(); else openSearch(el); break;
       case 'fold': setFold(it, !it.folded); break;
       case 'view': if (openPop === viewPop) closePops(); else { renderViewPop(); showPop(viewPop, el); } break;
       case 'image':
@@ -6696,6 +6743,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const textsMarkup = (pg, mode) => pg && pg.texts && pg.texts.length ? pg.texts.map(t => textMarkup(t, mode)).join('') : '';
   function renderTexts() {
     if (!pages[cur]) return;
+    renderHits();
     const list = textsOf(pages[cur]), r = Math.max(4.5, 44 / S()) / 2;
     textLayer.innerHTML = list.filter(t => !ted || ted.t !== t).map(t => textMarkup(t, 'ui')).join('');
     textUi.innerHTML = list.map(t => {
@@ -7217,7 +7265,191 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       Object.assign(view, was);
       zoomBack(b);
     }
+  }  // ---- Search: text boxes, the text of PDF pages and bookmark names of this notebook ----
+  // Accents and case don't matter ("e" finds "é"). The text of a PDF is read once (PDF.js) and kept in the browser.
+  function normMap(str) {                          // lower case, no accents, with the place of each letter in the original
+    let out = '';
+    const at = [];
+    for (let i = 0; i < str.length; i++) {
+      const n = str[i].normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      for (const c of n) { out += c; at.push(i); }
+    }
+    at.push(str.length);
+    return { s: out, at };
   }
+  const normQ = q => normMap(q.trim().replace(/\s+/g, ' ')).s;
+  function findAll(hay, q) {                       // [[start, end] in the original text]
+    const N = normMap(hay), out = [];
+    let k = N.s.indexOf(q);
+    while (k >= 0 && out.length < SRCH_MAX) { out.push([N.at[k], N.at[k + q.length - 1] + 1]); k = N.s.indexOf(q, k + q.length); }
+    return out;
+  }
+  const snippet = (str, a, b) => {
+    const s0 = Math.max(0, a - 32), e0 = Math.min(str.length, b + 48), clean = t => esc(t.replace(/\s+/g, ' '));
+    return (s0 > 0 ? '…' : '') + clean(str.slice(s0, a)) + '<mark>' + clean(str.slice(a, b)) + '</mark>' + clean(str.slice(b, e0)) + (e0 < str.length ? '…' : '');
+  };
+  // the text of one PDF page: its words with their places (fractions of the page)
+  const pdfTextMem = new Map();                    // pdf id -> { n: { s, items: [[start, end, fx, fy, fw, fh]] } }
+  async function pdfTextOf(id) {
+    if (pdfTextMem.has(id)) return pdfTextMem.get(id);
+    let t = null;
+    try { const v = await idb.get('ptext:' + id); t = v && v.pages; } catch (_) {}
+    t = t || {};
+    pdfTextMem.set(id, t);
+    return t;
+  }
+  async function pdfPageText(id, n) {
+    const T = await pdfTextOf(id);
+    if (T[n]) return T[n];
+    const doc = await pdfDoc(id);
+    if (!doc || n < 1 || n > doc.numPages) return (T[n] = { s: '', items: [] });
+    const page = await doc.getPage(n), vp = page.getViewport({ scale: 1 }), tc = await page.getTextContent();
+    let s = '';
+    const items = [];
+    let prev = null;
+    for (const it of tc.items) {
+      if (typeof it.str !== 'string' || !it.str) { if (it.hasEOL && s && !s.endsWith(' ')) s += ' '; continue; }
+      const tr = it.transform, [vx, vy] = vp.convertToViewportPoint(tr[4], tr[5]), fh = Math.hypot(tr[2], tr[3]) || it.height || 10;
+      if (prev && s && !s.endsWith(' ')) {             // a space between pieces that don't touch
+        const sameLine = Math.abs(vy - prev.vy) < fh * .5, gap = vx - prev.ex;
+        if (!sameLine || gap > fh * .18) s += ' ';
+      }
+      const start = s.length;
+      s += it.str;
+      items.push([start, s.length, vx / vp.width, (vy - fh * .82) / vp.height, (it.width || 0) / vp.width, fh * 1.08 / vp.height]);
+      prev = { vy, ex: vx + (it.width || 0) };
+      if (it.hasEOL && !s.endsWith(' ')) s += ' ';
+    }
+    try { page.cleanup(); } catch (_) {}
+    return (T[n] = { s, items });
+  }
+  let ptextSave = null;                            // what was read is kept, a little later, in the browser
+  function keepPdfText() {
+    clearTimeout(ptextSave);
+    ptextSave = setTimeout(() => { for (const [id, t] of pdfTextMem) idb.set('ptext:' + id, { pages: t }).catch(() => {}); }, 1500);
+  }
+  function pdfRects(pt, b, a, z) {                 // the places of the letters a..z of a PDF page text, in mm on the page
+    const out = [];
+    measureCtx.font = '100px sans-serif';
+    const wd = t => measureCtx.measureText(t).width;
+    for (const [s0, e0, fx, fy, fw, fh] of pt.items) {
+      if (e0 <= a || s0 >= z) continue;
+      // where the letters are inside the piece: measured with a similar font (better than counting letters)
+      const str = pt.s.slice(s0, e0), all = wd(str) || 1;
+      const p0 = wd(str.slice(0, Math.max(a, s0) - s0)) / all, p1 = wd(str.slice(0, Math.min(z, e0) - s0)) / all;
+      out.push({ x: b.x + (fx + fw * p0) * b.w, y: b.y + fy * b.h, w: Math.max(.6, fw * (p1 - p0) * b.w), h: fh * b.h });
+    }
+    return out;
+  }
+  function textBoxRect(t) {
+    const L = textLayout(t);
+    return { x: t.x, y: t.y, w: t.w, h: Math.max(1, L.lines.length) * L.lh + 2 * TEXT_PAD };
+  }
+  const textOfBox = t => (t.runs || []).map(r => r.t).join('');
+  async function runSearch(qRaw) {
+    const run = ++srch.run, q = normQ(qRaw);
+    srch.q = qRaw.trim(); srch.hits = []; srch.at = -1; srch.noPdfText = false;
+    if (q.length < 2) { srch.q = q ? srch.q : ''; srch.busy = false; renderSearch(); renderHits(); updateToolbarState(); return; }
+    const add = h => { if (srch.hits.length < SRCH_MAX) srch.hits.push(h); };
+    pages.forEach(pg => (pg.texts || []).forEach(t => {
+      const str = textOfBox(t);
+      for (const [a, z] of findAll(str, q)) add({ kind: 'text', page: pg, t, html: snippet(str, a, z) });
+    }));
+    for (const m of marks) {
+      const str = m.label || '';
+      for (const [a, z] of findAll(str, q)) add({ kind: 'mark', page: m.page, m, html: snippet(str, a, z) });
+    }
+    const order = () => {
+      const idx = new Map(pages.map((pg, i) => [pg, i])), kr = { text: 0, pdf: 1, mark: 2 };
+      srch.hits.sort((u, v) => (idx.get(u.page) - idx.get(v.page)) || (kr[u.kind] - kr[v.kind]) || ((u.y || 0) - (v.y || 0)));
+    };
+    order(); srch.busy = true; renderSearch(); renderHits(); updateToolbarState();
+    const pdfPages = pages.filter(pg => pg.bg && pg.bg.pdf);
+    let done = 0, anyText = false, fresh = false;
+    for (const pg of pdfPages) {
+      if (run !== srch.run) return;
+      let pt;
+      const known = pdfTextMem.has(pg.bg.pdf) && pdfTextMem.get(pg.bg.pdf)[pg.bg.n];
+      try { pt = await pdfPageText(pg.bg.pdf, pg.bg.n); } catch (_) { pt = { s: '', items: [] }; }
+      if (!known) fresh = true;
+      if (run !== srch.run) return;
+      if (pt.s.trim()) anyText = true;
+      for (const [a, z] of findAll(pt.s, q)) {
+        const rects = pdfRects(pt, pg.bg, a, z);
+        add({ kind: 'pdf', page: pg, rects, y: rects.length ? rects[0].y : 0, html: snippet(pt.s, a, z) });
+      }
+      done++;
+      if (done % 12 === 0 || done === pdfPages.length) {
+        order();
+        $('srchInfo').textContent = `Reading the PDF text… page ${done} of ${pdfPages.length} · ${srch.hits.length} found`;
+        renderSearch(true); renderHits();
+        await new Promise(res => setTimeout(res, 0));
+      }
+    }
+    if (fresh) keepPdfText();
+    srch.busy = false; srch.noPdfText = pdfPages.length > 0 && !anyText;
+    order(); renderSearch(); renderHits(); updateToolbarState();
+  }
+  function renderSearch(progress) {
+    const n = srch.hits.length;
+    if (!progress) $('srchInfo').textContent = !srch.q ? 'Text boxes, PDF pages and bookmark names'
+      : srch.q.length < 2 ? 'Type at least 2 letters'
+      : (n ? `${n >= SRCH_MAX ? SRCH_MAX + '+' : n} found` : 'Nothing found') + (srch.noPdfText ? ' · the PDF has no text (scanned pages can’t be searched)' : '');
+    const label = { text: 'Text', pdf: 'PDF', mark: 'Bookmark' };
+    $('srchList').innerHTML = srch.hits.slice(0, 200).map((h, k) => `<button type="button" data-k="${k}"${k === srch.at ? ' aria-current="true"' : ''}><b>p. ${pages.indexOf(h.page) + 1}</b><small>${label[h.kind]}</small>${h.html}</button>`).join('') +
+      (n > 200 ? `<p class="srchinfo">The first 200 are listed; the arrows go through all.</p>` : '');
+    $('srchPrev').disabled = $('srchNext').disabled = !n;
+  }
+  function renderHits() {
+    if (!hitLayer) return;
+    const pg = pages[cur], now = srch.hits[srch.at];
+    if (!srch.q || !pg) { hitLayer.innerHTML = ''; return; }
+    const f = v => +v.toFixed(2);
+    hitLayer.innerHTML = srch.hits.filter(h => h.page === pg && h.kind !== 'mark').map(h =>
+      (h.kind === 'pdf' ? h.rects : [textBoxRect(h.t)]).map(q => `<rect${h === now ? ' class="now"' : ''} x="${f(q.x)}" y="${f(q.y)}" width="${f(q.w)}" height="${f(q.h)}" rx=".6"/>`).join('')).join('');
+  }
+  function goHit(k) {
+    const n = srch.hits.length;
+    if (!n) return;
+    srch.at = ((k % n) + n) % n;
+    const h = srch.hits[srch.at];
+    if (h.kind === 'mark') { const keep = openPop; goMark(h.m); if (keep === searchPop) showPop(searchPop, popAnchor || searchAnchor()); }
+    else {
+      const i = pages.indexOf(h.page);
+      if (i < 0) return;
+      if (i !== cur) { cur = i; renderPage(); scheduleSave(); }
+      const q = h.kind === 'pdf' ? h.rects[0] : textBoxRect(h.t);
+      if (q && view.zoom > 1.05) {                   // zoomed in: the match comes into the middle
+        const sc = view.fit * view.zoom, was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+        Object.assign(view, { tx: vw / 2 - (q.x + q.w / 2) * sc, ty: vh / 2 - (q.y + q.h / 2) * sc }); clampView();
+        const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+        Object.assign(view, was); zoomBack(b);
+      }
+    }
+    renderHits(); renderSearch(srch.busy);
+    const cb = $('srchList').querySelector(`[data-k="${srch.at}"]`);
+    if (cb) cb.scrollIntoView({ block: 'nearest' });
+  }
+  const searchAnchor = () => document.querySelector('#toolbar [data-type="search"]') || $('app');
+  function openSearch(el) {
+    if (openPop !== searchPop) showPop(searchPop, el || searchAnchor());
+    srchIn.value = srch.q;
+    renderSearch(srch.busy);
+    setTimeout(() => { srchIn.focus(); srchIn.select(); }, 30);
+  }
+  let srchTimer = null;
+  srchIn.addEventListener('input', () => { clearTimeout(srchTimer); srchTimer = setTimeout(() => runSearch(srchIn.value), 260); });
+  srchIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (srchIn.value.trim() !== srch.q) { clearTimeout(srchTimer); runSearch(srchIn.value).then(() => goHit(0)); }
+      else goHit(srch.at + (e.shiftKey ? -1 : 1));
+    }
+  });
+  $('srchNext').addEventListener('click', () => goHit(srch.at + 1));
+  $('srchPrev').addEventListener('click', () => goHit(srch.at < 0 ? -1 : srch.at - 1));
+  $('srchList').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) goHit(+b.dataset.k); });
+
   function delMark(m) {
     remember();
     marks = marks.filter(x => x !== m);
@@ -10379,6 +10611,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'bookmark': return `Bookmarks · ${shownMarks().length}`;
       case 'view': return viewHidden() ? `View · hidden: ${viewHiddenNames()}` : 'View · everything shown';
       case 'toggle': return toggleName(it) + ' · hold for options';
+      case 'search': return srch.q ? `Search · “${srch.q}” · ${srch.hits.length} found` : 'Search text boxes, PDF pages and bookmarks';
       case 'fold': return it.folded ? 'Show the hidden buttons' : 'Minimize · hide the buttons before this one';
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
