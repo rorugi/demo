@@ -327,7 +327,7 @@
   .bmbar[hidden] { display: none; }
   .bmbar.tl { left: 0; align-items: flex-start; }
   .bmbar.tr { right: 0; align-items: flex-end; }
-  .bmtag { --n: 13px; max-width: 170px; min-width: 52px; height: 36px; border: 0; border-radius: 0; background: var(--c); color: var(--fg); cursor: pointer;
+  .bmtag { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; --n: 13px; max-width: 170px; min-width: 52px; height: 36px; border: 0; border-radius: 0; background: var(--c); color: var(--fg); cursor: pointer;
     font: 600 14px var(--ui); letter-spacing: .02em; display: flex; align-items: center; transition: transform .15s, opacity .15s; opacity: .6; }
   .bmbar.tl .bmtag { padding: 0 calc(var(--n) + 10px) 0 calc(env(safe-area-inset-left, 0px) + 12px); justify-content: flex-start;
     clip-path: polygon(0 0, 100% 0, calc(100% - var(--n)) 50%, 100% 100%, 0 100%); transform-origin: left center; }
@@ -1965,8 +1965,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_154';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.31';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_155';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.32';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6777,12 +6777,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const shownMarks = () => marks.filter(m => pages.includes(m.page));
   const inkOn = c => { const [r, g, b] = hexToRgb(c); return 0.299 * r + 0.587 * g + 0.114 * b > 0.62 ? '#1a1b1e' : '#ffffff'; };
   const hereNow = () => ({ page: pages[cur], x: (vw / 2 - view.tx) / S(), y: (vh / 2 - view.ty) / S(), z: view.zoom });
-  function addMark() {
+  function addMark(first = false) {                // first: at the top of the list (hold on the box's bookmark tab)
     if (LIVE_VIEW) return;
     remember();
     const used = new Set(marks.map(m => m.color)), color = BM_COLORS.find(c => !used.has(c)) || BM_COLORS[marks.length % BM_COLORS.length];
-    marks.push({ id: uid(), label: '', color, ...hereNow() });
+    const m = { id: uid(), label: '', color, ...hereNow() };
+    if (first) marks.unshift(m); else marks.push(m);
     scheduleSave(); renderMarks();
+    if (first) toast(`Bookmark added for page ${cur + 1}, first in the list.`, 1600);
   }
   function setMark(m) {                            // this bookmark now points here
     remember();
@@ -6843,12 +6845,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (openPop === bmPop) placePop();
     }
     // the box on the screen
-    bmBox.hidden = bmShow === 'off' || !list.length;
+    bmBox.hidden = bmShow === 'off';                // with no bookmarks only the tab shows: holding it adds one
     bmBox.className = 'bmbar ' + bmShow;
     if (!bmBox.hidden) bmBox.innerHTML =
-      `<button type="button" class="bmtag bmfold" data-bmfold="1" aria-expanded="${!bmFolded}" aria-label="${bmFolded ? 'Show' : 'Hide'} the bookmarks" title="${bmFolded ? 'Show' : 'Hide'} the bookmarks">` +
-      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.5-6 4.5z"/></svg>${bmFolded ? `<small>${list.length}</small>` : ''}</button>` +
-      (bmFolded ? '' : list.map(m => `<button type="button" class="bmtag${m.page === pages[cur] ? ' here' : ''}" data-bm="${m.id}" style="--c:${m.color};--fg:${inkOn(m.color)}" title="${esc(m.label || 'Page ' + pnum(m))}">` +
+      `<button type="button" class="bmtag bmfold" data-bmfold="1" aria-expanded="${!bmFolded}" aria-label="${bmFolded ? 'Show' : 'Hide'} the bookmarks. Hold to add a bookmark here" title="${bmFolded ? 'Show' : 'Hide'} the bookmarks · hold to add one here, first in the list">` +
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.5-6 4.5z"/></svg>${bmFolded || !list.length ? `<small>${list.length}</small>` : ''}</button>` +
+      (bmFolded ? '' : list.map(m => `<button type="button" class="bmtag${m.page === pages[cur] ? ' here' : ''}" data-bm="${m.id}" style="--c:${m.color};--fg:${inkOn(m.color)}" title="${esc(m.label || 'Page ' + pnum(m))} · hold to set it to here">` +
       `<span>${esc(m.label || String(pnum(m)))}</span></button>`).join(''));
     updateToolbarState();
   }
@@ -6953,8 +6955,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('bmAdd').addEventListener('click', addMark);
   $('bmShowSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; bmShow = b.dataset.v; store.set('bmShow', bmShow); renderMarks(); });
   $('bmThumbSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; bmThumb = b.dataset.v; store.set('bmThumb', bmThumb); renderMarks(); if (!$('overview').hidden) buildOverview(); });
+  // holding on the box: on the bookmark tab a new bookmark here goes first in the list, on a bookmark it is set to here
+  let bmHold = null, bmBoxSkip = false;
+  bmBox.addEventListener('pointerdown', e => {
+    const t = e.target.closest('[data-bmfold], [data-bm]');
+    if (!t || e.button > 0 || LIVE_VIEW) return;
+    const h = bmHold = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    h.timer = setTimeout(() => {
+      if (bmHold !== h) return;
+      h.fired = true; vibrate(12);
+      bmBoxSkip = true;                            // no tap action when the finger lifts
+      if (t.dataset.bmfold) addMark(true);
+      else { const m = marks.find(x => x.id === t.dataset.bm); if (m) setMark(m); }
+    }, PEEK_HOLD + 250);
+  });
+  const bmHoldEnd = e => {
+    if (!bmHold || e.pointerId !== bmHold.id) return;
+    clearTimeout(bmHold.timer);
+    if (bmHold.fired) setTimeout(() => { bmBoxSkip = false; }, 120);
+    bmHold = null;
+  };
+  bmBox.addEventListener('pointermove', e => { if (bmHold && !bmHold.fired && e.pointerId === bmHold.id && Math.hypot(e.clientX - bmHold.x, e.clientY - bmHold.y) > 10) bmHoldEnd(e); });
+  bmBox.addEventListener('pointerup', bmHoldEnd);
+  bmBox.addEventListener('pointercancel', bmHoldEnd);
+  bmBox.addEventListener('contextmenu', e => e.preventDefault());
   bmBox.addEventListener('click', e => {
-    if (e.target.closest('[data-bmfold]')) { bmFolded = !bmFolded; store.set('bmFolded', bmFolded); renderMarks(); return; }
+    if (bmBoxSkip) { e.stopPropagation(); return; }
+    if (e.target.closest('[data-bmfold]')) {
+      if (!shownMarks().length) { toast('Hold the bookmark tab to add a bookmark here.', 1800); return; }
+      bmFolded = !bmFolded; store.set('bmFolded', bmFolded); renderMarks(); return;
+    }
     const b = e.target.closest('[data-bm]'), m = b && marks.find(x => x.id === b.dataset.bm);
     if (m) goMark(m);
   });
