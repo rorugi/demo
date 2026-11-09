@@ -623,6 +623,8 @@
   .menu svg { width: 18px; height: 18px; flex: none; opacity: .8; }
   .menu small { margin-left: auto; font-size: 11px; opacity: .55; }
   .ptpop { width: 252px; }
+  .tgpop { width: 300px; }
+  .tgpop .menu button { padding-top: 7px; padding-bottom: 7px; }
   .ptpop .menu button[aria-pressed="true"] { background: var(--active); font-weight: 600; }
   .ptpop .menu button svg { width: 22px; height: 22px; }
   .ptpop .menu .sub { display: block; }
@@ -1342,6 +1344,12 @@
   <div class="seg four" id="bmThumbSeg"><button type="button" data-v="off">Off</button><button type="button" data-v="tl">Top left</button><button type="button" data-v="tr">Top right</button><button type="button" data-v="b">Bottom</button></div>
 </div>
 <div class="bmbar" id="bmBox" hidden></div>
+<!-- toggle button: what it switches between -->
+<div class="pop ptpop tgpop" id="togglePop" role="dialog" aria-label="Toggle" hidden>
+  <h3>Toggle between</h3>
+  <div class="menu" id="tgList"></div>
+  <p class="pthint">Tap the button to switch, hold it for these options. Add more toggle buttons in the toolbar layout.</p>
+</div>
 <!-- view: show or hide parts of the page (to see a plain PDF again) -->
 <div class="pop viewpop" id="viewPop" role="dialog" aria-label="View" hidden>
   <div class="poptitle">View</div>
@@ -1992,8 +2000,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_158';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.35';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_159';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.36';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2191,6 +2199,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     text:   { label: 'Text' },
     bookmark: { label: 'Bookmarks' },
     view:   { label: 'View (show / hide)' },
+    toggle: { label: 'Toggle', multi: true },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -2237,7 +2246,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const PART_NAMES = { color: 'Colour', width: 'Thickness', opacity: 'Opacity', kind: 'Pen type', highlighter: 'Highlighter', snap: 'Straight lines' };
   const cleanUse = (u, d) => Object.fromEntries(PARTS.map(k => [k, u && typeof u[k] === 'boolean' ? u[k] : !!(d && d[k])]));
   const ALL_BUT_KIND = { color: true, width: true, opacity: true, highlighter: true };
+  // Toggle buttons: each switches between two things; what it switches is chosen in its options (hold the button)
+  const TOGGLES = {
+    notebook: { name: 'Notebooks', sub: 'This notebook and the one opened before it',
+      icon: svg('<rect x="2.5" y="4" width="6.5" height="16" rx="1"/><rect x="15" y="4" width="6.5" height="16" rx="1"/><path d="M10.5 9.5h3M12.3 8.2l1.3 1.3-1.3 1.3M13.5 14.5h-3M11.7 13.2l-1.3 1.3 1.3 1.3"/>') },
+    page: { name: 'Pages', sub: 'This page and the page shown before it, each with its zoom and position',
+      icon: svg('<path d="M5.5 3.5h9l4 4v13h-13z"/><path d="M14.5 3.5v4h4"/><path d="M8.5 12.5h6M13 11l1.5 1.5L13 14M14.5 16.5h-6M10 15l-1.5 1.5L10 18"/>') },
+    tool: { name: 'Pens and tools', sub: 'This pen or tool and the one used before it (pen and eraser, two pens…)',
+      icon: svg('<path d="M19.5 12a7.5 7.5 0 0 1-13 5.1M4.5 12a7.5 7.5 0 0 1 13-5.1"/><path d="M17.8 3.5v3.6h-3.6M6.2 20.5v-3.6h3.6"/><path d="M13.3 9.2l1.5 1.5-4 4-2 .5.5-2z"/>') },
+    zoom: { name: 'Zoom', sub: 'The whole page and the last zoomed-in view of this page',
+      icon: svg('<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4l5.1 5.1"/><path d="M7.5 9h6M12 7.5L13.5 9 12 10.5M13.5 12h-6M9 10.5L7.5 12 9 13.5"/>') },
+    plain: { name: 'Plain page', sub: 'Hides grid, sticky notes, drawings, text and images (a plain PDF), then shows them again',
+      icon: svg('<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><path d="M12 9a3 3 0 0 0 0 6z" fill="currentColor"/><circle cx="12" cy="12" r="3"/>') }
+  };
+  ICON.toggle = TOGGLES.notebook.icon;
   function cleanItemData(it, o) {
+    if (it.type === 'toggle') { o.mode = TOGGLES[it.mode] ? it.mode : 'notebook'; return o; }
     if (it.type === 'size') { o.type = 'preset'; o.brush = cleanBrush({ width: cleanWidth(it.width) }); o.use = cleanUse(null, { width: true }); return o; }
     if (it.type === 'color') { o.type = 'preset'; o.brush = cleanBrush(cleanPaint(it.paint)); o.use = cleanUse(null, { color: true, opacity: true, highlighter: true }); return o; }
     if (it.type === 'ptype') { o.type = 'preset'; o.brush = cleanBrush(it.brush); o.use = cleanUse(null, { kind: true }); return o; }
@@ -2347,6 +2371,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!bars.some(b => b.items.some(i => i.type === 'view'))) {
       const m = bars[0].items, k = m.findIndex(i => i.type === 'bookmark' || i.type === 'image');
       m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'view' });
+      store.set('toolbars', bars);
+    }
+  }
+  if (!store.get('tgAdded', false)) {          // a toggle button (two notebooks) arrives once, after the view button
+    store.set('tgAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'toggle'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'view' || i.type === 'bookmark');
+      m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'toggle', mode: 'notebook' });
       store.set('toolbars', bars);
     }
   }
@@ -2740,6 +2772,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let ted = null;                                  // writing in a box: { t, el, page, before, isNew, orig, timer }
   let textEdit = { kind: 'tool' };                 // what the text menu changes: the tool, or one box
   let notesShown = store.get('notesShown', true) !== false;
+  // Toggle buttons (see runToggle): the page / pen or tool shown now and before, the zoomed view, the hidden parts before "plain page"
+  let pageHere = null, pageBack = null, useHere = null, useBack = null, zoomSaved = null, plainSaved = null;
   // View button: parts of the page hidden on the screen (see applyShown)
   const viewPop = $('viewPop'), viewHide = { grid: false, ink: false, obj: false };
   const viewHidden = () => viewHide.grid || viewHide.ink || viewHide.obj || !notesShown;
@@ -2965,6 +2999,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   function renderPage() {
+    trackPage();
     if (ted && ted.page !== pages[cur]) commitTextEdit();   // another page: the writing is done
     renderBg();
     if (objSel && !objOnPage(objSel)) objSel = null;
@@ -3032,6 +3067,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     el.style.width = (W * s) + 'px'; el.style.height = (H * s) + 'px';
   }
   function applyView() {
+    if (pageHere && pageHere.page === pages[cur]) pageHere.v = { zoom: view.zoom, tx: view.tx, ty: view.ty };   // for the page toggle
     const s = S();
     for (const el of [pageEl, sheetB, ...pool]) positionSheet(el);
     for (const ctx of [lctx, tctx]) {
@@ -3100,6 +3136,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'text': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Text: tap the page for a text box, tap again for size and colour" title="Text · tap the page to write, tap again for size and colour">${ICON.text}</button>`;
       case 'image': return `<button type="button" ${a} aria-label="Insert an image">${ICON.image}</button>`;
       case 'bookmark': return `<button type="button" ${a} aria-label="Bookmarks" title="Bookmarks">${ICON.bookmark}</button>`;
+      case 'toggle': return `<button type="button" class="eraser" ${a} data-mode="${it.mode}" aria-pressed="false" aria-label="Toggle: ${TOGGLES[it.mode].name}. Hold for options">${TOGGLES[it.mode].icon}</button>`;
       case 'view': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="View: show or hide grid, sticky notes, drawings, text and images" title="View · show or hide parts of the page">${ICON.eye}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
@@ -3339,6 +3376,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   };
   const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
   function updateToolbarState() {
+    trackUse();
     stage.classList.toggle('selecting', tool === 'lasso');
     if (typeof refreshSelbar === 'function' && !sel) refreshSelbar();
     const els = document.querySelectorAll('.tb-items [data-id]');
@@ -3382,6 +3420,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
+        case 'toggle':
+          if (el.dataset.mode !== it.mode) { el.innerHTML = TOGGLES[it.mode].icon; el.dataset.mode = it.mode; el.setAttribute('aria-label', `Toggle: ${TOGGLES[it.mode].name}. Hold for options`); }
+          el.setAttribute('aria-pressed', String(it.mode === 'plain' && !!plainSaved));
+          break;
         case 'view': { const off = viewHidden(); el.setAttribute('aria-pressed', String(off)); el.innerHTML = off ? ICON.eyeoff : ICON.eye; break; }
         case 'undo': el.disabled = !undoStack.length; break;
         case 'inmode':
@@ -3430,6 +3472,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (openPop === ptPop) closePops(); else { renderPtPop(); showPop(ptPop, el); }
         break;
       case 'bookmark': openMarks(el); break;
+      case 'toggle': runToggle(it); break;
       case 'view': if (openPop === viewPop) closePops(); else { renderViewPop(); showPop(viewPop, el); } break;
       case 'image':
         openPop === imgAddPop ? closePops() : showPop(imgAddPop, el);
@@ -4200,7 +4243,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (it.type === 'preset') { const lk = presetLook(it); return `<span class="ico ${lk === 'size' ? 'sizeico' : presetClass(lk)}" data-look="${lk}">${presetInner(lk)}</span>`; }
     if (it.type === 'sepbr') return `<span class="ico">${ICON.sepbr}</span>`;
     if (it.type === 'real') return `<span class="ico txt">1:1</span>`;
-    const ic = it.type === 'lock' ? ICON.lock(false) : it.type === 'fs' ? ICON.fs(false) : ICON[it.type];
+    const ic = it.type === 'lock' ? ICON.lock(false) : it.type === 'fs' ? ICON.fs(false) : it.type === 'toggle' ? TOGGLES[it.mode].icon : ICON[it.type];
     return `<span class="ico">${ic}</span>`;
   }
   function renderTbList() {
@@ -4218,6 +4261,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       edBar.items.map(it => {
         const name = it.type === 'pen' ? `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penList.indexOf(it) + 1}<small>${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}${it.locks ? ' · locked: ' + Object.keys(it.locks).map(k => k === 'width' ? 'thickness' : k).join(', ') : ''}</small>`
           : it.type === 'preset' ? `${presetName(it)}<small>${presetParts(it)}</small>`
+          : it.type === 'toggle' ? `Toggle<small>${TOGGLES[it.mode].name} · hold the button to change</small>`
           : ITEM_TYPES[it.type].label;
         const lastPen = main && it.type === 'pen' && mainPens === 1;
         return `<li data-id="${it.id}"><span class="handle" role="button" aria-label="Move ${ITEM_TYPES[it.type].label}">${ICON.handle}</span>${rowIcon(it)}<span class="name">${name}</span>` +
@@ -4265,6 +4309,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const b = e.target.closest('[data-add]');
     if (!b || b.disabled) return;
     const t = b.dataset.add, it = { id: uid(), type: ITEM_TYPES[t].add ? 'preset' : t };
+    if (t === 'toggle') it.mode = 'notebook';
     const presets = allItems().filter(i => i.type === 'preset');
     if (t === 'pen' || t === 'preset') it.brush = cleanBrush(brush());    // starts with the pen's current ink
     if (t === 'preset') it.use = cleanUse(null, ALL_BUT_KIND);
@@ -5615,6 +5660,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- View: show or hide the grid, sticky notes, drawings, text and images on the screen ----
   // (grid, drawings, text and images come back when the app starts again; sticky notes keep their own setting)
   function applyShown() {
+    if (!viewHidden()) plainSaved = null;
     stage.classList.toggle('v-nogrid', viewHide.grid);
     stage.classList.toggle('v-noink', viewHide.ink);
     stage.classList.toggle('v-noobj', viewHide.obj);
@@ -5636,6 +5682,149 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('vwObj').addEventListener('change', e => { viewHide.obj = !e.target.checked; if (viewHide.obj && typeof deselectObj === 'function') deselectObj(); applyShown(); });
   $('vwNotes').addEventListener('change', e => setNotesShown(e.target.checked));
   $('vwAll').addEventListener('click', () => { viewHide.grid = viewHide.ink = viewHide.obj = false; if (!notesShown) setNotesShown(true); applyShown(); });
+  // ---- Toggle buttons: switch between two notebooks, pages, pens or tools, zoomed views, or the plain page ----
+  function trackPage() {                           // the page shown before this one (for the page toggle)
+    const pg = pages[cur];
+    if (pageHere && pageHere.page === pg) return;
+    if (pageHere && pages.includes(pageHere.page)) pageBack = pageHere;
+    pageHere = { page: pg };
+  }
+  function trackUse() {                            // the pen or tool used before this one
+    if (tool === 'magnifier') return;
+    const k = tool === 'pen' ? 'pen:' + penId : tool;
+    if (useHere && useHere.k === k) return;
+    if (useHere) useBack = useHere;
+    useHere = { k, tool, penId };
+  }
+  const TOOL_NAMES = { eraser: 'eraser', lasso: 'select', sticky: 'sticky notes', text: 'text' };
+  const useName = u => u.tool === 'pen' ? `pen ${pens().indexOf(itemById(u.penId)) + 1}` : TOOL_NAMES[u.tool] || u.tool;
+  const otherNotebook = () => byOpened(nbIdx.loaded.filter(m => m.id !== nbIdx.current))[0] || null;
+  const useOk = u => u && (u.tool !== 'pen' || !!itemById(u.penId));
+  function toggleName(it) {
+    switch (it.mode) {
+      case 'notebook': { const o = otherNotebook(); return o ? `Toggle · notebook “${o.name}”` : 'Toggle · notebooks (no other open)'; }
+      case 'page': { const i = pageBack ? pages.indexOf(pageBack.page) : -1; return i >= 0 ? `Toggle · page ${i + 1}` : 'Toggle · pages (none visited yet)'; }
+      case 'tool': return useOk(useBack) ? `Toggle · ${useName(useBack)}` : 'Toggle · pens and tools';
+      case 'zoom': return Math.abs(view.zoom - 1) > 0.01 ? 'Toggle · whole page' : 'Toggle · zoomed-in view';
+      case 'plain': return plainSaved ? 'Toggle · show everything again' : 'Toggle · plain page';
+    }
+    return 'Toggle';
+  }
+  function glideTo(to) {                           // to a view of this page, smoothly
+    const was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+    Object.assign(view, to); clampView();
+    const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+    Object.assign(view, was);
+    zoomBack(b);
+  }
+  async function runToggle(it) {
+    if (LIVE_VIEW) return;
+    switch (it.mode) {
+      case 'notebook': {
+        const o = otherNotebook();
+        if (!o) { toast('There is no other open notebook. Open or start a second one in Notebooks.', 2600); return; }
+        closePops(); await switchNotebook(o.id);
+        break;
+      }
+      case 'page': {
+        const b = pageBack, i = b ? pages.indexOf(b.page) : -1;
+        if (i < 0) { toast('Go to another page first; then this button switches between the two.', 2400); return; }
+        closePops();
+        cur = i; renderPage(); scheduleSave();
+        if (b.v) { Object.assign(view, b.v); clampView(); applyView(); }
+        break;
+      }
+      case 'tool': {
+        const b = useBack;
+        if (!useOk(b)) { toast('Use another pen or tool first; then this button switches between the two.', 2400); return; }
+        if (sel) clearSelection();
+        closePops();
+        tool = b.tool; if (b.tool === 'pen') penId = b.penId;
+        saveItems();
+        break;
+      }
+      case 'zoom':
+        if (Math.abs(view.zoom - 1) > 0.01) { zoomSaved = { page: pages[cur], zoom: view.zoom, tx: view.tx, ty: view.ty }; glideTo({ zoom: 1, tx: view.tx, ty: view.ty }); }
+        else if (zoomSaved && zoomSaved.page === pages[cur]) glideTo({ zoom: zoomSaved.zoom, tx: zoomSaved.tx, ty: zoomSaved.ty });
+        else { toast('Zoom in first; then this button switches between that view and the whole page.', 2400); return; }
+        break;
+      case 'plain':
+        if (plainSaved) {
+          const p = plainSaved; plainSaved = null;
+          Object.assign(viewHide, p.h);
+          if (notesShown !== p.notes) setNotesShown(p.notes);
+          applyShown();
+        } else {
+          const p = { h: { ...viewHide }, notes: notesShown };
+          viewHide.grid = viewHide.ink = viewHide.obj = true;
+          if (typeof deselectObj === 'function') deselectObj();
+          if (notesShown) setNotesShown(false);
+          plainSaved = p;
+          applyShown();
+        }
+        break;
+    }
+    updateToolbarState();
+  }
+  const togglePop = $('togglePop');
+  let tgItem = null;
+  function openTogglePop(it, el) { tgItem = it; renderTogglePop(); showPop(togglePop, el); }
+  function renderTogglePop() {
+    $('tgList').innerHTML = Object.entries(TOGGLES).map(([k, d]) => `<button type="button" data-tg="${k}" aria-pressed="${!!tgItem && tgItem.mode === k}">${d.icon}<span>${d.name}<span class="sub">${d.sub}</span></span></button>`).join('');
+  }
+  $('tgList').addEventListener('click', e => {
+    const b = e.target.closest('[data-tg]');
+    if (!b || !tgItem) return;
+    tgItem.mode = b.dataset.tg;
+    saveItems(); renderTogglePop(); updateToolbarState();
+  });
+  // ---- Holding a toolbar button opens its options right away, without choosing the button first ----
+  function openItemOptions(it, el) {
+    switch (it.type) {
+      case 'pen':                                  // its options belong to the pen in use: the pen is taken
+        if (sel) clearSelection();
+        tool = 'pen'; penId = it.id; saveItems(); updateToolbarState();
+        penEdit = { kind: 'pen' }; renderPenPop(); showPop(penPop, el);
+        break;
+      case 'preset':                               // only the button changes (the pen keeps its ink unless it matches)
+        penEdit = { kind: 'preset', item: it, linked: tool === 'pen' && modMatches(it) }; renderPenPop(); showPop(penPop, el);
+        break;
+      case 'eraser': renderEraserPop(); showPop(eraserPop, el); break;
+      case 'sticky': noteEdit = { kind: 'tool' }; renderNotePop(); showPop(notePop, el); break;
+      case 'text': textEdit = { kind: 'tool' }; renderTextPop(); showPop(textPop, el); break;
+      case 'toggle': openTogglePop(it, el); break;
+      case 'pentype': renderPtPop(); showPop(ptPop, el); break;
+      case 'view': renderViewPop(); showPop(viewPop, el); break;
+      case 'bookmark': if (openPop !== bmPop) openMarks(el); break;
+      case 'image': showPop(imgAddPop, el); break;
+    }
+  }
+  const HOLD_OPTS = new Set(['pen', 'preset', 'eraser', 'sticky', 'text', 'toggle', 'pentype', 'view', 'bookmark', 'image']);
+  let tbHold = null, tbSkipClick = false;
+  document.addEventListener('pointerdown', e => {
+    const el = e.target.closest && e.target.closest('.tb-items [data-id]');
+    if (!el || e.button > 0 || LIVE_VIEW) return;
+    const it = itemById(el.dataset.id);
+    if (!it || !HOLD_OPTS.has(it.type)) return;
+    const h = tbHold = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    h.timer = setTimeout(() => {
+      if (tbHold !== h) return;
+      h.fired = true; tbSkipClick = true; vibrate(12);
+      openItemOptions(it, el);
+    }, PEEK_HOLD + 250);
+  }, true);
+  const tbHoldEnd = e => {
+    const h = tbHold;
+    if (!h || e.pointerId !== h.id) return;
+    clearTimeout(h.timer); tbHold = null;
+    if (h.fired) setTimeout(() => { tbSkipClick = false; }, 150);
+  };
+  document.addEventListener('pointermove', e => { if (tbHold && !tbHold.fired && e.pointerId === tbHold.id && Math.hypot(e.clientX - tbHold.x, e.clientY - tbHold.y) > 10) tbHoldEnd(e); }, true);
+  document.addEventListener('pointerup', tbHoldEnd, true);
+  document.addEventListener('pointercancel', tbHoldEnd, true);
+  document.addEventListener('click', e => {        // the lift after a hold is not a tap
+    if (tbSkipClick && e.target.closest && e.target.closest('.tb-items [data-id]')) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
   function placeNote(e) {
     const [x, y] = toMM(e);
     if (x < 0 || y < 0 || x > W || y > H) return;
@@ -10059,6 +10248,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'text': return `Text · ${textCfg.fs} pt`;
       case 'bookmark': return `Bookmarks · ${shownMarks().length}`;
       case 'view': return viewHidden() ? `View · hidden: ${viewHiddenNames()}` : 'View · everything shown';
+      case 'toggle': return toggleName(it) + ' · hold for options';
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
