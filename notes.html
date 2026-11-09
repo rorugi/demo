@@ -289,6 +289,11 @@
   .sticky-ico .body { fill: var(--nc, transparent); }
   .notepop { width: 248px; }
   .bmpop { width: 356px; }
+  .viewpop { width: 300px; }
+  /* View button: parts of the page hidden on the screen (thumbnails, saving and printing keep everything) */
+  .stage.v-nogrid .page .grid { display: none; }
+  .stage.v-noink .page .ink, .stage.v-noink .page .sel-halo { display: none; }
+  .stage.v-noobj .page .images, .stage.v-noobj .page .texts, .stage.v-noobj .page .imgui { display: none; }
   .bmlist { display: grid; gap: 6px; margin-bottom: 4px; max-height: min(52vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
   .bmnone { font: 13px/1.4 var(--ui); opacity: .7; padding: 6px 2px 2px; }
   .bmhint { font: 12px/1.3 var(--ui); opacity: .55; padding: 0 2px; }
@@ -1337,6 +1342,15 @@
   <div class="seg four" id="bmThumbSeg"><button type="button" data-v="off">Off</button><button type="button" data-v="tl">Top left</button><button type="button" data-v="tr">Top right</button><button type="button" data-v="b">Bottom</button></div>
 </div>
 <div class="bmbar" id="bmBox" hidden></div>
+<!-- view: show or hide parts of the page (to see a plain PDF again) -->
+<div class="pop viewpop" id="viewPop" role="dialog" aria-label="View" hidden>
+  <div class="poptitle">View</div>
+  <label class="hlrow" for="vwGrid"><span>Grid</span><span class="switch"><input type="checkbox" id="vwGrid"><i></i></span></label>
+  <label class="hlrow" for="vwNotes"><span>Sticky notes</span><span class="switch"><input type="checkbox" id="vwNotes"><i></i></span></label>
+  <label class="hlrow" for="vwInk"><span>Drawings<span class="sub">Pen and highlighter; drawing shows them again</span></span><span class="switch"><input type="checkbox" id="vwInk"><i></i></span></label>
+  <label class="hlrow" for="vwObj"><span>Text and images<span class="sub">Hidden ones can't be touched</span></span><span class="switch"><input type="checkbox" id="vwObj"><i></i></span></label>
+  <button type="button" class="wide-btn subtle" id="vwAll">Show everything</button>
+</div>
 <!-- text: one box, or the text tool -->
 <div class="pop notepop" id="textPop" role="dialog" aria-label="Text" hidden>
   <div class="poptitle" id="textPopTitle"></div>
@@ -1978,8 +1992,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_157';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.34';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_158';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.35';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2104,6 +2118,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     nib: svg('<g transform="rotate(45 12 12)"><path class="body" d="M12 23L6.3 12.6 7.9 5.6h8.2l1.6 7z"/><path d="M7.9 5.6V2.2h8.2v3.4M12 23v-8.6"/><circle cx="12" cy="13.2" r="1.2"/></g>', ' class="pen-ico"'),
     sticky: svg('<path class="body" d="M4.5 4.5h15v10l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/>', ' class="sticky-ico"'),
     bookmark: svg('<path d="M6 3.5h12v17l-6-4.5-6 4.5z"/>'),
+    eye: svg('<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>'),
+    eyeoff: svg('<path d="M2.5 12s3.5-6.5 9.5-6.5c1.6 0 3 .4 4.3 1.1M21.5 12s-3.5 6.5-9.5 6.5c-1.6 0-3-.4-4.3-1.1"/><path d="M9.9 14.1A3 3 0 0 1 14.1 9.9"/><path d="M4 20L20 4"/>'),
     text: svg('<path d="M5 7.5V5h14v2.5M12 5v14M9 19h6"/>'),
     image: svg('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.5l5-5 3.5 3.5 2.5-2.5 5 5"/>'),
     marker: svg('<path class="body" d="M14.6 3.4l5.9 5.9-7.6 7.6-5.9-5.9z"/><path d="M7 11l-2.4 4.6 3.7 3.7L13 17"/><path d="M3 21.2h7" stroke-width="2.4"/>', ' class="pen-ico"'),
@@ -2174,6 +2190,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sticky: { label: 'Sticky notes' },
     text:   { label: 'Text' },
     bookmark: { label: 'Bookmarks' },
+    view:   { label: 'View (show / hide)' },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -2235,7 +2252,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return [
       { id: uid(), type: 'pen', brush: cleanBrush(DEFAULT_PRESETS[0]) }, { id: uid(), type: 'pentype' },
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b), use: cleanUse(null, ALL_BUT_KIND) })),
-      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'text' }, { id: uid(), type: 'image' }, { id: uid(), type: 'bookmark' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
+      { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'text' }, { id: uid(), type: 'image' }, { id: uid(), type: 'bookmark' }, { id: uid(), type: 'view' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
     ];
@@ -2322,6 +2339,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!bars.some(b => b.items.some(i => i.type === 'bookmark'))) {
       const m = bars[0].items, k = m.findIndex(i => i.type === 'image' || i.type === 'text');
       m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'bookmark' });
+      store.set('toolbars', bars);
+    }
+  }
+  if (!store.get('vwAdded', false)) {          // the view button arrives once, after the bookmarks button
+    store.set('vwAdded', true);
+    if (!bars.some(b => b.items.some(i => i.type === 'view'))) {
+      const m = bars[0].items, k = m.findIndex(i => i.type === 'bookmark' || i.type === 'image');
+      m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'view' });
       store.set('toolbars', bars);
     }
   }
@@ -2715,6 +2740,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let ted = null;                                  // writing in a box: { t, el, page, before, isNew, orig, timer }
   let textEdit = { kind: 'tool' };                 // what the text menu changes: the tool, or one box
   let notesShown = store.get('notesShown', true) !== false;
+  // View button: parts of the page hidden on the screen (see applyShown)
+  const viewPop = $('viewPop'), viewHide = { grid: false, ink: false, obj: false };
+  const viewHidden = () => viewHide.grid || viewHide.ink || viewHide.obj || !notesShown;
+  const viewHiddenNames = () => [viewHide.grid && 'grid', !notesShown && 'sticky notes', viewHide.ink && 'drawings', viewHide.obj && 'text and images'].filter(Boolean).join(', ');
   const noteCfg = (c => ({ color: c && NOTE_COLORS[c.color] ? c.color : 'yellow', size: c && NOTE_SIZES[c.size] ? c.size : 'm' }))(store.get('noteCfg', null));
   (function loadNotebook() {
     const nb = null;    // the backup is read by loadBackup() once everything is set up
@@ -3071,6 +3100,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'text': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Text: tap the page for a text box, tap again for size and colour" title="Text · tap the page to write, tap again for size and colour">${ICON.text}</button>`;
       case 'image': return `<button type="button" ${a} aria-label="Insert an image">${ICON.image}</button>`;
       case 'bookmark': return `<button type="button" ${a} aria-label="Bookmarks" title="Bookmarks">${ICON.bookmark}</button>`;
+      case 'view': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="View: show or hide grid, sticky notes, drawings, text and images" title="View · show or hide parts of the page">${ICON.eye}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
       case 'undo': return `<button type="button" ${a} aria-label="Undo" title="Undo">${ICON.undo}</button>`;
@@ -3352,6 +3382,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
+        case 'view': { const off = viewHidden(); el.setAttribute('aria-pressed', String(off)); el.innerHTML = off ? ICON.eyeoff : ICON.eye; break; }
         case 'undo': el.disabled = !undoStack.length; break;
         case 'inmode':
           if (el.dataset.m !== String(penSeen)) { el.innerHTML = modeIcon(penSeen); el.dataset.m = String(penSeen); }
@@ -3399,6 +3430,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (openPop === ptPop) closePops(); else { renderPtPop(); showPop(ptPop, el); }
         break;
       case 'bookmark': openMarks(el); break;
+      case 'view': if (openPop === viewPop) closePops(); else { renderViewPop(); showPop(viewPop, el); } break;
       case 'image':
         openPop === imgAddPop ? closePops() : showPop(imgAddPop, el);
         break;
@@ -5578,7 +5610,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     notesShown = v; store.set('notesShown', v);
     renderNotes(); mapInkChanged(); updateToolbarState();
     if (!$('overview').hidden) buildOverview();
+    if (typeof renderViewPop === 'function' && !viewPop.hidden) renderViewPop();
   }
+  // ---- View: show or hide the grid, sticky notes, drawings, text and images on the screen ----
+  // (grid, drawings, text and images come back when the app starts again; sticky notes keep their own setting)
+  function applyShown() {
+    stage.classList.toggle('v-nogrid', viewHide.grid);
+    stage.classList.toggle('v-noink', viewHide.ink);
+    stage.classList.toggle('v-noobj', viewHide.obj);
+    updateToolbarState();
+    if (!viewPop.hidden) renderViewPop();
+  }
+  function renderViewPop() {
+    $('vwGrid').checked = !viewHide.grid; $('vwNotes').checked = notesShown;
+    $('vwInk').checked = !viewHide.ink; $('vwObj').checked = !viewHide.obj;
+    $('vwAll').disabled = !viewHidden();
+  }
+  function viewNeed(k, what) {                     // drawing or adding on a hidden part shows it again
+    if (!viewHide[k]) return;
+    viewHide[k] = false; applyShown();
+    toast(`${what} shown again.`, 1400);
+  }
+  $('vwGrid').addEventListener('change', e => { viewHide.grid = !e.target.checked; applyShown(); });
+  $('vwInk').addEventListener('change', e => { viewHide.ink = !e.target.checked; applyShown(); });
+  $('vwObj').addEventListener('change', e => { viewHide.obj = !e.target.checked; if (viewHide.obj && typeof deselectObj === 'function') deselectObj(); applyShown(); });
+  $('vwNotes').addEventListener('change', e => setNotesShown(e.target.checked));
+  $('vwAll').addEventListener('click', () => { viewHide.grid = viewHide.ink = viewHide.obj = false; if (!notesShown) setNotesShown(true); applyShown(); });
   function placeNote(e) {
     const [x, y] = toMM(e);
     if (x < 0 || y < 0 || x > W || y > H) return;
@@ -5920,6 +5977,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let nextImgAt = null;
   async function insertImageBlob(blob, at) {
     if (!blob || !/^image\//.test(blob.type)) { toast('That is not an image.'); return; }
+    viewNeed('obj', 'Text and images');
     nextImgAt = at || null;
     try { placeImage(await storeImage(blob)); }
     catch (e) { if (!(e && e.message === 'quota')) toast('This image can’t be read here. JPEG, PNG, WebP and GIF work.'); }
@@ -6021,6 +6079,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     renderTexts();
   }
   function imageAt(x, y) {
+    if (viewHide.obj) return null;                 // hidden (View button): can't be touched
     const list = imagesOf(pages[cur]);
     for (let i = list.length - 1; i >= 0; i--) { const m = list[i]; if (x >= m.x && y >= m.y && x <= m.x + m.w && y <= m.y + m.h) return m; }
     return null;
@@ -6351,6 +6410,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
   }
   function textAt(x, y) {
+    if (viewHide.obj) return null;
     const list = textsOf(pages[cur]);
     for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (x >= t.x && y >= t.y && x <= t.x + t.w && y <= t.y + textH(t)) return t; }
     return null;
@@ -6429,6 +6489,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // a new, empty box where the caret goes: the first line sits on the tapped spot
   function newTextAt(q, runs = [], select = false, centred = false) {
     if (LIVE_VIEW || q[0] < 0 || q[1] < 0 || q[0] > W || q[1] > H) return null;
+    viewNeed('obj', 'Text and images');
     const before = snapshot(), fmm = textCfg.fs * PT;
     let w = Math.min(90, W - 10);
     if (runs.length) {                             // pasted text: as wide as its longest line, within reason
@@ -7893,6 +7954,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let eraseSkip = null;                          // { st, at }: a stroke not erased until the eraser has moved away
   function startErase(e, spare) {
     if (LIVE_VIEW) return;
+    viewNeed('ink', 'Drawings');
     const q = toMM(e);
     eraseSkip = spare ? { st: spare, at: q } : null;
     clearCtx(lctx);
@@ -8055,6 +8117,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   function startLasso(e) {
     if (LIVE_VIEW) return;
+    viewNeed('ink', 'Drawings');
     const q = toMM(e);
     clearCtx(lctx); clearCtx(tctx);
     liveWrap.style.opacity = 1; liveWrap.style.mixBlendMode = 'normal';
@@ -8403,6 +8466,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (LIVE_VIEW) return;
     const [x, y] = toMM(e);
     if (x < 0 || y < 0 || x > W || y > H) return;
+    viewNeed('ink', 'Drawings');
     const br = over || effBrush();          // the pen, with an active size / colour button applied (or the finger's highlighter)
     clearCtx(lctx); clearCtx(tctx);
     const note = noteAt(x, y);              // a stroke that starts on a sticky note belongs to it
@@ -9994,6 +10058,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'sticky': return `Sticky notes · ${notesShown ? 'shown' : 'hidden'}`;
       case 'text': return `Text · ${textCfg.fs} pt`;
       case 'bookmark': return `Bookmarks · ${shownMarks().length}`;
+      case 'view': return viewHidden() ? `View · hidden: ${viewHiddenNames()}` : 'View · everything shown';
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
