@@ -2055,8 +2055,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_168';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.45';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_169';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.46';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7277,11 +7277,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     at.push(str.length);
     return { s: out, at };
   }
-  const normQ = q => normMap(q.trim().replace(/\s+/g, ' ')).s;
+  // Spaces count: a space before or after the words means a word starts or ends there ("cat " finds "cat." and
+  // "cat", not "category"; " art" doesn't find "start"). Spaces inside match any gap or line break.
+  const cleanQ = q => q.replace(/\s+/g, ' ');
+  const normQ = q => normMap(cleanQ(q)).s;
+  const qLetters = q => q.replace(/ /g, '').length;
+  const qOk = q => qLetters(q) >= 2 || (qLetters(q) === 1 && q.trim() !== q);   // one letter only as a whole word
+  const qRe = q => {
+    const core = q.trim().split(' ').map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
+    return new RegExp((q.startsWith(' ') ? '(?<![\\p{L}\\p{N}])' : '') + core + (q.endsWith(' ') ? '(?![\\p{L}\\p{N}])' : ''), 'gu');
+  };
   function findAll(hay, q) {                       // [[start, end] in the original text]
-    const N = normMap(hay), out = [];
-    let k = N.s.indexOf(q);
-    while (k >= 0 && out.length < SRCH_MAX) { out.push([N.at[k], N.at[k + q.length - 1] + 1]); k = N.s.indexOf(q, k + q.length); }
+    const N = normMap(hay), out = [], re = qRe(q);
+    let m;
+    while ((m = re.exec(N.s)) && out.length < SRCH_MAX) {
+      if (!m[0].length) { re.lastIndex++; continue; }
+      out.push([N.at[m.index], N.at[m.index + m[0].length - 1] + 1]);
+    }
     return out;
   }
   const snippet = (str, a, b) => {
@@ -7348,8 +7360,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const textOfBox = t => (t.runs || []).map(r => r.t).join('');
   async function runSearch(qRaw) {
     const run = ++srch.run, q = normQ(qRaw);
-    srch.q = qRaw.trim(); srch.hits = []; srch.at = -1; srch.noPdfText = false;
-    if (q.length < 2) { srch.q = q ? srch.q : ''; srch.busy = false; renderSearch(); renderHits(); updateToolbarState(); return; }
+    srch.q = q.trim() ? cleanQ(qRaw) : ''; srch.hits = []; srch.at = -1; srch.noPdfText = false;
+    if (!qOk(q)) { srch.busy = false; renderSearch(); renderHits(); updateToolbarState(); return; }
     const add = h => { if (srch.hits.length < SRCH_MAX) srch.hits.push(h); };
     pages.forEach(pg => (pg.texts || []).forEach(t => {
       const str = textOfBox(t);
@@ -7393,7 +7405,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function renderSearch(progress) {
     const n = srch.hits.length;
     if (!progress) $('srchInfo').textContent = !srch.q ? 'Text boxes, PDF pages and bookmark names'
-      : srch.q.length < 2 ? 'Type at least 2 letters'
+      : !qOk(srch.q) ? 'Type at least 2 letters (or one letter with a space for a whole word)'
       : (n ? `${n >= SRCH_MAX ? SRCH_MAX + '+' : n} found` : 'Nothing found') + (srch.noPdfText ? ' · the PDF has no text (scanned pages can’t be searched)' : '');
     const label = { text: 'Text', pdf: 'PDF', mark: 'Bookmark' };
     $('srchList').innerHTML = srch.hits.slice(0, 200).map((h, k) => `<button type="button" data-k="${k}"${k === srch.at ? ' aria-current="true"' : ''}><b>p. ${pages.indexOf(h.page) + 1}</b><small>${label[h.kind]}</small>${h.html}</button>`).join('') +
@@ -7442,7 +7454,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   srchIn.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (srchIn.value.trim() !== srch.q) { clearTimeout(srchTimer); runSearch(srchIn.value).then(() => goHit(0)); }
+      if (cleanQ(srchIn.value) !== srch.q) { clearTimeout(srchTimer); runSearch(srchIn.value).then(() => goHit(0)); }
       else goHit(srch.at + (e.shiftKey ? -1 : 1));
     }
   });
