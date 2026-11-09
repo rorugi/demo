@@ -123,12 +123,10 @@
   .toolbar.vertical { flex-direction: row; align-items: flex-start; }
   .tbline { display: flex; align-items: center; gap: 3px; }
   .toolbar.vertical .tbline { flex-direction: column; }
-  .toolbar.min .tbline + .tbline { display: none; }
   /* groups between "Separator (wraps)" items; a group that starts a new line hides its separator */
   .tbgrp { display: flex; align-items: center; gap: 3px; flex: none; }
   .toolbar.vertical .tbgrp { flex-direction: column; }
   .tbgrp.wrapped > .sep.soft { display: none; }
-  .toolbar.min .tbgrp { display: none; }
   .toolbar.dragging { box-shadow: 0 10px 30px rgba(0, 0, 0, .24); }
   /* additional toolbars: bottom centre (horizontal) or right edge (vertical) until moved */
   .toolbar.extra {
@@ -144,15 +142,15 @@
     right: calc(env(safe-area-inset-right, 0px) + 10px + var(--k, 0) * 54px);
     transform: translateY(-50%);
   }
-  /* minimize / maximize: a minimized toolbar shows only its first icon and this button */
-  .toolbar .tbmin { min-width: 34px !important; width: 34px; height: 34px; padding: 0 !important; opacity: .55; }
-  .toolbar .tbmin:hover { opacity: 1; }
-  .toolbar .tbmin svg { width: 18px; height: 18px; transition: transform .15s; }
-  .toolbar.vertical .tbmin { width: 34px; height: 34px; }
-  .toolbar.vertical .tbmin svg { transform: rotate(90deg); }
-  .toolbar.min .tbmin svg { transform: rotate(180deg); }
-  .toolbar.vertical.min .tbmin svg { transform: rotate(270deg); }
-  .toolbar.min .tb-items { display: none; }
+  /* minimize button (a toolbar item): hides the buttons before it, back to the previous minimize button */
+  .toolbar .tbfold { min-width: 30px !important; width: 30px; padding: 0 !important; opacity: .6; }
+  .toolbar .tbfold:hover { opacity: 1; }
+  .toolbar .tbfold svg { width: 18px; height: 18px; transition: transform .15s; }
+  .toolbar.vertical .tbfold { width: auto; height: 30px; }
+  .toolbar.vertical .tbfold svg { transform: rotate(90deg); }
+  .toolbar .tbfold[aria-expanded="false"] { opacity: .9; }
+  .toolbar .tbfold[aria-expanded="false"] svg { transform: rotate(180deg); }
+  .toolbar.vertical .tbfold[aria-expanded="false"] svg { transform: rotate(270deg); }
   /* a letter handle looks like the app mark: a dark tile with an upright letter */
   .toolbar .grip.letter {
     width: 30px; min-width: 30px !important; height: 30px; margin: 0 2px; opacity: 1;
@@ -2000,8 +1998,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_161';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.38';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_162';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.39';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2200,6 +2198,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     bookmark: { label: 'Bookmarks' },
     view:   { label: 'View (show / hide)' },
     toggle: { label: 'Toggle', multi: true },
+    fold:   { label: 'Minimize (hides the buttons before it)', multi: true },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -2262,6 +2261,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   ICON.toggle = TOGGLES.notebook.icon;
   function cleanItemData(it, o) {
     if (it.type === 'toggle') { o.mode = TOGGLES[it.mode] ? it.mode : 'notebook'; return o; }
+    if (it.type === 'fold') { o.folded = it.folded === true; return o; }
     if (it.type === 'size') { o.type = 'preset'; o.brush = cleanBrush({ width: cleanWidth(it.width) }); o.use = cleanUse(null, { width: true }); return o; }
     if (it.type === 'color') { o.type = 'preset'; o.brush = cleanBrush(cleanPaint(it.paint)); o.use = cleanUse(null, { color: true, opacity: true, highlighter: true }); return o; }
     if (it.type === 'ptype') { o.type = 'preset'; o.brush = cleanBrush(it.brush); o.use = cleanUse(null, { kind: true }); return o; }
@@ -2278,7 +2278,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       ...DEFAULT_PRESETS.map(b => ({ id: uid(), type: 'preset', brush: cleanBrush(b), use: cleanUse(null, ALL_BUT_KIND) })),
       { id: uid(), type: 'eraser' }, { id: uid(), type: 'lasso' }, { id: uid(), type: 'sticky' }, { id: uid(), type: 'text' }, { id: uid(), type: 'image' }, { id: uid(), type: 'bookmark' }, { id: uid(), type: 'view' }, { id: uid(), type: 'magnifier' }, { id: uid(), type: 'inmode' }, { id: uid(), type: 'undo' }, { id: uid(), type: 'sep' },
       { id: uid(), type: 'lock' }, { id: uid(), type: 'fs' }, { id: uid(), type: 'zoom' }, { id: uid(), type: 'real' }, { id: uid(), type: 'sep' },
-      { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }
+      { id: uid(), type: 'pages' }, { id: uid(), type: 'print' }, { id: uid(), type: 'fold' }
     ];
   };
   function cleanItems(list) {
@@ -2304,7 +2304,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       orient: b && b.orient === 'v' ? 'v' : 'h',
       pos: cleanPos(b && b.pos),
       enabled: main ? true : !(b && b.enabled === false),
-      min: !!(b && b.min),
+      min: !!(b && b.min),                                   // (before the minimize item: read once to set it up)
       scale: b && +b.scale >= 0.8 && +b.scale <= 2 ? Math.round(+b.scale * 10) / 10 : 1,   // toolbar size, 80–200 %
       bare: !!(b && b.bare),                                 // no background: only the buttons float over the page
       letter: main ? '' : cleanLetter(b && b.letter)
@@ -2381,6 +2381,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       m.splice(k < 0 ? m.length : k + 1, 0, { id: uid(), type: 'toggle', mode: 'notebook' });
       store.set('toolbars', bars);
     }
+  }
+  if (!store.get('foldAdded', false)) {        // the fixed minimize button became a toolbar item: one at the end of each toolbar
+    store.set('foldAdded', true);
+    bars.forEach(b => { if (!b.items.some(i => i.type === 'fold')) b.items.push({ id: uid(), type: 'fold', folded: !!b.min }); });
+    store.set('toolbars', bars);
   }
   if (LIVE_VIEW) bars = [cleanBar({ items: ['pages', 'sep', 'zoom', 'real', 'fs', 'lock'].map(t => ({ id: uid(), type: t })) }, true)];   // a viewer only looks (the pen stays hidden)
   const allItems = () => bars.flatMap(b => b.items);
@@ -3136,6 +3141,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'text': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Text: tap the page for a text box, tap again for size and colour" title="Text · tap the page to write, tap again for size and colour">${ICON.text}</button>`;
       case 'image': return `<button type="button" ${a} aria-label="Insert an image">${ICON.image}</button>`;
       case 'bookmark': return `<button type="button" ${a} aria-label="Bookmarks" title="Bookmarks">${ICON.bookmark}</button>`;
+      case 'fold': return `<button type="button" class="tbfold" ${a} aria-expanded="${!it.folded}" aria-label="${it.folded ? 'Show the hidden buttons' : 'Minimize: hide the buttons before this one'}">${MIN_ICON}</button>`;
       case 'toggle': return `<button type="button" class="eraser" ${a} data-mode="${it.mode}" aria-pressed="false" aria-label="Toggle: ${TOGGLES[it.mode].name}. Hold for options">${TOGGLES[it.mode].icon}</button>`;
       case 'view': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="View: show or hide grid, sticky notes, drawings, text and images" title="View · show or hide parts of the page">${ICON.eye}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
@@ -3159,35 +3165,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const LOGO = $('app').innerHTML;            // the app mark, reused in the toolbar editor
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const MIN_ICON = svg('<path d="M14.5 6.5L9 12l5.5 5.5"/>');
-  const minButton = b => `<button type="button" class="tbmin" data-min="${b.id}">${MIN_ICON}</button>`;
-  function setMin(b, v) {
-    b.min = v;
-    const el = barEl(b);
-    if (el) {
-      el.classList.toggle('min', v);
-      const btn = el.querySelector('.tbmin');
-      btn.setAttribute('aria-label', v ? 'Show all buttons of this toolbar' : 'Minimize this toolbar');
-      btn.title = v ? 'Maximize' : 'Minimize';
-      btn.setAttribute('aria-expanded', String(!v));
+  // the buttons hidden by minimize items: those before a folded one, back to the previous minimize item
+  function foldedItems(b) {
+    const out = new Set();
+    let part = [];
+    for (const it of b.items) {
+      if (it.type !== 'fold') { part.push(it); continue; }
+      if (it.folded) part.forEach(x => out.add(x));
+      part = [];
     }
-    if (openPop && popAnchor && el && el.contains(popAnchor)) closePops();
-    saveItems();
-    fitToolbars();
-    placeToolbar();
+    return out;
   }
-  document.addEventListener('click', e => {
-    const t = e.target.closest('.tbmin');
-    if (!t) return;
-    const b = bars.find(x => x.id === t.dataset.min);
-    if (b) setMin(b, !b.min);
-  });
+  function setFold(it, v) {
+    it.folded = v;
+    saveItems();
+    renderToolbar();
+  }
   const barEl = b => b.id === 'main' ? toolbar : document.querySelector(`.toolbar.extra[data-bar="${b.id}"]`);
   // split a toolbar at its line breaks; the first line starts with the N / ≡ icon and the minimize button
   // A toolbar: lines split at "Line break"; each line split into groups at "Separator (wraps)".
   // fitToolbars() then moves whole groups to extra lines when a line is longer than the screen.
   function linesHtml(b, lead) {
-    const lines = [[[]]];
+    const lines = [[[]]], hidden = foldedItems(b);
     for (const it of b.items) {
+      if (hidden.has(it)) continue;
       const line = lines[lines.length - 1];
       if (it.type === 'br') lines.push([[]]);
       else if (it.type === 'sepbr' || it.type === 'sep') line.push([]);   // separators are where a too long toolbar may wrap
@@ -3212,7 +3213,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const groups = lines.flatMap(l => [...l.querySelectorAll(':scope > .tbgrp')]);
         groups.forEach(g => { g.classList.remove('wrapped'); first.appendChild(g); });     // back to one line
         lines.slice(1).forEach(l => l.remove());
-        if (b.min || !b.enabled || groups.length < 2) continue;
+        if (!b.enabled || groups.length < 2) continue;
         const len = x => vert ? x.offsetHeight : x.offsetWidth;
         const avail = ((vert ? innerHeight : innerWidth) - 30) / barK(b);   // a larger toolbar wraps sooner
         const sizes = groups.map(len);
@@ -3236,7 +3237,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function renderToolbar() {
     closePops();
     const app = $('app');
-    toolbar.innerHTML = linesHtml(bars[0], '<span class="app-slot"></span>' + minButton(bars[0]));
+    toolbar.innerHTML = linesHtml(bars[0], '<span class="app-slot"></span>');
     toolbar.querySelector('.app-slot').replaceWith(app);
     document.querySelectorAll('.toolbar.extra').forEach(el => el.remove());
     bars.slice(1).forEach((b, k) => {
@@ -3249,11 +3250,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const handle = b.letter
         ? `<button type="button" class="grip letter" aria-label="Toolbar ${esc(b.letter)}, drag to move" title="Drag to move"><span>${esc(b.letter)}</span></button>`
         : `<button type="button" class="grip" aria-label="Move toolbar ${k + 2}" title="Drag to move">${GRIP}</button>`;
-      el.innerHTML = linesHtml(b, handle + minButton(b));
+      el.innerHTML = linesHtml(b, handle);
       document.body.insertBefore(el, toolbar.nextSibling);
       attachDrag(el.querySelector('.grip'), b, () => openBarPop(b, el.querySelector('.grip')));
     });
-    bars.forEach(b => setMin(b, b.min));
     markTrays();
     updateToolbarState();
     fitToolbars();
@@ -3473,6 +3473,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         break;
       case 'bookmark': openMarks(el); break;
       case 'toggle': runToggle(it); break;
+      case 'fold': setFold(it, !it.folded); break;
       case 'view': if (openPop === viewPop) closePops(); else { renderViewPop(); showPop(viewPop, el); } break;
       case 'image':
         openPop === imgAddPop ? closePops() : showPop(imgAddPop, el);
@@ -4267,7 +4268,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (it.type === 'preset') { const lk = presetLook(it); return `<span class="ico ${lk === 'size' ? 'sizeico' : presetClass(lk)}" data-look="${lk}">${presetInner(lk)}</span>`; }
     if (it.type === 'sepbr') return `<span class="ico">${ICON.sepbr}</span>`;
     if (it.type === 'real') return `<span class="ico txt">1:1</span>`;
-    const ic = it.type === 'lock' ? ICON.lock(false) : it.type === 'fs' ? ICON.fs(false) : it.type === 'toggle' ? TOGGLES[it.mode].icon : ICON[it.type];
+    const ic = it.type === 'lock' ? ICON.lock(false) : it.type === 'fs' ? ICON.fs(false) : it.type === 'toggle' ? TOGGLES[it.mode].icon : it.type === 'fold' ? MIN_ICON : ICON[it.type];
     return `<span class="ico">${ic}</span>`;
   }
   function renderTbList() {
@@ -4286,6 +4287,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const name = it.type === 'pen' ? `${it.brush.highlighter ? 'Highlighter' : 'Pen'} ${penList.indexOf(it) + 1}<small>${it.brush.width} mm${it.brush.opacity < 1 ? ' · ' + Math.round(it.brush.opacity * 100) + ' %' : ''}${it.locks ? ' · locked: ' + Object.keys(it.locks).map(k => k === 'width' ? 'thickness' : k).join(', ') : ''}</small>`
           : it.type === 'preset' ? `${presetName(it)}<small>${presetParts(it)}</small>`
           : it.type === 'toggle' ? `Toggle<small>${TOGGLES[it.mode].name} · hold the button to change</small>`
+          : it.type === 'fold' ? `Minimize<small>Hides the buttons before it${it.folded ? ' · hidden now' : ''}</small>`
           : ITEM_TYPES[it.type].label;
         const lastPen = main && it.type === 'pen' && mainPens === 1;
         return `<li data-id="${it.id}"><span class="handle" role="button" aria-label="Move ${ITEM_TYPES[it.type].label}">${ICON.handle}</span>${rowIcon(it)}<span class="name">${name}</span>` +
@@ -4302,7 +4304,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg('<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="currentColor" opacity=".12" stroke="none"/><path d="M15.2 4.8l4 4L9 19l-4.8.8.8-4.8z"/>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : ICON[t];
+      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg('<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="currentColor" opacity=".12" stroke="none"/><path d="M15.2 4.8l4 4L9 19l-4.8.8.8-4.8z"/>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : t === 'fold' ? MIN_ICON : ICON[t];
       return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
     }).join('');
   }
@@ -5126,7 +5128,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       toolbars: bars.map((b, i) => ({
         name: i ? `Toolbar ${i + 1}` : 'Main',
         enabled: b.enabled,
-        minimized: b.min,
         sizePercent: Math.round(barK(b) * 100),
         background: !b.bare,
         letter: b.letter || '',
@@ -5136,6 +5137,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, penType: it.brush.kind, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark,
               ...(it.use ? { sets: { color: it.use.color, thickness: it.use.width, opacity: it.use.opacity, penType: it.use.kind, highlighter: it.use.highlighter } } : {}),
               ...(it.locks ? { locked: { color: !!it.locks.color, thickness: !!it.locks.width, opacity: !!it.locks.opacity, penType: !!it.locks.kind, highlighter: !!it.locks.highlighter } } : {}) }
+          : it.type === 'toggle' ? { type: it.type, mode: it.mode }
+          : it.type === 'fold' ? { type: it.type, folded: !!it.folded }
           : { type: it.type })
       })),
       selectedPen: pens().findIndex(p => p.id === penId) + 1,
@@ -5172,7 +5175,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
-    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, min: t.minimized === true, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false }, main);
+    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false }, main);
     let newBars = null;
     // toolbars from files before v45 are ignored
     if (+o.formatVersion >= 3 && Array.isArray(o.toolbars) && o.toolbars.length) newBars = o.toolbars.map((t, i) => fileBar(t || {}, i === 0));
@@ -10273,7 +10276,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const lockedNames = it => it.locks ? ' · locked: ' + Object.keys(it.locks).map(k => k === 'width' ? 'thickness' : k).join(', ') : '';
   function toolName(el) {
     if (el.id === 'app') return 'Settings';
-    if (el.classList.contains('tbmin')) return 'Minimize or show the toolbar';
     if (el.classList.contains('grip')) return 'Toolbar · tap for layout, drag to move';
     const it = el.dataset.id && itemById(el.dataset.id);
     if (!it) return '';
@@ -10289,6 +10291,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'bookmark': return `Bookmarks · ${shownMarks().length}`;
       case 'view': return viewHidden() ? `View · hidden: ${viewHiddenNames()}` : 'View · everything shown';
       case 'toggle': return toggleName(it) + ' · hold for options';
+      case 'fold': return it.folded ? 'Show the hidden buttons' : 'Minimize · hide the buttons before this one';
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
       case 'undo': return 'Undo';
@@ -10310,7 +10313,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     document.body.appendChild(tip);
     let timer = 0, over = null;
     const hide = () => { clearTimeout(timer); over = null; tip.classList.remove('on'); tip.hidden = true; };
-    const target = e => e.target.closest && e.target.closest('.toolbar [data-id], .toolbar .app, .toolbar .grip, .toolbar .tbmin');
+    const target = e => e.target.closest && e.target.closest('.toolbar [data-id], .toolbar .app, .toolbar .grip');
     document.addEventListener('pointerover', e => {
       if (e.pointerType === 'touch') return;
       const el = target(e);
