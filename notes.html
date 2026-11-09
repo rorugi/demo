@@ -652,6 +652,7 @@
   .stepper output { min-width: 46px; text-align: center; font: 600 12.5px/1 var(--ui); font-variant-numeric: tabular-nums; }
   .advrow { border-top: 1px solid var(--bar-line); padding-top: 6px; }
   .advrow .chev { margin-left: auto; width: 16px; height: 16px; opacity: .5; }
+  #navBtn .chev { margin-left: auto; width: 16px; height: 16px; opacity: .5; }
   .pop .back {
     justify-self: start; display: flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px 0 2px;
     border: 0; border-radius: 7px; background: transparent; color: var(--bar-fg); font: 600 13px/1 var(--ui); cursor: pointer;
@@ -1495,6 +1496,7 @@
   <div class="menu">
     <button type="button" id="setupBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M5 9h14M5 15h14M12 3v18"/></svg>Page setup…<small id="setupSum"></small></button>
     <button type="button" id="allPagesBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="9" rx="1"/><rect x="13.5" y="3.5" width="7" height="9" rx="1"/><rect x="3.5" y="14.5" width="7" height="6" rx="1"/><rect x="13.5" y="14.5" width="7" height="6" rx="1"/></svg>All pages<small id="allPagesSum"></small></button>
+    <button type="button" id="navBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Navigation<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
   </div>
   <h3>Notebook</h3>
   <div class="menu">
@@ -1508,13 +1510,13 @@
   </div>
   <div class="menu advrow">
     <button type="button" id="gestBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5c0 3.6-2.4 6-6 6s-4.7-1.5-6.4-4.2L4.4 13.4a1.4 1.4 0 0 1 2.3-1.6L9 14"/></svg>Gestures<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
-    <button type="button" id="advBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Advanced<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button type="button" id="advBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Settings<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     <button type="button" id="supportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.6"/><path d="M6 6l3.4 3.4M18 6l-3.4 3.4M6 18l3.4-3.4M18 18l-3.4-3.4"/></svg>Support…</button>
     <button type="button" id="aboutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/></svg>About</button>
   </div>
 </div>
 <div class="pop" id="gestPop" role="dialog" aria-label="Gestures" hidden>
-  <button type="button" class="back" id="gestBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Settings</button>
+  <button type="button" class="back" id="gestBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Menu</button>
   <h3>Fingers</h3>
   <div class="menu">
     <div class="imgsizebox">
@@ -1555,14 +1557,10 @@
     <label for="scribbleToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l4-6 3 7 3-8 3 8 3-6 2 4"/></svg><span>Scribble to erase<span class="sub">Scribble over ink to delete it</span></span><span class="switch"><input type="checkbox" id="scribbleToggle"><i></i></span></label>
   </div>
 </div>
-<div class="pop" id="advPop" role="dialog" aria-label="Advanced settings" hidden>
-  <button type="button" class="back" id="advBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Settings</button>
-  <h3>Toolbars and screen</h3>
-  <div class="menu">
-    <button type="button" id="customizeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.6" fill="currentColor"/><circle cx="15" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="18" r="1.6" fill="currentColor"/></svg>Customize toolbars…<small id="tbSum"></small></button>
-    <button type="button" id="calibBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6v3M11 6v4M15 6v3M19 6v2"/></svg>Calibrate screen…<small id="calibState"></small></button>
-  </div>
-  <h3>View</h3>
+<div class="pop" id="navPop" role="dialog" aria-label="Navigation" hidden>
+  <button type="button" class="back" id="navBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Menu</button>
+  <div class="poptitle">Navigation</div>
+  <h3>Scrolling</h3>
   <div class="menu">
     <div class="numrow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="1"/><rect x="3" y="2.5" width="18" height="19" rx="2" stroke-dasharray="2.4 2.2"/></svg>
@@ -1585,6 +1583,22 @@
       <span class="switch"><input type="checkbox" id="mapToggle" aria-label="Show the page map"><i></i></span>
     </div>
   </div>
+  <h3>Selection</h3>
+  <div class="menu">
+    <div class="imgsizebox">
+      <span>Selection colour<span class="sub">Marks selected sticky notes, images and writing, and the page you land on when turning or sliding</span></span>
+      <button type="button" class="selcur" id="selColBtn"><i></i><span id="selColName"></span></button>
+    </div>
+  </div>
+</div>
+<div class="pop" id="advPop" role="dialog" aria-label="Settings" hidden>
+  <button type="button" class="back" id="advBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Menu</button>
+  <div class="poptitle">Settings</div>
+  <h3>Toolbars and screen</h3>
+  <div class="menu">
+    <button type="button" id="customizeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.6" fill="currentColor"/><circle cx="15" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="18" r="1.6" fill="currentColor"/></svg>Customize toolbars…<small id="tbSum"></small></button>
+    <button type="button" id="calibBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6v3M11 6v4M15 6v3M19 6v2"/></svg>Calibrate screen…<small id="calibState"></small></button>
+  </div>
   <h3>Handles</h3>
   <div class="menu">
     <div class="imgsizebox">
@@ -1592,13 +1606,6 @@
       <select class="dd" id="hndModes" aria-label="Handles on sticky notes and images">
         <option value="selected">When selected</option><option value="quiet">Quiet</option><option value="always">Always</option>
       </select>
-    </div>
-  </div>
-  <h3>Selection</h3>
-  <div class="menu">
-    <div class="imgsizebox">
-      <span>Selection colour<span class="sub">Marks selected sticky notes, images and writing, and the page you land on when turning or sliding</span></span>
-      <button type="button" class="selcur" id="selColBtn"><i></i><span id="selColName"></span></button>
     </div>
   </div>
   <h3>Images</h3>
@@ -2021,8 +2028,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_166';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.43';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_167';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.44';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2057,7 +2064,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pageInk = pageEl.querySelector('.ink');
   const live = $('live'), tip = $('tip'), liveWrap = $('liveWrap');
   const toolbar = $('toolbar');
-  const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), gestPop = $('gestPop'), eraserPop = $('eraserPop');
+  const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), gestPop = $('gestPop'), navPop = $('navPop'), eraserPop = $('eraserPop');
 
   const store = {
     mem: LIVE_VIEW ? new Map() : null,            // a live viewer changes nothing in this browser's own RRnotes
@@ -3967,9 +3974,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     b.orient = x.dataset.o;                   // the toolbar stays where it is, only its layout turns
     saveItems(); renderToolbar();
   }));
-  attachDrag($('app'), bars[0], () => { openPop === setPop || openPop === advPop || openPop === gestPop ? closePops() : showPop(setPop, $('app')); });
+  attachDrag($('app'), bars[0], () => { openPop === setPop || openPop === advPop || openPop === gestPop || openPop === navPop ? closePops() : showPop(setPop, $('app')); });
   $('advBtn').addEventListener('click', () => showPop(advPop, $('app')));
   $('advBack').addEventListener('click', () => showPop(setPop, $('app')));
+  $('navBtn').addEventListener('click', () => showPop(navPop, $('app')));
+  $('navBack').addEventListener('click', () => showPop(setPop, $('app')));
   $('gestBtn').addEventListener('click', () => showPop(gestPop, $('app')));
   $('gestBack').addEventListener('click', () => showPop(setPop, $('app')));
   $('app').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showPop(setPop, $('app')); } });
@@ -6551,7 +6560,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     e.preventDefault();
     for (const f of files) await insertImageBlob(f);
   });
-  // Advanced: how strongly new images are scaled down
+  // Settings: how strongly new images are scaled down
   function renderImgSize() {
     $('imgSizes').value = String(imgMax);
     $('imgSizeSub').textContent = imgMax ? `New images: longest side ${imgMax} px (about ${Math.round(imgMax / 2000 * 300)} dpi across a page width)` : 'New images are kept as they are (large files)';
@@ -10492,7 +10501,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('selDlgDone').addEventListener('click', () => $('selDlg').close());
   applySelColor();
   // settings: explanations behind a small (i), so the menus stay short; summaries of the current choice stay visible
-  for (const scope of ['advPop', 'gestPop', 'flipDlg', 'mapDlg']) $(scope).querySelectorAll('.sub').forEach(sub => {
+  for (const scope of ['advPop', 'gestPop', 'navPop', 'flipDlg', 'mapDlg']) $(scope).querySelectorAll('.sub').forEach(sub => {
     if (sub.id === 'flipSum' || sub.id === 'mapSum') return;
     sub.classList.add('hint');
     const b = document.createElement('button');
