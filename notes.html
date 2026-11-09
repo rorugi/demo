@@ -2000,8 +2000,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_159';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.36';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_160';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.37';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6925,9 +6925,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (onStage && (tool === 'text' || e.pointerType === 'touch')) { e.stopPropagation(); e.preventDefault(); }
   }, true);
   textBar.addEventListener('pointerdown', e => { if (e.target.closest('button')) e.preventDefault(); });   // the text keeps its caret and selection
+  // A finger tap outside the text ends a finger selection (the browser removes it, whatever the tap does), so the
+  // selected words are remembered when the text bar or its menus are touched, and selected again before formatting.
+  let tedKeep = null;
+  const tedRange = () => { const s = getSelection(); return ted && s.rangeCount && ted.el.contains(s.anchorNode) ? s.getRangeAt(0) : null; };
+  const keepSel = () => { const r = tedRange(); if (r && (!tedKeep || !r.collapsed)) tedKeep = r.cloneRange(); };
+  function restoreSel() {
+    if (!ted || !tedKeep || !ted.el.contains(tedKeep.startContainer) || !ted.el.contains(tedKeep.endContainer)) return;
+    const s = getSelection(); s.removeAllRanges(); s.addRange(tedKeep);
+  }
+  document.addEventListener('pointerdown', e => {
+    if (!ted) { tedKeep = null; return; }
+    if (ted.el.contains(e.target)) tedKeep = null;   // a new caret or selection in the text
+    else if (e.target.closest && e.target.closest('#textBar, #tcolPop, #linkPop')) keepSel();
+  }, true);
+  document.addEventListener('keydown', e => { if (ted && ted.el.contains(e.target)) tedKeep = null; }, true);
   $('textDone').addEventListener('click', () => commitTextEdit());
   // bold, italic and colour for the selected words (or for what is typed next)
-  const fmtCmd = (cmd, v) => { if (!ted) return; ted.el.focus({ preventScroll: true }); document.execCommand(cmd, false, v); ted.el.dispatchEvent(new Event('input')); barState(); };
+  const fmtCmd = (cmd, v) => { if (!ted) return; ted.el.focus({ preventScroll: true }); restoreSel(); tedKeep = null; document.execCommand(cmd, false, v); ted.el.dispatchEvent(new Event('input')); barState(); };
   $('textB').addEventListener('click', () => fmtCmd('bold'));
   $('textI').addEventListener('click', () => fmtCmd('italic'));
   function barState() {
@@ -6958,6 +6973,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let linkRange = null;
   function linkFromSelection() {
     if (!ted) return;
+    ted.el.focus({ preventScroll: true }); restoreSel(); tedKeep = null;
     const s = getSelection();
     if (!s.rangeCount || !ted.el.contains(s.anchorNode)) { toast('Select the words for the link first.', 1800); return; }
     let r = s.getRangeAt(0);
