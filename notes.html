@@ -2000,8 +2000,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_160';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.37';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_161';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.38';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3335,7 +3335,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return keys.length > 0 && keys.every(k => sameVal(k, brush(), it.brush));
   };
   const modUsable = () => tool === 'pen' || (tool === 'lasso' && !!sel);
-  const modLocked = it => tool === 'pen' && !modKeys(it).length;   // everything it sets is locked on this pen
+  const modLocked = it => tool === 'pen' && !(sel && sel.items.length) && !modKeys(it).length;   // everything it sets is locked on this pen (a selection takes any preset)
   function applyMod(it) {
     const v = it.brush, b = brush();
     modKeys(it).forEach(k => { b[k] = v[k]; if (k === 'color') b.pickedOnDark = v.pickedOnDark; });
@@ -3486,7 +3486,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         else { if (sel) clearSelection(); tool = 'sticky'; closePops(); updateToolbarState(); }
         break;
       case 'preset':
-        if (sel && sel.items.length && tool === 'lasso') { closePops(); restyleSelection(it); break; }     // change the selected strokes
+        if (sel && sel.items.length) { closePops(); restyleSelection(it); break; }     // change the selected strokes (selected with the select tool or a finger lasso)
         if (tool !== 'pen') break;                       // needs an active pen (the button is greyed out)
         if (modMatches(it)) {                            // the pen already has it: tap again to change the button
           if (openPop === penPop && penEdit.item === it) closePops();
@@ -3832,6 +3832,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
   }
   // drag a toolbar by its first button; a tap without moving calls onTap
+  // Right after a finger gesture on the page (a finger lasso, erasing, a swipe), Chrome sometimes drops the click of the
+  // next quick finger tap on a button (the pen never). A quick tap on a button that gets no click is clicked here.
+  {
+    let press = null;
+    document.addEventListener('pointerdown', e => {
+      press = null;
+      if (e.pointerType !== 'touch') return;
+      const b = e.target.closest && e.target.closest('button');
+      if (b && !b.matches('#app, .app, .grip')) press = { b, id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() };
+    }, true);
+    document.addEventListener('pointerup', e => {
+      const p = press;
+      press = null;
+      if (!p || e.pointerId !== p.id || performance.now() - p.t > 450 || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 12) return;
+      if (!p.b.contains(e.target) && e.target !== p.b) return;
+      let clicked = false;
+      const seen = ev => { if (ev.target === p.b || p.b.contains(ev.target)) clicked = true; };
+      document.addEventListener('click', seen, true);
+      setTimeout(() => {
+        document.removeEventListener('click', seen, true);
+        if (!clicked && p.b.isConnected && !p.b.disabled && !p.b.closest('[hidden]')) p.b.click();
+      }, 320);
+    }, true);
+  }
   // a menu opened when the finger lifts: a touch screen sends a late click to the same spot, which would hit
   // the menu item now lying under the finger (which one depends on where the toolbar is), so that click is dropped
   let ghostAt = null;
