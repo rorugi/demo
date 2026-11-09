@@ -821,6 +821,15 @@
     font: 500 12.5px/1.1 var(--ui); cursor: pointer; text-align: left;
   }
   .addlist button:disabled { opacity: .35; cursor: default; }
+  .addlist .addinfo { grid-column: 1 / -1; justify-content: center; }
+  .tbinfo { width: min(480px, calc(100vw - 24px)); }
+  .tbinfolist { list-style: none; margin: 0 0 12px; padding: 0; max-height: min(62vh, 560px); overflow-y: auto; }
+  .tbinfolist li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid var(--line, rgba(0,0,0,.08)); }
+  .tbinfolist .ico { flex: none; width: 24px; display: flex; justify-content: center; padding-top: 1px; }
+  .tbinfolist .ico svg { width: 20px; height: 20px; }
+  .tbinfolist b { font-weight: 600; }
+  .tbinfolist small { opacity: .6; font-size: 12px; }
+  .tbinfolist .sub { display: block; font-size: 13px; opacity: .78; margin-top: 2px; line-height: 1.35; }
   .addlist svg { width: 18px; height: 18px; flex: none; }
 
   /* ---------- desk + sheets ---------- */
@@ -1973,6 +1982,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     <button type="button" class="primary" id="tbDone">Done</button>
   </div>
 </dialog>
+<dialog class="dlg tbinfo" id="tbInfoDlg" aria-labelledby="tbInfoTitle">
+  <h2 id="tbInfoTitle">What the buttons do</h2>
+  <p>Buttons with options open them with a second tap or right away when held.</p>
+  <ul class="tbinfolist" id="tbInfoList"></ul>
+  <div class="row"><button type="button" class="primary" id="tbInfoDone">Done</button></div>
+</dialog>
 
 <dialog class="calib" id="calibDlg" aria-labelledby="calibTitle">
   <header>
@@ -1998,8 +2013,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_163';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.40';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_164';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.41';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2196,9 +2211,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sticky: { label: 'Sticky notes' },
     text:   { label: 'Text' },
     bookmark: { label: 'Bookmarks' },
-    view:   { label: 'View (show / hide)' },
+    view:   { label: 'View' },
     toggle: { label: 'Toggle', multi: true },
-    fold:   { label: 'Minimize (hides the buttons before it)', multi: true },
+    fold:   { label: 'Minimize', multi: true },
     image:  { label: 'Image' },
     eraser: { label: 'Eraser' },
     lasso: { label: 'Select' },
@@ -2215,6 +2230,39 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pages:  { label: 'Pages' },
     print:  { label: 'Print' },
     save:   { label: 'Save notebook' }
+  };
+  // what each toolbar button does (the info in the toolbar layout)
+  const ITEM_INFO = {
+    pen: 'A pen with its own colour, thickness, opacity and type. Tap to write with it, tap again (or hold) for its settings. Several pens make switching quick.',
+    pentype: 'Changes the type of the pen in use: pen, ballpoint, fountain pen, brush pen, calligraphy or pencil.',
+    inmode: 'Finger mode: the finger draws. Stylus mode: only the pen draws, fingers scroll, zoom and do the finger gestures.',
+    space: 'Empty room between buttons.',
+    preset: 'Gives the pen in use a saved look: colour, thickness, opacity and type, or only some of them. Tap to use it, tap again (or hold) to change it. With ink selected it restyles the selection.',
+    color: 'A preset that only sets the colour.',
+    size: 'A preset that only sets the thickness.',
+    ptype: 'A preset that only sets the pen type.',
+    sticky: 'Tap the page to place a sticky note. Tap again (or hold) for its colour and size.',
+    text: 'Tap the page to place a text box. Text can be bold, italic, coloured and have links. Tap again (or hold) for size and colour.',
+    bookmark: 'Bookmarks to pages with their position and zoom: the list, adding bookmarks and the bookmark options.',
+    view: 'Shows or hides the grid, sticky notes, drawings, text and images on the screen, for example to see a plain PDF.',
+    toggle: 'Switches between two things with one tap: two notebooks, two pages, two pens or tools, the whole page and a zoomed view, or the plain page. Hold it to choose. Several toggles can each switch something else.',
+    fold: 'Hides the buttons before it, back to the previous Minimize button or to the start of the toolbar. Tap again to show them.',
+    image: 'Puts an image on the page: from the camera or gallery, or pasted.',
+    eraser: 'Erases ink where it touches or whole strokes. Tap again (or hold) for its size, clearing the page and removing a PDF page background.',
+    lasso: 'Circle ink to select it, then move, resize, restyle, copy or delete it.',
+    undo: 'Takes back the last change.',
+    redo: 'Brings back what undo took back.',
+    sep: 'A thin line between buttons.',
+    br: 'Starts a new row (a new column on a vertical toolbar).',
+    sepbr: 'A line where a toolbar too long for the screen may continue in a new row.',
+    magnifier: 'Drag a rectangle on the page to keep that part in view.',
+    lock: 'Locks the zoom so that pinching cannot change it by accident.',
+    fs: 'Full screen on and off.',
+    zoom: 'Shows the zoom level. Tap to see the whole page.',
+    real: 'Zooms to the real paper size (1:1).',
+    pages: 'Shows the page number. Tap for the overview of all pages.',
+    print: 'Prints this page or all pages.',
+    save: 'Saves the notebook as a file.'
   };
   const okC = c => typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c);
   const okO = o => +o >= 0.05 && +o <= 1;
@@ -4301,14 +4349,26 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
     renderAddList();
   }
+  function addIcon(t) {
+    return t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg('<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="currentColor" opacity=".12" stroke="none"/><path d="M15.2 4.8l4 4L9 19l-4.8.8.8-4.8z"/>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : t === 'fold' ? MIN_ICON : ICON[t];
+  }
   function renderAddList() {
     const present = new Set(edBar.items.map(i => i.type));
     tbAddList.innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) => {
       const off = !d.multi && present.has(t);
-      const ic = t === 'real' ? '<span class="txt">1:1</span>' : t === 'space' ? svg('<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/>') : t === 'pen' ? ICON.p_pen : t === 'inmode' ? modeIcon(true) : t === 'preset' ? svg('<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="currentColor" opacity=".12" stroke="none"/><path d="M15.2 4.8l4 4L9 19l-4.8.8.8-4.8z"/>') : t === 'sep' ? svg('<path d="M12 4v16"/>') : t === 'br' ? ICON.br : t === 'sepbr' ? ICON.sepbr : t === 'size' ? svg('<path d="M3 15C5.5 8.5 9.5 6.7 11.8 10.1c1.6 2.4 1.9 5.8 5 5.4C19.6 15.1 21 11.3 21.5 9" stroke-width="2.6"/>') : t === 'color' ? svg('<circle cx="12" cy="12" r="7.5" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="7.5"/>') : t === 'ptype' ? ICON.kfountain : t === 'lock' ? ICON.lock(false) : t === 'fs' ? ICON.fs(false) : t === 'fold' ? MIN_ICON : ICON[t];
-      return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${ic}${d.label}</button>`;
-    }).join('');
+      return `<button type="button" data-add="${t}"${off ? ' disabled title="Already in the toolbar"' : ''}>${addIcon(t)}${d.label}</button>`;
+    }).join('') +
+      `<button type="button" class="addinfo" id="tbInfoBtn">${svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1" stroke-width="2.2"/>')}What the buttons do</button>`;
   }
+  // the explanation of all buttons
+  const tbInfoDlg = $('tbInfoDlg');
+  function openTbInfo() {
+    $('tbInfoList').innerHTML = Object.entries(ITEM_TYPES).map(([t, d]) =>
+      `<li><span class="ico">${addIcon(t)}</span><span><b>${d.label}</b>${d.multi ? '<small> · can be added more than once</small>' : ''}<span class="sub">${ITEM_INFO[t] || ''}</span></span></li>`).join('');
+    tbInfoDlg.showModal();
+    $('tbInfoList').scrollTop = 0;
+  }
+  $('tbInfoDone').addEventListener('click', () => tbInfoDlg.close());
   function itemsChanged() { saveItems(); renderToolbar(); renderTbList(); }
   // opens the toolbar editor on one toolbar (the main one from Settings, others from their handle)
   function openCustomize(b) {
@@ -4333,6 +4393,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('tbAddBtn').setAttribute('aria-expanded', String(!tbAddList.hidden));
   });
   tbAddList.addEventListener('click', e => {
+    if (e.target.closest('#tbInfoBtn')) { openTbInfo(); return; }
     const b = e.target.closest('[data-add]');
     if (!b || b.disabled) return;
     const t = b.dataset.add, it = { id: uid(), type: ITEM_TYPES[t].add ? 'preset' : t };
