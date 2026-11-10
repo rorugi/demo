@@ -1391,6 +1391,7 @@
   <div class="seg four" id="bmThumbSeg"><button type="button" data-v="off">Off</button><button type="button" data-v="tl">Top left</button><button type="button" data-v="tr">Top right</button><button type="button" data-v="b">Bottom</button></div>
 </div>
 <div class="bmbar" id="bmBox" hidden></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="cleanDefs"></defs></svg>
 <!-- search: text boxes, PDF text and bookmark names -->
 <div class="pop searchpop" id="searchPop" role="dialog" aria-label="Search" hidden>
   <div class="srchrow">
@@ -1765,7 +1766,7 @@
   </div>
   <label class="pscheck" id="psNoPdfGridBox"><input type="checkbox" id="psNoPdfGrid"> No grid on PDF backgrounds</label>
   <div class="field">
-    <span>Clean PDF background<small class="pssub"> · light grey becomes white (scans, tinted pages); PDF export keeps the original</small></span>
+    <span>Clean PDF background<small class="pssub"> · light colours become see-through (scans, grey or coloured pages), text stays; PDF export keeps the original</small></span>
     <div class="psclean"><input type="range" id="psClean" min="0" max="100" step="5" aria-label="Clean PDF background strength"><output id="psCleanVal">Off</output></div>
   </div>
   <div class="field">
@@ -2080,8 +2081,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_178';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.55';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_179';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.56';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4602,7 +4603,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
     let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${setup.pdfNoGrid ? ' data-pdf-no-grid="1"' : ''}${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
-    s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}${bgd.pdfs.map(d => `<desc class="rr-pdf" data-pdf="${d.id}" data-name="${esc(d.name)}">${d.data}</desc>`).join('')}</defs>\n`;
+    s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}${bgd.pdfs.map(d => `<desc class="rr-pdf" data-pdf="${d.id}" data-name="${esc(d.name)}">${d.data}</desc>`).join('')}${setup.pdfClean && pages.some(pg => pg.bg) ? cleanDef(setup.pdfClean) : ''}</defs>\n`;
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridD(p, setup, gridUse)}`;
@@ -7913,7 +7914,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pg || !pg.bg) return '';
     const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = mode === 'file' ? data || null : bgGet(b, want);   // (files: a picture given, or none)
     const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
-    const blend = ` style="${mode === 'file' ? (cleanFilter(st) ? `filter:${cleanFilter(st)};` : '') + 'mix-blend-mode:multiply' : bgStyle()}"`;   // the grid shows through the PDF's white, behind its print
+    const blend = ` style="${mode === 'file' ? (st.pdfClean ? `filter:url(#rrclean${st.pdfClean});` : '') + 'mix-blend-mode:multiply' : bgStyle()}"`;   // the grid shows through the PDF's white, behind its print
     const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
     if (!r) return `<rect class="pdfbg" ${box} fill="#fff"${meta}/>`;
     const sz = mode === 'file' ? '' : ` data-sz="${bgRast.L.get(bgKey(b)) === r ? 'L' : 'S'}"`;
@@ -7924,9 +7925,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let bgDetail = null, bgDetailT = 0, bgDetailTask = null;
   let bgHtml = '';
   // on dark paper the PDF turns dark too: light and dark swap, the colours keep their hue; the grid still shows behind it
-  // "Clean PDF background": everything brighter by up to 60 %, so light grey (a scan's paper, a tinted page) becomes white,
-  // which the blending then makes transparent; black stays black
-  const cleanFilter = (st = setup) => st.pdfClean ? `brightness(${+(1 + st.pdfClean / 100 * 0.6).toFixed(3)})` : '';
+  // "Clean PDF background": light parts become see-through whatever their colour (grey, beige, light green…), dark parts
+  // (text, lines) stay as they are, in between fades. By lightness: from the threshold t up everything is transparent,
+  // below t - 0.3 fully visible. The strength moves t from 1 (off) down to 0.4.
+  const cleanDef = pct => {
+    const t = 1 - pct / 100 * 0.6, w = 0.3, f = v => +v.toFixed(4);
+    return `<filter id="rrclean${pct}" color-interpolation-filters="sRGB" x="0" y="0" width="1" height="1"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 ${f(-0.2126 / w)} ${f(-0.7152 / w)} ${f(-0.0722 / w)} 0 ${f(t / w)}"/></filter>`;
+  };
+  const cleanDefs = $('cleanDefs');
+  function cleanFilter(st = setup) {               // the CSS filter for a strength (its SVG filter made once)
+    const pct = st.pdfClean;
+    if (!pct) return '';
+    if (cleanDefs && !document.getElementById('rrclean' + pct)) cleanDefs.insertAdjacentHTML('beforeend', cleanDef(pct));
+    return `url(#rrclean${pct})`;
+  }
   const bgStyle = (st = setup) => {
     const c = cleanFilter(st);
     return paperDark ? `filter:${c ? c + ' ' : ''}invert(1) hue-rotate(180deg);mix-blend-mode:screen` : `${c ? `filter:${c};` : ''}mix-blend-mode:multiply`;
