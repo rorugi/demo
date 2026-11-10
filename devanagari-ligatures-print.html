@@ -10,6 +10,9 @@
 <style>
 /* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
 @font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
+/* Sanskrit 2020 (SIL OFL, Omkarananda Ashram) and Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-ND 3.0, file unmodified): installed copy first, else the file next to this page */
+@font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
+@font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
 /* Printable chart: A4 portrait, 6 cards per row, ordered by importance in four tiers */
 :root{
   --fg:#1c2321; --muted:#5d6762; --line:#cfd4cd; --card:#fff;
@@ -23,9 +26,14 @@
 *{box-sizing:border-box}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
-.hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa)}
+.hi{font-family:var(--f-hi);font-feature-settings:var(--ff-hi,normal)} .sa{font-family:var(--f-sa);font-feature-settings:var(--ff-sa,normal)}
 
-.bar{max-width:210mm;margin:0 auto;padding:14px 4px 10px;display:flex;gap:16px;align-items:center}
+.bar{max-width:210mm;margin:0 auto;padding:14px 4px 10px;display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.fsel{display:inline-flex;gap:6px;align-items:center}
+.fsel b{font-weight:400;font-size:22px;line-height:1}
+.fsel b.sa{color:var(--sa)}
+.fsel select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer;max-width:168px}
+.fsel select:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
 .bar a{color:var(--muted);text-decoration:none;font-size:14px}
 .bar a:hover{color:var(--sa)}
 .bar button{margin-left:auto;appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:8px 16px;cursor:pointer;
@@ -59,9 +67,10 @@ h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
 .tier .k .no{font-family:"Uttara",serif;color:var(--no)}
 .tier .k .sa{color:var(--sa)}
 .tier .k .hi{color:#000}
+.tier .k i{font-style:normal}
 .intro{margin:-1mm 0 2mm;font-size:11.5px;color:var(--muted)}
 .cap{font-size:11.5px;color:#000;white-space:nowrap;line-height:1.3}
-.cap .dv{font-family:var(--f-hi);font-size:13.5px;color:#000}
+.cap .dv{font-family:var(--f-hi);font-feature-settings:var(--ff-hi,normal);font-size:13.5px;color:#000}
 .duo .hi,.key .hi{color:#000}
 footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
 
@@ -86,16 +95,15 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
 <nav class="bar">
   <a href="devanagari-ligatures.html">← Devanagari ligatures</a>
   <a href="devanagari-script-print.html">Script chart</a>
+  <label class="fsel" title="Font for the black forms"><b class="hi">क</b><select id="fa" aria-label="Font for the black forms"></select></label>
+  <label class="fsel" title="Font for the orange forms"><b class="sa">क</b><select id="fb" aria-label="Font for the orange forms"></select></label>
   <button type="button" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Print</button>
 </nav>
 
 <main class="sheet">
   <header>
     <h1>Devanagari ligatures <small>The most important conjuncts, in order of importance</small></h1>
-    <div class="key">
-      <span><b class="hi">क</b>Hindi · Tiro</span>
-      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro</span>
-    </div>
+    <div class="key"></div>
   </header>
   <div id="tiers1"></div>
   <footer>
@@ -107,10 +115,7 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
 <main class="sheet">
   <header>
     <h1>Devanagari ligatures <small>Continued: further forms, and northern letter shapes</small></h1>
-    <div class="key">
-      <span><b class="hi">क</b>Hindi · Tiro</span>
-      <span><b class="sa" style="color:var(--sa)">क</b>Sanskrit · Tiro</span>
-    </div>
+    <div class="key"></div>
   </header>
   <div id="tiers2"></div>
   <footer>
@@ -138,11 +143,11 @@ const TIERS = [
     ["ट्ट","ṭṭa"],["ड्ड","ḍḍa"],["ट्र","ṭra"],["प्त","pta"],["ह्र","hra"],["ह्व","hva"],
     ["ह्न","hna"],["द्म","dma"],["द्भ","dbha"],["द्ग","dga"],["द्द","dda"],["त्स","tsa"],
     ["क्ल","kla"],["क्व","kva"],["श्ल","śla"],["श्न","śna"],["क्ष्म","kṣma"],["त्त्व","ttva"]]},
-  {p:2, t:"Forms of र", n:"regular and the same in both fonts; a few examples", items:[
+  {p:2, t:"Forms of र", n:"regular and mostly the same in every font; a few examples", items:[
     ["र्थ","rtha"],["र्ष","rṣa"],["र्श","rśa"],["ब्र","bra"],["भ्र","bhra"],["ड्र","ḍra"]]},
   {p:2, t:"Vowel signs that change shape", n:"ु ू ृ joined to the letter", items:[
     ["रु","ru"],["रू","rū"],["कृ","kṛ"],["हृ","hṛ"],["शृ","śṛ"],["दू","dū"]]},
-  {p:2, t:"Further clusters", n:"where the fonts differ, plus frequent examples", items:[
+  {p:2, t:"Further clusters", n:"where Tiro Hindi and Sanskrit differ, plus frequent examples", items:[
     ["क्य","kya"],["ग्य","gya"],["न्म","nma"],["ल्य","lya"],["स्न","sna"],["च्च","cca"],
     ["क्क","kka"],["ल्प","lpa"],["श्य","śya"],["ह्ल","hla"],["ज्य","jya"],["त्म","tma"],
     ["स्क","ska"],["म्भ","mbha"],["ण्य","ṇya"],["त्थ","ttha"],["ब्ध","bdha"],["ण्ठ","ṇṭha"]]},
@@ -164,7 +169,7 @@ TIERS.forEach(tier => {
   const extra = [];
   if (tier.nw){
     sec.classList.add("nw");
-    h.insertAdjacentHTML("beforeend", '<span class="k"><span><b class="hi">क</b>Hindi</span><span><b class="sa">क</b>Sanskrit</span><span><b class="no">क</b>North · Uttara</span></span>');
+    h.insertAdjacentHTML("beforeend", '<span class="k"><span><b class="hi">क</b><i class="fa-name"></i></span><span><b class="sa">क</b><i class="fb-name"></i></span><span><b class="no">क</b>North · Uttara</span></span>');
     const p = document.createElement("p"); p.className = "intro";
     p.textContent = "Both Tiro fonts follow the southern (Bombay) style of Devanagari printing. The northern (Calcutta) style, shown here in Uttara, draws these letters differently; ligatures with them change along.";
     extra.push(p);
@@ -184,6 +189,70 @@ TIERS.forEach(tier => {
 });
 
 // Wait for the web fonts so the printout never falls back to a system font
+// Fonts for the two forms on each card: [id, family, short name, CSS features, lang, source]
+// g = Google Fonts (loaded on demand), f = file in fonts/, t = loaded in <head>
+const FONTS = [
+  ["th","Tiro Devanagari Hindi","Tiro Hindi","normal","hi","t"],
+  ["ts","Tiro Devanagari Sanskrit","Tiro Sanskrit","normal","sa","t"],
+  ["tm","Tiro Devanagari Marathi","Tiro Marathi","normal","mr","g"],
+  ["ns","Noto Serif Devanagari","Noto Serif","normal","hi","g"],
+  ["nn","Noto Sans Devanagari","Noto Sans","normal","hi","g"],
+  ["ma","Martel","Martel","normal","hi","g"],
+  ["hd","Hind","Hind","normal","hi","t"],
+  ["go","Gotu","Gotu","normal","hi","g"],
+  ["ka","Kalam","Kalam · handwritten","normal","hi","g"],
+  ["ec","Eczar","Eczar · त्र stroke",'"ss03" 1',"hi","g"],
+  ["as","Asar","Asar · त्र stroke",'"ss01" 1',"hi","g"],
+  ["ku","Kurale","Kurale · half-त त्र","normal","hi","g"],
+  ["s2","Sanskrit 2020","Sanskrit 2020","normal","sa","f"],
+  ["sc","Siddhanta Calcutta","Siddhanta Calcutta","normal","sa","f"],
+  ["ut","Uttara","Uttara","normal","sa","f"],
+];
+const font = id => FONTS.find(f => f[0] === id);
+let fa = "th", fb = "ts";
+try {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (font(h.get("a"))) fa = h.get("a");
+  if (font(h.get("b"))) fb = h.get("b");
+} catch(e){}
+const loaded = new Set();
+function loadFont([id, fam, , , , src]){
+  if (src !== "g" || loaded.has(id)) return;
+  loaded.add(id);
+  const l = document.createElement("link"); l.rel = "stylesheet";
+  l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
+  document.head.append(l);
+}
+function applyFonts(){
+  const A = font(fa), B = font(fb), root = document.documentElement.style;
+  [A, B].forEach(loadFont);
+  root.setProperty("--f-hi", `"${A[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-hi", A[3]);
+  root.setProperty("--f-sa", `"${B[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-sa", B[3]);
+  document.querySelectorAll(".duo .hi").forEach(e => e.lang = A[4]);
+  document.querySelectorAll(".duo .sa").forEach(e => e.lang = B[4]);
+  document.querySelectorAll(".key").forEach(k => {
+    k.replaceChildren();
+    [["hi", A], ["sa", B]].forEach(([c, F]) => {
+      const s = document.createElement("span"), b = document.createElement("b");
+      b.className = c; b.textContent = "क"; if (c === "sa") b.style.color = "var(--sa)";
+      s.append(b, F[2].split(" · ")[0]); k.append(s);
+    });
+  });
+  document.querySelectorAll(".fa-name").forEach(e => e.textContent = A[2].split(" · ")[0]);
+  document.querySelectorAll(".fb-name").forEach(e => e.textContent = B[2].split(" · ")[0]);
+  const h = new URLSearchParams();
+  if (fa !== "th") h.set("a", fa);
+  if (fb !== "ts") h.set("b", fb);
+  try { history.replaceState(null, "", h.toString() ? "#" + h : location.pathname); } catch(e){}
+}
+["fa", "fb"].forEach(id => {
+  const sel = document.getElementById(id);
+  FONTS.forEach(([v, , name]) => sel.add(new Option(name, v)));
+  sel.value = id === "fa" ? fa : fb;
+  sel.onchange = () => { if (id === "fa") fa = sel.value; else fb = sel.value; applyFonts(); };
+});
+applyFonts();
+
 document.getElementById("print").onclick = () => document.fonts.ready.then(() => window.print());
 </script>
 </body>
