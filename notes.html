@@ -503,7 +503,7 @@
   /* ---------- popovers ---------- */
   .pop {
     position: fixed;
-    z-index: 20;
+    z-index: 29;                                   /* above the bookmark box (28), below the page overview (30) */
     width: 272px;
     max-height: calc(100vh - 16px);
     max-height: calc(100dvh - 16px);
@@ -2082,8 +2082,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_181';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.58';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_182';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.59';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
