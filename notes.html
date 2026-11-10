@@ -425,6 +425,10 @@
   .seg.notesizes button { font-size: 12px; padding: 0 2px; white-space: nowrap; }
   .papers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .pssub { font-weight: 400; opacity: .6; }
+  .stage.pdfnogrid .page.onpdf path.grid { display: none; }
+  .pscheck { display: flex; align-items: center; gap: 8px; margin-top: 8px; font: 14px var(--ui); cursor: pointer; }
+  .pscheck input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent, #1e2a44); }
+  .pscheck.off { opacity: .4; pointer-events: none; }
   .papers button {
     display: grid; justify-items: center; gap: 5px; padding: 6px 0 5px;
     border: 1px solid var(--bar-line); border-radius: 9px; background: transparent; color: var(--bar-fg);
@@ -1752,6 +1756,7 @@
     </div>
     <label class="numfield" id="psMmBox">Spacing<input type="text" inputmode="decimal" id="psMm" aria-label="Grid spacing in millimetres">mm</label>
   </div>
+  <label class="pscheck" id="psNoPdfGridBox"><input type="checkbox" id="psNoPdfGrid"> No grid on PDF backgrounds</label>
   <div class="field">
     <span>Paper<small class="pssub"> · for all notebooks</small></span>
     <div class="papers" id="papers">
@@ -2064,8 +2069,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_174';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.51';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_175';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.52';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2519,7 +2524,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Grid: 5 mm squares inside a 5 mm empty border ----
   // ---- Page setup: size and grid ----
   const SIZES = { a4: [210, 297], letter: [215.9, 279.4] };
-  const DEFAULT_SETUP = { size: 'a4', orient: 'portrait', cw: 210, ch: 297, grid: 'squares', gridMm: 5 };
+  const DEFAULT_SETUP = { size: 'a4', orient: 'portrait', cw: 210, ch: 297, grid: 'squares', gridMm: 5, pdfNoGrid: false };
   function cleanSetup(o) {
     const st = { ...DEFAULT_SETUP };
     if (!o || typeof o !== 'object') return st;
@@ -2529,6 +2534,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (+o.ch >= 50 && +o.ch <= 10000) st.ch = +o.ch;
     if (['none', 'lines', 'squares'].includes(o.grid)) st.grid = o.grid;
     if (+o.gridMm >= 2 && +o.gridMm <= 30) st.gridMm = +o.gridMm;
+    st.pdfNoGrid = o.pdfNoGrid === true;             // no grid on pages with a PDF background
     return st;
   }
   function setupDims(st) {
@@ -2554,8 +2560,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const setupLabel = st => {
     const size = st.size === 'custom' ? `${+st.cw.toFixed(1)} × ${+st.ch.toFixed(1)} mm` : `${st.size === 'a4' ? 'A4' : 'Letter'}${st.orient === 'landscape' ? ' landscape' : ''}`;
     const grid = st.grid === 'none' ? 'no grid' : `${st.grid} ${+st.gridMm.toFixed(2)} mm`;
-    return `${size} · ${grid}`;
+    return `${size} · ${grid}${st.grid !== 'none' && st.pdfNoGrid ? ', none on PDF' : ''}`;
   };
+  // the grid of one page: none on a PDF page when that is set
+  const gridD = (p, st = setup, d = GRID_D) => st.pdfNoGrid && p && p.bg ? '' : d;
 
   // ---- Notebook model ----
   const okD = d => typeof d === 'string' && d.length > 0 && d.length < 400000 && /^[MLQHVZmlqhvz0-9.,\s\-e]+$/.test(d);
@@ -4202,6 +4210,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pageCss.textContent = `@page { size: ${W}mm ${H}mm; margin: 0; }`;
     document.querySelectorAll('.page > svg, #minimap svg').forEach(el => el.setAttribute('viewBox', `0 0 ${W} ${H}`));
     document.querySelectorAll('.page path.grid').forEach(el => el.setAttribute('d', GRID_D));
+    stage.classList.toggle('pdfnogrid', setup.pdfNoGrid);   // the page shown: its grid hides on a PDF page (CSS)
     const r = mm.querySelector('.mm-paper'); r.setAttribute('width', W); r.setAttribute('height', H);
     $('setupSum').textContent = setupLabel(setup);
     if (initial) return;
@@ -4221,6 +4230,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('psOrient').hidden = draft.size === 'custom';
     $('psCustom').hidden = draft.size !== 'custom';
     $('psMmBox').classList.toggle('off', draft.grid === 'none');
+    $('psNoPdfGridBox').classList.toggle('off', draft.grid === 'none'); $('psNoPdfGrid').checked = !!draft.pdfNoGrid;
     $('psMm').disabled = draft.grid === 'none';
     if (!keepInputs) {
       $('psW').value = String(+draft.cw.toFixed(1)); $('psH').value = String(+draft.ch.toFixed(1));
@@ -4236,6 +4246,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
   const segClick = (id, key) => $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draft[key] = b.dataset.v; renderSetupDlg(true); }));
   segClick('psSize', 'size'); segClick('psOrient', 'orient'); segClick('psGrid', 'grid');
+  $('psNoPdfGrid').addEventListener('change', e => { draft.pdfNoGrid = e.target.checked; });
   $('papers').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draftPaper = b.dataset.p; renderSetupDlg(true); }));
   $('psCancel').addEventListener('click', () => setupDlg.close());
   $('psApply').addEventListener('click', () => {
@@ -4550,12 +4561,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     await ensureImageData(pages);
     const bgd = await bgFileData(pages, preview);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
-    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
+    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${setup.pdfNoGrid ? ' data-pdf-no-grid="1"' : ''}${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
     s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}${bgd.pdfs.map(d => `<desc class="rr-pdf" data-pdf="${d.id}" data-name="${esc(d.name)}">${d.data}</desc>`).join('')}</defs>\n`;
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
-      s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridUse}`;
+      s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridD(p, setup, gridUse)}`;
       if (p.bg) s += `<g class="pdfbg">${bgMarkup(p, 'file', bgd.pics.get(bgKey(p.bg)) || '')}</g>\n`;
       if (p.images && p.images.some(m => !m.over)) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
       if (p.texts && p.texts.length) s += `<g class="texts">${textsMarkup(p, 'file')}</g>\n`;
@@ -4692,7 +4703,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       newSetup = cleanSetup(A('data-page-width') ? {      // files before v18 are A4 with 5 mm squares
         size: A('data-page-size'), orient: A('data-page-orient'),
         cw: parseFloat(A('data-page-width')), ch: parseFloat(A('data-page-height')),
-        grid: A('data-grid'), gridMm: parseFloat(A('data-grid-mm'))
+        grid: A('data-grid'), gridMm: parseFloat(A('data-grid-mm')), pdfNoGrid: A('data-pdf-no-grid') === '1'
       } : null);
       const groups = [...doc.querySelectorAll('[data-page]')];
       if (!groups.length) throw new Error('notebook');
@@ -5440,7 +5451,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('printGo').addEventListener('click', () => {
     const list = $('printAll').checked ? pages : [pages[cur]];
     $('printArea').innerHTML = list.map(p =>
-      `<div class="psheet"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes, true)}</g>${imagesMarkup(p, undefined, true)}${$('printNotes').checked && p.notes ? p.notes.map(n => noteMarkup(n, 'print')).join('') : ''}</svg></div>`
+      `<div class="psheet"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${gridD(p)}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes, true)}</g>${imagesMarkup(p, undefined, true)}${$('printNotes').checked && p.notes ? p.notes.map(n => noteMarkup(n, 'print')).join('') : ''}</svg></div>`
     ).join('');
     document.body.classList.toggle('print-no-grid', !gridBox.checked);
     printDlg.close();
@@ -8098,7 +8109,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     for (let i = 0; i < list.length; i++) {
       const pg = list[i], page = out.addPage([wPt, hPt]), b = pg.bg;
-      if (gridPages) page.drawPage(gridPages[i], { x: 0, y: 0, width: wPt, height: hPt });   // the grid, behind the PDF
+      if (gridPages && !(setup.pdfNoGrid && b)) page.drawPage(gridPages[i], { x: 0, y: 0, width: wPt, height: hPt });   // the grid, behind the PDF
       if (b) {
         const e = srcEmb.get(b.pdf) && srcEmb.get(b.pdf).get(b.n), box = { x: b.x * k, y: hPt - (b.y + b.h) * k, width: b.w * k, height: b.h * k, blendMode: L.BlendMode.Multiply };
         if (e) page.drawPage(e, box);
@@ -8908,7 +8919,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!mag) return;
     if (!pages.includes(mag.page)) { closeMag(); return; }     // its page was deleted
     $('magPaper').setAttribute('width', W); $('magPaper').setAttribute('height', H);
-    $('magGrid').setAttribute('d', GRID_D);
+    $('magGrid').setAttribute('d', gridD(mag.page));
     $('magInk').innerHTML = imagesMarkup(mag.page) + inkMarkup(mag.page.strokes) + imagesMarkup(mag.page, undefined, true) + notesMarkup(mag.page);
     magView();
   }
@@ -9718,7 +9729,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       return `<svg ${vb}><path d="M${cx - u} ${cy}H${cx + u}M${cx} ${cy - u}V${cy + u}" stroke="#f4f2ec" stroke-opacity=".85" stroke-width="${u * 0.22}" stroke-linecap="round"/></svg>`;
     }
     const p = pages[i];
-    return `<svg ${vb}><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}</g>${imagesMarkup(p, undefined, true)}${notesMarkup(p)}</svg>`;
+    return `<svg ${vb}><path class="grid" d="${gridD(p)}" fill="none" stroke-width="0.15"/>${imagesMarkup(p)}<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inkMarkup(p.strokes)}</g>${imagesMarkup(p, undefined, true)}${notesMarkup(p)}</svg>`;
   }
   function flatStart(sl) {
     const g = flatGeom(), el = $('strip'), inner = $('stripIn'), k = W * S() / g.pw;
@@ -10435,7 +10446,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('ovAfterLbl').textContent = `New page after ${cur + 1}`;
     ovGrid.innerHTML = pages.map((p, i) =>
       `<div class="thumb${i === cur ? ' cur' : ''}" data-i="${i}" role="button" aria-label="Page ${i + 1}">` +
-      `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${GRID_D}" fill="none" stroke-width="0.4"/>` +
+      `<div class="paper"><svg viewBox="0 0 ${W} ${H}" xmlns="${NS}"><path class="grid" d="${gridD(p)}" fill="none" stroke-width="0.4"/>` +
       `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${bgMarkup(p, 'thumb')}${(p.images || []).map((im, ii) => im.over ? '' : `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>`).join('')}${textsMarkup(p, 'static')}${inkMarkup(p.strokes)}${(p.images || []).map((im, ii) => im.over ? `<g data-ovimg="${ii}">${imageMarkup(im, 'static')}</g>` : '').join('')}${ovNotes && p.notes ? p.notes.map((n, ni) => `<g data-ovnote="${ni}">${noteMarkup({ ...n, folded: false }, 'static')}</g>`).join('') : ''}</g></svg>` +
       `<button type="button" class="del" aria-label="Delete page ${i + 1}">${DEL_ICON}</button>${thumbMarks(p)}</div>` +
       `<span class="num">${i + 1}</span></div>`
