@@ -642,6 +642,7 @@
   .srchrow .srchpeek { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--bar-line); border-radius: 9px; background: var(--panel); color: var(--bar-fg); cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   .srchrow .srchpeek svg { width: 19px; height: 19px; }
   .searchpop.peek .srchpeek { background: var(--active); }
+  body.peeking .toolbar, body.peeking .bmbar, body.peeking .minimap { opacity: 0; pointer-events: none; transition: opacity .12s; }
   /* search: the same field and button styles as the rest (numfield / seg / menu / hint) */
   .srchrow { display: flex; gap: 6px; align-items: center; }
   .srchrow input {
@@ -669,7 +670,11 @@
   .srchlist small { opacity: .6; margin-right: 6px; font: 400 11.5px var(--ui); }
   .srchlist mark { background: rgba(255, 196, 0, .55); color: inherit; border-radius: 2px; padding: 0 1px; }
   .page .hits rect { fill: rgba(255, 190, 0, .38); }
-  .page .hits rect.now { fill: rgba(255, 140, 0, .5); stroke: #e67700; stroke-width: .35; }
+  .page .hits rect.now { fill: rgba(255, 140, 0, .5); stroke: #e67700; stroke-width: .35; animation: hitpulse 1.2s ease-in-out infinite; }
+  .page .hits rect.ping { fill: none; stroke: #ff7a00; stroke-width: .8; transform-box: fill-box; transform-origin: center; animation: hitping .75s ease-out 3; pointer-events: none; }
+  @keyframes hitpulse { 0%, 100% { fill: rgba(255, 140, 0, .38); stroke-width: .3; } 50% { fill: rgba(255, 120, 0, .72); stroke-width: .9; } }
+  @keyframes hitping { 0% { transform: scale(1); opacity: .95; } 100% { transform: scale(2.6, 3.4); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .page .hits rect.now { animation: none; } .page .hits rect.ping { display: none; } }
   .tgpop .menu button { padding-top: 7px; padding-bottom: 7px; }
   .ptpop .menu button[aria-pressed="true"] { background: var(--active); font-weight: 600; }
   .ptpop .menu button svg { width: 22px; height: 22px; }
@@ -2101,8 +2106,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_185';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.62';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_186';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.63';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7549,8 +7554,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pg = pages[cur], now = srch.hits[srch.at];
     if (!srch.q || !pg) { hitLayer.innerHTML = ''; return; }
     const f = v => +v.toFixed(2);
+    const rectOf = (q, cls) => `<rect${cls ? ` class="${cls}"` : ''} x="${f(q.x)}" y="${f(q.y)}" width="${f(q.w)}" height="${f(q.h)}" rx=".6"/>`;
+    const ping = srch.ping && now && now.page === pg;   // just gone to: rings run out from it a few times
+    srch.ping = false;
     hitLayer.innerHTML = srch.hits.filter(h => h.page === pg && h.kind !== 'mark').map(h =>
-      (h.kind === 'pdf' ? h.rects : [textBoxRect(h.t)]).map(q => `<rect${h === now ? ' class="now"' : ''} x="${f(q.x)}" y="${f(q.y)}" width="${f(q.w)}" height="${f(q.h)}" rx=".6"/>`).join('')).join('');
+      (h.kind === 'pdf' ? h.rects : [textBoxRect(h.t)]).map(q => rectOf(q, h === now ? 'now' : '')).join('')).join('') +
+      (ping ? (now.kind === 'pdf' ? now.rects : [textBoxRect(now.t)]).map(q => rectOf(q, 'ping')).join('') : '');
   }
   function goHit(k) {
     const n = srch.hits.length;
@@ -7570,7 +7579,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         Object.assign(view, was); zoomBack(b);
       }
     }
-    renderHits(); renderSearch(srch.busy);
+    srch.ping = true; renderHits(); renderSearch(srch.busy);
     const cb = $('srchList').querySelector(`[data-k="${srch.at}"]`);
     if (cb) cb.scrollIntoView({ block: 'nearest' });
   }
@@ -7609,11 +7618,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   if (srchRegex) srchIn.placeholder = 'Regular expression';
   // hold the eye: the search window turns see-through until the finger, pen or mouse lets go
   {
-    const peek = $('srchPeek'), off = () => searchPop.classList.remove('peek');
-    peek.addEventListener('pointerdown', e => { e.preventDefault(); try { peek.setPointerCapture(e.pointerId); } catch (_) {} searchPop.classList.add('peek'); });
+    const on = () => { searchPop.classList.add('peek'); document.body.classList.add('peeking'); };   // toolbars, bookmark box and page map go too
+    const peek = $('srchPeek'), off = () => { searchPop.classList.remove('peek'); document.body.classList.remove('peeking'); };
+    peek.addEventListener('pointerdown', e => { e.preventDefault(); try { peek.setPointerCapture(e.pointerId); } catch (_) {} on(); });
     for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) peek.addEventListener(t, off);
     peek.addEventListener('contextmenu', e => e.preventDefault());
-    peek.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); searchPop.classList.add('peek'); } });
+    peek.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); on(); } });
     peek.addEventListener('keyup', off); peek.addEventListener('blur', off);
   }
   $('srchNext').addEventListener('click', () => goHit(srch.at + 1));
