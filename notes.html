@@ -433,7 +433,7 @@
   .psclean input::-moz-range-track { height: 6px; border-radius: 3px; background: var(--bar-line); }
   .psclean input::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--brand); }
   .psclean output { min-width: 42px; text-align: right; font: 600 13px var(--ui); font-variant-numeric: tabular-nums; }
-  .pscheck { display: flex; align-items: center; gap: 8px; margin-top: 8px; font: 14px var(--ui); cursor: pointer; }
+  .pscheck { display: flex; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 18px; font: 14px var(--ui); cursor: pointer; }
   .pscheck input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent, #1e2a44); }
   .pscheck.off { opacity: .4; pointer-events: none; }
   .papers button {
@@ -2080,8 +2080,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_177';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.54';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_178';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.55';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4266,9 +4266,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pg = pages[cur];
     if (pg && pg.bg) bgLayer.querySelectorAll('image').forEach(im => im.setAttribute('style', bgStyle(draft)));
   });
-  $('papers').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draftPaper = b.dataset.p; renderSetupDlg(true); }));
+  $('papers').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    draftPaper = b.dataset.p; renderSetupDlg(true);
+    paperPref = draftPaper; applyPaper();          // shown right away; Apply keeps it, Cancel puts the saved one back
+    if (draft.pdfClean !== setup.pdfClean) bgLayer.querySelectorAll('image').forEach(im => im.setAttribute('style', bgStyle(draft)));
+  }));
   $('psCancel').addEventListener('click', () => setupDlg.close());
-  setupDlg.addEventListener('close', () => { bgHtml = ''; renderBg(); });   // the preview of the clean strength goes away
+  setupDlg.addEventListener('close', () => {      // previews (paper colour, clean strength) give way to what is set
+    const saved = store.get('paper', 'auto');
+    if (paperPref !== saved) { paperPref = saved; applyPaper(); }
+    bgHtml = ''; renderBg();
+  });
   $('psApply').addEventListener('click', () => {
     const num = id => parseFloat($(id).value.replace(',', '.'));
     if (draft.size === 'custom') {
@@ -4282,7 +4290,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       draft.gridMm = g;
     }
     setupDlg.close();
-    if (draftPaper !== paperPref) setPaper(draftPaper);
+    if (draftPaper !== store.get('paper', 'auto')) setPaper(draftPaper);   // (already shown: the preview)
     const before = JSON.stringify(cleanSetup(setup)), after = cleanSetup(draft);
     if (JSON.stringify(after) === before) return;  // only the paper changed: zoom and view stay
     const look = k => JSON.stringify({ ...cleanSetup(k), pdfNoGrid: 0, pdfClean: 0 });
