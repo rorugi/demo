@@ -2082,8 +2082,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_180';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.57';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_181';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.58';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8000,7 +8000,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     pageEl.classList.toggle('onpdf', !!(pg && pg.bg));
     if (!pg || !pg.bg) { if (bgHtml) { bgLayer.innerHTML = ''; bgHtml = ''; } bgDetail = null; return; }
     const d = bgDetail && bgDetail.page === pg && bgDetail.key === bgKey(pg.bg) ? bgDetail : null, f = v => +(+v).toFixed(3);
-    const html = bgMarkup(pg, 'ui') + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none" style="${bgStyle()}"/>` : '');
+    // zoomed in: the sharp picture of the part in view, and a hole in the page picture under it (both are blended, so the
+    // enlarged page picture would show through as a blurred halo around every letter)
+    const b = pg.bg, hole = d ? `<clipPath id="bgHole"><path clip-rule="evenodd" d="M${f(b.x)} ${f(b.y)}h${f(b.w)}v${f(b.h)}h${f(-b.w)}Z M${f(d.x)} ${f(d.y)}h${f(d.w)}v${f(d.h)}h${f(-d.w)}Z"/></clipPath>` : '';
+    const html = (d ? `${hole}<g clip-path="url(#bgHole)">${bgMarkup(pg, 'ui')}</g>` : bgMarkup(pg, 'ui')) + (d ? `<image href="${d.url}" x="${f(d.x)}" y="${f(d.y)}" width="${f(d.w)}" height="${f(d.h)}" preserveAspectRatio="none" style="${bgStyle()}"/>` : '');
     if (html !== bgHtml) { bgLayer.innerHTML = html; bgHtml = html; }
     bgSharpSoon();
   }
