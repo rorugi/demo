@@ -426,6 +426,13 @@
   .papers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .pssub { font-weight: 400; opacity: .6; }
   .stage.pdfnogrid .page.onpdf path.grid { display: none; }
+  .psclean { display: flex; align-items: center; gap: 12px; }
+  .psclean input { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 32px; margin: 0; background: transparent; cursor: pointer; }
+  .psclean input::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--bar-line); }
+  .psclean input::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: var(--brand); box-shadow: 0 1px 4px rgba(0, 0, 0, .25); }
+  .psclean input::-moz-range-track { height: 6px; border-radius: 3px; background: var(--bar-line); }
+  .psclean input::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--brand); }
+  .psclean output { min-width: 42px; text-align: right; font: 600 13px var(--ui); font-variant-numeric: tabular-nums; }
   .pscheck { display: flex; align-items: center; gap: 8px; margin-top: 8px; font: 14px var(--ui); cursor: pointer; }
   .pscheck input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent, #1e2a44); }
   .pscheck.off { opacity: .4; pointer-events: none; }
@@ -1758,6 +1765,10 @@
   </div>
   <label class="pscheck" id="psNoPdfGridBox"><input type="checkbox" id="psNoPdfGrid"> No grid on PDF backgrounds</label>
   <div class="field">
+    <span>Clean PDF background<small class="pssub"> · light grey becomes white (scans, tinted pages); PDF export keeps the original</small></span>
+    <div class="psclean"><input type="range" id="psClean" min="0" max="100" step="5" aria-label="Clean PDF background strength"><output id="psCleanVal">Off</output></div>
+  </div>
+  <div class="field">
     <span>Paper<small class="pssub"> · for all notebooks</small></span>
     <div class="papers" id="papers">
       <button type="button" data-p="auto"><i class="auto"></i>Auto</button>
@@ -2069,8 +2080,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_176';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.53';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_177';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.54';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2524,7 +2535,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Grid: 5 mm squares inside a 5 mm empty border ----
   // ---- Page setup: size and grid ----
   const SIZES = { a4: [210, 297], letter: [215.9, 279.4] };
-  const DEFAULT_SETUP = { size: 'a4', orient: 'portrait', cw: 210, ch: 297, grid: 'squares', gridMm: 5, pdfNoGrid: false };
+  const DEFAULT_SETUP = { size: 'a4', orient: 'portrait', cw: 210, ch: 297, grid: 'squares', gridMm: 5, pdfNoGrid: false, pdfClean: 0 };
   function cleanSetup(o) {
     const st = { ...DEFAULT_SETUP };
     if (!o || typeof o !== 'object') return st;
@@ -2535,6 +2546,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (['none', 'lines', 'squares'].includes(o.grid)) st.grid = o.grid;
     if (+o.gridMm >= 2 && +o.gridMm <= 30) st.gridMm = +o.gridMm;
     st.pdfNoGrid = o.pdfNoGrid === true;             // no grid on pages with a PDF background
+    if (+o.pdfClean >= 0 && +o.pdfClean <= 100) st.pdfClean = Math.round(+o.pdfClean / 5) * 5;   // light grey of PDF pages made white (%)
     return st;
   }
   function setupDims(st) {
@@ -2560,7 +2572,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const setupLabel = st => {
     const size = st.size === 'custom' ? `${+st.cw.toFixed(1)} × ${+st.ch.toFixed(1)} mm` : `${st.size === 'a4' ? 'A4' : 'Letter'}${st.orient === 'landscape' ? ' landscape' : ''}`;
     const grid = st.grid === 'none' ? 'no grid' : `${st.grid} ${+st.gridMm.toFixed(2)} mm`;
-    return `${size} · ${grid}${st.grid !== 'none' && st.pdfNoGrid ? ', none on PDF' : ''}`;
+    return `${size} · ${grid}${st.grid !== 'none' && st.pdfNoGrid ? ', none on PDF' : ''}${st.pdfClean ? ` · PDF cleaned ${st.pdfClean}%` : ''}`;
   };
   // the grid of one page: none on a PDF page when that is set
   const gridD = (p, st = setup, d = GRID_D) => st.pdfNoGrid && p && p.bg ? '' : d;
@@ -4231,6 +4243,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('psCustom').hidden = draft.size !== 'custom';
     $('psMmBox').classList.toggle('off', draft.grid === 'none');
     $('psNoPdfGridBox').classList.toggle('off', draft.grid === 'none'); $('psNoPdfGrid').checked = !!draft.pdfNoGrid;
+    $('psClean').value = String(draft.pdfClean || 0); $('psCleanVal').textContent = draft.pdfClean ? draft.pdfClean + ' %' : 'Off';
     $('psMm').disabled = draft.grid === 'none';
     if (!keepInputs) {
       $('psW').value = String(+draft.cw.toFixed(1)); $('psH').value = String(+draft.ch.toFixed(1));
@@ -4247,8 +4260,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const segClick = (id, key) => $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draft[key] = b.dataset.v; renderSetupDlg(true); }));
   segClick('psSize', 'size'); segClick('psOrient', 'orient'); segClick('psGrid', 'grid');
   $('psNoPdfGrid').addEventListener('change', e => { draft.pdfNoGrid = e.target.checked; });
+  $('psClean').addEventListener('input', e => {
+    draft.pdfClean = +e.target.value; $('psCleanVal').textContent = draft.pdfClean ? draft.pdfClean + ' %' : 'Off';
+    // a preview on the page while choosing (Cancel puts it back)
+    const pg = pages[cur];
+    if (pg && pg.bg) bgLayer.querySelectorAll('image').forEach(im => im.setAttribute('style', bgStyle(draft)));
+  });
   $('papers').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draftPaper = b.dataset.p; renderSetupDlg(true); }));
   $('psCancel').addEventListener('click', () => setupDlg.close());
+  setupDlg.addEventListener('close', () => { bgHtml = ''; renderBg(); });   // the preview of the clean strength goes away
   $('psApply').addEventListener('click', () => {
     const num = id => parseFloat($(id).value.replace(',', '.'));
     if (draft.size === 'custom') {
@@ -4265,6 +4285,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (draftPaper !== paperPref) setPaper(draftPaper);
     const before = JSON.stringify(cleanSetup(setup)), after = cleanSetup(draft);
     if (JSON.stringify(after) === before) return;  // only the paper changed: zoom and view stay
+    const look = k => JSON.stringify({ ...cleanSetup(k), pdfNoGrid: 0, pdfClean: 0 });
+    if (look(after) === look(setup)) {             // only how PDF pages look: zoom and view stay
+      markChanged();
+      setup = after; $('setupSum').textContent = setupLabel(setup);
+      stage.classList.toggle('pdfnogrid', setup.pdfNoGrid);
+      bgHtml = ''; renderPage(); mapInkChanged();
+      if (!$('overview').hidden) buildOverview();
+      scheduleSave();
+      toast(`Page setup: ${setupLabel(setup)}`);
+      return;
+    }
     markChanged();
     applySetup(draft);
     toast(`Page setup: ${setupLabel(setup)}`);
@@ -4567,7 +4598,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridD(p, setup, gridUse)}`;
-      if (p.bg) s += `<g class="pdfbg">${bgMarkup(p, 'file', bgd.pics.get(bgKey(p.bg)) || '')}</g>\n`;
+      if (p.bg) s += `<g class="pdfbg">${bgMarkup(p, 'file', bgd.pics.get(bgKey(p.bg)) || '', setup)}</g>\n`;
       if (p.images && p.images.some(m => !m.over)) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
       if (p.texts && p.texts.length) s += `<g class="texts">${textsMarkup(p, 'file')}</g>\n`;
       s += `<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">\n`;
@@ -6300,6 +6331,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     } catch (_) { return uid() + uid(); }
   }
   // decode, scale down (setting), keep transparency as PNG, otherwise JPEG; store once
+  // storing a file: when Chrome can't read it while storing ("Failed to write blobs"), once more from a copy in memory
+  async function idbSetBlob(key, rec) {
+    try { await idb.set(key, rec); }
+    catch (e) {
+      if (idb.isQuota(e)) throw e;
+      await idb.set(key, { ...rec, blob: new Blob([await rec.blob.arrayBuffer()], { type: rec.blob.type }) });
+    }
+  }
   // decoding: directly, or (very large photos, some formats) through an <img>, drawn smaller right away
   async function decodeImage(blob) {
     try { return await createImageBitmap(blob); } catch (_) {}
@@ -6344,9 +6383,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       out = await new Promise(res => c.toBlob(res, alpha ? 'image/png' : 'image/jpeg', 0.86));
     }
     bmp.close && bmp.close();
+    // a file from the gallery or the clipboard is only a reference that Chrome reads while storing it, and that read
+    // can fail ("Failed to write blobs"): the picture is copied into memory first
+    if (out === blob) out = new Blob([await blob.arrayBuffer()], { type: blob.type });
     const id = await hashBlob(out);
     if (!imgStore.has(id)) {
-      try { await idb.set('img:' + id, { blob: out, w, h }); }
+      try { await idbSetBlob('img:' + id, { blob: out, w, h }); }
       catch (e) {
         toast(idb.isQuota(e) ? 'This browser has no room left for the image' + await storageNote() + '.'
           : `The image could not be stored: ${(e && (e.message || e.name)) || 'unknown error'}. Try again, or reload the page.`, 6000);
@@ -7762,7 +7804,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!pdfStore.has(id)) {
       pdfStore.set(id, { blob, name, doc: null });   // known at once (the memory shown in Notebooks counts it while it is stored)
       imgSize.delete('pdf:' + id);
-      try { await idb.set('pdf:' + id, { blob, name }); }
+      try { await idbSetBlob('pdf:' + id, { blob, name }); }
       catch (e) { pdfStore.delete(id); toast(idb.isQuota(e) ? 'This browser has no room left for the PDF' + await storageNote() + '.' : 'The PDF could not be stored.', 5000); throw e; }
     }
     return id;
@@ -7859,11 +7901,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }, 60);
   }
   // the background in a page's markup: under everything, the grid shows through (the PDF's white multiplies with the paper)
-  function bgMarkup(pg, mode, data) {
+  function bgMarkup(pg, mode, data, st = setup) {
     if (!pg || !pg.bg) return '';
     const b = pg.bg, f = v => +(+v).toFixed(3), want = mode === 'thumb' ? 'S' : 'L', r = mode === 'file' ? data || null : bgGet(b, want);   // (files: a picture given, or none)
     const box = `x="${f(b.x)}" y="${f(b.y)}" width="${f(b.w)}" height="${f(b.h)}"`;
-    const blend = ` style="${mode === 'file' ? 'mix-blend-mode:multiply' : bgStyle()}"`;   // the grid shows through the PDF's white, behind its print
+    const blend = ` style="${mode === 'file' ? (cleanFilter(st) ? `filter:${cleanFilter(st)};` : '') + 'mix-blend-mode:multiply' : bgStyle()}"`;   // the grid shows through the PDF's white, behind its print
     const meta = mode === 'file' ? ` data-pdf="${b.pdf}" data-pdfpage="${b.n}"` : ` data-bgk="${bgKey(b)}" data-want="${want}"`;
     if (!r) return `<rect class="pdfbg" ${box} fill="#fff"${meta}/>`;
     const sz = mode === 'file' ? '' : ` data-sz="${bgRast.L.get(bgKey(b)) === r ? 'L' : 'S'}"`;
@@ -7874,7 +7916,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let bgDetail = null, bgDetailT = 0, bgDetailTask = null;
   let bgHtml = '';
   // on dark paper the PDF turns dark too: light and dark swap, the colours keep their hue; the grid still shows behind it
-  const bgStyle = () => paperDark ? 'filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen' : 'mix-blend-mode:multiply';
+  // "Clean PDF background": everything brighter by up to 60 %, so light grey (a scan's paper, a tinted page) becomes white,
+  // which the blending then makes transparent; black stays black
+  const cleanFilter = (st = setup) => st.pdfClean ? `brightness(${+(1 + st.pdfClean / 100 * 0.6).toFixed(3)})` : '';
+  const bgStyle = (st = setup) => {
+    const c = cleanFilter(st);
+    return paperDark ? `filter:${c ? c + ' ' : ''}invert(1) hue-rotate(180deg);mix-blend-mode:screen` : `${c ? `filter:${c};` : ''}mix-blend-mode:multiply`;
+  };
   function renderBg() {                            // only touched when something changed: no flicker while writing
     const pg = pages[cur];
     pageEl.classList.toggle('onpdf', !!(pg && pg.bg));
