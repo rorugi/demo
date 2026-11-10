@@ -33,7 +33,7 @@ body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-si
 .bar{max-width:297mm;margin:0 auto;padding:14px 4px 10px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
 .bar a{color:var(--muted);text-decoration:none;font-size:14px}
 .bar a:hover{color:var(--sa)}
-.bar #print{margin-left:auto;appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:8px 16px;cursor:pointer;
+.bar #print{appearance:none;font:inherit;font-weight:500;font-size:15px;border-radius:999px;padding:8px 16px;cursor:pointer;
   border:1px solid var(--line);background:#fff;color:var(--fg);display:inline-flex;gap:8px;align-items:center}
 .bar #print svg{width:18px;height:18px}
 .bar #print:hover{border-color:var(--sa)}
@@ -52,7 +52,7 @@ h1 small{font-size:13px;font-weight:400;color:var(--muted);margin-left:12px}
 .cols{display:grid;grid-template-columns:106mm 1px minmax(0,1fr);grid-template-rows:auto auto auto 1fr;grid-template-areas:"v r c" "v r x" "v r s" "v r d";column-gap:5mm;align-items:start}
 .a-v{grid-area:v} .a-c{grid-area:c} .a-x{grid-area:x} .a-s{grid-area:s} .a-d{grid-area:d}
 .a-x[hidden]{display:none}
-.opts{flex-basis:100%;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.opts{flex-basis:100%;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
 .trad{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
 .trad label{display:inline-flex;gap:6px;align-items:center;cursor:pointer;color:var(--fg)}
 .trad input{width:16px;height:16px;margin:0}
@@ -66,7 +66,7 @@ h1 small{font-size:13px;font-weight:400;color:var(--muted);margin-left:12px}
 .car{display:inline-flex;gap:6px;align-items:center;font-size:14px;color:var(--muted)}
 .car select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
 .car select:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .seg button{appearance:none;font:inherit;font-size:14px;font-weight:500;border:0;background:#fff;color:var(--muted);padding:7px 14px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:rgba(184,103,12,.12);color:var(--fg)}
 .seg button:focus-visible{outline:2px solid var(--sa);outline-offset:-2px}
@@ -77,6 +77,8 @@ h2 small{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;col
 .tbl{display:grid;gap:1.4mm}
 .cons{grid-template-columns:19mm repeat(8,1fr)}
 .vow{grid-template-columns:22mm 1fr 1fr}
+.vow.nolab{grid-template-columns:1fr 1fr}
+#vnote[hidden]{display:none}
 .sig{grid-template-columns:repeat(8,1fr)}
 .dig{grid-template-columns:repeat(10,1fr)}
 .xc{grid-template-columns:repeat(9,1fr)}
@@ -121,9 +123,11 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
 .pt .cols{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"v" "c" "x" "s" "d"}
 .pt .vr{display:none}
 .pt .vow{grid-template-columns:19mm 1fr 1fr 19mm 1fr 1fr;column-gap:1.4mm}
+.pt .vow.nolab{grid-template-columns:repeat(4,1fr)}
+.pt .vow .r2t{margin-left:2mm}
 .pt .vow .rl.r2{margin-left:2mm}
 .pt .vow .rl small{white-space:normal}
-.pt .vow .note{grid-column:span 3;align-self:center;margin:0 0 0 2mm}
+.pt .vow .note{align-self:center;margin:0 0 0 2mm}
 .pt #vnote{display:none}
 .pt .cons{grid-template-columns:20mm repeat(8,1fr)}
 .pt .vt.g3 .duo{gap:1.2mm}
@@ -148,6 +152,10 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
 <nav class="bar">
   <a href="devanagari-writing.html">← Devanagari writing</a>
   <a href="devanagari-ligatures-print.html">Ligature chart</a>
+  <div class="seg" role="group" aria-label="Page orientation">
+    <button type="button" id="oLand" aria-pressed="true">Landscape</button>
+    <button type="button" id="oPort" aria-pressed="false">Portrait</button>
+  </div>
   <button type="button" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Print</button>
   <div class="opts">
     <div class="trad" role="group" aria-label="Traditions shown">
@@ -157,7 +165,9 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
       <label><input type="checkbox" value="mr"><b class="mr">क</b>Marathi</label>
     </div>
     <label class="xopt"><input type="checkbox" id="xopt">Extra letters</label>
-    <label class="car">Vowel signs on
+    <label class="xopt"><input type="checkbox" id="popt">Vowel places</label>
+    <label class="xopt"><input type="checkbox" id="ropt">Rules</label>
+    <label class="car">Signs on
       <select id="car">
         <option value="0">none ◌</option>
         <option value="p">pa प</option>
@@ -165,10 +175,6 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
         <option value="k">ka क</option>
       </select>
     </label>
-    <div class="seg" role="group" aria-label="Page orientation">
-      <button type="button" id="oLand" aria-pressed="true">Landscape</button>
-      <button type="button" id="oPort" aria-pressed="false">Portrait</button>
-    </div>
   </div>
 </nav>
 
@@ -311,6 +317,7 @@ function buildExtra(){
 // Carrier consonant for the vowel signs: [letter, ISO]; "0" shows the bare sign on a dotted circle
 const CARRIERS = {"0":["◌","–"], p:["प","p"], m:["म","m"], k:["क","k"]};
 let car = "p";
+let places = true, rules = true; // vowel row names; semivowel and sandhi rules
 let extra = false; // extra letters (nukta letters, ळ, eyelash r): off by default, rarely needed
 const carried = sign => CARRIERS[car][0] + sign;
 // Vowels: [label, link to its semivowel or source, short, long, traditions]; each vowel is [letter, sign, ISO]
@@ -334,33 +341,46 @@ function vowTile([t, ex, iso, tags = ALL]){
   return c;
 }
 // Returns false when neither vowel of the row is in a switched-on tradition
-function vowRow(g, [name, link, a, b], cls){
-  const ta = vowTile(a), tb = vowTile(b);
-  if (!ta && !tb) return false;
-  const r = el(cls); r.textContent = name;
-  if (link){ const sm = document.createElement("small"); sm.textContent = link; r.append(sm); }
-  g.append(r, ta || el("cell empty"), tb || el("cell empty"));
+// The label column holds the row names (places) and the rules; without either it is left out
+const labels = () => places || rules;
+function vowRow(g, [name, link, a, b], cls, tileCls){
+  const ta = vowTile(a) || el("cell empty"), tb = vowTile(b) || el("cell empty");
+  if (ta.classList.contains("empty") && tb.classList.contains("empty")) return false;
+  if (labels()){
+    const r = el(cls); if (places) r.textContent = name;
+    if (rules && link){ const sm = document.createElement("small"); sm.textContent = link; r.append(sm); }
+    g.append(r);
+  } else if (tileCls) ta.classList.add(tileCls);
+  g.append(ta, tb);
   return true;
+}
+function note(g){
+  const n = el("note"); n.textContent = $("vnote").textContent; g.append(n); return n;
 }
 function buildVow(portrait){
   const g = $("vow"); g.replaceChildren();
+  g.classList.toggle("nolab", !labels());
+  $("vnote").hidden = !rules;
+  const head = labels() ? ["", "short", "long"] : ["short", "long"];
+  const w = head.length; // columns per block
   if (!portrait){
-    ["", "short", "long"].forEach(h => { const d = el("ch"); d.textContent = h; g.append(d); });
+    head.forEach(h => { const d = el("ch"); d.textContent = h; g.append(d); });
     VOW.forEach(v => vowRow(g, v, "rl"));
     return;
   }
-  // Portrait: two blocks side by side, the simple vowels left, the rest right; the note fills the first free slot
-  ["", "short", "long", "", "short", "long"].forEach(h => { const d = el("ch"); d.textContent = h; g.append(d); });
+  // Portrait: two blocks side by side, the simple vowels left, the rest right; the rules note fills the first free slot
+  [...head, ...head].forEach((h, i) => { const d = el("ch"); d.textContent = h; if (i === w && !labels()) d.classList.add("r2t"); g.append(d); });
   const probe = el("tbl");
   const keep = v => vowRow(probe, v, "rl");
   const left = VOW.slice(0, 5).filter(keep), right = VOW.slice(5).filter(keep);
-  let noted = false;
+  let noted = !rules;
   for (let i = 0; i < Math.max(left.length, right.length); i++){
-    if (left[i]) vowRow(g, left[i], "rl"); else { const e = el("rl"); e.style.gridColumn = "span 3"; g.append(e); }
-    if (right[i]) vowRow(g, right[i], "rl r2");
-    else if (!noted){ const n = el("note"); n.textContent = $("vnote").textContent; g.append(n); noted = true; }
+    if (left[i]) vowRow(g, left[i], "rl"); else { const e = el("rl"); e.style.gridColumn = "span " + w; g.append(e); }
+    if (right[i]) vowRow(g, right[i], "rl r2", "r2t");
+    else if (!noted){ const n = note(g); n.style.gridColumn = "span " + w; noted = true; }
+    else { const e = el("rl"); e.style.gridColumn = "span " + w; g.append(e); }
   }
-  if (!noted){ const n = el("note"); n.textContent = $("vnote").textContent; n.style.gridColumn = "1 / -1"; n.style.margin = "1mm 0 0"; g.append(n); }
+  if (!noted){ const n = note(g); n.style.gridColumn = "1 / -1"; n.style.margin = "1mm 0 0"; }
 }
 
 // Signs: [text, transliteration, name, traditions]; the first four sit on the carrier (virama: its transliteration is the bare consonant)
@@ -390,7 +410,7 @@ function buildKey(){
   });
 }
 
-// State: orientation, traditions and carrier, kept in the URL hash (#o=portrait&t=hi.sa.no&c=m&x=1; default: landscape, Sanskrit only, pa, no extra letters)
+// State: orientation, traditions and carrier, kept in the URL hash (#o=portrait&t=hi.sa.no&c=m&x=1&pl=0&r=0; default: landscape, Sanskrit only, pa, no extra letters, places and rules shown)
 let portrait = false;
 function save(){
   const h = new URLSearchParams();
@@ -399,6 +419,8 @@ function save(){
   if (t !== "sa") h.set("t", t);
   if (car !== "p") h.set("c", car);
   if (extra) h.set("x", "1");
+  if (!places) h.set("pl", "0");
+  if (!rules) h.set("r", "0");
   try { history.replaceState(null, "", h.toString() ? "#" + h.toString().replace(/%2E/g, ".") : location.pathname); } catch(e){}
 }
 function render(){
@@ -408,6 +430,8 @@ function render(){
   document.querySelectorAll(".trad input").forEach(i => i.checked = on.has(i.value));
   $("car").value = car;
   $("xopt").checked = extra;
+  $("popt").checked = places;
+  $("ropt").checked = rules;
   $("vcar").textContent = car === "0" ? "sign" : "sign on " + CARRIERS[car][0];
   $("scar").textContent = car === "0" ? "" : "on " + CARRIERS[car][0];
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();
@@ -421,9 +445,13 @@ try {
   if (t.length) on = new Set(t);
   if (h.get("c") in CARRIERS) car = h.get("c");
   extra = h.get("x") === "1";
+  places = h.get("pl") !== "0";
+  rules = h.get("r") !== "0";
 } catch(e){}
 $("car").onchange = e => { car = e.target.value; render(); };
 $("xopt").onchange = e => { extra = e.target.checked; render(); };
+$("popt").onchange = e => { places = e.target.checked; render(); };
+$("ropt").onchange = e => { rules = e.target.checked; render(); };
 $("oLand").onclick = () => { portrait = false; render(); };
 $("oPort").onclick = () => { portrait = true; render(); };
 document.querySelectorAll(".trad input").forEach(i => i.onchange = () => {
