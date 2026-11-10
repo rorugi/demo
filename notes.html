@@ -670,10 +670,11 @@
   .srchlist small { opacity: .6; margin-right: 6px; font: 400 11.5px var(--ui); }
   .srchlist mark { background: rgba(255, 196, 0, .55); color: inherit; border-radius: 2px; padding: 0 1px; }
   .page .hits rect { fill: rgba(255, 190, 0, .38); }
-  .page .hits rect.now { fill: rgba(255, 140, 0, .5); stroke: #e67700; stroke-width: .35; animation: hitpulse 1.2s ease-in-out infinite; }
-  .page .hits rect.ping { fill: none; stroke: #ff7a00; stroke-width: .8; transform-box: fill-box; transform-origin: center; animation: hitping .75s ease-out 3; pointer-events: none; }
-  @keyframes hitpulse { 0%, 100% { fill: rgba(255, 140, 0, .38); stroke-width: .3; } 50% { fill: rgba(255, 120, 0, .72); stroke-width: .9; } }
-  @keyframes hitping { 0% { transform: scale(1); opacity: .95; } 100% { transform: scale(2.6, 3.4); opacity: 0; } }
+  /* the current match: an orange mark that pulses (no border); when gone to, a soft orange glow spreads from it */
+  .page .hits rect.now { fill: rgba(255, 140, 0, .5); animation: hitpulse 1.2s ease-in-out infinite; }
+  .page .hits rect.ping { fill: rgba(255, 140, 0, .45); transform-box: fill-box; transform-origin: center; animation: hitping .75s ease-out 3; pointer-events: none; }
+  @keyframes hitpulse { 0%, 100% { fill: rgba(255, 140, 0, .35); } 50% { fill: rgba(255, 120, 0, .78); } }
+  @keyframes hitping { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.2, 2.8); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .page .hits rect.now { animation: none; } .page .hits rect.ping { display: none; } }
   .tgpop .menu button { padding-top: 7px; padding-bottom: 7px; }
   .ptpop .menu button[aria-pressed="true"] { background: var(--active); font-weight: 600; }
@@ -2106,8 +2107,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_186';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.63';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_187';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.64';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
