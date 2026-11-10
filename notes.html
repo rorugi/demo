@@ -2069,8 +2069,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_175';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.52';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_176';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.53';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6300,8 +6300,34 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     } catch (_) { return uid() + uid(); }
   }
   // decode, scale down (setting), keep transparency as PNG, otherwise JPEG; store once
+  // decoding: directly, or (very large photos, some formats) through an <img>, drawn smaller right away
+  async function decodeImage(blob) {
+    try { return await createImageBitmap(blob); } catch (_) {}
+    const url = URL.createObjectURL(blob), img = new Image();
+    try {
+      img.src = url;
+      await img.decode();
+      const w0 = img.naturalWidth, h0 = img.naturalHeight, lim = imgMax || 4096, k = Math.min(1, lim / Math.max(w0, h0));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(w0 * k)); c.height = Math.max(1, Math.round(h0 * k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      return await createImageBitmap(c);
+    } finally { URL.revokeObjectURL(url); }
+  }
+  // why an image could not be read: HEIC/HEIF photos (Samsung "high efficiency pictures", iPhone) can't be shown by browsers
+  async function imageKind(blob) {
+    if (/hei[cf]/i.test(blob.type) || /\.hei[cf]$/i.test(blob.name || '')) return 'heic';
+    try {
+      const h = new Uint8Array(await blob.slice(0, 16).arrayBuffer()), t = String.fromCharCode(...h.slice(4, 12));
+      if (/^ftyp(heic|heix|hevc|heim|heis|mif1|msf1)/.test(t)) return 'heic';
+      if (/^ftyp(avif|avis)/.test(t)) return 'avif';
+    } catch (_) {}
+    return '';
+  }
   async function storeImage(blob, keepAsIs) {
-    const bmp = await createImageBitmap(blob);
+    let bmp;
+    try { bmp = await decodeImage(blob); }
+    catch (e) { const er = new Error('decode'); er.kind = 'decode'; throw er; }
     let w = bmp.width, h = bmp.height, out = blob;
     const okType = /^image\/(jpeg|png)$/.test(blob.type);
     if (!keepAsIs && (!okType || (imgMax && Math.max(w, h) > imgMax))) {
@@ -6324,7 +6350,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       catch (e) {
         toast(idb.isQuota(e) ? 'This browser has no room left for the image' + await storageNote() + '.'
           : `The image could not be stored: ${(e && (e.message || e.name)) || 'unknown error'}. Try again, or reload the page.`, 6000);
-        throw e || new Error('image');
+        const er = new Error('store'); er.kind = 'store'; throw er;   // (the message above is what the person sees)
       }
       imgStore.set(id, { url: URL.createObjectURL(out), w, h, type: out.type, blob: out });
     }
@@ -6350,7 +6376,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     viewNeed('obj', 'Text and images');
     nextImgAt = at || null;
     try { placeImage(await storeImage(blob)); }
-    catch (e) { if (!(e && e.message === 'quota')) toast('This image can’t be read here. JPEG, PNG, WebP and GIF work.'); }
+    catch (e) {
+      if (e && e.kind === 'store') return;          // already said why
+      const kind = await imageKind(blob), size = blob.size ? `, ${fmtBytes(blob.size)}` : '';
+      toast(kind === 'heic' ? 'This photo is in HEIC format, which the browser can’t show. Turn off “High efficiency pictures” in the camera settings, or share or save the photo as JPEG.'
+        : `This image can’t be read here (${(blob.type || 'unknown type').replace('image/', '').toUpperCase()}${size}). JPEG, PNG, WebP and GIF work${kind === 'avif' ? '; AVIF only in newer browsers' : ''}.`, 7000);
+    }
   }
   const imgFrac = (m, k) => +(+k).toFixed(3);
   // one image: the picture turned by rot inside its box
