@@ -668,13 +668,16 @@
   .srchlist b { font-weight: 600; margin-right: 6px; }
   .srchlist small { opacity: .6; margin-right: 6px; font: 400 11.5px var(--ui); }
   .srchlist mark { background: rgba(255, 196, 0, .55); color: inherit; border-radius: 2px; padding: 0 1px; }
-  .page .hits rect { fill: rgba(255, 190, 0, .38); }
+  .page .hits rect { fill: rgba(255, 190, 0, .5); }
   /* the current match: an orange mark that pulses (no border); when gone to, a soft orange glow spreads from it */
-  .page .hits rect.now { fill: rgba(255, 140, 0, .5); animation: hitpulse 1.2s ease-in-out infinite; }
-  .page .hits rect.ping { fill: rgba(255, 140, 0, .45); transform-box: fill-box; transform-origin: center; animation: hitping .75s ease-out 3; pointer-events: none; }
-  @keyframes hitpulse { 0%, 100% { fill: rgba(255, 140, 0, .35); } 50% { fill: rgba(255, 120, 0, .78); } }
+  /* the marks lie in front of the PDF (pictures don't hide them) but are blended like it: on light paper dark letters
+     show through the orange unchanged; on dark paper (light letters) the other way round. The current match is a strong
+     orange with a soft orange glow running out from it all the time */
+  .page .hits rect { mix-blend-mode: multiply; }
+  body.paper-dark .page .hits rect { mix-blend-mode: screen; }
+  .page .hits rect.now { fill: rgba(255, 140, 0, .72); }
+  .page .hits rect.ping { fill: rgba(255, 140, 0, .5); transform-box: fill-box; transform-origin: center; animation: hitping 1.1s ease-out infinite; pointer-events: none; }
   @keyframes hitping { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.2, 2.8); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .page .hits rect.now { animation: none; } .page .hits rect.ping { display: none; } }
   .tgpop .menu button { padding-top: 7px; padding-bottom: 7px; }
   .ptpop .menu button[aria-pressed="true"] { background: var(--active); font-weight: 600; }
   .ptpop .menu button svg { width: 22px; height: 22px; }
@@ -2105,8 +2108,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_188';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.65';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_189';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.66';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7554,8 +7557,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!srch.q || !pg) { hitLayer.innerHTML = ''; return; }
     const f = v => +v.toFixed(2);
     const rectOf = (q, cls) => `<rect${cls ? ` class="${cls}"` : ''} x="${f(q.x)}" y="${f(q.y)}" width="${f(q.w)}" height="${f(q.h)}" rx=".6"/>`;
-    const ping = srch.ping && now && now.page === pg;   // just gone to: rings run out from it a few times
-    srch.ping = false;
+    const ping = now && now.page === pg;           // the glow runs out from the current match all the time
     hitLayer.innerHTML = srch.hits.filter(h => h.page === pg && h.kind !== 'mark').map(h =>
       (h.kind === 'pdf' ? h.rects : [textBoxRect(h.t)]).map(q => rectOf(q, h === now ? 'now' : '')).join('')).join('') +
       (ping ? (now.kind === 'pdf' ? now.rects : [textBoxRect(now.t)]).map(q => rectOf(q, 'ping')).join('') : '');
@@ -7592,6 +7594,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let srchTimer = null;
   srchIn.addEventListener('input', () => { clearTimeout(srchTimer); srchTimer = setTimeout(() => runSearch(srchIn.value), 260); });
   srchIn.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); closePops(); return; }   // closes the window, the search and its marks stay (a search field would empty itself)
     if (e.key === 'Enter') {
       e.preventDefault();
       if (cleanQ(srchIn.value) !== srch.q) { clearTimeout(srchTimer); runSearch(srchIn.value).then(() => goHit(0)); }
