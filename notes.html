@@ -2108,8 +2108,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_189';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.66';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_190';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.67';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7573,9 +7573,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (i < 0) return;
       if (i !== cur) { cur = i; renderPage(); scheduleSave(); }
       const q = h.kind === 'pdf' ? h.rects[0] : textBoxRect(h.t);
-      if (q && view.zoom > 1.05) {                   // zoomed in: the match comes into the middle
+      if (q && view.zoom > 1.05) {                   // zoomed in: the match comes to the middle across, and down into the free
+        // part below the search window (the middle of what is left under it; without the window, at two thirds of the height)
         const sc = view.fit * view.zoom, was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
-        Object.assign(view, { tx: vw / 2 - (q.x + q.w / 2) * sc, ty: vh / 2 - (q.y + q.h / 2) * sc }); clampView();
+        const sb = !searchPop.hidden ? searchPop.getBoundingClientRect().bottom : 0;
+        const yT = sb && sb < vh * 0.8 ? Math.max(vh * 0.55, (sb + vh) / 2) : vh * 2 / 3;
+        Object.assign(view, { tx: vw / 2 - (q.x + q.w / 2) * sc, ty: yT - (q.y + q.h / 2) * sc }); clampView();
         const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
         Object.assign(view, was); zoomBack(b);
       }
