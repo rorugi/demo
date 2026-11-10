@@ -630,6 +630,10 @@
   .srchrow button:disabled { opacity: .3; }
   .srchrow svg { width: 20px; height: 20px; }
   .srchinfo { font: 12.5px var(--ui); opacity: .65; margin: 6px 2px 4px; }
+  .srchopt { display: flex; align-items: center; gap: 7px; margin: 8px 2px 0; font: 13px var(--ui); cursor: pointer; }
+  .srchopt input { width: 17px; height: 17px; margin: 0; accent-color: var(--accent, #1e2a44); }
+  .srchhelp { font: 12px/1.5 var(--ui); opacity: .7; margin: 4px 2px 0; }
+  .srchhelp code { font: 600 12px ui-monospace, monospace; padding: 0 3px; border-radius: 3px; background: var(--active); }
   .srchlist { max-height: min(52vh, 420px); overflow-y: auto; margin: 0 -4px; }
   @media (max-width: 560px), (max-height: 560px) { .srchlist { max-height: 30vh; } }
   .srchlist button { display: block; width: 100%; text-align: left; border: 0; border-radius: 8px; background: transparent; color: var(--bar-fg); padding: 7px 8px; font: 13.5px/1.35 var(--ui); cursor: pointer; }
@@ -1381,6 +1385,8 @@
     <button type="button" id="srchPrev" aria-label="Previous match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
     <button type="button" id="srchNext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   </div>
+  <label class="srchopt"><input type="checkbox" id="srchRe"> Regular expression</label>
+  <div class="srchhelp" id="srchHelp" hidden><code>.</code> any letter · <code>*</code> any number of the one before · <code>+</code> one or more · <code>?</code> optional · <code>[abc]</code> one of · <code>a|b</code> either · <code>\b</code> word edge · <code>\d</code> digit · <code>^</code> <code>$</code> start and end of a text box or page</div>
   <div class="srchinfo" id="srchInfo" aria-live="polite">Text boxes, PDF pages and bookmark names</div>
   <div class="srchlist" id="srchList"></div>
 </div>
@@ -2055,8 +2061,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_169';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.46';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_170';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.47';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7277,18 +7283,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     at.push(str.length);
     return { s: out, at };
   }
-  // Spaces count: a space before or after the words means a word starts or ends there ("cat " finds "cat." and
-  // "cat", not "category"; " art" doesn't find "start"). Spaces inside match any gap or line break.
-  const cleanQ = q => q.replace(/\s+/g, ' ');
-  const normQ = q => normMap(cleanQ(q)).s;
-  const qLetters = q => q.replace(/ /g, '').length;
-  const qOk = q => qLetters(q) >= 2 || (qLetters(q) === 1 && q.trim() !== q);   // one letter only as a whole word
-  const qRe = q => {
-    const core = q.trim().split(' ').map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
-    return new RegExp((q.startsWith(' ') ? '(?<![\\p{L}\\p{N}])' : '') + core + (q.endsWith(' ') ? '(?![\\p{L}\\p{N}])' : ''), 'gu');
-  };
-  function findAll(hay, q) {                       // [[start, end] in the original text]
-    const N = normMap(hay), out = [], re = qRe(q);
+  // Normal search: the letters as typed, each space is one space (or line break). With "Regular expression" on, the
+  // pattern is a JavaScript regular expression: . any letter, * repeat, [abc], \b word edge, ^ $ start and end…
+  // Case and accents never matter.
+  let srchRegex = store.get('srchRegex', false) === true;
+  const cleanQ = q => q;
+  const normQ = q => srchRegex ? q.normalize('NFKD').replace(/[\u0300-\u036f]/g, '') : normMap(q).s;
+  const qOk = q => srchRegex ? q.length >= 1 : q.trim().length >= 1 && q.length >= 2;
+  const qRe = q => srchRegex ? new RegExp(q, 'giu')
+    : new RegExp([...q].map(c => c === ' ' ? '\\s' : c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join(''), 'gu');
+  function findAll(hay, q, re) {                   // [[start, end] in the original text]
+    const N = normMap(hay), out = [];
+    re.lastIndex = 0;
     let m;
     while ((m = re.exec(N.s)) && out.length < SRCH_MAX) {
       if (!m[0].length) { re.lastIndex++; continue; }
@@ -7360,16 +7366,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const textOfBox = t => (t.runs || []).map(r => r.t).join('');
   async function runSearch(qRaw) {
     const run = ++srch.run, q = normQ(qRaw);
-    srch.q = q.trim() ? cleanQ(qRaw) : ''; srch.hits = []; srch.at = -1; srch.noPdfText = false;
-    if (!qOk(q)) { srch.busy = false; renderSearch(); renderHits(); updateToolbarState(); return; }
+    srch.q = q.trim() || (srchRegex && q) ? qRaw : ''; srch.hits = []; srch.at = -1; srch.noPdfText = false; srch.bad = false;
+    let re = null;
+    if (qOk(q)) { try { re = qRe(q); } catch (_) { srch.bad = true; } }
+    if (!re) { srch.busy = false; renderSearch(); renderHits(); updateToolbarState(); return; }
     const add = h => { if (srch.hits.length < SRCH_MAX) srch.hits.push(h); };
     pages.forEach(pg => (pg.texts || []).forEach(t => {
       const str = textOfBox(t);
-      for (const [a, z] of findAll(str, q)) add({ kind: 'text', page: pg, t, html: snippet(str, a, z) });
+      for (const [a, z] of findAll(str, q, re)) add({ kind: 'text', page: pg, t, html: snippet(str, a, z) });
     }));
     for (const m of marks) {
       const str = m.label || '';
-      for (const [a, z] of findAll(str, q)) add({ kind: 'mark', page: m.page, m, html: snippet(str, a, z) });
+      for (const [a, z] of findAll(str, q, re)) add({ kind: 'mark', page: m.page, m, html: snippet(str, a, z) });
     }
     const order = () => {
       const idx = new Map(pages.map((pg, i) => [pg, i])), kr = { text: 0, pdf: 1, mark: 2 };
@@ -7386,7 +7394,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (!known) fresh = true;
       if (run !== srch.run) return;
       if (pt.s.trim()) anyText = true;
-      for (const [a, z] of findAll(pt.s, q)) {
+      for (const [a, z] of findAll(pt.s, q, re)) {
         const rects = pdfRects(pt, pg.bg, a, z);
         add({ kind: 'pdf', page: pg, rects, y: rects.length ? rects[0].y : 0, html: snippet(pt.s, a, z) });
       }
@@ -7405,7 +7413,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function renderSearch(progress) {
     const n = srch.hits.length;
     if (!progress) $('srchInfo').textContent = !srch.q ? 'Text boxes, PDF pages and bookmark names'
-      : !qOk(srch.q) ? 'Type at least 2 letters (or one letter with a space for a whole word)'
+      : srch.bad ? 'This is not a valid regular expression'
+      : !qOk(srch.q) ? 'Type at least 2 letters'
       : (n ? `${n >= SRCH_MAX ? SRCH_MAX + '+' : n} found` : 'Nothing found') + (srch.noPdfText ? ' · the PDF has no text (scanned pages can’t be searched)' : '');
     const label = { text: 'Text', pdf: 'PDF', mark: 'Bookmark' };
     $('srchList').innerHTML = srch.hits.slice(0, 200).map((h, k) => `<button type="button" data-k="${k}"${k === srch.at ? ' aria-current="true"' : ''}><b>p. ${pages.indexOf(h.page) + 1}</b><small>${label[h.kind]}</small>${h.html}</button>`).join('') +
@@ -7458,6 +7467,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       else goHit(srch.at + (e.shiftKey ? -1 : 1));
     }
   });
+  $('srchRe').checked = srchRegex; $('srchHelp').hidden = !srchRegex;
+  $('srchRe').addEventListener('change', e => {
+    srchRegex = e.target.checked; store.set('srchRegex', srchRegex); $('srchHelp').hidden = !srchRegex;
+    srchIn.placeholder = srchRegex ? 'Regular expression' : 'Search this notebook';
+    if (srchIn.value) runSearch(srchIn.value);
+    srchIn.focus();
+  });
+  if (srchRegex) srchIn.placeholder = 'Regular expression';
   $('srchNext').addEventListener('click', () => goHit(srch.at + 1));
   $('srchPrev').addEventListener('click', () => goHit(srch.at < 0 ? -1 : srch.at - 1));
   $('srchList').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) goHit(+b.dataset.k); });
