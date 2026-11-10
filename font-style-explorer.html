@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Font Style Explorer · Devanagari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Font style explorer: pick a Devanagari font, see its stylistic sets (ss01 … / salt) side by side.
+   Table: every form some set changes, one column per style, changed cells marked. Below: a free sample text in each style. */
+/* Bundled fonts: installed copy first, else the file in fonts/ (Uttara GPL, Siddhanta CC BY-NC-ND unmodified, Sanskrit 2020 OFL) */
+@font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
+@font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
+@font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --chalk:#eef2e9;
+  --accent:#e9a23b; --accent-ink:#8a5508; --accent-soft:rgba(233,162,59,.18);
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+  --f-x:"Tiro Devanagari Hindi",serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --accent-ink:#f0b860; --accent-soft:rgba(233,162,59,.2); color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:22px}
+.wrap > *{min-width:0}
+header{display:grid;gap:4px}
+.back{font-size:14px;color:var(--muted);text-decoration:none;width:max-content}
+.back:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600}
+h1 .deva{font-family:"Tiro Devanagari Sanskrit",serif;font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:68ch}
+h2{margin:0 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.controls label{display:inline-flex;gap:8px;align-items:center;font-size:15px;color:var(--muted)}
+select,textarea{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px}
+select{font-size:16px;padding:8px 12px;cursor:pointer;min-width:min(240px,100%)}
+select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.info{font-size:14px;color:var(--muted)}
+
+/* side-by-side columns, one per style */
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
+th,td{padding:8px 14px;text-align:center;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+thead th{position:sticky;top:0;background:var(--panel);font-weight:600;font-size:14px;line-height:1.3;vertical-align:bottom}
+thead th b{display:block;font-size:15px}
+thead th small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;max-width:16ch;margin:0 auto}
+td.g{font-family:var(--f-x);font-size:38px;line-height:1.5;white-space:nowrap}
+td.g.on{background:var(--accent-soft);color:var(--accent-ink)}
+td.row{font-size:13px;color:var(--muted);text-align:left;white-space:nowrap}
+.legend{font-size:13px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--accent-soft);vertical-align:-2px;margin-right:4px;border:1px solid var(--line)}
+
+.samples{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.sample{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.sample b{font-size:14px;font-weight:600}
+.sample small{color:var(--muted);font-size:12.5px;margin-left:6px}
+.sample p{margin:6px 0 0;font-family:var(--f-x);font-size:26px;line-height:1.7;overflow-wrap:anywhere}
+textarea{width:100%;font-family:var(--f-x);font-size:22px;line-height:1.6;padding:10px 12px;resize:vertical;min-height:64px}
+.none{padding:18px;color:var(--muted)}
+footer{font-size:13px;color:var(--muted)}
+footer code{font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <div class="eyebrow">Devanagari · OpenType stylistic sets</div>
+    <h1>Font style explorer <span class="deva">शैली</span></h1>
+    <p class="lede">Many Devanagari fonts carry optional alternate forms in stylistic sets (ss01, ss02 … and salt). Pick a font to see its styles side by side: every form a set changes, then your own text in each style.</p>
+  </header>
+
+  <div class="controls">
+    <label>Font <select id="font" aria-label="Font"></select></label>
+    <span class="info" id="info"></span>
+  </div>
+
+  <section>
+    <h2>Forms that change</h2>
+    <div class="scroller" id="tableWrap"></div>
+    <div class="legend" id="legend"><i></i>differs from the default style</div>
+  </section>
+
+  <section>
+    <h2>Sample text</h2>
+    <textarea id="text" spellcheck="false" aria-label="Sample text">भक्ति शृङ्गार ऋषि मन्त्र क्षत्रिय लक्ष्मी झरना केशव क्रम पत्र कुल्लू १५८९</textarea>
+    <div class="samples" id="samples" style="margin-top:12px"></div>
+  </section>
+
+  <footer>
+    Sets switched on with CSS <code>font-feature-settings: "ss01" 1</code>; in InDesign under OpenType → Stylistic Sets; in LibreOffice as <code>Font:ss01</code> in the font name. The text stays the same characters, only the drawing changes.
+    Found by shaping each letter, vowel sign and common conjunct with and without the set (HarfBuzz).
+  </footer>
+</div>
+
+<script>
+// [id, family, name, lang, source]; source: g = Google Fonts (loaded on demand), f = file in fonts/, t = loaded in <head>
+const FONTS = [
+  ["th","Tiro Devanagari Hindi","Tiro Devanagari Hindi","hi","t"],
+  ["ts","Tiro Devanagari Sanskrit","Tiro Devanagari Sanskrit","sa","t"],
+  ["tm","Tiro Devanagari Marathi","Tiro Devanagari Marathi","mr","g"],
+  ["ns","Noto Serif Devanagari","Noto Serif Devanagari","hi","g"],
+  ["nn","Noto Sans Devanagari","Noto Sans Devanagari","hi","g"],
+  ["ma","Martel","Martel","hi","g"],
+  ["hd","Hind","Hind","hi","t"],
+  ["go","Gotu","Gotu","hi","g"],
+  ["ka","Kalam","Kalam","hi","g"],
+  ["ec","Eczar","Eczar","hi","g"],
+  ["as","Asar","Asar","hi","g"],
+  ["mu","Mukta","Mukta","hi","g"],
+  ["pa","Palanquin","Palanquin","hi","g"],
+  ["ku","Kurale","Kurale","hi","g"],
+  ["s2","Sanskrit 2020","Sanskrit 2020","sa","f"],
+  ["sc","Siddhanta Calcutta","Siddhanta Calcutta","sa","f"],
+  ["ut","Uttara","Uttara","sa","f"],
+];
+// Stylistic sets per font: [tag, what it does, forms shown, every form it changes]
+const STYLES = {"th":[["ss02","stacked क्त",["क्त"],["क्त"]],["ss03","alternate शृ",["शृ"],["शृ"]],["ss04","alternate digits",["१","५","८","९"],["१","५","८","९"]]],"ts":[["ss04","alternate digits",["१","५","८","९"],["१","५","८","९"]]],"tm":[["ss02","stacked क्त",["क्त"],["क्त"]],["ss03","alternate शृ",["शृ"],["शृ"]],["ss04","alternate digits",["१","५","८","९"],["१","५","८","९"]]],"nn":[["ss01","alternate numeral forms",["९"],["९"]]],"go":[["ss01","Sanskrit-style ल श, digits ५ ८",["ल","श","५","८","श्च","ल्ल","श्व","क्ल","श्ल","श्न","र्श","श्य","ह्ल"],["ल","श","५","८","श्च","ल्ल","श्व","क्ल","श्ल","श्न","र्श","शृ","श्य","ह्ल","ला","लि","ली","लु","लू","लृ","लॄ","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]]],"ec":[["ss01","Marathi forms",["ल","श","ल्ल","क्ल","श्ल","र्श","श्य"],["ल","श","ल्ल","क्ल","श्ल","र्श","श्य","ला","लि","ली","लु","लू","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]],["ss02","Nepali forms",["झ"],["झ","झा","झि","झी","झु","झू","झृ","झॄ","झे","झै","झो","झौ","झं","झः","झँ","झ्"]],["ss03","Sanskrit forms",["त्र","क्र","क्त","क्व","क्क"],["त्र","क्र","क्त","क्व","क्क"]],["ss05","alternative figures",["१","५","८","९"],["१","५","८","९"]],["ss06","other alternative forms",["ऋ","दृ","रृ"],["ऋ","दृ","रृ"]]],"as":[["ss01","त्र as त + stroke",["त्र","न्त्र","स्त्र"],["त्र","न्त्र","स्त्र"]]],"mu":[["ss01","ल श ५ ८",["ल","श","५","८","ल्ल","क्ल","र्श","श्य","ह्ल"],["ल","श","५","८","ल्ल","क्ल","र्श","श्य","ह्ल","ला","लि","ली","लु","लू","लृ","लॄ","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]],["ss02","त्र क्र … as stroke",["त्र","क्र","ल्ल","प्त","क्व","च्च","क्क"],["त्र","क्र","ल्ल","प्त","क्व","च्च","क्क"]],["ss03","alternate े sign",["के","खे","गे","घे","ङे","चे"],["के","खे","गे","घे","ङे","चे","छे","जे","झे","ञे","टे","ठे","डे","ढे","णे","ते","थे","दे","धे","ने","पे","फे","बे","भे","मे","ये","रे","ले","वे","शे","षे","से","हे","ळे"]],["salt","all alternates",["ल","श","५","८","त्र","क्र","ल्ल","प्त","क्ल","क्व","र्श","च्च","क्क","श्य","ह्ल"],["ल","श","५","८","त्र","क्र","ल्ल","प्त","क्ल","क्व","र्श","च्च","क्क","श्य","ह्ल","ला","लि","ली","लु","लू","लृ","लॄ","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]]],"pa":[["ss01","त्र as त + stroke",["त्र","न्त्र","स्त्र"],["त्र","न्त्र","स्त्र"]]]};
+const $ = id => document.getElementById(id);
+const font = id => FONTS.find(f => f[0] === id);
+const sets = id => STYLES[id] || [];
+const feat = tag => tag ? `"${tag}" 1` : "normal";
+
+const loaded = new Set();
+function loadFont([id, fam, , , src]){
+  if (src !== "g" || loaded.has(id)) return;
+  loaded.add(id);
+  const l = document.createElement("link"); l.rel = "stylesheet";
+  l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
+  document.head.append(l);
+}
+
+let cur = "th";
+try { const f = new URLSearchParams(location.hash.slice(1)).get("f"); if (font(f)) cur = f; } catch(e){}
+
+FONTS.forEach(([id, , name]) => $("font").add(new Option(`${name} (${sets(id).length + 1})`, id)));
+
+function cell(tag, el, text, lang){
+  el.textContent = text; el.lang = lang; el.style.fontFeatureSettings = feat(tag);
+}
+function render(){
+  const F = font(cur), list = sets(cur), cols = [["", "Default", ""], ...list];
+  loadFont(F);
+  document.documentElement.style.setProperty("--f-x", `"${F[1]}","Noto Serif Devanagari",serif`);
+  $("font").value = cur;
+  $("info").textContent = list.length ? `${list.length} stylistic set${list.length > 1 ? "s" : ""} + default` : "no stylistic sets";
+
+  // Table: rows = every form shown by some set, in first-seen order
+  const rows = [...new Set(list.flatMap(s => s[2]))];
+  const wrap = $("tableWrap"); wrap.replaceChildren();
+  $("legend").hidden = !rows.length;
+  if (!rows.length){ const d = document.createElement("div"); d.className = "none"; d.textContent = "This font has a single style: it carries no stylistic sets."; wrap.append(d); }
+  else {
+    const t = document.createElement("table"), hd = t.createTHead().insertRow(), body = t.createTBody();
+    cols.forEach(([tag, what], i) => {
+      const th = document.createElement("th"); th.scope = "col";
+      const b = document.createElement("b"); b.textContent = tag || "Default"; th.append(b);
+      if (tag){ const sm = document.createElement("small"); sm.textContent = what; th.append(sm); }
+      hd.append(th);
+    });
+    rows.forEach(r => {
+      const tr = body.insertRow();
+      cols.forEach(([tag, , , all]) => {
+        const td = tr.insertCell(); td.className = "g" + (tag && all.includes(r) ? " on" : "");
+        cell(tag, td, r, F[3]);
+      });
+    });
+    wrap.append(t);
+  }
+
+  // Sample text in each style
+  const box = $("samples"); box.replaceChildren();
+  cols.forEach(([tag, what]) => {
+    const c = document.createElement("div"); c.className = "sample";
+    const b = document.createElement("b"); b.textContent = tag || "Default"; c.append(b);
+    if (tag){ const sm = document.createElement("small"); sm.textContent = what; c.append(sm); }
+    const p = document.createElement("p"); cell(tag, p, $("text").value, F[3]); c.append(p);
+    box.append(c);
+  });
+  try { history.replaceState(null, "", cur === "th" ? location.pathname : "#f=" + cur); } catch(e){}
+}
+$("font").onchange = e => { cur = e.target.value; render(); };
+$("text").oninput = () => document.querySelectorAll(".sample p").forEach(p => p.textContent = $("text").value);
+render();
+</script>
+</body>
+</html>
