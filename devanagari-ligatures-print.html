@@ -29,10 +29,12 @@ body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-si
 .hi{font-family:var(--f-hi);font-feature-settings:var(--ff-hi,normal)} .sa{font-family:var(--f-sa);font-feature-settings:var(--ff-sa,normal)}
 
 .bar{max-width:210mm;margin:0 auto;padding:14px 4px 10px;display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.opts{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
 .fsel{display:inline-flex;gap:6px;align-items:center}
+.fsel select[hidden]{display:none}
 .fsel b{font-weight:400;font-size:22px;line-height:1}
 .fsel b.sa{color:var(--sa)}
-.fsel select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer;max-width:168px}
+.fsel select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer;max-width:200px}
 .fsel select:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
 .bar a{color:var(--muted);text-decoration:none;font-size:14px}
 .bar a:hover{color:var(--sa)}
@@ -95,9 +97,11 @@ footer{margin-top:3mm;padding-top:2mm;border-top:1px solid var(--line);font-size
 <nav class="bar">
   <a href="devanagari-ligatures.html">← Devanagari ligatures</a>
   <a href="devanagari-script-print.html">Script chart</a>
-  <label class="fsel" title="Font for the black forms"><b class="hi">क</b><select id="fa" aria-label="Font for the black forms"></select></label>
-  <label class="fsel" title="Font for the orange forms"><b class="sa">क</b><select id="fb" aria-label="Font for the orange forms"></select></label>
   <button type="button" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Print</button>
+  <div class="opts">
+    <div class="fsel"><b class="hi">क</b><select id="fa" aria-label="Font for the black forms"></select><select id="sta" aria-label="Style of the black forms"></select></div>
+    <div class="fsel"><b class="sa">क</b><select id="fb" aria-label="Font for the orange forms"></select><select id="stb" aria-label="Style of the orange forms"></select></div>
+  </div>
 </nav>
 
 <main class="sheet">
@@ -189,34 +193,51 @@ TIERS.forEach(tier => {
 });
 
 // Wait for the web fonts so the printout never falls back to a system font
-// Fonts for the two forms on each card: [id, family, short name, CSS features, lang, source]
-// g = Google Fonts (loaded on demand), f = file in fonts/, t = loaded in <head>
+// Fonts for the two forms on each card: [id, family, name, lang, source]
+// source: g = Google Fonts (loaded on demand), f = file in fonts/, t = loaded in <head>
 const FONTS = [
-  ["th","Tiro Devanagari Hindi","Tiro Hindi","normal","hi","t"],
-  ["ts","Tiro Devanagari Sanskrit","Tiro Sanskrit","normal","sa","t"],
-  ["tm","Tiro Devanagari Marathi","Tiro Marathi","normal","mr","g"],
-  ["ns","Noto Serif Devanagari","Noto Serif","normal","hi","g"],
-  ["nn","Noto Sans Devanagari","Noto Sans","normal","hi","g"],
-  ["ma","Martel","Martel","normal","hi","g"],
-  ["hd","Hind","Hind","normal","hi","t"],
-  ["go","Gotu","Gotu","normal","hi","g"],
-  ["ka","Kalam","Kalam · handwritten","normal","hi","g"],
-  ["ec","Eczar","Eczar · त्र stroke",'"ss03" 1',"hi","g"],
-  ["as","Asar","Asar · त्र stroke",'"ss01" 1',"hi","g"],
-  ["ku","Kurale","Kurale · half-त त्र","normal","hi","g"],
-  ["s2","Sanskrit 2020","Sanskrit 2020","normal","sa","f"],
-  ["sc","Siddhanta Calcutta","Siddhanta Calcutta","normal","sa","f"],
-  ["ut","Uttara","Uttara","normal","sa","f"],
+  ["th","Tiro Devanagari Hindi","Tiro Hindi","hi","t"],
+  ["ts","Tiro Devanagari Sanskrit","Tiro Sanskrit","sa","t"],
+  ["tm","Tiro Devanagari Marathi","Tiro Marathi","mr","g"],
+  ["ns","Noto Serif Devanagari","Noto Serif","hi","g"],
+  ["nn","Noto Sans Devanagari","Noto Sans","hi","g"],
+  ["ma","Martel","Martel","hi","g"],
+  ["hd","Hind","Hind","hi","t"],
+  ["go","Gotu","Gotu","hi","g"],
+  ["ka","Kalam","Kalam · handwritten","hi","g"],
+  ["ec","Eczar","Eczar","hi","g"],
+  ["as","Asar","Asar","hi","g"],
+  ["mu","Mukta","Mukta","hi","g"],
+  ["pa","Palanquin","Palanquin","hi","g"],
+  ["ku","Kurale","Kurale · half-त त्र","hi","g"],
+  ["s2","Sanskrit 2020","Sanskrit 2020","sa","f"],
+  ["sc","Siddhanta Calcutta","Siddhanta Calcutta","sa","f"],
+  ["ut","Uttara","Uttara","sa","f"],
 ];
+// Stylistic sets per font and what they change (found with HarfBuzz; names from the font where it has them)
+const STYLES = {
+  th: [["ss02","क्त stacked"],["ss03","शृ"],["ss04","digits १ ५ ८ ९"]],
+  tm: [["ss02","क्त stacked"],["ss03","शृ"],["ss04","digits १ ५ ८ ९"]],
+  ts: [["ss04","digits १ ५ ८ ९"]],
+  nn: [["ss01","digit ९"]],
+  go: [["ss01","ल श (Sanskrit forms)"]],
+  ec: [["ss01","Marathi forms: ल श"],["ss02","Nepali forms: झ"],["ss03","Sanskrit forms: त्र क्र क्त"],["ss05","digits १ ५ ८ ९"],["ss06","ऋ"]],
+  as: [["ss01","त्र as त + stroke"]],
+  mu: [["ss01","ल श ५ ८"],["ss02","त्र क्र as stroke"],["ss03","के"],["salt","all alternates"]],
+  pa: [["ss01","त्र as त + stroke"]],
+};
 const font = id => FONTS.find(f => f[0] === id);
-let fa = "th", fb = "ts";
+let fa = "th", fb = "ts", sa = "", sb = ""; // fonts and stylistic sets ("" = default)
+const hasStyle = (id, tag) => (STYLES[id] || []).some(x => x[0] === tag);
 try {
   const h = new URLSearchParams(location.hash.slice(1));
   if (font(h.get("a"))) fa = h.get("a");
   if (font(h.get("b"))) fb = h.get("b");
+  if (hasStyle(fa, h.get("sa"))) sa = h.get("sa");
+  if (hasStyle(fb, h.get("sb"))) sb = h.get("sb");
 } catch(e){}
 const loaded = new Set();
-function loadFont([id, fam, , , , src]){
+function loadFont([id, fam, , , src]){
   if (src !== "g" || loaded.has(id)) return;
   loaded.add(id);
   const l = document.createElement("link"); l.rel = "stylesheet";
@@ -226,31 +247,43 @@ function loadFont([id, fam, , , , src]){
 function applyFonts(){
   const A = font(fa), B = font(fb), root = document.documentElement.style;
   [A, B].forEach(loadFont);
-  root.setProperty("--f-hi", `"${A[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-hi", A[3]);
-  root.setProperty("--f-sa", `"${B[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-sa", B[3]);
-  document.querySelectorAll(".duo .hi").forEach(e => e.lang = A[4]);
-  document.querySelectorAll(".duo .sa").forEach(e => e.lang = B[4]);
+  root.setProperty("--f-hi", `"${A[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-hi", sa ? `"${sa}" 1` : "normal");
+  root.setProperty("--f-sa", `"${B[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-sa", sb ? `"${sb}" 1` : "normal");
+  document.querySelectorAll(".duo .hi").forEach(e => e.lang = A[3]);
+  document.querySelectorAll(".duo .sa").forEach(e => e.lang = B[3]);
+  fillStyles("sta", fa, sa); fillStyles("stb", fb, sb);
   document.querySelectorAll(".key").forEach(k => {
     k.replaceChildren();
-    [["hi", A], ["sa", B]].forEach(([c, F]) => {
+    [["hi", A, sa], ["sa", B, sb]].forEach(([c, F, st]) => {
       const s = document.createElement("span"), b = document.createElement("b");
       b.className = c; b.textContent = "क"; if (c === "sa") b.style.color = "var(--sa)";
-      s.append(b, F[2].split(" · ")[0]); k.append(s);
+      s.append(b, F[2].split(" · ")[0] + (st ? " · " + st : "")); k.append(s);
     });
   });
-  document.querySelectorAll(".fa-name").forEach(e => e.textContent = A[2].split(" · ")[0]);
-  document.querySelectorAll(".fb-name").forEach(e => e.textContent = B[2].split(" · ")[0]);
+  document.querySelectorAll(".fa-name").forEach(e => e.textContent = A[2].split(" · ")[0] + (sa ? " · " + sa : ""));
+  document.querySelectorAll(".fb-name").forEach(e => e.textContent = B[2].split(" · ")[0] + (sb ? " · " + sb : ""));
   const h = new URLSearchParams();
   if (fa !== "th") h.set("a", fa);
   if (fb !== "ts") h.set("b", fb);
+  if (sa) h.set("sa", sa);
+  if (sb) h.set("sb", sb);
   try { history.replaceState(null, "", h.toString() ? "#" + h : location.pathname); } catch(e){}
+}
+// Style dropdown: only the sets of the chosen font; hidden when it has none
+function fillStyles(id, f, cur){
+  const sel = document.getElementById(id), list = STYLES[f] || [];
+  sel.replaceChildren(new Option("Default style", ""));
+  list.forEach(([tag, what]) => sel.add(new Option(`${tag} · ${what}`, tag)));
+  sel.value = cur; sel.hidden = !list.length;
 }
 ["fa", "fb"].forEach(id => {
   const sel = document.getElementById(id);
   FONTS.forEach(([v, , name]) => sel.add(new Option(name, v)));
   sel.value = id === "fa" ? fa : fb;
-  sel.onchange = () => { if (id === "fa") fa = sel.value; else fb = sel.value; applyFonts(); };
+  sel.onchange = () => { if (id === "fa"){ fa = sel.value; sa = ""; } else { fb = sel.value; sb = ""; } applyFonts(); };
 });
+document.getElementById("sta").onchange = e => { sa = e.target.value; applyFonts(); };
+document.getElementById("stb").onchange = e => { sb = e.target.value; applyFonts(); };
 applyFonts();
 
 document.getElementById("print").onclick = () => document.fonts.ready.then(() => window.print());
