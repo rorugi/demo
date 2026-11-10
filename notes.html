@@ -636,23 +636,31 @@
   .tgpop { width: 300px; }
   .searchpop { width: min(max(320px, 80vw), calc(100vw - 16px)); }
   @media (max-width: 600px) { .searchpop { width: 100vw; left: 0 !important; border-left: 0; border-right: 0; border-radius: 0 0 14px 14px; } }   /* phone: the whole width */
-  .srchrow { display: flex; gap: 4px; align-items: center; }
-  .srchrow input { flex: 1 1 0; width: 0; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--bar-line); border-radius: 9px; background: var(--panel); color: var(--bar-fg); font: 15px var(--ui); }
-  .srchrow button { flex: none; width: 34px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 9px; background: transparent; color: var(--bar-fg); cursor: pointer; }
-  .srchrow button:disabled { opacity: .3; }
-  .srchrow .srchflag { width: auto; min-width: 38px; padding: 0 7px; font: 600 13.5px ui-monospace, monospace; opacity: .55; }
-  .srchrow .srchflag[aria-pressed="true"] { opacity: 1; background: var(--active); box-shadow: inset 0 0 0 1.5px currentColor; }
-  .srchrow svg { width: 20px; height: 20px; }
-  .srchinfo { font: 12.5px var(--ui); opacity: .65; margin: 6px 2px 4px; }
-  .srchhelp { font: 12px/1.5 var(--ui); opacity: .7; margin: 4px 2px 0; }
-  .srchhelp code { font: 600 12px ui-monospace, monospace; padding: 0 3px; border-radius: 3px; background: var(--active); }
+  /* search: the same field and button styles as the rest (numfield / seg / menu / hint) */
+  .srchrow { display: flex; gap: 6px; align-items: center; }
+  .srchrow input {
+    flex: 1 1 0; width: 0; min-width: 0; height: 40px; box-sizing: border-box; padding: 0 10px;
+    border: 1px solid var(--bar-line); border-radius: 9px; background: var(--panel); color: var(--bar-fg);
+    font: 500 14px/1 var(--ui); outline: none;
+  }
+  .srchrow input:focus { border-color: var(--bar-fg); }
+  .srchrow input::placeholder { color: var(--bar-fg); opacity: .45; }
+  .srchrow input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin-left: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2333352f' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center / 15px no-repeat; opacity: .55; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { .srchrow input::-webkit-search-cancel-button { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dedfd9' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E"); } }
+  .srchrow .seg.srchseg { flex: none; grid-template-columns: 38px 38px; }
+  .srchrow .seg.srchseg button:disabled { opacity: .3; cursor: default; }
+  .srchrow .seg.srchseg svg { width: 18px; height: 18px; }
+  .srchinfo { margin: 8px 8px 4px; font: 400 11.5px/1.35 var(--ui); opacity: .6; }
+  .srchhelp { margin: 8px 8px 0; font: 400 11.5px/1.5 var(--ui); opacity: .6; }
+  .srchhelp code { font: 600 11.5px var(--ui); padding: 0 4px; border-radius: 4px; background: var(--active); }
   .srchlist { max-height: min(52vh, 420px); overflow-y: auto; margin: 0 -4px; }
   @media (max-width: 560px), (max-height: 560px) { .srchlist { max-height: 30vh; } }
-  .srchlist button { display: block; width: 100%; text-align: left; border: 0; border-radius: 8px; background: transparent; color: var(--bar-fg); padding: 7px 8px; font: 13.5px/1.35 var(--ui); cursor: pointer; }
+  .srchlist button { display: block; width: 100%; text-align: left; border: 0; border-radius: 8px; background: transparent; color: var(--bar-fg); padding: 8px; font: 400 13.5px/1.35 var(--ui); cursor: pointer; }
+  .srchlist button:hover { background: var(--active); }
   .srchlist .sn { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   .srchlist button[aria-current="true"] { background: var(--active); }
   .srchlist b { font-weight: 600; margin-right: 6px; }
-  .srchlist small { opacity: .55; margin-right: 6px; font-size: 11.5px; }
+  .srchlist small { opacity: .6; margin-right: 6px; font: 400 11.5px var(--ui); }
   .srchlist mark { background: rgba(255, 196, 0, .55); color: inherit; border-radius: 2px; padding: 0 1px; }
   .page .hits rect { fill: rgba(255, 190, 0, .38); }
   .page .hits rect.now { fill: rgba(255, 140, 0, .5); stroke: #e67700; stroke-width: .35; }
@@ -1396,10 +1404,14 @@
 <div class="pop searchpop" id="searchPop" role="dialog" aria-label="Search" hidden>
   <div class="srchrow">
     <input type="search" id="srchIn" placeholder="Search this notebook" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search text boxes, PDF pages and bookmarks">
-    <button type="button" class="srchflag" id="srchCase" aria-pressed="false" aria-label="Match capital letters" title="Match capital letters">Aa</button>
-    <button type="button" class="srchflag" id="srchRe" aria-pressed="false" aria-label="Regular expression" title="Regular expression">[.*]</button>
+    <div class="seg srchseg" role="group" aria-label="Search options">
+    <button type="button" id="srchCase" aria-pressed="false" aria-label="Match capital letters" title="Match capital letters">Aa</button>
+    <button type="button" id="srchRe" aria-pressed="false" aria-label="Regular expression" title="Regular expression">[.*]</button>
+    </div>
+    <div class="seg srchseg" role="group" aria-label="Go through the matches">
     <button type="button" id="srchPrev" aria-label="Previous match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
     <button type="button" id="srchNext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
   </div>
   <div class="srchhelp" id="srchHelp" hidden><code>.</code> any letter · <code>*</code> any number of the one before · <code>+</code> one or more · <code>?</code> optional · <code>[abc]</code> one of · <code>a|b</code> either · <code>\b</code> word edge · <code>\d</code> digit · <code>^</code> <code>$</code> start and end of a line</div>
   <div class="srchinfo" id="srchInfo" aria-live="polite">Text boxes, PDF pages and bookmark names</div>
@@ -2082,8 +2094,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_182';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.59';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_183';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.60';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
