@@ -636,6 +636,10 @@
   .tgpop { width: 300px; }
   .searchpop { width: min(max(320px, 80vw), calc(100vw - 16px)); }
   @media (max-width: 600px) { .searchpop { width: 100vw; left: 0 !important; border-left: 0; border-right: 0; border-radius: 0 0 14px 14px; } }   /* phone: the whole width */
+  /* search: while you are not typing in the field, the window lets the page (and its marks) show through */
+  .searchpop { transition: background-color .15s; }
+  .searchpop:not(:has(#srchIn:focus)) { background: color-mix(in srgb, var(--panel) 68%, transparent); }
+  .searchpop:not(:has(#srchIn:focus)) .srchrow input { background: color-mix(in srgb, var(--panel) 60%, transparent); }
   /* search: the same field and button styles as the rest (numfield / seg / menu / hint) */
   .srchrow { display: flex; gap: 6px; align-items: center; }
   .srchrow input {
@@ -2094,8 +2098,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_183';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.60';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_184';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.61';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
