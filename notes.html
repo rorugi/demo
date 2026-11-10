@@ -638,10 +638,9 @@
   @media (max-width: 600px) { .searchpop { width: 100vw; left: 0 !important; border-left: 0; border-right: 0; border-radius: 0 0 14px 14px; } }   /* phone: the whole width */
   /* search: while the eye button is held, the window is see-through (only that button stays) to look at the page */
   .searchpop.peek { background: transparent; box-shadow: none; border-color: transparent; }
-  .searchpop.peek > :not(.srchrow), .searchpop.peek .srchrow > :not(.srchpeek) { opacity: 0; }
-  .srchrow .srchpeek { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--bar-line); border-radius: 9px; background: var(--panel); color: var(--bar-fg); cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  .srchrow .srchpeek svg { width: 19px; height: 19px; }
-  .searchpop.peek .srchpeek { background: var(--active); }
+  .searchpop.peek > :not(.srchrow), .searchpop.peek .srchrow > :not(.srchnav) { opacity: 0; }
+  .searchpop.peek .srchnav { background: var(--panel); }
+  .srchnav button { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   body.peeking .toolbar, body.peeking .bmbar, body.peeking .minimap { opacity: 0; pointer-events: none; transition: opacity .12s; }
   /* search: the same field and button styles as the rest (numfield / seg / menu / hint) */
   .srchrow { display: flex; gap: 6px; align-items: center; }
@@ -1420,10 +1419,9 @@
     <button type="button" id="srchCase" aria-pressed="false" aria-label="Match capital letters" title="Match capital letters">Aa</button>
     <button type="button" id="srchRe" aria-pressed="false" aria-label="Regular expression" title="Regular expression">[.*]</button>
     </div>
-    <button type="button" class="srchpeek" id="srchPeek" aria-label="Hold to look through the search window" title="Hold to see the page behind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
-    <div class="seg srchseg" role="group" aria-label="Go through the matches">
-    <button type="button" id="srchPrev" aria-label="Previous match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
-    <button type="button" id="srchNext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="seg srchseg srchnav" role="group" aria-label="Go through the matches (hold to look at the page)">
+    <button type="button" id="srchPrev" aria-label="Previous match (hold to look at the page)" title="Previous match · hold to look at the page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button type="button" id="srchNext" aria-label="Next match (hold to look at the page)" title="Next match · hold to look at the page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
   </div>
   <div class="srchhelp" id="srchHelp" hidden><code>.</code> any letter · <code>*</code> any number of the one before · <code>+</code> one or more · <code>?</code> optional · <code>[abc]</code> one of · <code>a|b</code> either · <code>\b</code> word edge · <code>\d</code> digit · <code>^</code> <code>$</code> start and end of a line</div>
@@ -2107,8 +2105,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_187';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.64';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_188';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.65';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2340,7 +2338,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     sticky: 'Tap the page to place a sticky note. Tap again (or hold) for its colour and size.',
     text: 'Tap the page to place a text box. Text can be bold, italic, coloured and have links. Tap again (or hold) for size and colour.',
     bookmark: 'Bookmarks to pages with their position and zoom: the list, adding bookmarks and the bookmark options.',
-    search: 'Finds words in the text boxes, in the text of PDF pages and in bookmark names of this notebook, and marks them on the page. Ctrl+F on a keyboard.',
+    search: 'Finds words in the text boxes, in the text of PDF pages and in bookmark names of this notebook, and marks them on the page. The arrows go to the previous or next match; hold one to look at the page behind the search. Ctrl+F on a keyboard.',
     view: 'Shows or hides the grid, sticky notes, drawings, text and images on the screen, for example to see a plain PDF.',
     toggle: 'Switches between two things with one tap: two notebooks, two pages, two pens or tools, the whole page and a zoomed view, or the plain page. Hold it to choose. Several toggles can each switch something else.',
     fold: 'Hides the buttons before it, back to the previous Minimize button or to the start of the toolbar. Tap again to show them.',
@@ -7617,18 +7615,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
   }
   if (srchRegex) srchIn.placeholder = 'Regular expression';
-  // hold the eye: the search window turns see-through until the finger, pen or mouse lets go
+  // the arrows: a short tap goes to the previous / next match; held (0.3 s), the search window, toolbars, bookmark box
+  // and page map fade out to look at the page, until the finger, pen or mouse lets go (then nothing moves)
   {
-    const on = () => { searchPop.classList.add('peek'); document.body.classList.add('peeking'); };   // toolbars, bookmark box and page map go too
-    const peek = $('srchPeek'), off = () => { searchPop.classList.remove('peek'); document.body.classList.remove('peeking'); };
-    peek.addEventListener('pointerdown', e => { e.preventDefault(); try { peek.setPointerCapture(e.pointerId); } catch (_) {} on(); });
-    for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) peek.addEventListener(t, off);
-    peek.addEventListener('contextmenu', e => e.preventDefault());
-    peek.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); on(); } });
-    peek.addEventListener('keyup', off); peek.addEventListener('blur', off);
+    const on = () => { searchPop.classList.add('peek'); document.body.classList.add('peeking'); };
+    const off = () => { searchPop.classList.remove('peek'); document.body.classList.remove('peeking'); };
+    const go = id => goHit(id === 'srchNext' ? srch.at + 1 : srch.at < 0 ? -1 : srch.at - 1);
+    for (const id of ['srchPrev', 'srchNext']) {
+      const b = $(id);
+      let press = null;
+      b.addEventListener('pointerdown', e => {
+        if (e.button > 0 || b.disabled) return;
+        e.preventDefault();
+        try { b.setPointerCapture(e.pointerId); } catch (_) {}
+        const p = press = { id: e.pointerId, held: false };
+        p.timer = setTimeout(() => { if (press === p) { p.held = true; on(); } }, 300);
+      });
+      const end = (e, cancel) => {
+        const p = press;
+        if (!p || e.pointerId !== p.id) return;
+        press = null; clearTimeout(p.timer);
+        if (p.held) off(); else if (!cancel) go(id);
+      };
+      b.addEventListener('pointerup', e => end(e, false));
+      b.addEventListener('pointercancel', e => end(e, true));
+      b.addEventListener('lostpointercapture', e => end(e, true));
+      b.addEventListener('click', e => { if (e.detail === 0 && !press) return; e.preventDefault(); });   // (handled above)
+      b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(id); } });
+      b.addEventListener('contextmenu', e => e.preventDefault());
+    }
   }
-  $('srchNext').addEventListener('click', () => goHit(srch.at + 1));
-  $('srchPrev').addEventListener('click', () => goHit(srch.at < 0 ? -1 : srch.at - 1));
   $('srchList').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) goHit(+b.dataset.k); });
 
   function delMark(m) {
