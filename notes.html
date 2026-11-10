@@ -1386,7 +1386,7 @@
     <button type="button" id="srchNext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   </div>
   <label class="srchopt"><input type="checkbox" id="srchRe"> Regular expression</label>
-  <div class="srchhelp" id="srchHelp" hidden><code>.</code> any letter · <code>*</code> any number of the one before · <code>+</code> one or more · <code>?</code> optional · <code>[abc]</code> one of · <code>a|b</code> either · <code>\b</code> word edge · <code>\d</code> digit · <code>^</code> <code>$</code> start and end of a text box or page</div>
+  <div class="srchhelp" id="srchHelp" hidden><code>.</code> any letter · <code>*</code> any number of the one before · <code>+</code> one or more · <code>?</code> optional · <code>[abc]</code> one of · <code>a|b</code> either · <code>\b</code> word edge · <code>\d</code> digit · <code>^</code> <code>$</code> start and end of a line</div>
   <div class="srchinfo" id="srchInfo" aria-live="polite">Text boxes, PDF pages and bookmark names</div>
   <div class="srchlist" id="srchList"></div>
 </div>
@@ -2061,8 +2061,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_170';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.47';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_171';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.48';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6714,6 +6714,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
       for (const k of await idb.keys()) {
         if (typeof k === 'string' && k.startsWith('pdf:') && !used.has(k.slice(4))) { await idb.del(k); pdfStore.delete(k.slice(4)); continue; }
+        if (typeof k === 'string' && k.startsWith('ptext:')) { await idb.del(k); continue; }   // the PDF text without line breaks (before 0.3.48)
+        if (typeof k === 'string' && k.startsWith('ptext2:') && !used.has(k.slice(7))) { await idb.del(k); pdfTextMem.delete(k.slice(7)); continue; }   // searched text of a PDF no notebook uses
         if (typeof k !== 'string' || !k.startsWith('img:') || used.has(k.slice(4))) continue;
         await idb.del(k);
         const r = imgStore.get(k.slice(4));
@@ -7290,7 +7292,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const cleanQ = q => q;
   const normQ = q => srchRegex ? q.normalize('NFKD').replace(/[\u0300-\u036f]/g, '') : normMap(q).s;
   const qOk = q => srchRegex ? q.length >= 1 : q.trim().length >= 1 && q.length >= 2;
-  const qRe = q => srchRegex ? new RegExp(q, 'giu')
+  const qRe = q => srchRegex ? new RegExp(q, 'gimu')   // m: ^ and $ are the start and end of a line
     : new RegExp([...q].map(c => c === ' ' ? '\\s' : c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join(''), 'gu');
   function findAll(hay, q, re) {                   // [[start, end] in the original text]
     const N = normMap(hay), out = [];
@@ -7311,7 +7313,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function pdfTextOf(id) {
     if (pdfTextMem.has(id)) return pdfTextMem.get(id);
     let t = null;
-    try { const v = await idb.get('ptext:' + id); t = v && v.pages; } catch (_) {}
+    try { const v = await idb.get('ptext2:' + id); t = v && v.pages; } catch (_) {}   // (2: with line breaks)
     t = t || {};
     pdfTextMem.set(id, t);
     return t;
@@ -7326,17 +7328,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const items = [];
     let prev = null;
     for (const it of tc.items) {
-      if (typeof it.str !== 'string' || !it.str) { if (it.hasEOL && s && !s.endsWith(' ')) s += ' '; continue; }
+      if (typeof it.str !== 'string' || !it.str) { if (it.hasEOL && s && !/\s$/.test(s)) s += '\n'; continue; }
       const tr = it.transform, [vx, vy] = vp.convertToViewportPoint(tr[4], tr[5]), fh = Math.hypot(tr[2], tr[3]) || it.height || 10;
-      if (prev && s && !s.endsWith(' ')) {             // a space between pieces that don't touch
+      if (prev && s && !/\s$/.test(s)) {              // a line break where a new line starts, a space between pieces that don't touch
         const sameLine = Math.abs(vy - prev.vy) < fh * .5, gap = vx - prev.ex;
-        if (!sameLine || gap > fh * .18) s += ' ';
+        if (!sameLine) s += '\n'; else if (gap > fh * .18) s += ' ';
       }
       const start = s.length;
       s += it.str;
       items.push([start, s.length, vx / vp.width, (vy - fh * .82) / vp.height, (it.width || 0) / vp.width, fh * 1.08 / vp.height]);
       prev = { vy, ex: vx + (it.width || 0) };
-      if (it.hasEOL && !s.endsWith(' ')) s += ' ';
+      if (it.hasEOL && !/\s$/.test(s)) s += '\n';
     }
     try { page.cleanup(); } catch (_) {}
     return (T[n] = { s, items });
@@ -7344,7 +7346,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let ptextSave = null;                            // what was read is kept, a little later, in the browser
   function keepPdfText() {
     clearTimeout(ptextSave);
-    ptextSave = setTimeout(() => { for (const [id, t] of pdfTextMem) idb.set('ptext:' + id, { pages: t }).catch(() => {}); }, 1500);
+    ptextSave = setTimeout(() => { for (const [id, t] of pdfTextMem) idb.set('ptext2:' + id, { pages: t }).catch(() => {}); }, 1500);
   }
   function pdfRects(pt, b, a, z) {                 // the places of the letters a..z of a PDF page text, in mm on the page
     const out = [];
