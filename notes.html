@@ -2108,8 +2108,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_190';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.67';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_191';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.68';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3206,7 +3206,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pool = [];                 // extra sheets used while several pages turn at once
   const S = () => view.fit * view.zoom;
   let vw = 0, vh = 0, dpr = 1;
-  const lctx = live.getContext('2d'), tctx = tip.getContext('2d');
+  // on a PC (mouse, no touch screen) the live ink uses Chrome's low-latency mode: it reaches the screen about a frame sooner;
+  // tablets and touch screens keep the usual drawing
+  const LOW_LAT = !matchMedia('(any-pointer: coarse)').matches && !navigator.maxTouchPoints ? { desynchronized: true } : undefined;
+  const lctx = live.getContext('2d', LOW_LAT), tctx = tip.getContext('2d', LOW_LAT);
 
   function sizeCanvases() {
     vw = stage.clientWidth; vh = stage.clientHeight;
