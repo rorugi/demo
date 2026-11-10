@@ -636,10 +636,12 @@
   .tgpop { width: 300px; }
   .searchpop { width: min(max(320px, 80vw), calc(100vw - 16px)); }
   @media (max-width: 600px) { .searchpop { width: 100vw; left: 0 !important; border-left: 0; border-right: 0; border-radius: 0 0 14px 14px; } }   /* phone: the whole width */
-  /* search: while you are not typing in the field, the window lets the page (and its marks) show through */
-  .searchpop { transition: background-color .15s; }
-  .searchpop:not(:has(#srchIn:focus)) { background: color-mix(in srgb, var(--panel) 68%, transparent); }
-  .searchpop:not(:has(#srchIn:focus)) .srchrow input { background: color-mix(in srgb, var(--panel) 60%, transparent); }
+  /* search: while the eye button is held, the window is see-through (only that button stays) to look at the page */
+  .searchpop.peek { background: transparent; box-shadow: none; border-color: transparent; }
+  .searchpop.peek > :not(.srchrow), .searchpop.peek .srchrow > :not(.srchpeek) { opacity: 0; }
+  .srchrow .srchpeek { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--bar-line); border-radius: 9px; background: var(--panel); color: var(--bar-fg); cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .srchrow .srchpeek svg { width: 19px; height: 19px; }
+  .searchpop.peek .srchpeek { background: var(--active); }
   /* search: the same field and button styles as the rest (numfield / seg / menu / hint) */
   .srchrow { display: flex; gap: 6px; align-items: center; }
   .srchrow input {
@@ -1412,6 +1414,7 @@
     <button type="button" id="srchCase" aria-pressed="false" aria-label="Match capital letters" title="Match capital letters">Aa</button>
     <button type="button" id="srchRe" aria-pressed="false" aria-label="Regular expression" title="Regular expression">[.*]</button>
     </div>
+    <button type="button" class="srchpeek" id="srchPeek" aria-label="Hold to look through the search window" title="Hold to see the page behind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <div class="seg srchseg" role="group" aria-label="Go through the matches">
     <button type="button" id="srchPrev" aria-label="Previous match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
     <button type="button" id="srchNext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -2098,8 +2101,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_184';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.61';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_185';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.62';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -7604,6 +7607,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     });
   }
   if (srchRegex) srchIn.placeholder = 'Regular expression';
+  // hold the eye: the search window turns see-through until the finger, pen or mouse lets go
+  {
+    const peek = $('srchPeek'), off = () => searchPop.classList.remove('peek');
+    peek.addEventListener('pointerdown', e => { e.preventDefault(); try { peek.setPointerCapture(e.pointerId); } catch (_) {} searchPop.classList.add('peek'); });
+    for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) peek.addEventListener(t, off);
+    peek.addEventListener('contextmenu', e => e.preventDefault());
+    peek.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); searchPop.classList.add('peek'); } });
+    peek.addEventListener('keyup', off); peek.addEventListener('blur', off);
+  }
   $('srchNext').addEventListener('click', () => goHit(srch.at + 1));
   $('srchPrev').addEventListener('click', () => goHit(srch.at < 0 ? -1 : srch.at - 1));
   $('srchList').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) goHit(+b.dataset.k); });
