@@ -1765,6 +1765,7 @@
     <label class="numfield" id="psMmBox">Spacing<input type="text" inputmode="decimal" id="psMm" aria-label="Grid spacing in millimetres">mm</label>
   </div>
   <label class="pscheck" id="psNoPdfGridBox"><input type="checkbox" id="psNoPdfGrid"> No grid on PDF backgrounds</label>
+  <label class="pscheck"><input type="checkbox" id="psNoPdfImg"><span>Hide pictures in PDFs<small class="pssub"> · only text and lines; scanned pages stay as they are</small></span></label>
   <div class="field">
     <span>Clean PDF background<small class="pssub"> · light colours become see-through (scans, grey or coloured pages), text stays; PDF export keeps the original</small></span>
     <div class="psclean"><input type="range" id="psClean" min="0" max="100" step="5" aria-label="Clean PDF background strength"><output id="psCleanVal">Off</output></div>
@@ -2081,8 +2082,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_179';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.56';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_180';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.57';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2536,7 +2537,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Grid: 5 mm squares inside a 5 mm empty border ----
   // ---- Page setup: size and grid ----
   const SIZES = { a4: [210, 297], letter: [215.9, 279.4] };
-  const DEFAULT_SETUP = { size: 'a4', orient: 'portrait', cw: 210, ch: 297, grid: 'squares', gridMm: 5, pdfNoGrid: false, pdfClean: 0 };
+  const DEFAULT_SETUP = { size: 'a4', orient: 'portrait', cw: 210, ch: 297, grid: 'squares', gridMm: 5, pdfNoGrid: false, pdfClean: 0, pdfNoImages: false };
   function cleanSetup(o) {
     const st = { ...DEFAULT_SETUP };
     if (!o || typeof o !== 'object') return st;
@@ -2547,6 +2548,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (['none', 'lines', 'squares'].includes(o.grid)) st.grid = o.grid;
     if (+o.gridMm >= 2 && +o.gridMm <= 30) st.gridMm = +o.gridMm;
     st.pdfNoGrid = o.pdfNoGrid === true;             // no grid on pages with a PDF background
+    st.pdfNoImages = o.pdfNoImages === true;         // PDF pages without their pictures: text and lines only
     if (+o.pdfClean >= 0 && +o.pdfClean <= 100) st.pdfClean = Math.round(+o.pdfClean / 5) * 5;   // light grey of PDF pages made white (%)
     return st;
   }
@@ -2573,7 +2575,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const setupLabel = st => {
     const size = st.size === 'custom' ? `${+st.cw.toFixed(1)} × ${+st.ch.toFixed(1)} mm` : `${st.size === 'a4' ? 'A4' : 'Letter'}${st.orient === 'landscape' ? ' landscape' : ''}`;
     const grid = st.grid === 'none' ? 'no grid' : `${st.grid} ${+st.gridMm.toFixed(2)} mm`;
-    return `${size} · ${grid}${st.grid !== 'none' && st.pdfNoGrid ? ', none on PDF' : ''}${st.pdfClean ? ` · PDF cleaned ${st.pdfClean}%` : ''}`;
+    return `${size} · ${grid}${st.grid !== 'none' && st.pdfNoGrid ? ', none on PDF' : ''}${st.pdfClean ? ` · PDF cleaned ${st.pdfClean}%` : ''}${st.pdfNoImages ? ' · PDF without pictures' : ''}`;
   };
   // the grid of one page: none on a PDF page when that is set
   const gridD = (p, st = setup, d = GRID_D) => st.pdfNoGrid && p && p.bg ? '' : d;
@@ -4244,6 +4246,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('psCustom').hidden = draft.size !== 'custom';
     $('psMmBox').classList.toggle('off', draft.grid === 'none');
     $('psNoPdfGridBox').classList.toggle('off', draft.grid === 'none'); $('psNoPdfGrid').checked = !!draft.pdfNoGrid;
+    $('psNoPdfImg').checked = !!draft.pdfNoImages;
     $('psClean').value = String(draft.pdfClean || 0); $('psCleanVal').textContent = draft.pdfClean ? draft.pdfClean + ' %' : 'Off';
     $('psMm').disabled = draft.grid === 'none';
     if (!keepInputs) {
@@ -4261,6 +4264,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const segClick = (id, key) => $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => { draft[key] = b.dataset.v; renderSetupDlg(true); }));
   segClick('psSize', 'size'); segClick('psOrient', 'orient'); segClick('psGrid', 'grid');
   $('psNoPdfGrid').addEventListener('change', e => { draft.pdfNoGrid = e.target.checked; });
+  $('psNoPdfImg').addEventListener('change', e => { draft.pdfNoImages = e.target.checked; });
   $('psClean').addEventListener('input', e => {
     draft.pdfClean = +e.target.value; $('psCleanVal').textContent = draft.pdfClean ? draft.pdfClean + ' %' : 'Off';
     // a preview on the page while choosing (Cancel puts it back)
@@ -4294,7 +4298,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (draftPaper !== store.get('paper', 'auto')) setPaper(draftPaper);   // (already shown: the preview)
     const before = JSON.stringify(cleanSetup(setup)), after = cleanSetup(draft);
     if (JSON.stringify(after) === before) return;  // only the paper changed: zoom and view stay
-    const look = k => JSON.stringify({ ...cleanSetup(k), pdfNoGrid: 0, pdfClean: 0 });
+    const look = k => JSON.stringify({ ...cleanSetup(k), pdfNoGrid: 0, pdfClean: 0, pdfNoImages: 0 });
     if (look(after) === look(setup)) {             // only how PDF pages look: zoom and view stay
       markChanged();
       setup = after; $('setupSum').textContent = setupLabel(setup);
@@ -4601,7 +4605,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     await ensureImageData(pages);
     const bgd = await bgFileData(pages, preview);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
-    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${setup.pdfNoGrid ? ' data-pdf-no-grid="1"' : ''}${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
+    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${setup.pdfNoGrid ? ' data-pdf-no-grid="1"' : ''}${setup.pdfNoImages ? ' data-pdf-no-images="1"' : ''}${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
     s += `<defs>${GRID_D ? `<path id="nb-grid" d="${GRID_D}" fill="none" stroke="#b4c3cf" stroke-width="0.15"/>` : ''}${pages.some(pg => [...pg.strokes, ...notesOf(pg).flatMap(n => n.strokes || []), ...imagesOf(pg).flatMap(m => m.ink || [])].some(st => st.t === 'p')) ? GRAIN_DEFS : ''}${bgd.pdfs.map(d => `<desc class="rr-pdf" data-pdf="${d.id}" data-name="${esc(d.name)}">${d.data}</desc>`).join('')}${setup.pdfClean && pages.some(pg => pg.bg) ? cleanDef(setup.pdfClean) : ''}</defs>\n`;
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
@@ -4743,7 +4747,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       newSetup = cleanSetup(A('data-page-width') ? {      // files before v18 are A4 with 5 mm squares
         size: A('data-page-size'), orient: A('data-page-orient'),
         cw: parseFloat(A('data-page-width')), ch: parseFloat(A('data-page-height')),
-        grid: A('data-grid'), gridMm: parseFloat(A('data-grid-mm')), pdfNoGrid: A('data-pdf-no-grid') === '1'
+        grid: A('data-grid'), gridMm: parseFloat(A('data-grid-mm')), pdfNoGrid: A('data-pdf-no-grid') === '1', pdfNoImages: A('data-pdf-no-images') === '1'
       } : null);
       const groups = [...doc.querySelectorAll('[data-page]')];
       if (!groups.length) throw new Error('notebook');
@@ -6810,7 +6814,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
       for (const k of await idb.keys()) {
         if (typeof k === 'string' && k.startsWith('pdf:') && !used.has(k.slice(4))) { await idb.del(k); pdfStore.delete(k.slice(4)); continue; }
-        if (typeof k === 'string' && k.startsWith('ptext:')) { await idb.del(k); continue; }   // the PDF text without line breaks (before 0.3.48)
+        if (typeof k === 'string' && k.startsWith('ptext:')) { await idb.del(k); continue; }
+        if (typeof k === 'string' && k.startsWith('pdfni:') && !used.has(k.slice(6))) { await idb.del(k); continue; }   // a PDF's copy without pictures   // the PDF text without line breaks (before 0.3.48)
         if (typeof k === 'string' && k.startsWith('ptext2:') && !used.has(k.slice(7))) { await idb.del(k); pdfTextMem.delete(k.slice(7)); continue; }   // searched text of a PDF no notebook uses
         if (typeof k !== 'string' || !k.startsWith('img:') || used.has(k.slice(4))) continue;
         await idb.del(k);
@@ -7834,10 +7839,47 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       .catch(e => { r.doc = null; throw e; });
     return r.doc;
   }
+  // the PDF without its pictures: every picture object becomes an empty drawing, text and lines stay as they are.
+  // Made once with pdf-lib and kept in the browser next to the PDF.
+  async function pdfDocNoImg(id) {
+    const r = await pdfRec(id);
+    if (!r) return null;
+    if (!r.docNi) r.docNi = (async () => {
+      let bytes = null;
+      try { const v = await idb.get('pdfni:' + id); bytes = v && v.blob ? new Uint8Array(await v.blob.arrayBuffer()) : null; } catch (_) {}
+      if (!bytes) {
+        toast('Preparing the PDF without its pictures… (once)', 2500);
+        const L = await pdflib(), src = await L.PDFDocument.load(await r.blob.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
+        const ctx = src.context, IMG = L.PDFName.of('Image'), ST = L.PDFName.of('Subtype');
+        const empty = () => ctx.stream('', { Type: 'XObject', Subtype: 'Form', BBox: [0, 0, 1, 1] });
+        for (const [ref, obj] of ctx.enumerateIndirectObjects()) if (obj && obj.dict && obj.dict.get(ST) === IMG) ctx.assign(ref, empty());
+        bytes = await src.save({ useObjectStreams: false });
+        idb.set('pdfni:' + id, { blob: new Blob([bytes], { type: 'application/pdf' }) }).catch(() => {});
+      }
+      const lib = await pdfjs();
+      return lib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+    })().catch(e => { r.docNi = null; throw e; });
+    return r.docNi;
+  }
+  // does a page still show something without its pictures? (scans: their visible text is part of the picture)
+  const niOk = new Map();
+  async function pageHasOwnText(doc, n, lib) {
+    const page = await doc.getPage(n), ol = await page.getOperatorList(), O = lib.OPS;
+    let mode = 0, paths = 0;
+    const shows = new Set([O.showText, O.showSpacedText, O.nextLineShowText, O.nextLineSetSpacingShowText]);
+    for (let i = 0; i < ol.fnArray.length; i++) {
+      const f = ol.fnArray[i];
+      if (f === O.setTextRenderingMode) mode = ol.argsArray[i][0];
+      else if (shows.has(f) && mode % 4 !== 3) return true;     // text that is drawn (3: invisible, as in scans)
+      else if (f === O.constructPath && ++paths > 20) return true;
+    }
+    return false;
+  }
+  let niNoted = false;
   const pdfIdsOf = list => { const s = new Set(); list.forEach(pg => { if (pg.bg) s.add(pg.bg.pdf); }); return s; };
   // pictures of the PDF pages: small ones (page overview) are kept, large ones (the page, turning, sliding) for the pages used lately
   const BG_PX = { S: 360, L: 1600 }, BG_KEEP = 60;
-  const bgKey = b => b.pdf + ':' + b.n;
+  const bgKey = b => b.pdf + ':' + b.n + (setup.pdfNoImages ? ':t' : '');   // (:t a picture without the PDF's own pictures)
   const bgRast = { S: new Map(), L: new Map() };  // key -> { url, blob, w, h } (large ones: most recently used last)
   let bgQueue = [], bgBusy = false, bgRefresh = 0, libWarned = false;
   const bgFailed = new Set(), bgDone = new Set();
@@ -7850,7 +7892,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return size === 'L' ? bgRast.S.get(k) || null : null;   // meanwhile the small one, if there is one
   }
   async function renderPdfPage(b, longPx, region, quality = 0.9) {   // region: { x, y, w, h } in mm of the background box, drawn at longPx for the whole page
-    const doc = await pdfDoc(b.pdf);
+    let doc = null;
+    if (setup.pdfNoImages) {                       // without the PDF's pictures, unless the page would be empty then
+      const k = b.pdf + ':' + b.n;
+      try {
+        const d = await pdfDocNoImg(b.pdf);
+        if (!niOk.has(k)) niOk.set(k, await pageHasOwnText(d, b.n, await pdfjs()));
+        if (niOk.get(k)) doc = d;
+        else if (!niNoted) { niNoted = true; toast('Some PDF pages are scans: their text is part of the picture, so they are shown as they are.', 5000); }
+      } catch (_) {}
+    }
+    if (!doc) doc = await pdfDoc(b.pdf);
     if (!doc) throw new Error('pdf');
     const page = await doc.getPage(b.n), vp1 = page.getViewport({ scale: 1 });
     const scale = longPx / Math.max(vp1.width, vp1.height);
