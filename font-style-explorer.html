@@ -11,6 +11,16 @@
 /* Font style explorer: pick a Devanagari font, see its stylistic sets (ss01 … / salt) side by side.
    Table: every form some set changes, one column per style, changed cells marked. Below: a free sample text in each style. */
 /* Bundled fonts: installed copy first, else the file in fonts/ (Uttara GPL, Siddhanta CC BY-NC-ND unmodified, Sanskrit 2020 OFL) */
+/* Self-hosted Devanagari subsets that keep the stylistic sets (Google Fonts serves these families without them); SIL OFL, see fonts/sets/ */
+@font-face{font-family:"Tiro Devanagari Hindi Sets";src:url("fonts/sets/TiroDevanagariHindi-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Tiro Devanagari Sanskrit Sets";src:url("fonts/sets/TiroDevanagariSanskrit-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Tiro Devanagari Marathi Sets";src:url("fonts/sets/TiroDevanagariMarathi-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Noto Sans Devanagari Sets";src:url("fonts/sets/NotoSansDevanagari-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Gotu Sets";src:url("fonts/sets/Gotu-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Eczar Sets";src:url("fonts/sets/Eczar-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Asar Sets";src:url("fonts/sets/Asar-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Mukta Sets";src:url("fonts/sets/Mukta-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Palanquin Sets";src:url("fonts/sets/Palanquin-deva.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
 @font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
 @font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
@@ -123,6 +133,9 @@ const FONTS = [
   ["ut","Uttara","Uttara","sa","f"],
 ];
 // Stylistic sets per font: [tag, what it does, forms shown, every form it changes]
+// Fonts with stylistic sets come from fonts/sets/ (family "<name> Sets"), since the Google Fonts copies lack the sets
+const SETS = new Set(["th","ts","tm","nn","go","ec","as","mu","pa"]);
+const family = ([id, fam]) => SETS.has(id) ? `"${fam} Sets","${fam}"` : `"${fam}"`;
 const STYLES = {"th":[["ss02","stacked क्त",["क्त"],["क्त"]],["ss03","alternate शृ",["शृ"],["शृ"]],["ss04","alternate digits",["१","५","८","९"],["१","५","८","९"]]],"ts":[["ss04","alternate digits",["१","५","८","९"],["१","५","८","९"]]],"tm":[["ss02","stacked क्त",["क्त"],["क्त"]],["ss03","alternate शृ",["शृ"],["शृ"]],["ss04","alternate digits",["१","५","८","९"],["१","५","८","९"]]],"nn":[["ss01","alternate numeral forms",["९"],["९"]]],"go":[["ss01","Sanskrit-style ल श, digits ५ ८",["ल","श","५","८","श्च","ल्ल","श्व","क्ल","श्ल","श्न","र्श","श्य","ह्ल"],["ल","श","५","८","श्च","ल्ल","श्व","क्ल","श्ल","श्न","र्श","शृ","श्य","ह्ल","ला","लि","ली","लु","लू","लृ","लॄ","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]]],"ec":[["ss01","Marathi forms",["ल","श","ल्ल","क्ल","श्ल","र्श","श्य"],["ल","श","ल्ल","क्ल","श्ल","र्श","श्य","ला","लि","ली","लु","लू","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]],["ss02","Nepali forms",["झ"],["झ","झा","झि","झी","झु","झू","झृ","झॄ","झे","झै","झो","झौ","झं","झः","झँ","झ्"]],["ss03","Sanskrit forms",["त्र","क्र","क्त","क्व","क्क"],["त्र","क्र","क्त","क्व","क्क"]],["ss05","alternative figures",["१","५","८","९"],["१","५","८","९"]],["ss06","other alternative forms",["ऋ","दृ","रृ"],["ऋ","दृ","रृ"]]],"as":[["ss01","त्र as त + stroke",["त्र","न्त्र","स्त्र"],["त्र","न्त्र","स्त्र"]]],"mu":[["ss01","ल श ५ ८",["ल","श","५","८","ल्ल","क्ल","र्श","श्य","ह्ल"],["ल","श","५","८","ल्ल","क्ल","र्श","श्य","ह्ल","ला","लि","ली","लु","लू","लृ","लॄ","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]],["ss02","त्र क्र … as stroke",["त्र","क्र","ल्ल","प्त","क्व","च्च","क्क"],["त्र","क्र","ल्ल","प्त","क्व","च्च","क्क"]],["ss03","alternate े sign",["के","खे","गे","घे","ङे","चे"],["के","खे","गे","घे","ङे","चे","छे","जे","झे","ञे","टे","ठे","डे","ढे","णे","ते","थे","दे","धे","ने","पे","फे","बे","भे","मे","ये","रे","ले","वे","शे","षे","से","हे","ळे"]],["salt","all alternates",["ल","श","५","८","त्र","क्र","ल्ल","प्त","क्ल","क्व","र्श","च्च","क्क","श्य","ह्ल"],["ल","श","५","८","त्र","क्र","ल्ल","प्त","क्ल","क्व","र्श","च्च","क्क","श्य","ह्ल","ला","लि","ली","लु","लू","लृ","लॄ","ले","लै","लो","लौ","लं","लः","लँ","ल्","शा","शि","शी","शु","शू","शॄ","शे","शै","शो","शौ","शं","शः","शँ","श्"]]],"pa":[["ss01","त्र as त + stroke",["त्र","न्त्र","स्त्र"],["त्र","न्त्र","स्त्र"]]]};
 const $ = id => document.getElementById(id);
 const font = id => FONTS.find(f => f[0] === id);
@@ -131,7 +144,7 @@ const feat = tag => tag ? `"${tag}" 1` : "normal";
 
 const loaded = new Set();
 function loadFont([id, fam, , , src]){
-  if (src !== "g" || loaded.has(id)) return;
+  if (src !== "g" || SETS.has(id) || loaded.has(id)) return;
   loaded.add(id);
   const l = document.createElement("link"); l.rel = "stylesheet";
   l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
@@ -149,7 +162,7 @@ function cell(tag, el, text, lang){
 function render(){
   const F = font(cur), list = sets(cur), cols = [["", "Default", ""], ...list];
   loadFont(F);
-  document.documentElement.style.setProperty("--f-x", `"${F[1]}","Noto Serif Devanagari",serif`);
+  document.documentElement.style.setProperty("--f-x", `${family(F)},"Noto Serif Devanagari",serif`);
   $("font").value = cur;
   $("info").textContent = list.length ? `${list.length} stylistic set${list.length > 1 ? "s" : ""} + default` : "no stylistic sets";
 

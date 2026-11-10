@@ -9,6 +9,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&family=Tiro+Devanagari+Sanskrit&display=swap">
 <style>
 /* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
+/* Self-hosted Devanagari subsets that keep the stylistic sets (Google Fonts serves these families without them); SIL OFL, see fonts/sets/ */
+@font-face{font-family:"Tiro Devanagari Hindi Sets";src:url("fonts/sets/TiroDevanagariHindi-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Tiro Devanagari Sanskrit Sets";src:url("fonts/sets/TiroDevanagariSanskrit-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Tiro Devanagari Marathi Sets";src:url("fonts/sets/TiroDevanagariMarathi-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Noto Sans Devanagari Sets";src:url("fonts/sets/NotoSansDevanagari-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Gotu Sets";src:url("fonts/sets/Gotu-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Eczar Sets";src:url("fonts/sets/Eczar-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Asar Sets";src:url("fonts/sets/Asar-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Mukta Sets";src:url("fonts/sets/Mukta-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Palanquin Sets";src:url("fonts/sets/Palanquin-deva.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
 /* Sanskrit 2020 (SIL OFL, Omkarananda Ashram) and Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-ND 3.0, file unmodified): installed copy first, else the file next to this page */
 @font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
@@ -226,6 +236,9 @@ const STYLES = {
   mu: [["ss01","ल श ५ ८"],["ss02","त्र क्र as stroke"],["ss03","के"],["salt","all alternates"]],
   pa: [["ss01","त्र as त + stroke"]],
 };
+// Fonts with stylistic sets come from fonts/sets/ (family "<name> Sets"), since the Google Fonts copies lack the sets
+const SETS = new Set(["th","ts","tm","nn","go","ec","as","mu","pa"]);
+const family = ([id, fam]) => SETS.has(id) ? `"${fam} Sets","${fam}"` : `"${fam}"`;
 const font = id => FONTS.find(f => f[0] === id);
 let fa = "th", fb = "ts", sa = "", sb = ""; // fonts and stylistic sets ("" = default)
 const hasStyle = (id, tag) => (STYLES[id] || []).some(x => x[0] === tag);
@@ -238,7 +251,7 @@ try {
 } catch(e){}
 const loaded = new Set();
 function loadFont([id, fam, , , src]){
-  if (src !== "g" || loaded.has(id)) return;
+  if (src !== "g" || SETS.has(id) || loaded.has(id)) return;
   loaded.add(id);
   const l = document.createElement("link"); l.rel = "stylesheet";
   l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
@@ -247,8 +260,8 @@ function loadFont([id, fam, , , src]){
 function applyFonts(){
   const A = font(fa), B = font(fb), root = document.documentElement.style;
   [A, B].forEach(loadFont);
-  root.setProperty("--f-hi", `"${A[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-hi", sa ? `"${sa}" 1` : "normal");
-  root.setProperty("--f-sa", `"${B[1]}","Noto Serif Devanagari",serif`); root.setProperty("--ff-sa", sb ? `"${sb}" 1` : "normal");
+  root.setProperty("--f-hi", `${family(A)},"Noto Serif Devanagari",serif`); root.setProperty("--ff-hi", sa ? `"${sa}" 1` : "normal");
+  root.setProperty("--f-sa", `${family(B)},"Noto Serif Devanagari",serif`); root.setProperty("--ff-sa", sb ? `"${sb}" 1` : "normal");
   document.querySelectorAll(".duo .hi").forEach(e => e.lang = A[3]);
   document.querySelectorAll(".duo .sa").forEach(e => e.lang = B[3]);
   fillStyles("sta", fa, sa); fillStyles("stb", fb, sb);
