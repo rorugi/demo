@@ -435,46 +435,18 @@ conns.forEach((c, i) => { c.n = i + 1; c.froms = [].concat(c.from); c.tos = [].c
 
 /* Sizes */
 svg.setAttribute("viewBox", `0 ${HEADH} ${W} ${H - HEADH}`);
-axis.setAttribute("viewBox", `0 ${HEADH} ${AXW} ${H - HEADH}`);
-head.setAttribute("viewBox", `0 0 ${W} ${HEADH}`);
+
+
 
 /* Defs: arrow marker */
 const defs = el("defs", {});
 const mk = el("marker", {id:"arr", viewBox:"0 0 10 10", refX:"8", refY:"5", markerWidth:"7", markerHeight:"7", orient:"auto-start-reverse"}, defs);
 el("path", {d:"M0,0 L10,5 L0,10 z", fill:"context-stroke"}, mk);
 
-/* Period bands (in both SVGs) and year grid */
+/* Period bands in the chart; the year grid, the year axis and the column headings are drawn by drawAxes() for each zoom */
 const bands = [[-1500,-1000,"Frühvedische Zeit"],[-1000,-500,"Spätvedische Zeit"],[-500,300,"Epen und Sūtras"],[300,600,"Gupta-Zeit"],[600,1000,"Frühmittelalter"]];
-el("rect", {x:0, y:0, width:AXW, height:H, fill:"var(--panel)"}, axis);
-bands.forEach(([a,b,label],i) => {
-  if (i % 2 === 0){
-    el("rect", {x:0, y:Y(a), width:W, height:Y(b)-Y(a), fill:"var(--band)"});
-    el("rect", {x:0, y:Y(a), width:AXW, height:Y(b)-Y(a), fill:"var(--band)"}, axis);
-  }
-  const cy = (Y(a)+Y(b))/2;
-  el("text", {x:12, y:cy, transform:`rotate(-90 12 ${cy})`, "text-anchor":"middle", "font-size":12, fill:"var(--muted)", "letter-spacing":".04em", "font-family":"var(--f-ui)"}, axis, label.toUpperCase());
-});
-for (let yr = START; yr <= END; yr += 200){
-  el("line", {x1:0, x2:W, y1:Y(yr), y2:Y(yr), stroke:"var(--grid)", "stroke-dasharray": yr===0 ? "" : "3 4"});
-  el("line", {x1:AXW-6, x2:AXW, y1:Y(yr), y2:Y(yr), stroke:"var(--grid)"}, axis);
-  const lab = yr < 0 ? `${-yr} v. Chr.` : yr === 0 ? "Zeitenwende" : `${yr} n. Chr.`;
-  el("text", {x:AXW-8, y:Y(yr)+4, "text-anchor":"end", "font-size": yr===0?11.5:12, fill:"var(--muted)", "font-weight": yr===0?600:400, "font-family":"var(--f-ui)"}, axis, lab);
-}
-
-/* Group and column headers */
-groups.forEach(gr => {
-  el("line", {x1:gr.x1, x2:gr.x2, y1:26, y2:26, stroke:"var(--muted)"}, head);
-  el("line", {x1:gr.x1, x2:gr.x1, y1:26, y2:32, stroke:"var(--muted)"}, head);
-  el("line", {x1:gr.x2, x2:gr.x2, y1:26, y2:32, stroke:"var(--muted)"}, head);
-  el("text", {x:(gr.x1+gr.x2)/2, y:20, "text-anchor":"middle", "font-size":12.5, fill:"var(--muted)", "font-weight":600, "font-family":"var(--f-ui)"}, head, gr.label);
-  gr.cols.forEach(h => {
-    const cx = h.x + h.w/2;
-    el("text", {x:cx, y:57, "text-anchor":"middle", "font-size":19, fill:"var(--fg)", "font-family":"var(--f-deva)"}, head, h.deva);
-    el("text", {x:cx, y:77, "text-anchor":"middle", "font-size":14, fill:"var(--fg)", "font-weight":600, "font-family":"var(--f-ui)"}, head, h.name);
-    el("text", {x:cx, y:94, "text-anchor":"middle", "font-size":11.5, fill:"var(--muted)", "font-family":"var(--f-ui)"}, head, h.r1);
-    el("text", {x:cx, y:108, "text-anchor":"middle", "font-size":11.5, fill:"var(--muted)", "font-style":"italic", "font-family":"var(--f-ui)"}, head, h.r2);
-  });
-});
+bands.forEach(([a,b],i) => { if (i % 2 === 0) el("rect", {x:0, y:Y(a), width:W, height:Y(b)-Y(a), fill:"var(--band)"}); });
+const grid = el("g", {});
 
 /* Items */
 const nodes = {};
@@ -609,10 +581,78 @@ function selectConn(n, scroll){
     const xs = [...c.froms, ...c.tos].map(id => { const b = box(id); return b.x + b.w/2; });
     const ys = [...c.froms, ...c.tos].map(id => box(id).y1);
     const mid = (Math.min(...xs) + Math.max(...xs)) / 2, s = scale();
-    scroller.scrollTo({left: Math.max(0, (AXW + mid) * s - scroller.clientWidth / 2), top: Math.max(0, (Math.min(...ys) - HEADH - 30) * s), behavior:"smooth"});
+    scroller.scrollTo({left: Math.max(0, AXW + mid * s - scroller.clientWidth / 2), top: Math.max(0, (Math.min(...ys) - HEADH - 30) * s), behavior:"smooth"});
   }
 }
 svg.addEventListener("click", () => { clearSel(); panel.innerHTML = defaultPanel; });
+
+/* Axes in screen pixels: the diagram zooms, labels keep their size and only move.
+   Year ticks get denser or sparser with the zoom; column headings shrink only when a column gets too narrow for them. */
+const yearLabel = yr => yr < 0 ? `${-yr} v. Chr.` : yr === 0 ? "Zeitenwende" : `${yr} n. Chr.`;
+let headPx = HEADH;
+const headScale = s => Math.max(0.5, Math.min(1, s * 1.15)); // headings at full size from about 87 % zoom
+// Shrink a text until it fits a width; with a row name, all texts of that row shrink by the same factor (see fitRows)
+let rows = {};
+function fitText(t, max, row){
+  const w = t.getComputedTextLength(), k = w > max && max > 0 ? max / w : 1;
+  if (!row){ if (k < 1) t.setAttribute("font-size", parseFloat(t.getAttribute("font-size")) * k); return; }
+  (rows[row] ||= {k: 1, ts: []}).ts.push(t); rows[row].k = Math.min(rows[row].k, k);
+}
+function fitRows(){
+  Object.values(rows).forEach(({k, ts}) => { if (k < 1) ts.forEach(t => t.setAttribute("font-size", parseFloat(t.getAttribute("font-size")) * k)); });
+  rows = {};
+}
+function drawAxes(s){
+  const hs = headScale(s); headPx = Math.round(HEADH * hs);
+  const ph = (H - HEADH) * s; // chart height in px
+  const py = yr => (Y(yr) - HEADH) * s;
+  // year step: labels at least ~44 px apart
+  const step = [50, 100, 200, 400, 500].find(st => st * K * s >= 44) || 1000;
+  const first = Math.ceil(START / step) * step;
+  // grid in the chart (chart units, hairline at every zoom)
+  grid.replaceChildren();
+  for (let yr = first; yr <= END; yr += step)
+    el("line", {x1:0, x2:W, y1:Y(yr), y2:Y(yr), stroke:"var(--grid)", "stroke-dasharray": yr===0 ? "" : "3 4", "vector-effect":"non-scaling-stroke"}, grid);
+  // year axis
+  axis.replaceChildren();
+  axis.setAttribute("viewBox", `0 0 ${AXW} ${ph}`);
+  axis.style.width = AXW + "px"; axis.style.height = ph + "px";
+  el("rect", {x:0, y:0, width:AXW, height:ph, fill:"var(--panel)"}, axis);
+  bands.forEach(([a,b,label],i) => {
+    if (i % 2 === 0) el("rect", {x:0, y:py(a), width:AXW, height:py(b)-py(a), fill:"var(--band)"}, axis);
+    const len = py(b) - py(a), cy = (py(a) + py(b)) / 2;
+    if (len < 40) return;
+    const t = el("text", {x:12, y:cy, transform:`rotate(-90 12 ${cy})`, "text-anchor":"middle", "font-size":12, fill:"var(--muted)", "letter-spacing":".04em", "font-family":"var(--f-ui)"}, axis, label.toUpperCase());
+    fitText(t, len - 8);
+  });
+  for (let yr = first; yr <= END; yr += step){
+    el("line", {x1:AXW-6, x2:AXW, y1:py(yr), y2:py(yr), stroke:"var(--grid)"}, axis);
+    el("text", {x:AXW-8, y:py(yr)+4, "text-anchor":"end", "font-size": yr===0?11.5:12, fill:"var(--muted)", "font-weight": yr===0?600:400, "font-family":"var(--f-ui)"}, axis, yearLabel(yr));
+  }
+  // column headings
+  head.replaceChildren();
+  head.setAttribute("viewBox", `0 0 ${W * s} ${headPx}`);
+  head.style.width = (W * s) + "px"; head.style.height = headPx + "px";
+  const fs = (n, k = hs) => Math.round(n * k * 10) / 10;
+  groups.forEach(gr => {
+    const x1 = gr.x1 * s, x2 = gr.x2 * s, ly = 26 * hs;
+    el("line", {x1, x2, y1:ly, y2:ly, stroke:"var(--muted)"}, head);
+    el("line", {x1, x2:x1, y1:ly, y2:ly + 6*hs, stroke:"var(--muted)"}, head);
+    el("line", {x1:x2, x2, y1:ly, y2:ly + 6*hs, stroke:"var(--muted)"}, head);
+    fitText(el("text", {x:(x1+x2)/2, y:20*hs, "text-anchor":"middle", "font-size":fs(12.5), fill:"var(--muted)", "font-weight":600, "font-family":"var(--f-ui)"}, head, gr.label), x2 - x1, "group");
+    gr.cols.forEach(h => {
+      const cx = (h.x + h.w/2) * s, w = (h.w + GAP * 0.6) * s - 4;
+      fitText(el("text", {x:cx, y:57*hs, "text-anchor":"middle", "font-size":fs(19), fill:"var(--fg)", "font-family":"var(--f-deva)"}, head, h.deva), w, "deva");
+      fitText(el("text", {x:cx, y:77*hs, "text-anchor":"middle", "font-size":fs(14), fill:"var(--fg)", "font-weight":600, "font-family":"var(--f-ui)"}, head, h.name), w, "name");
+      if (hs > 0.7){
+        fitText(el("text", {x:cx, y:94*hs, "text-anchor":"middle", "font-size":fs(11.5), fill:"var(--muted)", "font-family":"var(--f-ui)"}, head, h.r1), w, "r");
+        fitText(el("text", {x:cx, y:108*hs, "text-anchor":"middle", "font-size":fs(11.5), fill:"var(--muted)", "font-style":"italic", "font-family":"var(--f-ui)"}, head, h.r2), w, "r");
+      }
+    });
+  });
+  fitRows();
+  corner.style.width = AXW + "px"; corner.style.height = headPx + "px";
+}
 
 const stage = document.querySelector(".stage");
 /* Zoom: − / + in steps, "whole chart" fits width and height into the window, Ctrl/⌘ + wheel (and trackpad pinch) zooms at the pointer */
@@ -620,22 +660,20 @@ const ZMIN = 0.1, ZMAX = 2.5, STEP = 1.25;
 let zoom = 1, fit = false;
 const fitBtn = document.getElementById("fit"), zin = document.getElementById("zin"), zout = document.getElementById("zout"), zval = document.getElementById("zval");
 function fitScale(){
-  const w = (scroller.clientWidth - 2) / (AXW + W);
-  const h = (innerHeight - 20) / H; // whole height in the frame too
+  const w = (scroller.clientWidth - 2 - AXW) / W;
+  const h = (innerHeight - 20 - HEADH * 0.6) / (H - HEADH); // whole height in the frame too (headings shrink a little)
   return Math.max(ZMIN, Math.min(1, w, h));
 }
 function scale(){ return fit ? fitScale() : zoom; }
 // Keep the chart point at (px, py) (relative to the frame's top left) in place while the size changes; default: the frame's centre
 function applySize(px, py, keep = true){
   if (px == null){ px = scroller.clientWidth / 2; py = scroller.clientHeight / 2; }
-  const old = svg.getBoundingClientRect().width / W || 1;
-  const cx = (scroller.scrollLeft + px) / old, cy = (scroller.scrollTop + py) / old; // chart units under the point
+  const old = svg.getBoundingClientRect().width / W || 1, oldHead = headPx;
+  const cx = (scroller.scrollLeft + px - AXW) / old, cy = (scroller.scrollTop + py - oldHead) / old; // chart units under the point
   const s = scale();
-  axis.style.width = (AXW * s) + "px";
   svg.style.width = (W * s) + "px";
-  head.style.width = (W * s) + "px";
-  corner.style.width = (AXW * s) + "px"; corner.style.height = (HEADH * s) + "px";
-  if (keep){ scroller.scrollLeft = cx * s - px; scroller.scrollTop = cy * s - py; }
+  drawAxes(s);
+  if (keep){ scroller.scrollLeft = AXW + cx * s - px; scroller.scrollTop = headPx + cy * s - py; }
   zval.textContent = Math.round(s * 100) + " %";
   zout.disabled = s <= ZMIN + 1e-3; zin.disabled = s >= ZMAX - 1e-3;
   fitBtn.textContent = fit ? "Lesegröße" : "Ganze Grafik zeigen";
