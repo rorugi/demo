@@ -2108,8 +2108,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_191';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.68';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_192';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.69';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3074,7 +3074,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       applySetup(cleanSetup(nb.setup), true);
     } else { pages = [{ strokes: [] }]; cur = 0; marks = []; }
     view.zoom = 1;
-    layout();
+    layout(); centrePage();
     renderPage();
     if (!$('overview').hidden) buildOverview();
     const shown = pages;
@@ -3223,12 +3223,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const scrollMarginPx = () => Math.max(MARGIN, scrollMarginMm * (pxPerMm || estimatePpm()));
   function clampView() {
     const pw = W * S(), ph = H * S(), M = scrollMarginPx();
-    // larger than the screen: it moves until its edge is the margin away from the screen edge; at any zoom other than
-    // "whole page" (zoomed in, zoomed out, 1:1) a side that fits moves as well, up to the margin at either end
-    const zoomed = Math.abs(view.zoom - 1) > 0.001;
+    // larger than the screen: it moves until its edge is the margin away from the screen edge; a side that fits
+    // (also at "whole page") moves as well, up to the margin at either end. Going to "whole page" centres it (centrePage).
     const fit = (len, size, t) => {
       const a = size - M - len, b = M;
-      if (len <= size - 2 * MARGIN && !zoomed) return (size - len) / 2;   // the whole page in view: centred
       const lo = Math.min(a, b), hi = Math.max(a, b);
       return Math.min(hi, Math.max(lo, t));
     };
@@ -3264,7 +3262,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   var selRedrawT = 0;
   function layout() {
     const wasReal = isReal();
-    const oldFit = view.fit;
+    const oldFit = view.fit, oldW = vw, oldH = vh;
     sizeCanvases();
     view.fit = Math.min((vw - 2 * MARGIN) / W, (vh - 2 * MARGIN) / H);
     if (oldFit !== view.fit && view.zoom !== 1) {
@@ -3272,11 +3270,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       view.tx = vw / 2 - cx * S(); view.ty = vh / 2 - cy * S();
     }
     if (wasReal) zoomAt(realZoom(), vw / 2, vh / 2, view.zoom, view.tx, view.ty);   // stay at real size after rotating
+    else if (view.zoom === 1 && (oldW !== vw || oldH !== vh)) Object.assign(view, centred());   // whole page, new screen size: in the middle
     clampView(); applyView(); fitToolbars(); placeToolbar();
     if (openPop) placePop();
     if (calibDlg.open) drawCard();
   }
-  function resetZoom() { view.zoom = 1; clampView(); applyView(); }
+  function resetZoom() { view.zoom = 1; centrePage(); }
+  function centred(z = 1) { return { tx: (vw - W * view.fit * z) / 2, ty: (vh - H * view.fit * z) / 2 }; }   // the page in the middle
+  function centrePage() { Object.assign(view, centred(view.zoom)); clampView(); applyView(); }
 
   // ---- Real size (1:1): CSS px per real millimetre, measured once with a card ----
   const CARD_W = 85.60, CARD_H = 53.98;          // ISO/IEC 7810 ID-1
@@ -4259,7 +4260,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('setupSum').textContent = setupLabel(setup);
     if (initial) return;
     view.zoom = 1;
-    layout();
+    layout(); centrePage();
     renderPage();
     if (!$('overview').hidden) buildOverview();
     scheduleSave();
@@ -5998,7 +5999,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         break;
       }
       case 'zoom':
-        if (Math.abs(view.zoom - 1) > 0.01) { zoomSaved = { page: pages[cur], zoom: view.zoom, tx: view.tx, ty: view.ty }; glideTo({ zoom: 1, tx: view.tx, ty: view.ty }); }
+        if (Math.abs(view.zoom - 1) > 0.01) { zoomSaved = { page: pages[cur], zoom: view.zoom, tx: view.tx, ty: view.ty }; glideTo({ zoom: 1, ...centred() }); }
         else if (zoomSaved && zoomSaved.page === pages[cur]) glideTo({ zoom: zoomSaved.zoom, tx: zoomSaved.tx, ty: zoomSaved.ty });
         else { toast('Zoom in first; then this button switches between that view and the whole page.', 2400); return; }
         break;
@@ -10184,6 +10185,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const to = atFit ? (rz && Math.abs(rz - 1) > 0.05 ? rz : 2) : 1;
       const was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
       zoomAt(to, x, y, view.zoom, view.tx, view.ty);              // where it should end up…
+      if (to === 1) Object.assign(view, centred());                 // (the whole page: in the middle)
       const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
       Object.assign(view, was);
       zoomBack(b);                                                  // …and glide there
