@@ -81,6 +81,8 @@
   button:focus-visible { outline: 2px solid var(--bar-fg); outline-offset: 1px; }
 
   /* a toolbar without background: the buttons alone, with a soft halo so they stay readable on ink */
+  /* a toolbar with its own colour (Customize toolbars): the panel tinted with it, so the buttons stay readable */
+  .toolbar.tinted { background: color-mix(in srgb, var(--tbtint) 34%, var(--bar)); border-color: color-mix(in srgb, var(--tbtint) 55%, var(--bar-line)); }
   .toolbar.bare { background: transparent !important; border-color: transparent !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
   .toolbar.bare .tbline > * { filter: drop-shadow(0 0 1.5px var(--panel)) drop-shadow(0 0 3px var(--panel)); }
   /* ---------- floating toolbar ---------- */
@@ -830,11 +832,20 @@
   .tbhead .toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
   .tbhead .toggle .sub { display: block; font-size: 12px; opacity: .6; margin-top: 2px; }
   .tbhead .toggle .switch { margin-left: auto; }
+  .tbtint { display: grid; gap: 8px; }
+  .tbtint > span { font-size: 14px; }
+  #tbTints { grid-template-columns: repeat(9, 1fr); }
+  #tbTints button { background: color-mix(in srgb, var(--c) 34%, var(--bar)); box-shadow: inset 0 0 0 2px var(--c); }
+  #tbTints .std { --c: var(--bar-line); background: var(--bar); box-shadow: inset 0 0 0 1px var(--bar-line); position: relative; }
+  #tbTints .std::after { content: ''; position: absolute; left: 18%; right: 18%; top: 50%; height: 1.5px; background: var(--bar-fg); opacity: .45; transform: rotate(-45deg); }
+  #tbTints [aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--c), 0 0 0 2px var(--panel), 0 0 0 4px var(--bar-fg); }
   .tblist .ico.gripico { opacity: .55; }
   .tblist .ico.gripico svg { width: 18px; height: 18px; }
   .tblist .empty { padding: 14px 8px; font-size: 13px; opacity: .6; }
   .dlg .row button.danger-text { color: var(--danger); }
   .tblist { list-style: none; margin: 0 0 8px; padding: 0; overflow: auto; flex: 1; min-height: 0; }
+  .tbdlg > :not(.tblist) { flex-shrink: 0; }     /* a tall head (colour picker open): the dialog scrolls, nothing gets squeezed */
+  .tbdlg .tblist { min-height: 150px; }
   .tblist li {
     display: flex; align-items: center; gap: 8px;
     height: 46px; padding: 0 4px 0 0;
@@ -2064,6 +2075,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     <label class="tbsize"><span>Size</span><input type="range" id="tbSize" min="80" max="200" step="10" value="100" aria-label="Toolbar size in percent"><output id="tbSizeVal" for="tbSize">100 %</output></label>
     <label class="numfield" id="tbLetterRow">Handle letter<input type="text" id="tbLetter" maxlength="2" autocomplete="off" autocapitalize="characters" aria-label="Letter shown on the toolbar handle" placeholder="≡" style="max-width:60px;text-align:center;margin-left:auto"></label>
     <label class="toggle" for="tbBg"><span>Background<span class="sub">Off: only the buttons float over the page</span></span><span class="switch"><input type="checkbox" id="tbBg"><i></i></span></label>
+    <div class="tbtint" id="tbTintRow"><span>Background colour</span><div class="swatches" id="tbTints" role="group" aria-label="Background colour"></div>
+      <button type="button" class="custom-color" id="tbTintCustom" aria-expanded="false"><span class="dot"></span>Custom colour<small></small><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <label class="toggle" id="tbShowRow" for="tbShow"><span>Show this toolbar<span class="sub">When off it is hidden but keeps its buttons</span></span><span class="switch"><input type="checkbox" id="tbShow"><i></i></span></label>
   </div>
   <p id="tbHint">Drag the handle to move a button.</p>
@@ -2108,8 +2121,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_192';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.69';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_193';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.70';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2454,6 +2467,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       min: !!(b && b.min),                                   // (before the minimize item: read once to set it up)
       scale: b && +b.scale >= 0.8 && +b.scale <= 2 ? Math.round(+b.scale * 10) / 10 : 1,   // toolbar size, 80–200 %
       bare: !!(b && b.bare),                                 // no background: only the buttons float over the page
+      tint: b && okC(b.tint) ? b.tint : null,                // its own background colour (null: the usual one)
       letter: main ? '' : cleanLetter(b && b.letter)
     };
   }
@@ -3997,6 +4011,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       el.hidden = !b.enabled;
       el.style.setProperty('--tbk', barK(b));
       el.classList.toggle('bare', !!b.bare);
+      el.classList.toggle('tinted', !!b.tint && !b.bare);
+      if (b.tint) el.style.setProperty('--tbtint', b.tint); else el.style.removeProperty('--tbtint');
       if (!b.pos) { el.style.left = el.style.top = el.style.transform = el.style.right = el.style.bottom = el.style.transformOrigin = ''; return; }
       el.style.transformOrigin = '0 0';
       const w = el.offsetWidth * barK(b), h = el.offsetHeight * barK(b);
@@ -4410,6 +4426,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const main = edBar === bars[0];
     $('tbOrient').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.o === edBar.orient)));
     $('tbBg').checked = !edBar.bare;
+    renderTbTint();
     $('tbSize').value = Math.round(barK(edBar) * 100); $('tbSizeVal').textContent = Math.round(barK(edBar) * 100) + ' %';
     $('tbShowRow').hidden = main;
     $('tbShow').checked = edBar.enabled;
@@ -4430,6 +4447,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const t = e.target.closest('[data-bar]');
     if (!t) return;
     edBar = bars.find(b => b.id === t.dataset.bar) || bars[0];
+    if (pickTo && pickTo.bar) closeBmPicker();
     tbAddList.hidden = true; $('tbAddBtn').setAttribute('aria-expanded', 'false');
     renderTbList();
   });
@@ -4444,7 +4462,43 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const el = barEl(edBar); if (el) el.style.setProperty('--tbk', edBar.scale);
   });
   $('tbSize').addEventListener('change', () => { saveItems(); renderToolbar(); });
-  $('tbBg').addEventListener('change', e => { edBar.bare = !e.target.checked; saveItems(); renderToolbar(); });
+  $('tbBg').addEventListener('change', e => { edBar.bare = !e.target.checked; saveItems(); renderToolbar(); renderTbTint(); });
+  // the toolbar's background colour: standard, one of the pen colours, or any colour with the pen's colour picker (lent here)
+  function renderTbTint() {
+    const t = edBar.tint, inList = !t || COLORS.includes(t), lent = !!(pickTo && pickTo.bar);
+    $('tbTintRow').hidden = !!edBar.bare;
+    $('tbTints').innerHTML = `<button type="button" class="std" data-c="" aria-label="Standard background" title="Standard" aria-pressed="${!t}"></button>` +
+      COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" aria-label="Background ${c}" aria-pressed="${t === c}"></button>`).join('');
+    const cb = $('tbTintCustom');
+    cb.setAttribute('aria-pressed', String(!!t && !inList));
+    cb.setAttribute('aria-expanded', String(lent));
+    cb.querySelector('.dot').style.background = t && !inList ? t : 'conic-gradient(#d92b1e, #f0bf12, #2f9e41, #0e9bb8, #1f6fd1, #a92fb4, #d92b1e)';
+    cb.querySelector('small').textContent = t && !inList ? t.toUpperCase() : '';
+  }
+  function setTbTint(c) {
+    edBar.tint = c || null;
+    placeToolbar(); renderTbTint(); saveItemsSoon();
+  }
+  let tbTintT = 0;
+  function saveItemsSoon() { clearTimeout(tbTintT); tbTintT = setTimeout(saveItems, 300); }
+  $('tbTints').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]');
+    if (!b) return;
+    if (pickTo && pickTo.bar) closeBmPicker();
+    setTbTint(b.dataset.c);
+  });
+  $('tbTintCustom').addEventListener('click', () => {
+    if (pickTo && pickTo.bar) { closeBmPicker(); renderTbTint(); return; }
+    if (pickTo) closeBmPicker();
+    const bar = edBar;
+    pickTo = hex => { if (edBar === bar) setTbTint(hex); };
+    pickTo.bar = bar; pk.open = true;
+    $('tbTintCustom').after(pickerEl); pickerEl.hidden = false;
+    pickerFrom(bar.tint || '#1f6fd1'); paintPicker();
+    if (!bar.tint) setTbTint(hsvToHex(pk.h, pk.s, pk.v));
+    renderTbTint();
+  });
+  tbDlg.addEventListener('close', () => { if (pickTo && pickTo.bar) closeBmPicker(); clearTimeout(tbTintT); saveItems(); });
   $('tbLetter').addEventListener('input', e => {
     edBar.letter = cleanLetter(e.target.value);
     saveItems(); renderToolbar(); renderTbList();
@@ -5358,6 +5412,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         enabled: b.enabled,
         sizePercent: Math.round(barK(b) * 100),
         background: !b.bare,
+        backgroundColor: b.tint || null,
         letter: b.letter || '',
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
@@ -5403,7 +5458,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : i);
-    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false }, main);
+    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false, tint: t.backgroundColor }, main);
     let newBars = null;
     // toolbars from files before v45 are ignored
     if (+o.formatVersion >= 3 && Array.isArray(o.toolbars) && o.toolbars.length) newBars = o.toolbars.map((t, i) => fileBar(t || {}, i === 0));
