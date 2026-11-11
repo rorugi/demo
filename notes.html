@@ -1015,6 +1015,8 @@
   /* a strong, slightly see-through line in the middle; around it a glow of wider, fainter strokes */
   .laser .lz-g { stroke: var(--lc); opacity: .075; }
   .laser .lz-line { stroke: var(--lc); opacity: .85; }
+  .laser circle { stroke: none; fill: var(--lc); }
+  .laser circle.lz-g { opacity: .075; }
   .lzsub { margin: -2px 0 6px; font-size: 12.5px; line-height: 1.4; opacity: .65; }
   .ripple { position: absolute; z-index: 41; overflow: hidden; pointer-events: none; transform-origin: 50% 50%; }
   .ripple i { position: absolute; border-radius: 50%; background: var(--sel); opacity: 0; will-change: transform, opacity; }
@@ -1610,10 +1612,14 @@
 <div class="pop" id="laserPop" role="dialog" aria-label="Laser pointer settings" hidden>
   <div class="poptitle">Laser pointer</div>
   <p class="lzsub">For pointing only: what you draw is not saved and fades away.</p>
+  <h3>Shows</h3>
+  <div class="seg" id="lzMode" role="group" aria-label="Shows">
+    <button type="button" data-m="line">Line</button><button type="button" data-m="dot">Dot</button>
+  </div>
   <h3>Colour</h3>
   <div class="swatches" id="lzSwatches"></div>
   <button type="button" class="custom-color" id="lzCustom" aria-expanded="false"><span class="dot"></span>Custom colour<small></small><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-  <h3>Line size <output id="lzSizeVal"></output></h3>
+  <h3><span id="lzSizeH">Line size</span> <output id="lzSizeVal"></output></h3>
   <input type="range" class="opacity" id="lzSize" min="0.5" max="8" step="0.5" aria-label="Line size">
   <h3>Fades after <output id="lzFadeVal"></output></h3>
   <input type="range" class="opacity" id="lzFade" min="0" max="11" step="1" aria-label="Fades after">
@@ -2172,8 +2178,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_198';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.75';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_199';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.76';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2484,7 +2490,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const LASER_FADES = [0.5, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30];
   function cleanLaser(it) {
     const n = (v, lo, hi, d) => (isFinite(+v) && v !== null && v !== '' ? Math.min(hi, Math.max(lo, +v)) : d);
-    return { color: okC(it && it.color) ? it.color : LASER_COLORS[0], size: n(it && it.size, 0.5, 8, 2), fade: n(it && it.fade, 0.5, 30, 2) };
+    return { color: okC(it && it.color) ? it.color : LASER_COLORS[0], size: n(it && it.size, 0.5, 8, 2), fade: n(it && it.fade, 0.5, 30, 2),
+             mode: it && it.mode === 'dot' ? 'dot' : 'line' };   // line: what you draw; dot: only a dot where the pen is
   }
   function cleanItemData(it, o) {
     if (it.type === 'laser') return Object.assign(o, cleanLaser(it));
@@ -4103,7 +4110,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     cb.setAttribute('aria-pressed', String(!inList)); cb.setAttribute('aria-expanded', String(lent));
     cb.querySelector('.dot').style.background = inList ? 'conic-gradient(#d92b1e, #f0bf12, #2f9e41, #0e9bb8, #1f6fd1, #a92fb4, #d92b1e)' : it.color;
     cb.querySelector('small').textContent = inList ? '' : it.color.toUpperCase();
-    $('lzSize').value = it.size; $('lzSizeVal').textContent = it.size + ' mm';
+    $('lzMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === it.mode)));
+    $('lzSize').value = it.size; $('lzSizeVal').textContent = (it.mode === 'dot' ? it.size * 2 : it.size) + ' mm';
+    $('lzSizeH').textContent = it.mode === 'dot' ? 'Dot size' : 'Line size';
     const fi = LASER_FADES.reduce((b, v, i) => Math.abs(v - it.fade) < Math.abs(LASER_FADES[b] - it.fade) ? i : b, 0);
     $('lzFade').value = fi; $('lzFadeVal').textContent = it.fade + ' s';
   }
@@ -4123,6 +4132,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('lzCustom').after(pickerEl); pickerEl.hidden = false;
     pickerFrom(it.color); paintPicker();
     renderLaserPop(); placePop();
+  });
+  $('lzMode').addEventListener('click', e => {
+    const b = e.target.closest('[data-m]');
+    if (!b || !lzItem) return;
+    lzItem.mode = b.dataset.m; renderLaserPop(); laserChanged();
   });
   $('lzSize').addEventListener('input', e => { if (!lzItem) return; lzItem.size = +e.target.value; renderLaserPop(); laserChanged(); });
   $('lzFade').addEventListener('input', e => { if (!lzItem) return; lzItem.fade = LASER_FADES[+e.target.value] || 2; renderLaserPop(); laserChanged(); });
@@ -5643,7 +5657,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, penType: it.brush.kind, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark,
               ...(it.use ? { sets: { color: it.use.color, thickness: it.use.width, opacity: it.use.opacity, penType: it.use.kind, highlighter: it.use.highlighter } } : {}),
               ...(it.locks ? { locked: { color: !!it.locks.color, thickness: !!it.locks.width, opacity: !!it.locks.opacity, penType: !!it.locks.kind, highlighter: !!it.locks.highlighter } } : {}) }
-          : { type: it.type, ...(it.type === 'toggle' ? { mode: it.mode } : it.type === 'fold' ? { folded: !!it.folded } : it.type === 'laser' ? { color: it.color, size: it.size, fade: it.fade } : {}), ...(it.bg ? { backgroundColor: it.bg } : {}) })
+          : { type: it.type, ...(it.type === 'toggle' ? { mode: it.mode } : it.type === 'fold' ? { folded: !!it.folded } : it.type === 'laser' ? { mode: it.mode, color: it.color, size: it.size, fade: it.fade } : {}), ...(it.bg ? { backgroundColor: it.bg } : {}) })
       })),
       selectedPen: pens().findIndex(p => p.id === penId) + 1,
       eraserSizeMm: eraserSize,
@@ -9469,17 +9483,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (laserPage !== pages[cur]) { laserEl.textContent = ''; laserPage = pages[cur]; }   // another page: the old lines go
     const g = document.createElementNS(NS, 'g');
     g.setAttribute('class', 'lz'); g.style.setProperty('--lc', it.color);
-    const w = it.size;
-    g.innerHTML = [4.4, 3.7, 3.1, 2.6, 2.1, 1.7, 1.35].map(k => `<path class="lz-g" stroke-width="${(w * k).toFixed(2)}"/>`).join('') + `<path class="lz-line" stroke-width="${w}"/>`;   // glow: soft towards the outside
+    const w = it.size, GLOW = [4.4, 3.7, 3.1, 2.6, 2.1, 1.7, 1.35];   // glow: soft towards the outside
+    const dot = it.mode === 'dot';
+    g.innerHTML = dot
+      ? GLOW.map(k => `<circle class="lz-g" r="${(w * k).toFixed(2)}"/>`).join('') + `<circle class="lz-line" r="${w}"/>`   // a dot of twice the line size
+      : GLOW.map(k => `<path class="lz-g" stroke-width="${(w * k).toFixed(2)}"/>`).join('') + `<path class="lz-line" stroke-width="${w}"/>`;
     laserEl.appendChild(g);
     const q = toMM(e);
-    active = { id: e.pointerId, type: e.pointerType, laser: g, lzD: `M${q[0].toFixed(2)} ${q[1].toFixed(2)}l0 0`, lzLast: q, lzFade: it.fade };
+    active = { id: e.pointerId, type: e.pointerType, laser: g, lzDot: dot, lzD: `M${q[0].toFixed(2)} ${q[1].toFixed(2)}l0 0`, lzLast: q, lzFade: it.fade };
     laserPaint();
   }
-  function laserPaint() { for (const p of active.laser.children) p.setAttribute('d', active.lzD); }
+  function laserPaint() {
+    const a = active;
+    if (a.lzDot) a.laser.setAttribute('transform', `translate(${a.lzLast[0].toFixed(2)} ${a.lzLast[1].toFixed(2)})`);   // the dot follows the pen
+    else for (const p of a.laser.children) p.setAttribute('d', a.lzD);
+  }
   function laserMove(list) {
     const a = active;
     let add = '';
+    if (a.lzDot) { a.lzLast = toMM(list[list.length - 1]); laserPaint(); return; }
     for (const s of list) {
       const q = toMM(s);
       if (Math.hypot(q[0] - a.lzLast[0], q[1] - a.lzLast[1]) < 0.2) continue;
@@ -11222,7 +11244,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'fold': return it.folded ? 'Show the hidden buttons' : 'Minimize · hide the buttons before this one';
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
-      case 'laser': return `Laser pointer · ${it.size} mm · fades after ${it.fade} s`;
+      case 'laser': return `Laser pointer · ${it.mode === 'dot' ? 'dot' : 'line'} · ${it.size} mm · fades after ${it.fade} s`;
       case 'undo': return 'Undo';
       case 'inmode': return penSeen ? 'Stylus mode · tap: finger mode' : 'Finger mode · tap: stylus mode';
       case 'redo': return 'Redo';
