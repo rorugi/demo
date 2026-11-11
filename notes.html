@@ -1692,6 +1692,10 @@
     <button type="button" id="customizeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.6" fill="currentColor"/><circle cx="15" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="18" r="1.6" fill="currentColor"/></svg>Customize toolbars…<small id="tbSum"></small></button>
     <button type="button" id="calibBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6v3M11 6v4M15 6v3M19 6v2"/></svg>Calibrate screen…<small id="calibState"></small></button>
   </div>
+  <h3>Drawing</h3>
+  <div class="menu">
+    <label class="toggle settoggle" for="fastInkToggle"><span>Fast ink<span class="sub">The line reaches the screen sooner while you draw. Switch it off if lines flicker or look wrong</span></span><span class="switch"><input type="checkbox" id="fastInkToggle"><i></i></span></label>
+  </div>
   <h3>Handles</h3>
   <div class="menu">
     <div class="imgsizebox">
@@ -2129,8 +2133,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_195';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.72';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_196';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.73';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2163,7 +2167,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const NS = 'http://www.w3.org/2000/svg';
   const stage = $('stage'), pageEl = $('page'), sheetB = $('sheetB');
   const pageInk = pageEl.querySelector('.ink');
-  const live = $('live'), tip = $('tip'), liveWrap = $('liveWrap');
+  let live = $('live'), tip = $('tip');   // replaced when Fast ink is switched (makeInkCtx)
+  const liveWrap = $('liveWrap');
   const toolbar = $('toolbar');
   const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), gestPop = $('gestPop'), navPop = $('navPop'), eraserPop = $('eraserPop');
 
@@ -3230,10 +3235,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pool = [];                 // extra sheets used while several pages turn at once
   const S = () => view.fit * view.zoom;
   let vw = 0, vh = 0, dpr = 1;
-  // on a PC (mouse, no touch screen) the live ink uses Chrome's low-latency mode: it reaches the screen about a frame sooner;
-  // tablets and touch screens keep the usual drawing
-  const LOW_LAT = !matchMedia('(any-pointer: coarse)').matches && !navigator.maxTouchPoints ? { desynchronized: true } : undefined;
-  const lctx = live.getContext('2d', LOW_LAT), tctx = tip.getContext('2d', LOW_LAT);
+  // Fast ink (Settings): the line being drawn uses Chrome's low-latency mode and reaches the screen about a frame sooner.
+  // Unless set, it is on for PCs (no touch screen) and off for tablets and touch screens.
+  const fastInkAuto = !matchMedia('(any-pointer: coarse)').matches && !navigator.maxTouchPoints;
+  let fastInk = (v => typeof v === 'boolean' ? v : fastInkAuto)(store.get('fastInk', null));
+  let lctx = null, tctx = null;
+  function makeInkCtx() {
+    const o = fastInk ? { desynchronized: true } : undefined;
+    const again = !!lctx;
+    if (again) {                                   // a canvas keeps its mode: switching needs fresh ones
+      for (const c of [live, tip]) c.replaceWith(c.cloneNode(false));
+      live = $('live'); tip = $('tip');
+    }
+    lctx = live.getContext('2d', o); tctx = tip.getContext('2d', o);
+    if (again) { sizeCanvases(); applyView(); }
+  }
+  makeInkCtx();
 
   function sizeCanvases() {
     vw = stage.clientWidth; vh = stage.clientHeight;
@@ -6850,6 +6867,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   $('imgSizes').addEventListener('change', e => { imgMax = +e.target.value; store.set('imgMax', imgMax); renderImgSize(); });
   renderImgSize();
+  // Settings: Fast ink (the low-latency drawing layer)
+  $('fastInkToggle').checked = fastInk;
+  $('fastInkToggle').addEventListener('change', e => { fastInk = e.target.checked; store.set('fastInk', fastInk); makeInkCtx(); });
   const HND_SUB = { selected: 'Shown on a sticky note or image after a finger tap selects it; tap or write elsewhere to deselect', always: 'Always shown at full strength', quiet: 'Always shown, but faint until the stylus comes near or it is selected; hidden while writing', hidden: 'Not shown. With a finger, the top left corner opens the options, bottom right folds or resizes; the pen writes everywhere', select: 'Only shown while the Select tool is on' };
   $('hndModes').addEventListener('change', e => {
     handleMode = e.target.value; store.set('handleMode', handleMode); $('hndSub').textContent = HND_SUB[handleMode]; applyHandleMode();
