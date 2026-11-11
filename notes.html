@@ -1053,6 +1053,8 @@
   .optrow .switch { margin: 0 8px 0 2px; }
   .dlg .field { display: grid; gap: 8px; margin-bottom: 16px; }
   .dlg .field > span { font: 600 10.5px/1 var(--ui); letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
+  #slideStyle { grid-template-columns: repeat(3, 1fr); }
+  .dlg .field > .fieldnote { margin: -2px 0 2px; font-size: 12.5px; line-height: 1.4; opacity: .65; }
   .dlg .toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; padding: 4px 0; }
   .dlg .toggle .sub { display: block; font-size: 12px; opacity: .6; margin-top: 2px; }
   .dlg .toggle .switch { margin-left: auto; }
@@ -1844,7 +1846,8 @@
   <h2 id="flipTitle">Page flip</h2>
   <p>Swipe from the right edge to turn forward, from the left edge to turn back. Along either edge, slide up or down to run through the pages. Each edge can be switched off.</p>
   <div class="field">
-    <span>Style</span>
+    <span>Edge swipe style</span>
+    <p class="fieldnote">How the pages move when you swipe in from an edge or slide along it.</p>
     <div class="seg" id="flipStyle">
       <button type="button" data-f="book">Notebook</button>
       <button type="button" data-f="flat">Flat</button>
@@ -1856,11 +1859,12 @@
   </div>
   <div class="field">
     <label class="toggle" for="flipZoomToggle"><span>Zoom out while flipping<span class="sub">Shows the whole sheet, then returns to your spot</span></span><span class="switch"><input type="checkbox" id="flipZoomToggle"><i></i></span></label>
-    <label class="toggle" for="riffleToggle"><span>Page slider beside the page<span class="sub">Touch the desk next to the page and move: right or down for later pages, left or up for earlier ones</span></span><span class="switch"><input type="checkbox" id="riffleToggle"><i></i></span></label>
   </div>
   <div class="field">
-    <span>Slider style</span>
+    <span>Page slider beside the page</span>
+    <p class="fieldnote">Touch the empty area around the page (beside, above or below it) and move: right or down for later pages, left or up for earlier ones. Choose how the pages move, or switch it off.</p>
     <div class="seg" id="slideStyle">
+      <button type="button" data-v="off">Off</button>
       <button type="button" data-v="book">Notebook</button>
       <button type="button" data-v="flat">Flat</button>
     </div>
@@ -2125,8 +2129,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_194';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.71';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_195';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.72';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4150,8 +4154,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('flipToggle').checked = flipOn;
     $('flipZoomToggle').checked = flipZoom;
     $('flipLToggle').checked = flipL; $('flipRToggle').checked = flipR;
-    $('riffleToggle').checked = riffleOn;
-    $('slideStyle').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === sliderStyle)); b.disabled = !riffleOn; });
+    $('slideStyle').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === (riffleOn ? sliderStyle : 'off'))));
     $('flipOpen').disabled = !flipOn;
     $('flipSum').textContent = flipOn ? `${flipStyle === 'flat' ? 'Flat' : 'Notebook'}${flipL && flipR ? '' : flipL ? ' · left edge only' : flipR ? ' · right edge only' : ' · edges off'}${flipZoom && flipStyle !== 'flat' ? ' · zoom out' : ''}${riffleOn ? (sliderStyle === 'flat' ? ' · flat slider' : ' · slider') : ''}` : 'Off: swiping the edges does nothing';
     store.set('sliderStyle', sliderStyle);
@@ -4159,13 +4162,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     store.set('flipL', flipL); store.set('flipR', flipR);
   }
   function setFlipStyle(f) { flipStyle = f; renderFlipCfg(); }
-  $('slideStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { sliderStyle = b.dataset.v; renderFlipCfg(); }));
+  $('slideStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {   // Off, or on in one of the two styles
+    if (b.dataset.v === 'off') riffleOn = false; else { riffleOn = true; sliderStyle = b.dataset.v; }
+    renderFlipCfg();
+  }));
   $('flipStyle').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setFlipStyle(b.dataset.f)));
   $('flipToggle').addEventListener('change', e => { flipOn = e.target.checked; renderFlipCfg(); });
   $('flipZoomToggle').addEventListener('change', e => { flipZoom = e.target.checked; renderFlipCfg(); });
   $('flipLToggle').addEventListener('change', e => { flipL = e.target.checked; renderFlipCfg(); });
   $('flipRToggle').addEventListener('change', e => { flipR = e.target.checked; renderFlipCfg(); });
-  $('riffleToggle').addEventListener('change', e => { riffleOn = e.target.checked; renderFlipCfg(); });
   $('flipOpen').addEventListener('click', () => { closePops(); $('flipDlg').showModal(); });
   $('flipDone').addEventListener('click', () => $('flipDlg').close());
 
