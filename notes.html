@@ -128,6 +128,16 @@
   .toolbar.vertical .tbgrp { flex-direction: column; }
   .tbgrp.wrapped > .sep.soft { display: none; }
   .toolbar.dragging { box-shadow: 0 10px 30px rgba(0, 0, 0, .24); }
+  /* attached toolbar: full width (top, bottom) or full height (left, right) at that side; the page keeps clear of it */
+  .toolbar.docked { max-width: none; max-height: none; border-radius: 0; box-shadow: 0 1px 8px rgba(0, 0, 0, .08); }
+  .toolbar.dock-top { border-width: 0 0 1px; }
+  .toolbar.dock-bottom { border-width: 1px 0 0; }
+  .toolbar.dock-left { border-width: 0 1px 0 0; }
+  .toolbar.dock-right { border-width: 0 0 0 1px; }
+  #barDock, #tbDock { grid-template-columns: repeat(5, 1fr); }
+  #barDock button, #tbDock button { font-size: 12px; padding: 0 2px; }
+  .tbdock { display: grid; gap: 6px; }
+  .tbdock > span { font-size: 14px; }
   /* additional toolbars: bottom centre (horizontal) or right edge (vertical) until moved */
   .toolbar.extra {
     transform-origin: 0 100%;
@@ -997,6 +1007,15 @@
   .page.turning.from-left .pnum { right: auto; left: 12px; }
   .grid { stroke: var(--grid); }
   .livewrap { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+  /* laser pointer: lines only shown, never saved; they fade away (page millimetres, moves with the page) */
+  .laser { position: absolute; z-index: 41; pointer-events: none; overflow: visible; }
+  .laser path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .laser .lz { transition: opacity .6s ease; }
+  .laser .lz.out { opacity: 0; }
+  .laser .lz-glow { stroke: var(--lc); opacity: .3; }
+  .laser .lz-line { stroke: var(--lc); }
+  .laser .lz-core { stroke: #fff; opacity: .7; }
+  .lzsub { margin: -2px 0 6px; font-size: 12.5px; line-height: 1.4; opacity: .65; }
   .ripple { position: absolute; z-index: 41; overflow: hidden; pointer-events: none; transform-origin: 50% 50%; }
   .ripple i { position: absolute; border-radius: 50%; background: var(--sel); opacity: 0; will-change: transform, opacity; }
   .livewrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -1370,6 +1389,7 @@
     <canvas id="live"></canvas>
     <canvas id="tip"></canvas>
   </div>
+  <svg class="laser" id="laserLayer" aria-hidden="true"></svg>
 </div>
 
 <div class="toolbar" id="toolbar" role="toolbar" aria-label="Tools">
@@ -1560,6 +1580,10 @@
     <button type="button" data-o="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="2"/></svg>Horizontal</button>
     <button type="button" data-o="v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="18" rx="2"/></svg>Vertical</button>
   </div>
+  <h3>Attach</h3>
+  <div class="seg" id="barDock" role="group" aria-label="Attach to a side">
+    <button type="button" data-d="">Off</button><button type="button" data-d="top">Top</button><button type="button" data-d="bottom">Bottom</button><button type="button" data-d="left">Left</button><button type="button" data-d="right">Right</button>
+  </div>
   <div class="menu">
     <button type="button" id="barCustomize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.6" fill="currentColor"/><circle cx="15" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="18" r="1.6" fill="currentColor"/></svg>Customize this toolbar…</button>
   </div>
@@ -1581,6 +1605,18 @@
   <div class="esizes" id="esizes"></div>
   <button type="button" class="wide-btn" id="clearPage">Clear this page</button>
   <button type="button" class="wide-btn subtle" id="bgRemove" hidden>Remove the PDF from this page</button>
+</div>
+
+<div class="pop" id="laserPop" role="dialog" aria-label="Laser pointer settings" hidden>
+  <div class="poptitle">Laser pointer</div>
+  <p class="lzsub">For pointing only: what you draw is not saved and fades away.</p>
+  <h3>Colour</h3>
+  <div class="swatches" id="lzSwatches"></div>
+  <button type="button" class="custom-color" id="lzCustom" aria-expanded="false"><span class="dot"></span>Custom colour<small></small><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+  <h3>Line size <output id="lzSizeVal"></output></h3>
+  <input type="range" class="opacity" id="lzSize" min="0.5" max="8" step="0.5" aria-label="Line size">
+  <h3>Fades after <output id="lzFadeVal"></output></h3>
+  <input type="range" class="opacity" id="lzFade" min="0" max="11" step="1" aria-label="Fades after">
 </div>
 
 <!-- settings menu -->
@@ -2086,6 +2122,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <button type="button" data-o="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="2"/></svg>Horizontal</button>
       <button type="button" data-o="v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="18" rx="2"/></svg>Vertical</button>
     </div>
+    <div class="tbdock"><span>Attach to a side<span class="sub" style="display:block;font-size:12.5px;opacity:.65;margin-top:2px">Full width or height at that side; the page keeps clear of it</span></span><div class="seg" id="tbDock" role="group" aria-label="Attach to a side">
+      <button type="button" data-d="">Off</button><button type="button" data-d="top">Top</button><button type="button" data-d="bottom">Bottom</button><button type="button" data-d="left">Left</button><button type="button" data-d="right">Right</button>
+    </div></div>
     <label class="tbsize"><span>Size</span><input type="range" id="tbSize" min="80" max="200" step="10" value="100" aria-label="Toolbar size in percent"><output id="tbSizeVal" for="tbSize">100 %</output></label>
     <label class="numfield" id="tbLetterRow">Handle letter<input type="text" id="tbLetter" maxlength="2" autocomplete="off" autocapitalize="characters" aria-label="Letter shown on the toolbar handle" placeholder="≡" style="max-width:60px;text-align:center;margin-left:auto"></label>
     <label class="toggle" for="tbBg"><span>Background<span class="sub">Off: only the buttons float over the page</span></span><span class="switch"><input type="checkbox" id="tbBg"><i></i></span></label>
@@ -2133,8 +2172,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_196';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.73';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_197';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.74';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -2168,7 +2207,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const stage = $('stage'), pageEl = $('page'), sheetB = $('sheetB');
   const pageInk = pageEl.querySelector('.ink');
   let live = $('live'), tip = $('tip');   // replaced when Fast ink is switched (makeInkCtx)
-  const liveWrap = $('liveWrap');
+  const liveWrap = $('liveWrap'), laserEl = $('laserLayer');
+  // the room taken by attached toolbars at each side (px); the page fits and moves in what is left (placeToolbar)
+  let dockIn = { t: 0, r: 0, b: 0, l: 0 }, dockKey = '0,0,0,0';
   const toolbar = $('toolbar');
   const penPop = $('penPop'), setPop = $('setPop'), advPop = $('advPop'), gestPop = $('gestPop'), navPop = $('navPop'), eraserPop = $('eraserPop');
 
@@ -2269,6 +2310,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     eraser: svg('<path d="M14.6 4.2l5.2 5.2a1.5 1.5 0 0 1 0 2.1L12.3 19H7.8l-3.6-3.6a1.5 1.5 0 0 1 0-2.1l8.3-8.3a1.5 1.5 0 0 1 2.1 0z"/><path d="M9.2 8.6l6.2 6.2M7.8 19H20"/>'),
     sepbr: svg('<path d="M8 4v16" stroke-dasharray="2.5 2.2"/><path d="M19 5v6.5a3 3 0 0 1-3 3h-4"/><path d="M14.5 12l-2.5 2.5 2.5 2.5"/>'),
     br: svg('<path d="M19 5v6.5a3 3 0 0 1-3 3H6"/><path d="M9.5 10.5L5.5 14.5l4 4"/>'),
+    laser: svg('<path d="M13.4 10.6l5.4-5.4a1.6 1.6 0 0 1 2.3 2.3l-5.4 5.4z"/><path d="M10.3 13.7l2.4-2.4" style="stroke:var(--lc,#ff2a1a)" stroke-width="2.2"/><circle cx="7" cy="17" r="5.2" style="fill:var(--lc,#ff2a1a)" stroke="none" opacity=".3"/><circle cx="7" cy="17" r="2.7" style="fill:var(--lc,#ff2a1a)" stroke="none"/>'),
     magnifier: svg('<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4l5.1 5.1"/><rect x="7.6" y="7.6" width="5.8" height="5.8" rx=".6" stroke-dasharray="1.8 1.4"/>'),
     lasso: svg('<path d="M7.5 15.2C4.8 14 3.5 12.2 3.5 10.2c0-3.6 3.8-6.2 8.5-6.2s8.5 2.6 8.5 6.2-3.8 6.2-8.5 6.2c-1 0-2-.1-2.9-.3" stroke-dasharray="2.6 2.4"/><path d="M8.6 14.6c-1.6.9-2.2 2.4-1.4 3.6.8 1.2 2.5 1.2 3.2.2"/><path d="M10.4 18.4l-1.2 2.6"/>'),
     undo: svg('<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),
@@ -2346,6 +2388,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     br:     { label: 'Line break', multi: true },
     sepbr:  { label: 'Separator (wraps)', multi: true },
     magnifier: { label: 'Magnifier' },
+    laser:  { label: 'Laser pointer', multi: true },
     lock:   { label: 'Zoom lock' },
     fs:     { label: 'Full screen' },
     zoom:   { label: 'Zoom level' },
@@ -2380,6 +2423,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     br: 'Starts a new row (a new column on a vertical toolbar).',
     sepbr: 'A line where a toolbar too long for the screen may continue in a new row.',
     magnifier: 'Drag a rectangle on the page to keep that part in view.',
+    laser: 'Draw to point at something: the line is not saved and fades away. Each laser pointer has its own colour, line size and fade time. Tap again (or hold) to change them.',
     lock: 'Locks the zoom so that pinching cannot change it by accident.',
     fs: 'Full screen on and off.',
     zoom: 'Shows the zoom level. Tap to see the whole page.',
@@ -2435,7 +2479,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // a button's own background colour, to tell buttons apart (not for pens, presets and spacers: they show their own look)
   const NO_BG = new Set(['pen', 'preset', 'color', 'size', 'ptype', 'space', 'sep', 'br', 'sepbr']);
   const withBg = (it, o) => { if (!NO_BG.has(o.type) && okC(it.bg)) o.bg = it.bg; return o; };
+  // laser pointer: colour, line size (mm) and how long its lines stay (seconds)
+  const LASER_COLORS = ['#ff2a1a', '#ff7a00', '#ffd400', '#22d64f', '#00c2ff', '#2f6bff', '#a64dff', '#ff3da5'];
+  const LASER_FADES = [0.5, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30];
+  function cleanLaser(it) {
+    const n = (v, lo, hi, d) => (isFinite(+v) && v !== null && v !== '' ? Math.min(hi, Math.max(lo, +v)) : d);
+    return { color: okC(it && it.color) ? it.color : LASER_COLORS[0], size: n(it && it.size, 0.5, 8, 2), fade: n(it && it.fade, 0.5, 30, 2) };
+  }
   function cleanItemData(it, o) {
+    if (it.type === 'laser') return Object.assign(o, cleanLaser(it));
     if (it.type === 'toggle') { o.mode = TOGGLES[it.mode] ? it.mode : 'notebook'; return o; }
     if (it.type === 'fold') { o.folded = it.folded === true; return o; }
     if (it.type === 'size') { o.type = 'preset'; o.brush = cleanBrush({ width: cleanWidth(it.width) }); o.use = cleanUse(null, { width: true }); return o; }
@@ -2472,6 +2524,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // ---- Toolbars: the main one (with N) plus any number of additional ones ----
   const cleanPos = q => q && isFinite(q.x) && isFinite(q.y) ? { x: +q.x, y: +q.y } : null;
+  const DOCKS = ['top', 'bottom', 'left', 'right'];
   function cleanBar(b, main) {
     const list = main ? cleanItems(b && b.items) : cleanExtraItems(b && b.items);
     return {
@@ -2483,6 +2536,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       min: !!(b && b.min),                                   // (before the minimize item: read once to set it up)
       scale: b && +b.scale >= 0.8 && +b.scale <= 2 ? Math.round(+b.scale * 10) / 10 : 1,   // toolbar size, 80–200 %
       bare: !!(b && b.bare),                                 // no background: only the buttons float over the page
+      dock: b && DOCKS.includes(b.dock) ? b.dock : null,     // attached to a side: full width or height there
       letter: main ? '' : cleanLetter(b && b.letter)
     };
   }
@@ -2579,7 +2633,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pens = () => allItems().filter(i => i.type === 'pen');
   let penId = store.get('penId', null);
   if (!itemById(penId) || itemById(penId).type !== 'pen') penId = pens()[0].id;
-  let tool = 'pen';                  // 'pen' | 'eraser' | 'lasso'
+  let tool = 'pen';                  // 'pen' | 'eraser' | 'lasso' | 'laser' | …
+  let laserId = null;                // the laser pointer in use (tool 'laser')
   const erasing = () => tool === 'eraser';
   let prevTool = 'pen';              // tool to return to after the magnifier rectangle
   let eraserMode = store.get('eraserMode', 'part') === 'whole' ? 'whole' : 'part';
@@ -3266,13 +3321,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const pw = W * S(), ph = H * S(), M = scrollMarginPx();
     // larger than the screen: it moves until its edge is the margin away from the screen edge; a side that fits
     // (also at "whole page") moves as well, up to the margin at either end. Going to "whole page" centres it (centrePage).
-    const fit = (len, size, t) => {
-      const a = size - M - len, b = M;
+    const fit = (len, size, t, i0, i1) => {          // i0, i1: room taken by attached toolbars at either end
+      const a = size - i1 - M - len, b = i0 + M;
       const lo = Math.min(a, b), hi = Math.max(a, b);
       return Math.min(hi, Math.max(lo, t));
     };
-    view.tx = fit(pw, vw, view.tx);
-    view.ty = fit(ph, vh, view.ty);
+    view.tx = fit(pw, vw, view.tx, dockIn.l, dockIn.r);
+    view.ty = fit(ph, vh, view.ty, dockIn.t, dockIn.b);
   }
   function positionSheet(el) {
     const s = S();
@@ -3283,6 +3338,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (pageHere && pageHere.page === pages[cur]) pageHere.v = { zoom: view.zoom, tx: view.tx, ty: view.ty };   // for the page toggle
     const s = S();
     for (const el of [pageEl, sheetB, ...pool]) positionSheet(el);
+    positionSheet(laserEl); laserEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
     for (const ctx of [lctx, tctx]) {
       ctx.restore(); ctx.save();
       ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * view.tx, dpr * view.ty);
@@ -3305,19 +3361,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const wasReal = isReal();
     const oldFit = view.fit, oldW = vw, oldH = vh;
     sizeCanvases();
-    view.fit = Math.min((vw - 2 * MARGIN) / W, (vh - 2 * MARGIN) / H);
+    view.fit = Math.min((vw - dockIn.l - dockIn.r - 2 * MARGIN) / W, (vh - dockIn.t - dockIn.b - 2 * MARGIN) / H);
     if (oldFit !== view.fit && view.zoom !== 1) {
       const cx = (vw / 2 - view.tx) / (oldFit * view.zoom), cy = (vh / 2 - view.ty) / (oldFit * view.zoom);
       view.tx = vw / 2 - cx * S(); view.ty = vh / 2 - cy * S();
     }
     if (wasReal) zoomAt(realZoom(), vw / 2, vh / 2, view.zoom, view.tx, view.ty);   // stay at real size after rotating
-    else if (view.zoom === 1 && (oldW !== vw || oldH !== vh)) Object.assign(view, centred());   // whole page, new screen size: in the middle
+    else if (view.zoom === 1 && (oldW !== vw || oldH !== vh || oldFit !== view.fit)) Object.assign(view, centred());   // whole page, new screen size: in the middle
     clampView(); applyView(); fitToolbars(); placeToolbar();
     if (openPop) placePop();
     if (calibDlg.open) drawCard();
   }
   function resetZoom() { view.zoom = 1; centrePage(); }
-  function centred(z = 1) { return { tx: (vw - W * view.fit * z) / 2, ty: (vh - H * view.fit * z) / 2 }; }   // the page in the middle
+  function centred(z = 1) {                         // the page in the middle (of the room next to attached toolbars)
+    return { tx: dockIn.l + (vw - dockIn.l - dockIn.r - W * view.fit * z) / 2, ty: dockIn.t + (vh - dockIn.t - dockIn.b - H * view.fit * z) / 2 };
+  }   // the page in the middle
   function centrePage() { Object.assign(view, centred(view.zoom)); clampView(); applyView(); }
 
   // ---- Real size (1:1): CSS px per real millimetre, measured once with a card ----
@@ -3356,6 +3414,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'search': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Search text boxes, PDF pages and bookmarks">${ICON.search}</button>`;
       case 'toggle': return `<button type="button" class="eraser" ${a} data-mode="${it.mode}" aria-pressed="false" aria-label="Toggle: ${TOGGLES[it.mode].name}. Hold for options">${TOGGLES[it.mode].icon}</button>`;
       case 'view': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="View: show or hide grid, sticky notes, drawings, text and images" title="View · show or hide parts of the page">${ICON.eye}</button>`;
+      case 'laser': return `<button type="button" class="eraser laserbtn" ${a} aria-pressed="false" style="--lc:${it.color}" aria-label="Laser pointer" title="Laser pointer · tap again for colour, size and fade time">${ICON.laser}</button>`;
       case 'magnifier': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Magnifier: drag a rectangle to keep it in view" title="Magnifier · drag a rectangle on the page">${ICON.magnifier}</button>`;
       case 'lasso': return `<button type="button" class="eraser" ${a} aria-pressed="false" aria-label="Select: circle ink to move or delete it" title="Select · circle ink to move or delete it">${ICON.lasso}</button>`;
       case 'undo': return `<button type="button" ${a} aria-label="Undo" title="Undo">${ICON.undo}</button>`;
@@ -3640,6 +3699,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           break;
         }
         case 'magnifier': el.setAttribute('aria-pressed', String(tool === 'magnifier')); break;
+        case 'laser': el.setAttribute('aria-pressed', String(tool === 'laser' && laserId === it.id)); el.style.setProperty('--lc', it.color); break;
         case 'search': el.setAttribute('aria-pressed', String(!!srch.q)); break;
         case 'toggle':
           if (el.dataset.mode !== it.mode) { el.innerHTML = TOGGLES[it.mode].icon; el.dataset.mode = it.mode; el.setAttribute('aria-label', `Toggle: ${TOGGLES[it.mode].name}. Hold for options`); }
@@ -3720,6 +3780,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (tool !== 'magnifier') { prevTool = tool; tool = 'magnifier'; closePops(); updateToolbarState(); toast('Drag a rectangle over the part of the page you want to keep in view.'); }
         else { tool = prevTool; updateToolbarState(); }
         break;
+      case 'laser':
+        if (tool === 'laser' && laserId === it.id) { openPop === laserPop ? closePops() : openLaserPop(it, el); }
+        else { if (sel) clearSelection(); tool = 'laser'; laserId = it.id; closePops(); updateToolbarState(); }
+        break;
       case 'eraser':
         if (tool === it.type) { openPop === eraserPop ? closePops() : (renderEraserPop(), showPop(eraserPop, el)); }
         else { tool = it.type; closePops(); updateToolbarState(); }
@@ -3769,6 +3833,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function closePops() {
     if (openPop && openPop.id === 'cropPop' && typeof endCrop === 'function') { const p = openPop; openPop = null; p.hidden = true; endCrop(true); popAnchor = null; return; }
     if (openPop === bmPop) { if (pickTo) closeBmPicker(); bmColOpen = null; }
+    if (openPop === laserPop && pickTo) closeBmPicker();
     if (openPop) openPop.hidden = true;
     if (openPop === penPop) { penEdit = { kind: 'pen' }; pk.open = false; }
     openPop = popAnchor = null;
@@ -4026,6 +4091,42 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('eraseMode').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
     eraserMode = b.dataset.m; store.set('eraserMode', eraserMode); renderEraserPop();
   }));
+  // ---- Laser pointer options: colour, line size, fade time ----
+  const laserPop = $('laserPop');
+  let lzItem = null;
+  function openLaserPop(it, el) { lzItem = it; renderLaserPop(); showPop(laserPop, el); }
+  function renderLaserPop() {
+    const it = lzItem; if (!it) return;
+    const inList = LASER_COLORS.includes(it.color), lent = !!(pickTo && pickTo.laser === it);
+    $('lzSwatches').innerHTML = LASER_COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" aria-label="Colour ${c}" aria-pressed="${it.color === c}"></button>`).join('');
+    const cb = $('lzCustom');
+    cb.setAttribute('aria-pressed', String(!inList)); cb.setAttribute('aria-expanded', String(lent));
+    cb.querySelector('.dot').style.background = inList ? 'conic-gradient(#d92b1e, #f0bf12, #2f9e41, #0e9bb8, #1f6fd1, #a92fb4, #d92b1e)' : it.color;
+    cb.querySelector('small').textContent = inList ? '' : it.color.toUpperCase();
+    $('lzSize').value = it.size; $('lzSizeVal').textContent = it.size + ' mm';
+    const fi = LASER_FADES.reduce((b, v, i) => Math.abs(v - it.fade) < Math.abs(LASER_FADES[b] - it.fade) ? i : b, 0);
+    $('lzFade').value = fi; $('lzFadeVal').textContent = it.fade + ' s';
+  }
+  function laserChanged() { saveItems(); updateToolbarState(); if (openPop === laserPop) placePop(); }
+  $('lzSwatches').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]');
+    if (!b || !lzItem) return;
+    if (pickTo) closeBmPicker();
+    lzItem.color = b.dataset.c; renderLaserPop(); laserChanged();
+  });
+  $('lzCustom').addEventListener('click', () => {
+    if (!lzItem) return;
+    if (pickTo) { const was = pickTo.laser; closeBmPicker(); renderLaserPop(); if (was) { placePop(); return; } }
+    const it = lzItem;
+    pickTo = hex => { it.color = hex; if (lzItem === it) renderLaserPop(); laserChanged(); };
+    pickTo.laser = it; pk.open = true;
+    $('lzCustom').after(pickerEl); pickerEl.hidden = false;
+    pickerFrom(it.color); paintPicker();
+    renderLaserPop(); placePop();
+  });
+  $('lzSize').addEventListener('input', e => { if (!lzItem) return; lzItem.size = +e.target.value; renderLaserPop(); laserChanged(); });
+  $('lzFade').addEventListener('input', e => { if (!lzItem) return; lzItem.fade = LASER_FADES[+e.target.value] || 2; renderLaserPop(); laserChanged(); });
+
   $('clearPage').addEventListener('click', async () => {
     closePops();
     if (!pages[cur].strokes.length && !notesOf(pages[cur]).length && !imagesOf(pages[cur]).length) return;
@@ -4038,14 +4139,34 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Toolbars: placing and dragging (each one independently) ----
   const barK = b => b.scale || 1;
   function placeToolbar() {
-    bars.forEach(b => {
+    const dk = { t: 0, r: 0, b: 0, l: 0 };
+    const vDock = b => b.dock === 'left' || b.dock === 'right';
+    [...bars].sort((a, b) => vDock(a) - vDock(b)).forEach(b => {      // top and bottom first: left and right fit between them
       const el = barEl(b);
       if (!el) return;
+      if (b.dock) b.orient = vDock(b) ? 'v' : 'h';
+      el.classList.toggle('docked', !!b.dock);
+      DOCKS.forEach(d => el.classList.toggle('dock-' + d, b.dock === d));
+      el.style.width = el.style.height = '';
       el.classList.toggle('vertical', b.orient === 'v');
       el.setAttribute('aria-orientation', b.orient === 'v' ? 'vertical' : 'horizontal');
       el.hidden = !b.enabled;
       el.style.setProperty('--tbk', barK(b));
       el.classList.toggle('bare', !!b.bare);
+      if (b.dock) {
+        const k = barK(b), iw = window.innerWidth, ih = window.innerHeight, px = v => v + 'px';
+        const st = { transform: 'none', left: 'auto', top: 'auto', right: 'auto', bottom: 'auto' };
+        if (b.dock === 'top') Object.assign(st, { transformOrigin: '0 0', left: '0', top: px(dk.t), width: px(iw / k) });
+        else if (b.dock === 'bottom') Object.assign(st, { transformOrigin: '0 100%', left: '0', bottom: px(dk.b), width: px(iw / k) });
+        else if (b.dock === 'left') Object.assign(st, { transformOrigin: '0 0', left: px(dk.l), top: px(dk.t), height: px((ih - dk.t - dk.b) / k) });
+        else Object.assign(st, { transformOrigin: '100% 0', right: px(dk.r), top: px(dk.t), height: px((ih - dk.t - dk.b) / k) });
+        Object.assign(el.style, st);
+        if (b.enabled) {
+          if (b.dock === 'top') dk.t += el.offsetHeight * k; else if (b.dock === 'bottom') dk.b += el.offsetHeight * k;
+          else if (b.dock === 'left') dk.l += el.offsetWidth * k; else dk.r += el.offsetWidth * k;
+        }
+        return;
+      }
       if (!b.pos) { el.style.left = el.style.top = el.style.transform = el.style.right = el.style.bottom = el.style.transformOrigin = ''; return; }
       el.style.transformOrigin = '0 0';
       const w = el.offsetWidth * barK(b), h = el.offsetHeight * barK(b);
@@ -4053,6 +4174,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       b.pos.y = Math.max(4, Math.min(window.innerHeight - h - 4, b.pos.y));
       Object.assign(el.style, { transform: 'none', right: 'auto', bottom: 'auto', left: b.pos.x + 'px', top: b.pos.y + 'px' });
     });
+    const key = [dk.t, dk.r, dk.b, dk.l].map(Math.round).join();
+    if (key !== dockKey) {                         // attached toolbars changed: the page fits into the new room
+      dockKey = key; dockIn = dk;
+      requestAnimationFrame(() => { layout(); if (view.zoom === 1) centrePage(); });
+    }
   }
   // drag a toolbar by its first button; a tap without moving calls onTap
   // Right after a finger gesture on the page (a finger lasso, erasing, a swipe), Chrome sometimes drops the click of the
@@ -4100,7 +4226,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.px, dy = e.clientY - drag.py;
       if (!drag.moved && Math.hypot(dx, dy) < 6) return;
-      if (!drag.moved) { drag.moved = true; closePops(); drag.el.classList.add('dragging'); }
+      if (!drag.moved) {
+        drag.moved = true; closePops(); drag.el.classList.add('dragging');
+        if (bar.dock) {                            // dragging an attached toolbar takes it off its side
+          bar.dock = null; drag.el.style.width = drag.el.style.height = '';
+          const r = drag.el.getBoundingClientRect(); drag.x = Math.min(r.left, drag.px - 20); drag.y = Math.min(r.top, drag.py - 20);
+        }
+      }
       bar.pos = { x: drag.x + dx, y: drag.y + dy };
       placeToolbar();
     });
@@ -4121,15 +4253,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     barPopBar = b;
     const i = bars.indexOf(b);
     $('barPopTitle').textContent = b.letter ? `Toolbar ${b.letter}` : `Toolbar ${i + 1}`;
-    $('barOrient').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.o === b.orient)));
+    $('barOrient').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(!b.dock && x.dataset.o === b.orient)));
+    $('barDock').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.d === (b.dock || ''))));
     showPop($('barPop'), anchor);
   }
   $('barOrient').querySelectorAll('button').forEach(x => x.addEventListener('click', () => {
     const b = barPopBar;
     if (!b) return;
     closePops();
-    if (b.orient === x.dataset.o) return;
+    if (b.orient === x.dataset.o && !b.dock) return;
+    if (b.dock) { b.dock = null; b.pos = null; }   // floating again (at its usual place)
     b.orient = x.dataset.o;                   // the toolbar stays where it is, only its layout turns
+    saveItems(); renderToolbar();
+  }));
+  $('barDock').querySelectorAll('button').forEach(x => x.addEventListener('click', () => {
+    const b = barPopBar;
+    if (!b) return;
+    closePops();
+    const d = x.dataset.d || null;
+    if (d === b.dock) return;
+    if (!d) b.pos = null;                     // off: floating at its usual place
+    b.dock = d;
+    if (d) b.orient = d === 'left' || d === 'right' ? 'v' : 'h';
     saveItems(); renderToolbar();
   }));
   attachDrag($('app'), bars[0], () => { openPop === setPop || openPop === advPop || openPop === gestPop || openPop === navPop ? closePops() : showPop(setPop, $('app')); });
@@ -4458,7 +4603,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       `<button type="button" role="tab" data-bar="${b.id}" aria-pressed="${b === edBar}"${b.enabled ? '' : ' class="off"'}>${i ? 'Toolbar ' + (b.letter ? esc(b.letter) : i + 1) : 'Main'}${b.enabled ? '' : ' (hidden)'}</button>`
     ).join('') + `<button type="button" class="new" id="tbNew">+ New toolbar</button>`;
     const main = edBar === bars[0];
-    $('tbOrient').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.o === edBar.orient)));
+    $('tbOrient').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(!edBar.dock && b.dataset.o === edBar.orient)));
+    $('tbDock').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.d === (edBar.dock || ''))));
     $('tbBg').checked = !edBar.bare;
     $('tbSize').value = Math.round(barK(edBar) * 100); $('tbSizeVal').textContent = Math.round(barK(edBar) * 100) + ' %';
     $('tbShowRow').hidden = main;
@@ -4486,8 +4632,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     renderTbList();
   });
   $('tbOrient').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-    if (edBar.orient === b.dataset.o) return;
-    edBar.orient = b.dataset.o; edBar.pos = null;        // a new layout starts at its default spot
+    if (edBar.orient === b.dataset.o && !edBar.dock) return;
+    edBar.orient = b.dataset.o; edBar.pos = null; edBar.dock = null;   // a new layout starts at its default spot (floating)
+    itemsChanged();
+  }));
+  $('tbDock').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    const d = b.dataset.d || null;
+    if (d === edBar.dock) return;
+    edBar.dock = d; edBar.pos = null;
+    if (d) edBar.orient = d === 'left' || d === 'right' ? 'v' : 'h';
     itemsChanged();
   }));
   $('tbSize').addEventListener('input', e => {     // live while sliding; the layout (wrapping) is redone when let go
@@ -4532,6 +4685,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (it.type === 'preset') { const lk = presetLook(it); return `<span class="ico ${lk === 'size' ? 'sizeico' : presetClass(lk)}" data-look="${lk}">${presetInner(lk)}</span>`; }
     if (it.type === 'sepbr') return `<span class="ico">${ICON.sepbr}</span>`;
     if (it.type === 'real') return `<span class="ico txt">1:1</span>`;
+    if (it.type === 'laser') return `<span class="ico" style="--lc:${it.color}">${ICON.laser}</span>`;
     const ic = it.type === 'lock' ? ICON.lock(false) : it.type === 'fs' ? ICON.fs(false) : it.type === 'toggle' ? TOGGLES[it.mode].icon : it.type === 'fold' ? MIN_ICON : ICON[it.type];
     return `<span class="ico">${ic}</span>`;
   }
@@ -4620,6 +4774,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!b || b.disabled) return;
     const t = b.dataset.add, it = { id: uid(), type: ITEM_TYPES[t].add ? 'preset' : t };
     if (t === 'toggle') it.mode = 'notebook';
+    if (t === 'laser') {                      // a colour not on a laser pointer yet
+      const used = new Set(allItems().filter(i => i.type === 'laser').map(i => i.color));
+      Object.assign(it, cleanLaser({ color: LASER_COLORS.find(c => !used.has(c)) || LASER_COLORS[0] }));
+    }
     const presets = allItems().filter(i => i.type === 'preset');
     if (t === 'pen' || t === 'preset') it.brush = cleanBrush(brush());    // starts with the pen's current ink
     if (t === 'preset') it.use = cleanUse(null, ALL_BUT_KIND);
@@ -5480,11 +5638,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         letter: b.letter || '',
         orientation: b.orient === 'v' ? 'vertical' : 'horizontal',
         position: b.pos,
+        attach: b.dock || 'off',
         items: b.items.map(it => it.type === 'pen' || it.type === 'preset'
           ? { type: it.type, color: it.brush.color, widthMm: it.brush.width, opacity: it.brush.opacity, penType: it.brush.kind, highlighter: it.brush.highlighter, colorPickedOnDarkPaper: it.brush.pickedOnDark,
               ...(it.use ? { sets: { color: it.use.color, thickness: it.use.width, opacity: it.use.opacity, penType: it.use.kind, highlighter: it.use.highlighter } } : {}),
               ...(it.locks ? { locked: { color: !!it.locks.color, thickness: !!it.locks.width, opacity: !!it.locks.opacity, penType: !!it.locks.kind, highlighter: !!it.locks.highlighter } } : {}) }
-          : { type: it.type, ...(it.type === 'toggle' ? { mode: it.mode } : it.type === 'fold' ? { folded: !!it.folded } : {}), ...(it.bg ? { backgroundColor: it.bg } : {}) })
+          : { type: it.type, ...(it.type === 'toggle' ? { mode: it.mode } : it.type === 'fold' ? { folded: !!it.folded } : it.type === 'laser' ? { color: it.color, size: it.size, fade: it.fade } : {}), ...(it.bg ? { backgroundColor: it.bg } : {}) })
       })),
       selectedPen: pens().findIndex(p => p.id === penId) + 1,
       eraserSizeMm: eraserSize,
@@ -5520,7 +5679,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       : i.type === 'size' ? { type: 'size', width: i.widthMm }
       : i.type === 'color' ? { type: 'color', paint: { color: i.color, opacity: i.opacity, highlighter: i.highlighter, pickedOnDark: i.colorPickedOnDarkPaper } }
       : { ...i, bg: i.backgroundColor });
-    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false }, main);
+    const fileBar = (t, main) => cleanBar({ items: fileItems(Array.isArray(t.items) ? t.items : []), orient: t.orientation === 'vertical' ? 'v' : 'h', pos: t.position, enabled: t.enabled !== false, letter: t.letter, scale: +t.sizePercent / 100, bare: t.background === false, dock: t.attach }, main);
     let newBars = null;
     // toolbars from files before v45 are ignored
     if (+o.formatVersion >= 3 && Array.isArray(o.toolbars) && o.toolbars.length) newBars = o.toolbars.map((t, i) => fileBar(t || {}, i === 0));
@@ -6063,15 +6222,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   function trackUse() {                            // the pen or tool used before this one
     if (tool === 'magnifier') return;
-    const k = tool === 'pen' ? 'pen:' + penId : tool;
+    const k = tool === 'pen' ? 'pen:' + penId : tool === 'laser' ? 'laser:' + laserId : tool;
     if (useHere && useHere.k === k) return;
     if (useHere) useBack = useHere;
-    useHere = { k, tool, penId };
+    useHere = { k, tool, penId, laserId };
   }
-  const TOOL_NAMES = { eraser: 'eraser', lasso: 'select', sticky: 'sticky notes', text: 'text' };
+  const TOOL_NAMES = { eraser: 'eraser', lasso: 'select', sticky: 'sticky notes', text: 'text', laser: 'laser pointer' };
   const useName = u => u.tool === 'pen' ? `pen ${pens().indexOf(itemById(u.penId)) + 1}` : TOOL_NAMES[u.tool] || u.tool;
   const otherNotebook = () => byOpened(nbIdx.loaded.filter(m => m.id !== nbIdx.current))[0] || null;
-  const useOk = u => u && (u.tool !== 'pen' || !!itemById(u.penId));
+  const useOk = u => u && (u.tool === 'pen' ? !!itemById(u.penId) : u.tool === 'laser' ? !!itemById(u.laserId) : true);
   function toggleName(it) {
     switch (it.mode) {
       case 'notebook': { const o = otherNotebook(); return o ? `Toggle · notebook “${o.name}”` : 'Toggle · notebooks (no other open)'; }
@@ -6111,7 +6270,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (!useOk(b)) { toast('Use another pen or tool first; then this button switches between the two.', 2400); return; }
         if (sel) clearSelection();
         closePops();
-        tool = b.tool; if (b.tool === 'pen') penId = b.penId;
+        tool = b.tool; if (b.tool === 'pen') penId = b.penId; if (b.tool === 'laser') laserId = b.laserId;
         saveItems();
         break;
       }
@@ -6162,6 +6321,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         penEdit = { kind: 'preset', item: it, linked: tool === 'pen' && modMatches(it) }; renderPenPop(); showPop(penPop, el);
         break;
       case 'eraser': renderEraserPop(); showPop(eraserPop, el); break;
+      case 'laser':                                // like a pen: it is taken, then its options open
+        if (sel) clearSelection();
+        tool = 'laser'; laserId = it.id; updateToolbarState(); openLaserPop(it, el);
+        break;
       case 'sticky': noteEdit = { kind: 'tool' }; renderNotePop(); showPop(notePop, el); break;
       case 'text': textEdit = { kind: 'tool' }; renderTextPop(); showPop(textPop, el); break;
       case 'toggle': openTogglePop(it, el); break;
@@ -6171,7 +6334,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'image': showPop(imgAddPop, el); break;
     }
   }
-  const HOLD_OPTS = new Set(['pen', 'preset', 'eraser', 'sticky', 'text', 'toggle', 'pentype', 'view', 'bookmark', 'image']);
+  const HOLD_OPTS = new Set(['pen', 'preset', 'eraser', 'laser', 'sticky', 'text', 'toggle', 'pentype', 'view', 'bookmark', 'image']);
   let tbHold = null, tbSkipClick = false;
   document.addEventListener('pointerdown', e => {
     const el = e.target.closest && e.target.closest('.tb-items [data-id]');
@@ -9298,6 +9461,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('magClose').addEventListener('click', closeMag);
 
   // choosing the region with the magnifier tool
+  // ---- Laser pointer: drawn over the page, never saved, fades away after its time ----
+  let laserPage = null;
+  function startLaser(e) {
+    const it = itemById(laserId);
+    if (!it || it.type !== 'laser') { tool = 'pen'; updateToolbarState(); startStroke(e); return; }
+    if (laserPage !== pages[cur]) { laserEl.textContent = ''; laserPage = pages[cur]; }   // another page: the old lines go
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'lz'); g.style.setProperty('--lc', it.color);
+    g.innerHTML = `<path class="lz-glow" stroke-width="${it.size * 2.6}"/><path class="lz-line" stroke-width="${it.size}"/><path class="lz-core" stroke-width="${it.size * 0.36}"/>`;
+    laserEl.appendChild(g);
+    const q = toMM(e);
+    active = { id: e.pointerId, type: e.pointerType, laser: g, lzD: `M${q[0].toFixed(2)} ${q[1].toFixed(2)}l0 0`, lzLast: q, lzFade: it.fade };
+    laserPaint();
+  }
+  function laserPaint() { for (const p of active.laser.children) p.setAttribute('d', active.lzD); }
+  function laserMove(list) {
+    const a = active;
+    let add = '';
+    for (const s of list) {
+      const q = toMM(s);
+      if (Math.hypot(q[0] - a.lzLast[0], q[1] - a.lzLast[1]) < 0.2) continue;
+      add += `L${q[0].toFixed(2)} ${q[1].toFixed(2)}`; a.lzLast = q;
+    }
+    if (add) { a.lzD += add; laserPaint(); }
+  }
+  function endLaser() {
+    const a = active; active = null;
+    const g = a.laser;
+    setTimeout(() => { g.classList.add('out'); setTimeout(() => g.remove(), 700); }, a.lzFade * 1000);
+  }
   function startMagSel(e) {
     clearCtx(lctx); clearCtx(tctx);
     liveWrap.style.opacity = 1; liveWrap.style.mixBlendMode = 'normal';
@@ -9457,6 +9650,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const a = active;
     if (!a) return;
     if (a.magsel) { active = null; clearCtx(tctx); return; }
+    if (a.laser) { endLaser(); return; }
     if (a.noteDrag) { endNoteDrag(); return; }
     if (a.textDrag) { endTextDrag(); return; }
     if (a.textTool) { endTextTool(null); return; }
@@ -10540,6 +10734,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (tool === 'lasso' && !isBtn(e)) { startLasso(e); return; }
       if (tool === 'magnifier') { startMagSel(e); return; }
       if (tool === 'sticky') { placeNote(e); return; }
+      if (tool === 'laser' && !isBtn(e)) { startLaser(e); return; }
       if (isBtn(e)) btnDown(e);
       else if (erasing()) startErase(e);
       else startStroke(e);
@@ -10584,7 +10779,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
       if (tool === 'sticky') { placeNote(e); return; }
       if (tool === 'text') { textDown(e); return; }
-      tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
+      tool === 'laser' ? startLaser(e) : tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
       return;
     }
     if (active) return;
@@ -10594,7 +10789,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (info && !info.quick && !(tool === 'lasso' && inSelBox(toMM(e)))) startNav(e, info);
     else if (tool === 'sticky') placeNote(e);
     else if (tool === 'text') textDown(e);
-    else tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
+    else tool === 'laser' ? startLaser(e) : tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
   });
 
   // the stylus button: on a sticky note or image it grabs it (a tap opens its options), elsewhere it erases
@@ -10627,6 +10822,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active.erase && active.byBtn && !zero && !isBtn(e) && (e.buttons & 1)) {
       finishStroke(e, true);
       if (erasing() || tool === 'lasso' || tool === 'magnifier' || tool === 'sticky' || tool === 'text') { startErase(e); active.byBtn = true; }
+      else if (tool === 'laser') startLaser(e);
       else startStroke(e);
       return true;
     }
@@ -10692,6 +10888,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active.erase) { eraseMove(list.length ? list : [e]); if (active.type === 'touch' && !fingTag.hidden) showFingTag(e); return; }
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
+    if (active.laser) { laserMove(list.length ? list : [e]); return; }
     if (active.move) { selMove(e); return; }
     if (active.sm && smoothMove(e)) return;
     holdWatch(e);
@@ -10727,6 +10924,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       else if (active.peek) endPeek();
       else if (active.lasso) endLasso();
       else if (active.magsel) endMagSel();
+      else if (active.laser) endLaser();
       else if (active.move) endSelMove();
       else finishStroke(e, true);
     }
@@ -11023,6 +11221,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       case 'fold': return it.folded ? 'Show the hidden buttons' : 'Minimize · hide the buttons before this one';
       case 'image': return 'Image · camera, gallery or paste';
       case 'magnifier': return 'Magnifier';
+      case 'laser': return `Laser pointer · ${it.size} mm · fades after ${it.fade} s`;
       case 'undo': return 'Undo';
       case 'inmode': return penSeen ? 'Stylus mode · tap: finger mode' : 'Finger mode · tap: stylus mode';
       case 'redo': return 'Redo';
