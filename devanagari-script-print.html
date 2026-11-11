@@ -71,6 +71,9 @@ h1 small{font-size:13px;font-weight:400;color:var(--muted);margin-left:12px}
 .trad label{display:inline-flex;gap:6px;align-items:center;cursor:pointer;color:var(--fg)}
 .trad input{width:16px;height:16px;margin:0}
 .trad b{font-weight:400;font-size:20px;line-height:1}
+.trad .tf{display:inline-flex;gap:6px;align-items:center}
+.trad select{font:inherit;font-size:13px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:#fff;cursor:pointer;max-width:150px}
+.trad select:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
 .trad input:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
 .vr{grid-area:r;align-self:stretch}
 .vr{background:var(--line);margin-top:3mm}
@@ -179,14 +182,11 @@ html.thumb .sheet~.sheet{display:none}
   <button type="button" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Print</button>
   <div class="opts">
     <div class="trad" role="group" aria-label="Traditions shown">
-      <label><input type="checkbox" value="hi"><b class="hi">क</b>Hindi</label>
-      <label><input type="checkbox" value="sa"><b class="sa">क</b>Sanskrit</label>
-      <label><input type="checkbox" value="no"><b class="no">क</b>Sanskrit north</label>
-      <label><input type="checkbox" value="mr"><b class="mr">क</b>Marathi</label>
+      <span class="tf"><label><input type="checkbox" value="hi"><b class="hi">क</b>Hindi</label><select data-font="hi" aria-label="Font for Hindi"></select></span>
+      <span class="tf"><label><input type="checkbox" value="sa"><b class="sa">क</b>Sanskrit</label><select data-font="sa" aria-label="Font for Sanskrit"></select></span>
+      <span class="tf"><label><input type="checkbox" value="no"><b class="no">क</b>Sanskrit north</label><select data-font="no" aria-label="Font for Sanskrit north"></select></span>
+      <span class="tf"><label><input type="checkbox" value="mr"><b class="mr">क</b>Marathi</label><select data-font="mr" aria-label="Font for Marathi"></select></span>
     </div>
-    <label class="car"><b class="sa" style="font-weight:400;font-size:20px;line-height:1">क</b>Sanskrit font
-      <select id="fsa"></select>
-    </label>
     <label class="xopt"><input type="checkbox" id="xopt">Extra letters</label>
     <label class="xopt"><input type="checkbox" id="popt">Vowel places</label>
     <label class="xopt"><input type="checkbox" id="ropt">Rules</label>
@@ -243,7 +243,7 @@ const $ = id => document.getElementById(id);
 const el = (cls, html) => { const d = document.createElement("div"); d.className = cls; if (html != null) d.innerHTML = html; return d; };
 const txt = (p, s, cls) => { const e = document.createElement("span"); if (cls) e.className = cls; e.textContent = s; p.append(e); };
 
-// Fonts for the Sanskrit forms: [id, family, name, source, letters in the Sanskrit (southern) form, letters in the northern form]
+// Fonts a tradition can be drawn in: [id, family, name, source, letters in the Sanskrit (southern) form, letters in the northern form]
 // source: t = loaded in <head>, f = file in fonts/, s = fonts/sets/ copy, g = Google Fonts (loaded when chosen).
 // The forms were sorted by eye against Tiro Hindi (Hindi forms), Tiro Sanskrit and Uttara; letters not listed have the Hindi form.
 const SA_FORMS = "ऋ ॠ ल श १ ५ ८ ९ पू मू कू ◌ू";
@@ -268,28 +268,33 @@ const FONTS = [
   ["ku","Kurale","Kurale","g",DIG_FORMS,""],
 ];
 const fontById = id => FONTS.find(f => f[0] === id);
-let saFont = "s2";
-const SA_FONT = () => fontById(saFont);
+// The font of each tradition, chosen next to its checkbox; kept in the link as fh, f (Sanskrit), fn, fm
+const FONT_DEFAULT = {hi:"th", sa:"s2", no:"ut", mr:"tm"};
+const FONT_KEY = {hi:"fh", sa:"f", no:"fn", mr:"fm"};
+const fontSel = {...FONT_DEFAULT};
+const fontOf = t => fontById(fontSel[t]);
 const loadedFonts = new Set();
-function applySaFont(){
-  const [id, fam, , src] = SA_FONT();
-  if (src === "g" && !loadedFonts.has(id)){
-    loadedFonts.add(id);
-    const l = document.createElement("link"); l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
-    document.head.append(l);
-  }
-  const f = src === "s" ? `"${fam} Sets","${fam}"` : `"${fam}"`;
-  document.documentElement.style.setProperty("--f-sa", `${f},"Noto Serif Devanagari",serif`);
-  TRAD[1].font = SA_FONT()[2].split(" · ")[0];
+function applyFonts(){
+  TRAD.forEach(t => {
+    const [id, fam, name, src] = fontOf(t.id);
+    if (src === "g" && !loadedFonts.has(id)){
+      loadedFonts.add(id);
+      const l = document.createElement("link"); l.rel = "stylesheet";
+      l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
+      document.head.append(l);
+    }
+    const f = src === "s" ? `"${fam} Sets","${fam}"` : `"${fam}"`;
+    document.documentElement.style.setProperty("--f-" + t.id, `${f},"Noto Serif Devanagari",serif`);
+    t.font = name.split(" · ")[0];
+  });
 }
 
-// Traditions, in display order; each draws with its own font (the Sanskrit one is chosen above)
+// Traditions, in display order; each draws with its own font (chosen above)
 const TRAD = [
-  {id:"hi", name:"Hindi", font:"Tiro", lang:"hi"},
+  {id:"hi", name:"Hindi", font:"Tiro Hindi", lang:"hi"},
   {id:"sa", name:"Sanskrit", font:"Sanskrit 2020", lang:"sa"},
   {id:"no", name:"Sanskrit north", font:"Uttara", lang:"sa"},
-  {id:"mr", name:"Marathi", font:"Tiro", lang:"mr"},
+  {id:"mr", name:"Marathi", font:"Tiro Marathi", lang:"mr"},
 ];
 const ALL = TRAD.map(t => t.id);
 let on = new Set(["sa"]);
@@ -299,13 +304,11 @@ const ORDER = () => [primary(), ...ALL.filter(f => f !== primary())];
 
 // Where the fonts draw a form differently (Tiro outlines compared with HarfBuzz; the other fonts sorted by eye).
 // Shape 0 = the Tiro Hindi form, 1 = the Sanskrit (southern) form, 2 = the northern (Calcutta) form.
-// Tiro Marathi uses the Sanskrit form for ल श and the digits, the Hindi form otherwise.
+// Each tradition looks up the forms of the font chosen for it (e.g. Tiro Marathi: Sanskrit form for ल श and the digits).
 const has = (list, x) => list.split(" ").includes(x);
 function shape(x, f){
-  if (f === "sa"){ const F = SA_FONT(); return has(F[5], x) ? 2 : has(F[4], x) ? 1 : 0; }
-  if (f === "mr") return has("ल श १ ५ ८ ९", x) ? 1 : 0;
-  if (f === "no") return has(NORTH, x) ? 2 : 0;
-  return 0;
+  const F = fontOf(f);
+  return has(F[5], x) ? 2 : has(F[4], x) ? 1 : 0;
 }
 // The forms a tile shows: one per switched-on tradition that has this letter, skipping repeats.
 // t is a string, or an object {tradition: text} when the traditions write different letters.
@@ -475,7 +478,7 @@ function buildKey(){
   });
 }
 
-// State: orientation, traditions, Sanskrit font and carrier, kept in the URL hash (#o=portrait&t=hi.sa.no&f=ts&c=m&x=1&pl=0&r=0; default: landscape, Sanskrit only in Sanskrit 2020, pa, no extra letters, places and rules shown)
+// State: orientation, traditions, their fonts and carrier, kept in the URL hash (#o=portrait&t=hi.sa.no&f=ts&fh=ns&c=m&x=1&pl=0&r=0; default: landscape, Sanskrit only; fonts Tiro Hindi, Sanskrit 2020, Uttara, Tiro Marathi; pa, no extra letters, places and rules shown)
 let portrait = false;
 function save(){
   const h = new URLSearchParams();
@@ -486,7 +489,7 @@ function save(){
   if (extra) h.set("x", "1");
   if (!places) h.set("pl", "0");
   if (!rules) h.set("r", "0");
-  if (saFont !== "s2") h.set("f", saFont);
+  TRAD.forEach(t => { if (fontSel[t.id] !== FONT_DEFAULT[t.id]) h.set(FONT_KEY[t.id], fontSel[t.id]); });
   try { history.replaceState(null, "", h.toString() ? "#" + h.toString().replace(/%2E/g, ".") : location.pathname); } catch(e){}
 }
 function render(){
@@ -500,9 +503,9 @@ function render(){
   $("ropt").checked = rules;
   $("vcar").textContent = car === "0" ? "sign" : "sign on " + CARRIERS[car][0];
   $("scar").textContent = car === "0" ? "" : "on " + CARRIERS[car][0];
-  applySaFont();
-  $("fsa").value = saFont;
-  $("fnote").textContent = "Further forms only where traditions differ · " + [...new Set(ORDER().map(id => TRAD.find(t => t.id === id)).filter(t => on.has(t.id)).map(t => t.id === "no" ? "Uttara: northern (Calcutta) style" : t.id === "sa" ? "Sanskrit: " + t.font : "Tiro Devanagari " + t.name))].join(" · ");
+  applyFonts();
+  document.querySelectorAll("[data-font]").forEach(s => s.value = fontSel[s.dataset.font]);
+  $("fnote").textContent = "Further forms only where traditions differ · " + ORDER().map(id => TRAD.find(t => t.id === id)).filter(t => on.has(t.id)).map(t => t.name + ": " + t.font).join(" · ");
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();
   save();
 }
@@ -516,10 +519,12 @@ try {
   extra = h.get("x") === "1";
   places = h.get("pl") !== "0";
   rules = h.get("r") !== "0";
-  if (fontById(h.get("f"))) saFont = h.get("f");
+  TRAD.forEach(t => { if (fontById(h.get(FONT_KEY[t.id]))) fontSel[t.id] = h.get(FONT_KEY[t.id]); });
 } catch(e){}
-FONTS.forEach(([v, , name]) => $("fsa").add(new Option(name, v)));
-$("fsa").onchange = e => { saFont = e.target.value; render(); };
+document.querySelectorAll("[data-font]").forEach(sel => {
+  FONTS.forEach(([v, , name]) => sel.add(new Option(name, v)));
+  sel.onchange = () => { fontSel[sel.dataset.font] = sel.value; render(); };
+});
 $("car").onchange = e => { car = e.target.value; render(); };
 $("xopt").onchange = e => { extra = e.target.checked; render(); };
 $("popt").onchange = e => { places = e.target.checked; render(); };
