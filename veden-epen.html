@@ -53,7 +53,8 @@ p{margin:0}
 .hint{font-size:13px;color:var(--muted)}
 /* the chart scrolls inside its frame (at most one window high); column headings stay on top, the year axis on the left */
 .scroll{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;justify-content:start;align-content:start;
-  overflow:auto;overscroll-behavior:contain;max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);
+  overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y; /* no page pinch-zoom here: a pinch zooms the diagram */
+  max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);
   -webkit-overflow-scrolling:touch;background:var(--panel);border:1px solid var(--line);border-radius:14px}
 .corner{grid-area:1/1;position:sticky;left:0;top:0;z-index:3;background:var(--panel);box-shadow:1px 1px 0 var(--line)}
 #head{grid-area:1/2;position:sticky;top:0;z-index:2;background:var(--panel);box-shadow:0 1px 0 var(--line)}
@@ -119,7 +120,7 @@ svg .conn.on .badge text,svg .dyn .badge text{fill:var(--ink)}
         <button id="zin" type="button" aria-label="Vergrößern">+</button>
       </div>
       <button id="fit" type="button">Ganze Grafik zeigen</button>
-      <span class="hint">Tippe auf ein Rechteck oder eine Nummer. Die Grafik lässt sich in alle Richtungen schieben, Spalten und Jahre bleiben sichtbar; Strg/⌘ + Mausrad zoomt.</span>
+      <span class="hint">Tippe auf ein Rechteck oder eine Nummer. Die Grafik lässt sich in alle Richtungen schieben, Spalten und Jahre bleiben sichtbar; Zwei-Finger-Zoom oder Strg/⌘ + Mausrad zoomt nur die Grafik.</span>
     </div>
     <div class="scroll" id="scroller">
       <div class="corner" id="corner" aria-hidden="true"></div>
@@ -688,6 +689,22 @@ scroller.addEventListener("wheel", e => {
   const r = scroller.getBoundingClientRect();
   setZoom(scale() * Math.exp(-e.deltaY * 0.0025), e.clientX - r.left, e.clientY - r.top);
 }, {passive: false});
+// Pinch on the diagram zooms the diagram, never the page: two-finger touch, and Safari's trackpad gesture events
+let pinch = null, frame = 0;
+const pinchZoom = (z, x, y) => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => setZoom(z, x, y)); };
+const mid = t => { const r = scroller.getBoundingClientRect(); return [(t[0].clientX + t[1].clientX) / 2 - r.left, (t[0].clientY + t[1].clientY) / 2 - r.top]; };
+const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+scroller.addEventListener("touchstart", e => { if (e.touches.length === 2) pinch = {d: dist(e.touches), z: scale()}; }, {passive: true});
+scroller.addEventListener("touchmove", e => {
+  if (!pinch || e.touches.length !== 2) return;
+  e.preventDefault();
+  pinchZoom(pinch.z * dist(e.touches) / pinch.d, ...mid(e.touches));
+}, {passive: false});
+scroller.addEventListener("touchend", e => { if (e.touches.length < 2) pinch = null; });
+let gz = 1;
+scroller.addEventListener("gesturestart", e => { e.preventDefault(); gz = scale(); });
+scroller.addEventListener("gesturechange", e => { e.preventDefault(); const r = scroller.getBoundingClientRect(); pinchZoom(gz * e.scale, e.clientX - r.left, e.clientY - r.top); });
+scroller.addEventListener("gestureend", e => e.preventDefault());
 addEventListener("resize", () => applySize(null, null, false));
 applySize(null, null, false);
 
