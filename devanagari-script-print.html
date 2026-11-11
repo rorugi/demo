@@ -146,11 +146,17 @@ footer{margin-top:3mm;padding-top:1.5mm;border-top:1px solid var(--line);font-si
   .sheet,.pt .sheet{width:auto;margin:0;padding:0;box-shadow:none}
   .pt .sheet{padding-left:10mm} /* with the 1 cm page margin: 2 cm on the left, even when a browser replaces the page margins */
 }
+/* ?thumb: live preview on devanagari-print-charts.html — no toolbar, first sheet only */
+html.thumb body{background:#fff;overflow:hidden}
+html.thumb .bar{display:none}
+html.thumb .sheet{margin:0 auto;box-shadow:none}
+html.thumb .sheet~.sheet{display:none}
 </style>
+<script>if(/[?&]thumb\b/.test(location.search))document.documentElement.classList.add("thumb")</script>
 </head>
 <body>
 <nav class="bar">
-  <a href="devanagari-writing.html">← Devanagari writing</a>
+  <a href="devanagari-print-charts.html">← Print charts</a>
   <a href="devanagari-ligatures-print.html">Ligature chart</a>
   <div class="seg" role="group" aria-label="Page orientation">
     <button type="button" id="oLand" aria-pressed="true">Landscape</button>

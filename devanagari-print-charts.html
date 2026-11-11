@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devanagari charts for print</title>
+<meta name="description" content="Two printable A4 Devanagari charts: the whole script on one sheet, and the most important conjuncts (ligatures) on two.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<style>
+/* Overview of the printable charts: one card per chart with a live, scaled-down preview of its first sheet (the chart page loaded with ?thumb). */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --accent:#e9a23b; --accent-soft:rgba(233,162,59,.16);
+  --f-deva:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120; --accent-soft:rgba(233,162,59,.18); color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:20px 56px;display:grid;gap:24px}
+header{display:grid;gap:4px}
+.back{font-size:14px;color:var(--muted);text-decoration:none;width:max-content}
+.back:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:8px}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:64ch}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:18px;align-items:start}
+.chart{display:grid;gap:12px;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;
+  transition:border-color .15s,transform .15s}
+.chart:hover{border-color:var(--accent);transform:translateY(-1px)}
+.chart:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.pv{position:relative;overflow:hidden;border-radius:6px;background:#fff;box-shadow:0 1px 8px rgba(0,0,0,.14);aspect-ratio:var(--ratio)}
+.pv iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;pointer-events:none;background:#fff}
+.pv .wait{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-deva);font-size:64px;color:#c9cec7}
+.chart h2{margin:0;font-size:20px;font-weight:600}
+.chart p{margin:0;color:var(--muted);font-size:15px}
+.facts{display:flex;flex-wrap:wrap;gap:6px}
+.facts span{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--muted)}
+.go{color:var(--accent);font-weight:600;font-size:14px}
+.tips{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.tips h2{margin:0 0 6px;font-size:17px}
+.tips ul{margin:0;padding-left:20px;color:var(--muted);font-size:15px}
+.tips a{color:inherit}
+.tips a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <div class="eyebrow">Devanagari</div>
+    <h1>Charts for print <span class="deva">देवनागरी</span></h1>
+    <p class="lede">Two A4 reference sheets to keep next to you while reading or writing: the whole script on one page, and the conjuncts on two. Set the options on the chart, then print it or save it as a PDF.</p>
+  </header>
+
+  <div class="charts">
+    <a class="chart" href="devanagari-script-print.html">
+      <div class="pv" style="--ratio:297/210" data-src="devanagari-script-print.html?thumb" data-w="1123" aria-hidden="true"><div class="wait">क</div></div>
+      <h2>Script chart</h2>
+      <p>Every letter on one sheet: vowels as letters and as signs on a consonant, consonants by place and manner of articulation, extra letters, signs such as anusvāra and visarga, and digits.</p>
+      <div class="facts"><span>1 page</span><span>A4 landscape or portrait</span><span>Hindi, Sanskrit, northern and Marathi forms</span></div>
+      <span class="go">Open the script chart →</span>
+    </a>
+    <a class="chart" href="devanagari-ligatures-print.html">
+      <div class="pv" style="--ratio:210/297" data-src="devanagari-ligatures-print.html?thumb" data-w="794" aria-hidden="true"><div class="wait">क्ष</div></div>
+      <h2>Ligature chart</h2>
+      <p>The most important conjunct consonants, ordered in tiers from the ones you meet on every page to rare forms, each in two fonts you choose, so Hindi half forms and Sanskrit stacks can be compared.</p>
+      <div class="facts"><span>2 pages</span><span>A4 portrait</span><span>Choice of two fonts and styles</span></div>
+      <span class="go">Open the ligature chart →</span>
+    </a>
+  </div>
+
+  <section class="tips">
+    <h2>Printing</h2>
+    <ul>
+      <li>Use the print button on the chart or your browser's print command. Keep the scale at 100 % so the sheet fills the page.</li>
+      <li>Your choices (fonts, traditions, orientation) are kept in the link, so you can bookmark or share a chart set up the way you like it.</li>
+      <li>To learn the letters and conjuncts behind the charts, see <a href="devanagari-writing.html">Devanagari writing</a> and <a href="devanagari-ligatures.html">Devanagari ligatures</a>.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+/* Load each chart in an iframe at its real A4 width and scale it down to the card. */
+(function () {
+  const boxes = [...document.querySelectorAll('.pv')];
+  function fit(box) {
+    const f = box.querySelector('iframe'); if (!f) return;
+    const w = +box.dataset.w, s = box.clientWidth / w;
+    let h = w * (box.clientHeight / box.clientWidth) / 1;
+    try {
+      const sheet = f.contentDocument && f.contentDocument.querySelector('.sheet');
+      if (sheet && sheet.offsetHeight) { h = sheet.offsetHeight; box.style.aspectRatio = `${w} / ${h}`; }
+    } catch (e) {}
+    f.style.width = w + 'px'; f.style.height = h + 'px';
+    f.style.transform = `scale(${box.clientWidth / w})`;
+  }
+  function load(box) {
+    if (box.querySelector('iframe')) return;
+    const f = document.createElement('iframe');
+    f.src = box.dataset.src; f.tabIndex = -1; f.title = ''; f.setAttribute('aria-hidden', 'true'); f.loading = 'lazy';
+    f.style.width = box.dataset.w + 'px'; f.style.height = Math.round(box.dataset.w * box.clientHeight / box.clientWidth) + 'px';
+    f.style.transform = `scale(${box.clientWidth / box.dataset.w})`;
+    f.addEventListener('load', () => {
+      fit(box);
+      setTimeout(() => fit(box), 600);           // after the web fonts have arrived
+      try { f.contentDocument.fonts.ready.then(() => fit(box)); } catch (e) {}
+      const w = box.querySelector('.wait'); if (w) w.remove();
+    });
+    box.appendChild(f);
+  }
+  boxes.forEach(load);
+  const ro = new ResizeObserver(es => es.forEach(e => fit(e.target)));
+  boxes.forEach(b => ro.observe(b));
+})();
+</script>
+</body>
+</html>
