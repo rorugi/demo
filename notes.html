@@ -1273,7 +1273,20 @@
   .overview header { flex-direction: column; align-items: stretch; gap: 10px; }
   .overview .ovtop, .overview .ovtools { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .overview .ovtop .ovtitles { flex: 1; }
-  .overview header #ovDone { margin-left: auto; flex: none; }
+  .overview header #ovDone { margin-left: 0; flex: none; }
+  /* go to page: a number, Enter or Go */
+  .ovgo { display: flex; flex: none; margin-left: auto; height: 36px; border: 1px solid var(--bar-line); border-radius: 999px; overflow: hidden; background: var(--panel); }
+  .ovgo input { width: 64px; border: 0; background: transparent; color: var(--bar-fg); font: 500 15px var(--ui); padding: 0 6px 0 14px; outline: none; text-align: center; }
+  .ovgo input:focus { background: var(--active); }
+  .overview header .ovgo button { height: 100%; border-radius: 0; border: 0; border-left: 1px solid var(--bar-line); background: transparent; color: var(--bar-fg); padding: 0 14px; }
+  .ovgo.bad { animation: ovbad .3s; }
+  @keyframes ovbad { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  /* scrollbar at the right side: drag the knob (shows the page) or tap the track */
+  .ovscroll { position: absolute; right: 0; width: 26px; touch-action: none; cursor: pointer; }
+  .ovscroll::before { content: ''; position: absolute; top: 0; bottom: 0; right: 9px; width: 4px; border-radius: 2px; background: var(--bar-line); opacity: .7; }
+  .ovscroll i { position: absolute; right: 6px; width: 10px; min-height: 36px; border-radius: 5px; background: var(--bar-fg); opacity: .45; transition: opacity .15s; }
+  .ovscroll:hover i, .ovscroll.drag i { opacity: .75; }
+  .ovtip { position: absolute; right: 30px; transform: translateY(-50%); padding: 5px 10px; border-radius: 8px; background: var(--brand); color: var(--brand-fg); font: 600 13px var(--ui); white-space: nowrap; pointer-events: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
   .overview header .ovchip { margin-left: 0; flex: none; }
   /* preview size: a long slider with a big knob, easy to set with a finger */
   .overview .ovtools { flex-wrap: wrap; row-gap: 8px; }
@@ -1301,7 +1314,7 @@
     grid-template-columns: repeat(auto-fill, minmax(var(--tw, 118px), 1fr));
     align-content: start;
     gap: 22px 18px;
-    padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 40px) max(16px, env(safe-area-inset-left, 0px));
+    padding: 8px max(30px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 40px) max(16px, env(safe-area-inset-left, 0px));
   }
   .thumb { display: grid; gap: 7px; justify-items: center; cursor: pointer; }
   .thumb .paper {
@@ -1313,6 +1326,7 @@
   }
   .thumb .paper svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .thumb.cur .paper { outline: 3px solid var(--brand); outline-offset: 4px; }
+  .thumb.goto .paper { outline: 3px dashed var(--brand); outline-offset: 4px; }
   .thumb .num { font: 500 12px/1 var(--ui); font-variant-numeric: tabular-nums; opacity: .7; }
   .thumb .del {
     position: absolute; top: 5px; right: 5px;
@@ -1817,6 +1831,7 @@
 <div class="overview" id="overview" hidden>
   <header>
     <div class="ovtop"><div class="ovtitles"><h2 id="ovTitle">Pages</h2><span id="ovSub">Tap to open · hold and drag to reorder</span></div>
+    <form class="ovgo" id="ovGo"><input type="text" id="ovGoIn" inputmode="numeric" autocomplete="off" enterkeyhint="go" placeholder="Page" aria-label="Go to page number"><button type="submit" id="ovGoBtn">Go</button></form>
     <button type="button" id="ovDone">Done</button></div>
     <div class="ovtools">
     <label class="ovzoom" title="Preview size"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><input type="range" id="ovZoom" min="70" max="420" step="10" aria-label="Preview size"><svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/></svg></label>
@@ -1825,6 +1840,7 @@
     </div>
   </header>
   <div class="ov-grid" id="ovGrid"></div>
+  <div class="ovscroll" id="ovScroll" aria-hidden="true"><i id="ovThumb"></i><span class="ovtip" id="ovTip" hidden></span></div>
 </div>
 
 <dialog class="dlg" id="setupDlg" aria-labelledby="setupTitle">
@@ -2178,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_200';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.77';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_201';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.78';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -10994,6 +11010,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ovSize = Math.round(Math.max(70, Math.min(420, v)));
     ovGrid.style.setProperty('--tw', ovSize + 'px');
     $('ovZoom').value = ovSize;
+    if (typeof ovBar === 'function') requestAnimationFrame(ovBar);
     if (!keep) store.set('ovZoom', ovSize);
   }
   setOvSize(ovSize, true);
@@ -11013,6 +11030,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     $('ovSub').textContent = ovPick ? 'Tap the page it should go to' : `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · tap to open · hold a page to reorder, a sticky note or image to move it`;
     $('ovDone').textContent = ovPick ? 'Cancel' : 'Done';
     $('ovNotesBtn').setAttribute('aria-pressed', String(ovNotes));
+    if (typeof ovBar === 'function') requestAnimationFrame(ovBar);
   }
   function openOverview() {
     closePops();
@@ -11022,6 +11040,67 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     ov.hidden = false;
     const c = ovGrid.querySelector('.thumb.cur');
     if (c) ovGrid.scrollTop = Math.max(0, c.offsetTop - ovGrid.clientHeight / 2 + c.offsetHeight / 2);
+    $('ovGoIn').value = ''; $('ovGoIn').placeholder = `1–${pages.length}`;
+    ovBar();
+  }
+  // ---- go to a page by its number (in "move to a page" mode: moves there) ----
+  $('ovGo').addEventListener('submit', e => {
+    e.preventDefault();
+    const n = parseInt($('ovGoIn').value, 10);
+    if (!(n >= 1 && n <= pages.length)) {
+      const f = $('ovGo'); f.classList.remove('bad'); void f.offsetWidth; f.classList.add('bad');
+      toast(`There ${pages.length === 1 ? 'is 1 page' : `are ${pages.length} pages`}.`, 1600);
+      return;
+    }
+    $('ovGoIn').value = ''; $('ovGoIn').blur();
+    ovPick ? moveNoteTo(n - 1) : goTo(n - 1);
+  });
+  $('ovGoIn').addEventListener('input', e => {        // while typing, the page shows in the overview
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5);
+    const n = parseInt(e.target.value, 10), t = n >= 1 && ovGrid.querySelector(`.thumb[data-i="${Math.min(n, pages.length) - 1}"]`);
+    ovGrid.querySelectorAll('.thumb.goto').forEach(x => x.classList.remove('goto'));
+    if (t) { t.classList.add('goto'); ovGrid.scrollTop = Math.max(0, t.offsetTop - ovGrid.clientHeight / 2 + t.offsetHeight / 2); }
+  });
+  // ---- the scrollbar at the right side ----
+  const ovScroll = $('ovScroll'), ovThumb = $('ovThumb'), ovTip = $('ovTip');
+  function ovBar() {
+    if (ov.hidden) return;
+    const top = ovGrid.offsetTop, h = ovGrid.clientHeight, sh = ovGrid.scrollHeight;
+    ovScroll.hidden = sh <= h + 2;
+    if (ovScroll.hidden) return;
+    Object.assign(ovScroll.style, { top: top + 8 + 'px', height: h - 16 + 'px' });
+    const th = Math.max(36, (h - 16) * h / sh), room = h - 16 - th;
+    ovThumb.style.height = th + 'px';
+    ovThumb.style.top = room * ovGrid.scrollTop / (sh - h) + 'px';
+  }
+  const ovPageAt = () => {                           // the page at the middle of the visible part
+    const mid = ovGrid.scrollTop + ovGrid.clientHeight / 2;
+    let best = null;
+    for (const t of ovGrid.querySelectorAll('.thumb[data-i]')) { if (t.offsetTop <= mid) best = t; else break; }
+    return best ? +best.dataset.i + 1 : 1;
+  };
+  ovGrid.addEventListener('scroll', ovBar);
+  window.addEventListener('resize', ovBar);
+  {
+    let d = null;
+    const to = y => {
+      const r = ovScroll.getBoundingClientRect(), th = ovThumb.offsetHeight, room = r.height - th;
+      const f = room > 0 ? Math.max(0, Math.min(1, (y - r.top - d.grab) / room)) : 0;
+      ovGrid.scrollTop = f * (ovGrid.scrollHeight - ovGrid.clientHeight);
+      ovTip.hidden = false; ovTip.textContent = `Page ${ovPageAt()}`;
+      ovTip.style.top = ovThumb.offsetTop + th / 2 + 'px';
+    };
+    ovScroll.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      cancelAnimationFrame(inertia);
+      const tr = ovThumb.getBoundingClientRect();
+      d = { id: e.pointerId, grab: e.target === ovThumb ? e.clientY - tr.top : ovThumb.offsetHeight / 2 };   // the track: the knob jumps there
+      ovScroll.setPointerCapture(e.pointerId); ovScroll.classList.add('drag');
+      to(e.clientY);
+    });
+    ovScroll.addEventListener('pointermove', e => { if (d && e.pointerId === d.id) to(e.clientY); });
+    const end = e => { if (!d || e.pointerId !== d.id) return; d = null; ovScroll.classList.remove('drag'); ovTip.hidden = true; };
+    ovScroll.addEventListener('pointerup', end); ovScroll.addEventListener('pointercancel', end);
   }
   function closeOverview() { ov.hidden = true; if (ovPick) { ovPick = null; ov.classList.remove('picking'); } }
   function goTo(i) { cur = i; renderPage(); scheduleSave(); closeOverview(); }
