@@ -89,7 +89,8 @@ button:focus-visible,.tog input:focus-visible,summary:focus-visible{outline:2px 
 .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px}
 .step.apply{border-left:4px solid var(--accent)}
 .step .t{font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-.sutra{font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+.sutra{font-size:13px;font-weight:500;color:var(--muted);overflow-wrap:anywhere}
+.sutra .num{white-space:nowrap}
 .sutra .num{font-variant-numeric:tabular-nums;color:var(--fg)}
 .sutra.deva{font-size:15px}
 .step p{margin:0;color:var(--muted);font-size:15px}
@@ -114,6 +115,30 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;box-shadow:0 
 .variant{font-size:14px;color:var(--muted)}
 .variant b{color:var(--fg);font-weight:500}
 
+.view{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.stage-list{display:grid;gap:18px}
+.topbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.tabs button{font-size:15px;padding:8px 16px}
+.forms{flex-wrap:wrap;border-radius:14px}
+.forms button{display:grid;gap:0;text-align:left;line-height:1.25;padding:6px 12px}
+.forms button small{font-size:12px;color:var(--muted);font-weight:400}
+.morphs{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:flex-start}
+.mo{display:grid;justify-items:center;gap:0;border:1px solid var(--line);border-radius:8px;padding:2px 9px 3px;background:var(--bg);min-width:34px}
+.mo .mt{font-size:20px;font-style:italic;line-height:1.35}
+.mo .mt.deva{font-style:normal;font-size:22px}
+.mo .ml{font-size:11px;color:var(--muted);letter-spacing:.02em}
+.mo.on{border-color:var(--accent);background:var(--accent-soft)}
+.mplus{color:var(--muted);font-size:16px;align-self:center;margin-top:-12px}
+.rootgrid{display:grid;gap:8px;margin:8px 0}
+.rootgrid .cls{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+.rootgrid .cls>span{font-size:13px;color:var(--muted);min-width:118px}
+.board .forms-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fchip{appearance:none;font:inherit;font-size:14px;border:1px solid rgba(238,242,233,.3);background:transparent;color:var(--chalk);border-radius:999px;padding:1px 10px;cursor:pointer}
+.fchip.deva{font-size:16px}
+.fchip:hover{border-color:var(--accent)}
+.fchip[aria-current="true"]{border-color:var(--accent);color:var(--accent)}
+.fchip small{color:var(--chalk-dim);font-size:11px;margin-right:4px;font-family:var(--f-ui)}
+details ol{padding-left:20px}
 details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
 summary{cursor:pointer;font-weight:600}
 details p,details li{color:var(--muted);font-size:15px}
@@ -132,9 +157,21 @@ details p{margin:8px 0}
     <a class="back" href="index.html">← Demos</a>
     <div class="eyebrow">Sanskrit grammar</div>
     <h1>Sandhi, step by step <span class="deva">सन्धि</span></h1>
-    <p class="lede">Type two words in IAST or Devanagari. The page checks the sandhi rules in order, shows each one that applies with its Pāṇini sūtra, and says why the others don't.</p>
+    <p class="lede">Join two words, or build a form from its root. Every step names the Pāṇini sūtra that applies and shows what changes; rules that don't fit are listed with the reason.</p>
   </header>
 
+  <div class="topbar">
+    <div class="seg tabs" role="group" aria-label="Mode">
+      <button type="button" data-tab="join" aria-pressed="true">Join two words</button>
+      <button type="button" data-tab="derive" aria-pressed="false">Root → form</button>
+    </div>
+    <div class="seg" role="group" aria-label="Show in">
+      <button type="button" data-script="iast" aria-pressed="true">IAST</button>
+      <button type="button" data-script="deva" aria-pressed="false" class="deva">नागरी</button>
+    </div>
+  </div>
+
+  <div class="view" id="joinView">
   <section aria-label="Words">
     <div class="pair">
       <label class="field"><span>Word 1</span>
@@ -150,10 +187,6 @@ details p{margin:8px 0}
         <button type="button" data-mode="sentence" aria-pressed="true">In a sentence</button>
         <button type="button" data-mode="compound" aria-pressed="false">Compound</button>
       </div>
-      <div class="seg" role="group" aria-label="Show in">
-        <button type="button" data-script="iast" aria-pressed="true">IAST</button>
-        <button type="button" data-script="deva" aria-pressed="false" class="deva">नागरी</button>
-      </div>
       <button type="button" class="btn" id="swap" title="Swap the two words">⇄ Swap</button>
       <label class="tog"><input type="checkbox" id="dual"><span>Word 1 is a dual (pragṛhya)</span></label>
     </div>
@@ -162,8 +195,7 @@ details p{margin:8px 0}
 
   <section class="board" id="board" aria-live="polite"></section>
 
-  <section id="trace" class="stage-list" style="display:grid;gap:18px" aria-label="Steps"></section>
-
+  <section id="trace" class="stage-list" aria-label="Steps"></section>
   <details>
     <summary>How the page works</summary>
     <p>Each pair goes through the same checks, in this order:</p>
@@ -176,7 +208,43 @@ details p{margin:8px 0}
     <p>Covered: the external sandhi rules found in the standard tables (vowel sandhi, visarga, final <i>m</i>, <i>n</i> and stops, <i>ch</i> doubling). Not covered: internal sandhi inside a word (for example <i>budh + ta → buddha</i>), the change of <i>n</i> to <i>ṇ</i> after <i>r ṛ ṣ</i>, Vedic exceptions, and words with irregular behaviour beyond <i>saḥ</i> and <i>eṣaḥ</i>. A visarga typed as <i>ḥ</i> is treated as coming from <i>s</i>, except in common <i>r</i>-words such as <i>punaḥ</i>, <i>antaḥ</i>, <i>prātaḥ</i>; type the word with a final <i>r</i> to say it explicitly.</p>
     <p>Sūtra numbers refer to Pāṇini's Aṣṭādhyāyī (book.chapter.rule).</p>
   </details>
-  <p class="foot">The link updates as you type, so you can share a pair.</p>
+  </div>
+
+  <div class="view" id="deriveView" hidden>
+  <section aria-label="Root and form">
+    <label class="field"><span>Root (dhātu), or a finished form to look up</span>
+      <input id="root" lang="sa" list="rootlist" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="budh, kṛ, गम्, buddha …">
+      <small class="readas" id="rr"></small></label>
+    <datalist id="rootlist"></datalist>
+    <div class="controls" style="margin-top:10px">
+      <div class="seg forms" role="group" aria-label="Form" id="forms"></div>
+    </div>
+    <div class="examples" id="dexamples"><span>Try:</span></div>
+  </section>
+
+  <section class="board" id="dboard" aria-live="polite"></section>
+
+  <section id="dtrace" class="stage-list" aria-label="Steps"></section>
+
+  <details>
+    <summary>Roots in the list</summary>
+    <p>The derivation needs to know each root's class, whether it takes the connecting vowel <i>iṭ</i>, and its irregularities, so it works from a built-in list. Tap a root to load it.</p>
+    <div class="rootgrid" id="rootgrid"></div>
+  </details>
+  <details>
+    <summary>How the derivation works</summary>
+    <ol>
+      <li><b>Root and affix.</b> The root gets the affix for the chosen form. Pāṇini's affixes carry marker letters (<i>it</i>) that are dropped but tell the grammar how to treat them: the <i>k</i> of <i>kta</i> means “no guṇa”, the <i>p</i> of <i>tip</i> means “guṇa allowed”.</li>
+      <li><b>Present stem.</b> In the present the root's class (gaṇa) decides the vikaraṇa between root and ending: <i>a</i>, <i>ya</i>, <i>nu</i>, <i>u</i>, <i>nā</i>, an infix <i>na</i>, reduplication or nothing. A few common roots have a special present stem (<i>gam → gacch</i>, <i>sthā → tiṣṭha</i>, <i>dṛś → paśya</i>).</li>
+      <li><b>iṭ.</b> Before the other affixes some roots insert <i>i</i> (seṭ roots), others don't (aniṭ).</li>
+      <li><b>Changes inside the root:</b> loss of a nasal, samprasāraṇa (<i>vac → uc</i>, <i>yaj → ij</i>) and guṇa (<i>i → e</i>, <i>u → o</i>, <i>ṛ → ar</i>).</li>
+      <li><b>Where root and affix meet:</b> the internal sandhi rules, among them Bartholomae's law (<i>budh + ta → buddha</i>), voicing and devoicing, <i>ś → ṣ → k</i>, the change of <i>s</i> to <i>ṣ</i> after <i>i u ṛ k</i>, and of <i>n</i> to <i>ṇ</i> after <i>r ṛ ṣ</i>.</li>
+    </ol>
+    <p>The order of the steps follows the usual teaching order, not Pāṇini's exact rule ordering. Forms with prefixes (<i>-ya</i> absolutives), other persons and tenses, and roots outside the list are not covered.</p>
+  </details>
+  </div>
+
+  <p class="foot">The link updates as you type, so you can share what you see.</p>
 </div>
 
 <script>
@@ -752,7 +820,7 @@ function run(aTok, bTok, opt) {
 /* ---------- Rendering ---------- */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const state = {mode: 'sentence', script: 'iast'};
+const state = {mode: 'sentence', script: 'iast', tab: 'join'};
 
 function tok(s) { const r = parseIast(s); return r.tokens || [s]; }
 function frag(s, cls = '') { // a sound or short sequence, in the current script
@@ -776,7 +844,7 @@ function plain(st, script) {
 }
 function sutraHtml(s) {
   const name = state.script === 'deva'
-    ? `<span class="deva" lang="sa-Deva">${esc(toDeva(tok(s.name)))}</span>`
+    ? `<span class="deva" lang="sa-Deva">${esc(s.name.split('…').map(x => toDeva(tok(x))).join('…'))}</span>`
     : `<i>${esc(s.name.replace(/'/g, '’'))}</i>`;
   return `<span class="sutra${state.script === 'deva' ? ' deva' : ''}"><span class="num">${s.num}</span> ${name}</span>`;
 }
@@ -902,7 +970,7 @@ function setScript(s) {
     c.textContent = s === 'deva' ? `${toDeva(tok(c.dataset.a))} + ${toDeva(tok(c.dataset.b))}` : `${c.dataset.a} + ${c.dataset.b}`;
     c.classList.toggle('deva', s === 'deva');
   });
-  render();
+  renderAll();
 }
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 document.querySelectorAll('[data-script]').forEach(b => b.addEventListener('click', () => setScript(b.dataset.script)));
@@ -911,24 +979,490 @@ $('#w1').addEventListener('input', render);
 $('#w2').addEventListener('input', render);
 $('#dual').addEventListener('change', render);
 
+/* =====================================================================
+   Root → form: derivation of a single word from its root (prakriyā)
+   ===================================================================== */
+const CLASS = {1:'bhvādi',2:'adādi',3:'juhotyādi',4:'divādi',5:'svādi',6:'tudādi',7:'rudhādi',8:'tanādi',9:'kryādi',10:'curādi'};
+const FORMS = {
+  pres: {name: 'Present', sub: '3rd sg.', affix: 'laṭ'},
+  fut:  {name: 'Future', sub: '3rd sg.', affix: 'lṛṭ'},
+  ppp:  {name: 'Past participle', sub: 'kta', affix: 'kta'},
+  abs:  {name: 'Absolutive', sub: 'ktvā', affix: 'ktvā'},
+  inf:  {name: 'Infinitive', sub: 'tumun', affix: 'tumun'},
+  ger:  {name: 'Gerundive', sub: 'tavyat', affix: 'tavyat'}
+};
+const FORM_KEYS = Object.keys(FORMS);
+
+const IT_7270 = {on: true, s: [S('7.2.70', 'ṛddhanoḥ sye')], why: 'Roots ending in ṛ, and han, take iṭ before sya, although they are otherwise aniṭ.'};
+const NASAL_LOSS = (to, root) => ({to, title: 'The final nasal drops',
+  s: [S('6.4.37', 'anudāttopadeśavanatitanotyādīnām anunāsikalopo jhali kṅiti')],
+  why: `Before a kit affix beginning with a consonant, the final nasal of ⟦${root}⟧ is lost.`});
+
+/* The root list. set: seṭ (takes iṭ) in general. Overrides and irregularities are spelled out per root. */
+const ROOTS = [
+  {r:'bhū', g:'be, become', c:1, p:'P', set:1, kitIt:{on:false, s:[S('7.2.11','śryukaḥ kiti')], why:'Before a kit affix, roots ending in u, ū or ṛ take no iṭ, although bhū is otherwise seṭ.'}},
+  {r:'budh', g:'wake, understand', c:1, p:'P'},
+  {r:'kṛ', g:'do, make', c:8, p:'P', syaIt:IT_7270},
+  {r:'gam', g:'go', c:1, p:'P',
+    syaIt:{on:true, s:[S('7.2.58','gamer iṭ parasmaipadeṣu')], why:'gam takes iṭ before an active (parasmaipada) affix beginning with s.'},
+    pres:{to:'gacch', title:'gam becomes gacch', s:[S('7.3.77','iṣugamiyamāṃ chaḥ'), S('6.1.73','che ca')], why:'Before the śit vikaraṇa the final m of gam is replaced by ⟦ch⟧, and a ⟦t⟧ inserted before ⟦ch⟧ turns into ⟦c⟧.'},
+    kit:NASAL_LOSS('ga','gam')},
+  {r:'nī', g:'lead', c:1, p:'P'},
+  {r:'ji', g:'conquer', c:1, p:'P'},
+  {r:'smṛ', g:'remember', c:1, p:'P', syaIt:IT_7270},
+  {r:'car', g:'move, walk', c:1, p:'P', set:1},
+  {r:'pat', g:'fall, fly', c:1, p:'P', set:1},
+  {r:'paṭh', g:'read, recite', c:1, p:'P', set:1},
+  {r:'jīv', g:'live', c:1, p:'P', set:1},
+  {r:'khād', g:'eat', c:1, p:'P', set:1},
+  {r:'nam', g:'bow', c:1, p:'P', kit:NASAL_LOSS('na','nam')},
+  {r:'yaj', g:'worship, sacrifice', c:1, p:'P', vrasc:1,
+    kit:{to:'ij', title:'Samprasāraṇa: ya becomes i', s:[S('6.1.15','vacisvapiyajādīnāṃ kiti'), S('6.1.108','samprasāraṇāc ca')], why:'Before a kit affix the ⟦y⟧ of yaj becomes the vowel ⟦i⟧ (samprasāraṇa), and the following ⟦a⟧ merges into it.'}},
+  {r:'dṛś', g:'see', c:1, p:'P',
+    pres:{to:'paśya', title:'dṛś becomes paśya', s:[S('7.3.78','pāghrādhmāsthā… pibajighradhamatiṣṭha…')], why:'Before a śit affix dṛś is replaced by ⟦paśya⟧.'},
+    am:{to:'draś', title:'dṛś becomes draś', s:[S('6.1.58','sṛjidṛśor jhaly am akiti'), S('6.1.77','iko yaṇ aci')], why:'Before an affix that begins with a consonant and is not kit, dṛś inserts ⟦a⟧ after ⟦ṛ⟧, and ⟦ṛ⟧ before it becomes ⟦r⟧.'}},
+  {r:'sthā', g:'stand', c:1, p:'P',
+    pres:{to:'tiṣṭha', title:'sthā becomes tiṣṭha', s:[S('7.3.78','pāghrādhmāsthā… pibajighradhamatiṣṭha…')], why:'Before a śit affix sthā is replaced by ⟦tiṣṭha⟧.'},
+    kit:{to:'sthi', title:'ā becomes i', s:[S('7.4.40','dyatisyatimāsthām it ti kiti')], why:'Before a kit affix beginning with t, the ⟦ā⟧ of sthā becomes ⟦i⟧.'}},
+  {r:'dah', g:'burn', c:1, p:'P', h:{to:'gh', s:[S('8.2.32','dāder dhātor ghaḥ')], why:'In a root beginning with d, a final ⟦h⟧ becomes ⟦gh⟧ before a consonant.'}},
+  {r:'labh', g:'obtain', c:1, p:'Ā'},
+  {r:'vac', g:'speak', c:2, p:'P',
+    kit:{to:'uc', title:'Samprasāraṇa: va becomes u', s:[S('6.1.15','vacisvapiyajādīnāṃ kiti'), S('6.1.108','samprasāraṇāc ca')], why:'Before a kit affix the ⟦v⟧ of vac becomes the vowel ⟦u⟧ (samprasāraṇa), and the following ⟦a⟧ merges into it.'}},
+  {r:'i', g:'go', c:2, p:'P'},
+  {r:'han', g:'strike, kill', c:2, p:'P', syaIt:IT_7270, kit:NASAL_LOSS('ha','han')},
+  {r:'duh', g:'milk', c:2, p:'P', h:{to:'gh', s:[S('8.2.32','dāder dhātor ghaḥ')], why:'In a root beginning with d, a final ⟦h⟧ becomes ⟦gh⟧ before a consonant.'}},
+  {r:'dā', g:'give', c:3, p:'P',
+    pres:{to:'dadā', title:'The root is reduplicated', s:[S('6.1.10','ślau'), S('7.4.59','hrasvaḥ')], why:'ślu makes the root double; the vowel of the first copy is shortened: ⟦dā⟧ → ⟦da-dā⟧.'},
+    kit:{to:'dad', title:'dā becomes dad', s:[S('7.4.46','do dad ghoḥ')], why:'Before a kit affix beginning with t, the root dā (“give”) is replaced by ⟦dad⟧.'}},
+  {r:'nah', g:'bind', c:4, p:'P', h:{to:'dh', s:[S('8.2.34','naho dhaḥ')], why:'The final ⟦h⟧ of nah becomes ⟦dh⟧ before a consonant.'}},
+  {r:'man', g:'think', c:4, p:'Ā', kit:NASAL_LOSS('ma','man')},
+  {r:'su', g:'press out (soma)', c:5, p:'P'},
+  {r:'āp', g:'reach, obtain', c:5, p:'P'},
+  {r:'śak', g:'be able', c:5, p:'P'},
+  {r:'śru', g:'hear', c:5, p:'P',
+    pres:{to:'śṛ', title:'śru becomes śṛ', s:[S('3.1.74','śruvaḥ śṛ ca')], why:'With the vikaraṇa śnu, śru is replaced by ⟦śṛ⟧.'}},
+  {r:'viś', g:'enter', c:6, p:'P'},
+  {r:'diś', g:'point, show', c:6, p:'P'},
+  {r:'muc', g:'release', c:6, p:'P',
+    pres:{to:'muñc', title:'A nasal is inserted: muñc', s:[S('7.1.59','śe mucādīnām'), S('8.3.24','naś cāpadāntasya jhali'), S('8.4.58','anusvārasya yayi parasavarṇaḥ')], why:'Before the vikaraṇa śa, muc and similar roots insert a nasal (num) before the last consonant; before ⟦c⟧ it is pronounced ⟦ñ⟧.'}},
+  {r:'rudh', g:'obstruct', c:7, p:'P'},
+  {r:'yuj', g:'yoke, join', c:7, p:'P'},
+  {r:'krī', g:'buy', c:9, p:'P'},
+  {r:'jñā', g:'know', c:9, p:'P',
+    pres:{to:'jā', title:'jñā becomes jā', s:[S('7.3.79','jñājanor jā')], why:'Before a śit affix jñā is replaced by ⟦jā⟧.'}},
+  {r:'cur', g:'steal', c:10, p:'P'},
+  {r:'cint', g:'think', c:10, p:'P'}
+];
+ROOTS.forEach(R => { R.t = tok(R.r); });
+
+const JHAL = t => isStop(t) || ['ś','ṣ','s','h'].includes(t);
+const VOICED_ASP = t => isStop(t) && C[t].voiced && C[t].asp;
+
+function itDecision(R, fk) {
+  const gen = S('7.2.35', 'ārdhadhātukasyeḍ valādeḥ');
+  if (R.c === 10) return {on: true, s: [gen], why: 'The stem with ṇic has more than one vowel, so the general rule applies: an ārdhadhātuka affix beginning with a consonant other than y gets the augment iṭ, ⟦i⟧.'};
+  if (fk === 'fut' && R.syaIt) return R.syaIt;
+  if ((fk === 'ppp' || fk === 'abs') && R.kitIt) return R.kitIt;
+  if (R.set) return {on: true, s: [gen], why: `⟦${R.r}⟧ is a seṭ root: an ārdhadhātuka affix beginning with a consonant other than y gets the augment iṭ, ⟦i⟧.`};
+  return {on: false, s: [S('7.2.10', "ekāca upadeśe 'nudāttāt")], why: `⟦${R.r}⟧ is an aniṭ root: a one-syllable root taught with low pitch (anudātta) takes no iṭ.`};
+}
+
+function derive(R, fk) {
+  let id = 0;
+  const mk = (kind, t, label, extra) => Object.assign({id: ++id, kind, t: typeof t === 'string' ? tok(t) : t, label}, extra || {});
+  const steps = [];
+  let M = [], prev = [];
+  const sig = m => m.id + ':' + m.t.join('');
+  const apply = o => {
+    M = M.filter(m => m.t.length);
+    const before = new Set(prev);
+    const morphs = M.map(m => Object.assign({}, m, {t: [...m.t]}));
+    steps.push(Object.assign({type: 'apply', sutras: []}, o, {morphs, changed: morphs.map(m => !before.has(sig(m)))}));
+    prev = M.map(sig);
+  };
+  const skip = (title, why, sutras) => steps.push({type: 'skip', title, why, sutras: sutras || []});
+  const root = mk('root', [...R.t], 'root');
+  const P = R.p === 'P';
+  M = [root];
+  apply({title: 'Start from the root', text: `⟦${R.r}⟧ “${R.g}”: class ${R.c} (${CLASS[R.c]}), ${P ? 'active endings (parasmaipada)' : 'middle endings (ātmanepada)'}.`, sutras: [S('1.3.1', 'bhūvādayo dhātavaḥ')]});
+
+  if (R.c === 10) {
+    M.push(mk('vik', 'i', 'ṇic', {guna: true, trig: true}));
+    apply({title: 'Add ṇic', sutras: [S('3.1.25', '…curādibhyo ṇic')],
+      text: 'Class 10 roots take the suffix ṇic in every form. ⟦ṇ⟧ and ⟦c⟧ are markers (it), so what is added is ⟦i⟧. It is ārdhadhātuka, so the root before it can take guṇa.'});
+  }
+
+  // Affix
+  const end = () => P ? mk('end', 'ti', 'tip', {trig: true}) : mk('end', 'te', 'ta', {trig: false});
+  const endText = P ? 'the 3rd person singular active ending tip: its ⟦p⟧ is a marker, so ⟦ti⟧ is added, and it counts as pit'
+                    : 'the 3rd person singular middle ending ta, whose final vowel becomes ⟦e⟧ (3.4.79): ⟦te⟧';
+  const endSut = [S('3.4.78', 'tiptasjhi…mahiṅ')].concat(P ? [S('1.3.3', 'halantyam')] : [S('3.4.79', 'ṭita ātmanepadānāṃ ṭer e')]);
+  let aff = null;
+  if (fk === 'pres') {
+    M.push(end());
+    apply({title: 'Add the present ending', sutras: [S('3.2.123', 'vartamāne laṭ')].concat(endSut),
+      text: `The present tense (laṭ) is replaced by ${endText}.`});
+  } else if (fk === 'fut') {
+    aff = mk('aff', 'sya', 'sya', {trig: true});
+    M.push(aff, end());
+    apply({title: 'Add the future affix sya and the ending', sutras: [S('3.3.13', 'lṛṭ śeṣe ca'), S('3.1.33', 'syatāsī lṛluṭoḥ')].concat(endSut),
+      text: `The future (lṛṭ) puts ⟦sya⟧ between root and ending; the ending is ${endText}.`});
+  } else {
+    const A = {
+      ppp: ['ta', 'kta', false, [S('3.2.102', 'niṣṭhā'), S('1.3.8', 'laśakvataddhite')], 'The past participle is made with kta. Its ⟦k⟧ is a marker (it), so ⟦ta⟧ is added; because of the k the affix is kit, which blocks guṇa.'],
+      abs: ['tvā', 'ktvā', false, [S('3.4.21', 'samānakartṛkayoḥ pūrvakāle'), S('1.3.8', 'laśakvataddhite')], 'The absolutive (“having done”) is made with ktvā. Its ⟦k⟧ is a marker, so ⟦tvā⟧ is added, and it is kit.'],
+      inf: ['tum', 'tumun', true, [S('3.3.10', 'tumunṇvulau kriyāyāṃ kriyārthāyām'), S('1.3.2', "upadeśe 'janunāsika it"), S('1.3.3', 'halantyam')], 'The infinitive is made with tumun. ⟦u⟧ and ⟦n⟧ are markers, so ⟦tum⟧ is added. It is not kit, so guṇa can apply.'],
+      ger: ['tavya', 'tavyat', true, [S('3.1.96', 'tavyattavyānīyaraḥ'), S('1.3.3', 'halantyam')], 'The gerundive (“to be done”) is made with tavyat. The final ⟦t⟧ is a marker, so ⟦tavya⟧ is added. It is not kit.']
+    }[fk];
+    aff = mk('aff', A[0], A[1], {trig: A[2]});
+    M.push(aff);
+    apply({title: `Add the affix ${A[1]}`, sutras: A[3], text: A[4]});
+  }
+
+  // Present stem: vikaraṇa
+  if (fk === 'pres') {
+    const at = M.length - 1;
+    const V = {
+      1: ['a','śap',true,S('3.1.68','kartari śap'),'⟦ś⟧ and ⟦p⟧ are markers, leaving ⟦a⟧. It is pit, so the root before it takes guṇa.'],
+      10:['a','śap',true,S('3.1.68','kartari śap'),'⟦ś⟧ and ⟦p⟧ are markers, leaving ⟦a⟧; it follows the ṇic.'],
+      4: ['ya','śyan',false,S('3.1.69','divādibhyaḥ śyan'),'⟦ś⟧ and ⟦n⟧ are markers, leaving ⟦ya⟧. Without a p marker it counts as ṅit (1.2.4), which blocks guṇa.'],
+      5: ['nu','śnu',false,S('3.1.73','svādibhyaḥ śnuḥ'),'⟦ś⟧ is a marker, leaving ⟦nu⟧. Without a p marker it counts as ṅit (1.2.4), so the root keeps its vowel.'],
+      6: ['a','śa',false,S('3.1.77','tudādibhyaḥ śaḥ'),'⟦ś⟧ is a marker, leaving ⟦a⟧. Without a p marker it counts as ṅit (1.2.4), so the root keeps its vowel.'],
+      8: ['u','u',true,S('3.1.79','tanādikṛñbhya uḥ'),'It has no ś marker, so it is ārdhadhātuka (3.4.114): the root before it takes guṇa.'],
+      9: ['nā','śnā',false,S('3.1.81','kryādibhyaḥ śnā'),'⟦ś⟧ is a marker, leaving ⟦nā⟧. Without a p marker it counts as ṅit (1.2.4), so the root keeps its vowel.']
+    }[R.c];
+    if (V) {
+      M.splice(at, 0, mk('vik', V[0], V[1], {trig: V[2], guna: ['nu','u'].includes(V[0])}));
+      apply({title: `Add the vikaraṇa ${V[1]}`, sutras: [V[3]],
+        text: `Between a root of class ${R.c} and a present ending comes the vikaraṇa ${V[1]}. ${V[4]}`});
+    } else if (R.c === 2) {
+      skip('No vikaraṇa', 'In class 2 (adādi) the śap is dropped, so the ending follows the root directly.', [S('2.4.72', 'adiprabhṛtibhyaḥ śapaḥ')]);
+    } else if (R.c === 3) {
+      skip('No vikaraṇa', 'In class 3 (juhotyādi) the śap is replaced by ślu, which leaves nothing behind but makes the root double.', [S('2.4.75', 'juhotyādibhyaḥ śluḥ')]);
+    } else if (R.c === 7) {
+      let k = root.t.length - 1; while (k >= 0 && !isV(root.t[k])) k--;
+      root.t.splice(k + 1, 0, 'n', 'a');
+      apply({title: 'Insert the infix śnam', sutras: [S('3.1.78', 'rudhādibhyaḥ śnam'), S('1.1.47', "midaco 'ntyāt paraḥ")],
+        text: `Class 7 roots take the vikaraṇa inside the root. ⟦ś⟧ and ⟦m⟧ are markers; because of the m, the remaining ⟦na⟧ goes right after the root's last vowel.`});
+    }
+    if (R.pres) { root.t = tok(R.pres.to); apply({title: R.pres.title, sutras: R.pres.s, text: R.pres.why}); }
+  }
+
+  // iṭ
+  if (aff) {
+    const d = itDecision(R, fk);
+    if (d.on) {
+      if (fk === 'abs') aff.trig = true;
+      M.splice(M.indexOf(aff), 0, mk('it', 'i', 'iṭ', {trig: aff.trig}));
+      apply({title: 'Insert iṭ', sutras: d.s.concat(fk === 'abs' ? [S('1.2.18', 'na ktvā seṭ')] : []),
+        text: d.why + (fk === 'abs' ? ' A ktvā with iṭ no longer counts as kit, so guṇa is no longer blocked.' : '')});
+    } else skip('No iṭ', d.why, d.s);
+  }
+
+  // Changes inside the root
+  const kitNow = (fk === 'ppp' || fk === 'abs') && !aff.trig;
+  if (kitNow && R.kit) { root.t = tok(R.kit.to); apply({title: R.kit.title, sutras: R.kit.s, text: R.kit.why}); }
+  if (R.am && aff && aff.trig && fk !== 'abs' && fk !== 'ppp') { root.t = tok(R.am.to); apply({title: R.am.title, sutras: R.am.s, text: R.am.why}); }
+
+  // Guṇa
+  const GUNA = {i:['e'],'ī':['e'],u:['o'],'ū':['o'],'ṛ':['a','r'],'ṝ':['a','r']};
+  for (let i = 0; i < M.length - 1; i++) {
+    const m = M[i], nx = M[i + 1];
+    if (!(m.kind === 'root' || m.guna)) continue;
+    const t = m.t, L = last(t), Pn = t[t.length - 2];
+    let pos = -1, sut = null;
+    if (GUNA[L]) { pos = t.length - 1; sut = S('7.3.84', 'sārvadhātukārdhadhātukayoḥ'); }
+    else if (isC(L) && ['i','u','ṛ'].includes(Pn)) { pos = t.length - 2; sut = S('7.3.86', 'pugantalaghūpadhasya ca'); }
+    if (pos < 0) {
+      if (m.kind === 'root') skip('No guṇa', `⟦${t.join('')}⟧ has no ⟦i⟧, ⟦u⟧ or ⟦ṛ⟧ at the end or as a short vowel before its final consonant, so there is nothing to strengthen.`);
+      continue;
+    }
+    const v = t[pos];
+    if (!nx.trig) {
+      const blk = nx.kind === 'it' ? M[i + 2] : nx;
+      if (m.kind === 'root') skip('No guṇa', ['kta','ktvā'].includes(blk.label)
+        ? `The affix ${blk.label} is kit, and a kit affix blocks guṇa, so ⟦${v}⟧ stays.`
+        : `${blk.label} is a sārvadhātuka affix without the marker p, so it counts as ṅit and blocks guṇa: ⟦${v}⟧ stays.`,
+        ['kta','ktvā'].includes(blk.label) ? [S('1.1.5', 'kṅiti ca')] : [S('1.2.4', 'sārvadhātukam apit'), S('1.1.5', 'kṅiti ca')]);
+      continue;
+    }
+    const g = GUNA[v];
+    m.t = [...t.slice(0, pos), ...g, ...t.slice(pos + 1)];
+    apply({title: m.kind === 'root' ? 'Guṇa of the root vowel' : `Guṇa of ${m.label}`,
+      sutras: [sut].concat(v === 'ṛ' || v === 'ṝ' ? [S('1.1.51', 'uraṇ raparaḥ')] : []),
+      text: `Before ⟦${nx.t.join('')}⟧${nx.t.join('') === nx.label ? '' : ` (${nx.label})`}, which is not kit or ṅit, ${pos === t.length - 1 ? 'the final' : 'the short'} vowel ⟦${v}⟧ takes its guṇa grade ⟦${g.join('')}⟧${v === 'ṛ' || v === 'ṝ' ? ' (guṇa of ṛ is a, followed by r)' : ''}.`});
+  }
+
+  // ṇic is dropped in the past participle
+  if (R.c === 10 && fk === 'ppp') {
+    M = M.filter(m => m.label !== 'ṇic');
+    apply({title: 'ṇic is dropped', sutras: [S('6.4.52', 'niṣṭhāyāṃ seṭi')], text: 'Before a past participle affix with iṭ, ṇic is deleted. The guṇa it caused stays.'});
+  }
+
+  // Vowels meeting across the pieces
+  for (let i = 0; i < M.length - 1; i++) {
+    const a = M[i], b = M[i + 1];
+    if (!a.t.length || !b.t.length) continue;
+    const L = last(a.t), F = b.t[0];
+    if (!isV(L) || !isV(F)) continue;
+    const ay = {e:['a','y'], o:['a','v'], ai:['ā','y'], au:['ā','v']}[L];
+    if (ay) {
+      a.t = [...a.t.slice(0, -1), ...ay];
+      apply({title: `${L} before a vowel becomes ${ay.join('')}`, sutras: [S('6.1.78', "eco 'yavāyāvaḥ")], text: `Before the vowel ⟦${F}⟧ the diphthong ⟦${L}⟧ splits into ⟦${ay.join('')}⟧.`});
+    } else if (L === 'a' && F === 'a') {
+      b.t = b.t.slice(1);
+      apply({title: 'a + a becomes a', sutras: [S('6.1.97', 'ato guṇe')], text: 'The stem ends in ⟦a⟧ and the vikaraṇa is ⟦a⟧: the second replaces both, leaving one ⟦a⟧.'});
+    }
+  }
+
+  // Consonants meeting across the pieces
+  for (let i = 0; i < M.length - 1; i++) {
+    const a = M[i], b = M[i + 1];
+    if (!a.t.length || !b.t.length || !isC(last(a.t)) || !JHAL(b.t[0])) continue;
+    const setL = x => { a.t[a.t.length - 1] = x; };
+    let L = last(a.t), F = b.t[0];
+    if (L === 'h' && R.h) { setL(R.h.to); apply({title: `h becomes ${R.h.to}`, sutras: R.h.s, text: R.h.why}); }
+    L = last(a.t);
+    if (L === 'ś' || (L === 'j' && R.vrasc)) {
+      setL('ṣ');
+      apply({title: `${L} becomes ṣ`, sutras: [S('8.2.36', 'vraścabhrasjasṛjamṛjayajarājabhrājacchaśāṃ ṣaḥ')],
+        text: `Before a consonant, ${L === 'ś' ? 'a root-final ⟦ś⟧' : 'the ⟦j⟧ of yaj (and a few other roots)'} becomes ⟦ṣ⟧.`});
+    } else if (L === 'c' || L === 'j') {
+      const to = L === 'c' ? 'k' : 'g'; setL(to);
+      apply({title: `${L} becomes ${to}`, sutras: [S('8.2.30', 'coḥ kuḥ')], text: `Before a consonant a palatal turns into the velar of the same kind: ⟦${L}⟧ → ⟦${to}⟧.`});
+    }
+    L = last(a.t);
+    if (L === 'ṣ' && F === 's') { setL('k'); apply({title: 'ṣ before s becomes k', sutras: [S('8.2.41', 'ṣaḍhoḥ kaḥ si')], text: '⟦ṣ⟧ (and ⟦ḍh⟧) before ⟦s⟧ becomes ⟦k⟧.'}); }
+    L = last(a.t);
+    if (F === 's' && a.kind === 'root' && VOICED_ASP(L) && ['b','g','ḍ','d'].includes(a.t[0])) {
+      const from = a.t[0]; a.t[0] = C[from].row[3];
+      apply({title: 'The aspiration moves to the start', sutras: [S('8.2.37', 'ekāco baśo bhaṣ jhaṣantasya sdhvoḥ')],
+        text: `In a one-syllable root that begins with ⟦${from}⟧ and ends in an aspirate, the first sound becomes aspirated before ⟦s⟧: ⟦${from}⟧ → ⟦${a.t[0]}⟧. The final aspirate loses its aspiration in the next step.`});
+    }
+    if (VOICED_ASP(L) && (F === 't' || F === 'th')) {
+      b.t[0] = 'dh';
+      apply({title: "Bartholomae's law: t becomes dh", sutras: [S('8.2.40', "jhaṣas tathor dho 'dhaḥ")],
+        text: `After a voiced aspirate (here ⟦${L}⟧), the ⟦${F}⟧ of the affix becomes ⟦dh⟧: voice and aspiration move to the affix.`});
+    }
+    F = b.t[0];
+    if (VOICED_ASP(L) && isStop(F) && C[F].voiced) {
+      setL(C[L].row[2]);
+      apply({title: `${L} becomes ${C[L].row[2]}`, sutras: [S('8.4.53', 'jhalāṃ jaś jhaśi')], text: `Before the voiced stop ⟦${F}⟧, ⟦${L}⟧ loses its aspiration: ⟦${C[L].row[2]}⟧.`});
+    }
+    L = last(a.t);
+    if (isStop(L) && C[L].voiced && !voiced(F)) {
+      setL(C[L].row[0]);
+      apply({title: `${L} becomes ${C[L].row[0]}`, sutras: [S('8.4.55', 'khari ca')], text: `Before the voiceless ⟦${F}⟧, ⟦${L}⟧ becomes voiceless and unaspirated: ⟦${C[L].row[0]}⟧.`});
+    }
+    L = last(a.t);
+    if (L === 'ṣ' && (F === 't' || F === 'th')) {
+      const to = F === 't' ? 'ṭ' : 'ṭh'; b.t[0] = to;
+      apply({title: `${F} becomes ${to} after ṣ`, sutras: [S('8.4.41', 'ṣṭunā ṣṭuḥ')], text: `Next to the retroflex ⟦ṣ⟧, the dental ⟦${F}⟧ becomes retroflex ⟦${to}⟧.`});
+    }
+    if ((L === 'm' && JHAL(F)) || (L === 'n' && F === 's')) {
+      setL('ṃ');
+      apply({title: `${L} becomes anusvāra`, sutras: [S('8.3.24', 'naś cāpadāntasya jhali')], text: `Inside a word, ⟦${L}⟧ before ⟦${F}⟧ becomes anusvāra ⟦ṃ⟧.`});
+      if (isStop(F)) {
+        const n = C[F].row[4]; setL(n);
+        apply({title: `Anusvāra becomes ${n}`, sutras: [S('8.4.58', 'anusvārasya yayi parasavarṇaḥ')], text: `Before the stop ⟦${F}⟧, the anusvāra is pronounced as the nasal of its row: ⟦${n}⟧.`});
+      }
+    }
+  }
+
+  // s → ṣ in the affix sya
+  for (let i = 1; i < M.length; i++) {
+    const b = M[i], a = M[i - 1];
+    if (b.label !== 'sya' || b.t[0] !== 's') continue;
+    const L = last(a.t);
+    if ((isV(L) && L !== 'a' && L !== 'ā') || ['k','r','l','h','y','v'].includes(L)) {
+      b.t[0] = 'ṣ';
+      apply({title: 's becomes ṣ', sutras: [S('8.3.59', 'ādeśapratyayayoḥ'), S('8.3.57', 'iṇkoḥ')], text: `The ⟦s⟧ of an affix becomes ⟦ṣ⟧ after ⟦${L}⟧ (any vowel other than a/ā, or k, r).`});
+    }
+  }
+
+  // n → ṇ
+  const flat = []; M.forEach((m, mi) => m.t.forEach((t, ti) => flat.push({t, mi, ti})));
+  const OK_BETWEEN = t => isV(t) || ['h','y','v','r','ṃ'].includes(t) || (C[t] && ['velar','labial'].includes(C[t].place) && C[t].kind !== 'semivowel');
+  for (let k = 0; k < flat.length - 1; k++) {
+    if (flat[k].t !== 'n') continue;
+    let j = k - 1, trigger = null;
+    while (j >= 0) { const t = flat[j].t; if (['r','ṛ','ṝ','ṣ'].includes(t)) { trigger = t; break; } if (!OK_BETWEEN(t)) break; j--; }
+    if (!trigger) continue;
+    M[flat[k].mi].t[flat[k].ti] = 'ṇ'; flat[k].t = 'ṇ';
+    apply({title: 'n becomes ṇ', sutras: [S('8.4.1', 'raṣābhyāṃ no ṇaḥ samānapade'), S('8.4.2', "aṭkupvāṅnumvyavāye 'pi")],
+      text: `In the same word, ⟦n⟧ becomes retroflex ⟦ṇ⟧ after ⟦${trigger}⟧, as long as only vowels, h, y, v, r, velars or labials stand between them.`});
+  }
+
+  const word = M.flatMap(m => m.t);
+  return {steps, word, morphs: M};
+}
+
+/* ---------- Derivation UI ---------- */
+const dstate = {root: ROOTS[1], form: 'ppp'};
+const fold = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const FORM_INDEX = new Map();
+const ALL_FORMS = new Map();
+ROOTS.forEach(R => {
+  const f = {};
+  FORM_KEYS.forEach(k => { const w = toIast(derive(R, k).word); f[k] = w; if (!FORM_INDEX.has(w)) FORM_INDEX.set(w, [R, k]); });
+  ALL_FORMS.set(R, f);
+});
+function lookup(raw) {
+  const p = parse(raw);
+  if (p.err) return {err: p.err};
+  if (!p.tokens.length) return {};
+  const s = toIast(p.tokens);
+  let R = ROOTS.find(x => x.r === s);
+  if (R) return {R, read: p.tokens};
+  if (FORM_INDEX.has(s)) { const [R2, k] = FORM_INDEX.get(s); return {R: R2, form: k, read: p.tokens, viaForm: true}; }
+  const f = fold(s), fr = f.replace(/ri/g, 'r');
+  const hits = ROOTS.filter(x => fold(x.r) === f || fold(x.r) === fr);
+  if (hits.length === 1) return {R: hits[0], read: p.tokens, fuzzy: true};
+  for (const [w, v] of FORM_INDEX) if (fold(w) === f) return {R: v[0], form: v[1], read: p.tokens, viaForm: true, fuzzy: true};
+  return {none: true, read: p.tokens};
+}
+
+const formsBox = $('#forms');
+FORM_KEYS.forEach(k => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.form = k;
+  b.innerHTML = `${FORMS[k].name}<small>${FORMS[k].sub}</small>`;
+  b.addEventListener('click', () => { dstate.form = k; renderDerive(); });
+  formsBox.appendChild(b);
+});
+const D_EXAMPLES = [['budh','ppp'],['kṛ','pres'],['gam','pres'],['rudh','pres'],['budh','fut'],['dṛś','inf'],['yaj','ppp'],['labh','ppp'],['bhū','fut'],['vac','ppp'],['krī','pres'],['cur','pres'],['dah','ppp'],['sthā','pres']];
+const dexBox = $('#dexamples');
+D_EXAMPLES.forEach(([r, k]) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip'; b.dataset.r = r; b.dataset.k = k;
+  b.addEventListener('click', () => { $('#root').value = r; dstate.form = k; renderDerive(); });
+  dexBox.appendChild(b);
+});
+$('#rootlist').innerHTML = ROOTS.map(R => `<option value="${esc(R.r)}">${esc(R.g)}</option>`).join('');
+$('#root').addEventListener('input', renderDerive);
+
+function labelChips() {
+  const deva = state.script === 'deva';
+  dexBox.querySelectorAll('.chip').forEach(c => {
+    const R = ROOTS.find(x => x.r === c.dataset.r), w = ALL_FORMS.get(R)[c.dataset.k];
+    c.textContent = deva ? `${toDeva(R.t)} → ${toDeva(tok(w))}` : `${R.r} → ${w}`;
+    c.classList.toggle('deva', deva);
+    c.setAttribute('aria-current', String(dstate.root === R && dstate.form === c.dataset.k));
+  });
+  const grid = $('#rootgrid');
+  grid.innerHTML = Object.keys(CLASS).map(c => {
+    const rs = ROOTS.filter(R => R.c === +c);
+    return `<div class="cls"><span>${c} · ${CLASS[c]}</span>${rs.map(R => `<button type="button" class="chip${deva ? ' deva' : ''}" data-root="${esc(R.r)}" title="${esc(R.g)}" aria-current="${dstate.root === R}">${esc(deva ? toDeva(R.t, true) : R.r)}</button>`).join('')}</div>`;
+  }).join('');
+}
+$('#rootgrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-root]'); if (!b) return;
+  $('#root').value = b.dataset.root; renderDerive();
+  $('#root').scrollIntoView({block: 'center', behavior: 'smooth'});
+});
+
+function morphsHtml(ms, changed) {
+  const deva = state.script === 'deva';
+  return '<div class="morphs">' + ms.map((m, i) =>
+    `${i ? '<span class="mplus" aria-hidden="true">+</span>' : ''}<span class="mo${changed && changed[i] ? ' on' : ''}"><span class="mt${deva ? ' deva' : ''}" lang="${deva ? 'sa-Deva' : 'sa-Latn'}">${esc(deva ? toDeva(m.t, true) : m.t.join(''))}</span><span class="ml">${esc(m.label)}</span></span>`
+  ).join('') + '</div>';
+}
+function wordHtml(tokens) {
+  return state.script === 'deva' ? `<span class="deva" lang="sa-Deva">${esc(toDeva(tokens))}</span>` : `<i lang="sa-Latn">${esc(toIast(tokens))}</i>`;
+}
+const FORM_NOTE = {
+  pres: () => '3rd person singular present (“he, she or it …”).',
+  fut: () => '3rd person singular future.',
+  ppp: w => `A stem that is declined like an adjective, e.g. masculine nominative singular ${'⟦' + w + 'ḥ⟧'}.`,
+  abs: () => 'Indeclinable: “having …”.',
+  inf: () => 'Indeclinable: “to …”.',
+  ger: w => `A stem meaning “to be …”, e.g. neuter nominative ${'⟦' + w + 'm⟧'}.`
+};
+
+function renderDerive() {
+  const box = $('#rr');
+  const lk = lookup($('#root').value);
+  $('#root').setAttribute('aria-invalid', lk.err ? 'true' : 'false');
+  if (lk.err) box.innerHTML = `<span class="err">Can't read “${esc(lk.err)}”. Use IAST or Devanagari.</span>`;
+  else if (lk.none) box.innerHTML = `<span class="err">“${esc(toIast(lk.read))}” isn't in the list of ${ROOTS.length} roots. Pick one from “Roots in the list” below.</span>`;
+  else if (lk.R) {
+    if (lk.viaForm) dstate.form = lk.form;
+    dstate.root = lk.R;
+    box.innerHTML = (lk.viaForm ? `<b><i>${esc(ALL_FORMS.get(lk.R)[lk.form])}</i></b> is the ${FORMS[lk.form].name.toLowerCase()} of ` : 'root ')
+      + `<b><i>${esc(lk.R.r)}</i></b> · <b class="deva">${esc(toDeva(lk.R.t))}</b> “${esc(lk.R.g)}”, class ${lk.R.c}`;
+  } else box.textContent = '';
+  syncUrl();
+  formsBox.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.form === dstate.form)));
+  labelChips();
+  const board = $('#dboard'), trace = $('#dtrace');
+  if (!lk.R) {
+    board.innerHTML = `<div class="msg">${lk.err ? 'Fix the input above.' : lk.none ? 'Choose a root from the list.' : 'Type a root such as budh or kṛ.'}</div>`;
+    trace.innerHTML = '';
+    return;
+  }
+  const R = dstate.root, fk = dstate.form, deva = state.script === 'deva';
+  const d = derive(R, fk);
+  const applied = d.steps.filter(s => s.type === 'apply').length - 1;
+  const other = deva ? toIast(d.word) : toDeva(d.word);
+  const forms = ALL_FORMS.get(R);
+  board.innerHTML = `
+    <div class="eq${deva ? ' deva' : ''}">${esc(deva ? toDeva(R.t) : R.r)} + ${esc(FORMS[fk].affix)} · ${esc(FORMS[fk].name.toLowerCase())}</div>
+    <div class="res${deva ? ' deva' : ''}" lang="${deva ? 'sa-Deva' : 'sa-Latn'}">${esc(deva ? toDeva(d.word) : toIast(d.word))}</div>
+    <div class="other${deva ? '' : ' deva'}">${esc(other)}</div>
+    <div class="meta"><span class="badge hot">${applied} ${applied === 1 ? 'rule' : 'rules'} applied</span><span>“${esc(R.g)}”, class ${R.c} (${CLASS[R.c]})</span></div>
+    <div class="forms-row">${FORM_KEYS.map(k => `<button type="button" class="fchip${deva ? ' deva' : ''}" data-f="${k}" aria-current="${k === fk}"><small>${esc(FORMS[k].name)}</small>${esc(deva ? toDeva(tok(forms[k])) : forms[k])}</button>`).join('')}</div>`;
+  board.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { dstate.form = b.dataset.f; if (lookup($('#root').value).viaForm) $('#root').value = R.r; renderDerive(); }));
+
+  let n = 0;
+  const items = d.steps.map(s => {
+    if (s.type === 'skip') return `<li class="step skip"><div class="t"><span>${esc(s.title)}</span>${s.sutras.map(sutraHtml).join('')}</div><p>${rich(s.why)}</p></li>`;
+    n++;
+    return `<li class="step apply"><div class="t"><span>${n}. ${esc(s.title)}</span>${s.sutras.map(sutraHtml).join('')}</div>
+      <p>${rich(s.text)}</p>${morphsHtml(s.morphs, s.changed)}</li>`;
+  }).join('');
+  trace.innerHTML = `<h2>Step by step</h2><div class="stage"><ol class="steps">${items}</ol></div>
+    <div class="stage"><h3><span class="n">Result</span>Join the pieces</h3><ol class="steps"><li class="step">
+      ${morphsHtml(d.morphs, null)}
+      <div class="formula"><span class="op">→</span><span style="font-size:26px">${wordHtml(d.word)}</span></div>
+      <p>${rich(FORM_NOTE[fk](toIast(d.word)))}</p></li></ol></div>`;
+}
+
 function syncUrl() {
   const q = new URLSearchParams();
-  q.set('a', $('#w1').value.trim()); q.set('b', $('#w2').value.trim());
-  if (state.mode !== 'sentence') q.set('m', state.mode);
+  if (state.tab === 'derive') {
+    q.set('tab', 'derive'); q.set('root', $('#root').value.trim()); q.set('form', dstate.form);
+  } else {
+    q.set('a', $('#w1').value.trim()); q.set('b', $('#w2').value.trim());
+    if (state.mode !== 'sentence') q.set('m', state.mode);
+    if ($('#dual').checked) q.set('dual', '1');
+  }
   if (state.script !== 'iast') q.set('s', state.script);
-  if ($('#dual').checked) q.set('dual', '1');
   try { history.replaceState(null, '', '?' + q.toString()); } catch (e) {}
 }
+function setTab(t) {
+  state.tab = t;
+  document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === t)));
+  $('#joinView').hidden = t !== 'join';
+  $('#deriveView').hidden = t !== 'derive';
+  renderAll();
+}
+function renderAll() { if (state.tab === 'derive') renderDerive(); else render(); }
+document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
 
 const q = new URLSearchParams(location.search);
 $('#w1').value = q.get('a') ?? 'bhū';
 $('#w2').value = q.get('b') ?? 'buddha';
 $('#dual').checked = q.get('dual') === '1';
+$('#root').value = q.get('root') ?? 'budh';
+if (FORM_KEYS.includes(q.get('form'))) dstate.form = q.get('form');
 state.mode = q.get('m') === 'compound' ? 'compound' : 'sentence';
+state.tab = q.get('tab') === 'derive' ? 'derive' : 'join';
 document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
-setScript(q.get('s') === 'deva' ? 'deva' : 'iast');
+state.script = q.get('s') === 'deva' ? 'deva' : 'iast';
+setScript(state.script);
+setTab(state.tab);
 
-window.__sandhi = {parse, run, toDeva, toIast};
+window.__sandhi = {parse, run, toDeva, toIast, derive, ROOTS, FORM_KEYS};
 })();
 </script>
 </body>
