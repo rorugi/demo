@@ -28,7 +28,7 @@
    Checkboxes pick the traditions; a tile shows one form per tradition only where the forms differ, and letters of a tradition only when it is on. */
 :root{
   --fg:#1c2321; --muted:#5d6762; --line:#cfd4cd; --card:#fff;
-  --sa:#b8670c; --no:#2c5a8c; --mr:#2e7d5b;
+  --sa:#b8670c; --no:#2c5a8c; --mr:#2e7d5b; --hi:#8b3a62;
   --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
   --f-sa:"Sanskrit 2020","Noto Serif Devanagari",serif;
   --f-no:"Uttara",serif;
@@ -40,7 +40,8 @@
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:#e4e6e1;color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
 .hi{font-family:var(--f-hi)} .sa{font-family:var(--f-sa);color:var(--sa)} .no{font-family:var(--f-no);color:var(--no)} .mr{font-family:var(--f-mr);color:var(--mr)}
-/* the first selected tradition prints in black; only the differing forms of the others keep their colour */
+/* the main tradition (Sanskrit when it is on, else the first selected) prints in black; only the differing forms of the others keep their colour */
+.duo .hi,.key .hi,.trad b.hi{color:var(--hi)}
 .duo .pri,.key .pri{color:#000}
 
 .bar{max-width:297mm;margin:0 auto;padding:14px 4px 10px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
@@ -292,7 +293,9 @@ const TRAD = [
 ];
 const ALL = TRAD.map(t => t.id);
 let on = new Set(["sa"]);
-const primary = () => ALL.find(f => on.has(f));
+// The main (black) forms are the Sanskrit ones in the chosen font whenever Sanskrit is on; the others are added only where they differ
+const primary = () => on.has("sa") ? "sa" : ALL.find(f => on.has(f));
+const ORDER = () => [primary(), ...ALL.filter(f => f !== primary())];
 
 // Where the fonts draw a form differently (Tiro outlines compared with HarfBuzz; the other fonts sorted by eye).
 // Shape 0 = the Tiro Hindi form, 1 = the Sanskrit (southern) form, 2 = the northern (Calcutta) form.
@@ -308,7 +311,7 @@ function shape(x, f){
 // t is a string, or an object {tradition: text} when the traditions write different letters.
 function forms(t, tags = ALL){
   const out = [], seen = new Set();
-  for (const f of ALL){
+  for (const f of ORDER()){
     if (!on.has(f) || !tags.includes(f)) continue;
     const x = typeof t === "string" ? t : t[f];
     if (!x) continue;
@@ -464,7 +467,7 @@ function buildDig(){
 
 function buildKey(){
   const k = $("key"); k.replaceChildren();
-  TRAD.filter(t => on.has(t.id)).forEach(t => {
+  ORDER().map(id => TRAD.find(t => t.id === id)).filter(t => on.has(t.id)).forEach(t => {
     const s = document.createElement("span");
     const b = document.createElement("b"); b.className = t.id + (t.id === primary() ? " pri" : ""); b.lang = t.lang; b.textContent = "क";
     const f = document.createElement("i"); f.className = "kf"; f.textContent = "\u00a0· " + t.font;
@@ -499,7 +502,7 @@ function render(){
   $("scar").textContent = car === "0" ? "" : "on " + CARRIERS[car][0];
   applySaFont();
   $("fsa").value = saFont;
-  $("fnote").textContent = "Further forms only where traditions differ · " + [...new Set(TRAD.filter(t => on.has(t.id)).map(t => t.id === "no" ? "Uttara: northern (Calcutta) style" : t.id === "sa" ? "Sanskrit: " + t.font : "Tiro Devanagari " + t.name))].join(" · ");
+  $("fnote").textContent = "Further forms only where traditions differ · " + [...new Set(ORDER().map(id => TRAD.find(t => t.id === id)).filter(t => on.has(t.id)).map(t => t.id === "no" ? "Uttara: northern (Calcutta) style" : t.id === "sa" ? "Sanskrit: " + t.font : "Tiro Devanagari " + t.name))].join(" · ");
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();
   save();
 }
