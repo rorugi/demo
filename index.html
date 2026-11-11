@@ -6,12 +6,13 @@
 <title>Demos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Noto+Serif+Devanagari&family=Tiro+Devanagari+Hindi&display=swap">
 <style>
 :root{
   --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
   --slate:#22302e; --chalk:#eef2e9; --accent:#e9a23b;
   --f-deva:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
+  --f-sa:"Noto Serif Devanagari",serif;
   --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root{
@@ -27,6 +28,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .thumb{width:96px;height:96px;border-radius:10px;background:var(--slate);display:grid;place-items:center;
   font-family:var(--f-deva);font-size:56px;color:var(--chalk);line-height:1}
+.thumb.sa{font-family:var(--f-sa)}
 .card h2{margin:0 0 4px;font-size:19px;font-weight:600}
 .card p{font-size:15px}
 .go{display:inline-block;margin-top:8px;color:var(--accent);font-weight:600;font-size:14px}
@@ -41,7 +43,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
   </header>
 
   <a class="card" href="devanagari-writing.html">
-    <div class="thumb" aria-hidden="true">क्ष</div>
+    <div class="thumb sa" aria-hidden="true">क्ष</div>
     <div>
       <h2>Devanagari writing for Hindi/Sanskrit</h2>
       <p>Animated stroke order of the Devanagari letters, drawn with a flat nib at an adjustable angle on a four-zone grid.</p>
@@ -49,7 +51,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="devanagari-writer.html">
-    <div class="thumb" aria-hidden="true" title="likhāmi, I write" style="font-size:28px">लिखामि</div>
+    <div class="thumb sa" aria-hidden="true" title="likhāmi, I write" style="font-size:28px">लिखामि</div>
     <div>
       <h2>Write Hindi and Sanskrit in Devanagari</h2>
       <p>Type in ITRANS or Devanagari and get Devanagari, IAST and ITRANS at once. With an InScript on-screen keyboard that pops out into its own window, and a reference table.</p>
@@ -57,7 +59,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="devanagari-ligatures.html">
-    <div class="thumb" aria-hidden="true">ङ्क्ष</div>
+    <div class="thumb sa" aria-hidden="true">ङ्क्ष</div>
     <div>
       <h2>Devanagari ligatures: Hindi and Sanskrit</h2>
       <p>The rules for forming conjuncts, then the same clusters in Tiro Devanagari Hindi and Tiro Devanagari Sanskrit, side by side or overlaid: half form, visible virama or stacked ligature.</p>
@@ -65,7 +67,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="devanagari-print-charts.html">
-    <div class="thumb" aria-hidden="true" style="font-size:44px">कखग</div>
+    <div class="thumb sa" aria-hidden="true" style="font-size:40px">कखग</div>
     <div>
       <h2>Devanagari charts for print</h2>
       <p>Two A4 reference sheets: the whole script on one page (vowels, vowel signs, consonants by place of articulation, signs and digits, in Hindi, Sanskrit, northern or Marathi forms) and the most important conjuncts on two, compared in two fonts.</p>
@@ -73,7 +75,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="font-style-explorer.html">
-    <div class="thumb" aria-hidden="true">त्र</div>
+    <div class="thumb sa" aria-hidden="true">त्र</div>
     <div>
       <h2>Font style explorer</h2>
       <p>Pick a Devanagari font and see its OpenType stylistic sets side by side: every form a set changes, such as त्र drawn as त with a stroke, then your own text in each style.</p>
@@ -81,7 +83,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="aksharaloka.html">
-    <div class="thumb" aria-hidden="true">अ</div>
+    <div class="thumb sa" aria-hidden="true">अ</div>
     <div>
       <h2>Akṣaraloka</h2>
       <p>Ein Spiel zum Sanskrit-Lernen: Als अ wanderst du durch eine Welt aus Devanagari-Wörtern, liest Zeichen, benennst Tiere und Feuer, um vorbeizukommen, und wiederholst Gelerntes in Abständen.</p>
@@ -113,7 +115,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="sanskrit-reader.html">
-    <div class="thumb" aria-hidden="true">योग</div>
+    <div class="thumb sa" aria-hidden="true">योग</div>
     <div>
       <h2>Sanskrit Reader</h2>
       <p>Read passages from the Bhagavad Gītā and the Yoga Sūtras, or paste your own Devanagari. Hover or tap a word to see its IAST, and time your reading pace in syllables per minute.</p>
@@ -121,7 +123,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="sanskrit-sandhi.html">
-    <div class="thumb" aria-hidden="true" style="font-size:40px">सन्धि</div>
+    <div class="thumb sa" aria-hidden="true" style="font-size:40px">सन्धि</div>
     <div>
       <h2>Sanskrit sandhi, step by step</h2>
       <p>Join two words, or build a form from its root (budh → buddha, kṛ → karoti): every rule that applies, with its Pāṇini sūtra and the form after each step, and why the other rules don't fit. Input and output in IAST or Nāgarī.</p>
@@ -129,7 +131,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="veden-epen.html">
-    <div class="thumb" aria-hidden="true">वेद</div>
+    <div class="thumb sa" aria-hidden="true">वेद</div>
     <div>
       <h2>Veden, Epen und Gītā</h2>
       <p>Eine Zeitleiste der Sanskrit-Literatur bis 1000 n. Chr.: die vier Veden mit ihren Schichten, Epen, Gītā und Purāṇas, die philosophischen Sūtras, Pāṇini, Manu und andere Lehrbücher, dazu Pāli-Kanon und Jaina-Schriften. Antippen zeigt Inhalt, Datierung und wie die Texte aufeinander zurückgreifen.</p>
@@ -137,7 +139,7 @@ p{margin:0;color:var(--muted);max-width:60ch}
     </div>
   </a>
   <a class="card" href="indische-goetter.html">
-    <div class="thumb" aria-hidden="true">देव</div>
+    <div class="thumb sa" aria-hidden="true">देव</div>
     <div>
       <h2>Indiens Götterwelt – vom Ṛgveda bis heute</h2>
       <p>Ein großes Flussdiagramm über 3500 Jahre: über 70 Götter, Menschen und Bewegungen und 37 Geschichten, von Indra und Vṛtra bis zur Kumbh Melā 2025. Antippen zeigt, wer aus wem hervorgeht, wer mit wem verheiratet ist, wessen Form oder Kind er ist und wo welche Geschichte spielt.</p>
