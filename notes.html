@@ -1012,9 +1012,9 @@
   .laser path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
   .laser .lz { transition: opacity .6s ease; }
   .laser .lz.out { opacity: 0; }
-  .laser .lz-glow { stroke: var(--lc); opacity: .3; }
-  .laser .lz-line { stroke: var(--lc); }
-  .laser .lz-core { stroke: #fff; opacity: .7; }
+  /* a strong, slightly see-through line in the middle; around it a glow of wider, fainter strokes */
+  .laser .lz-g { stroke: var(--lc); opacity: .075; }
+  .laser .lz-line { stroke: var(--lc); opacity: .85; }
   .lzsub { margin: -2px 0 6px; font-size: 12.5px; line-height: 1.4; opacity: .65; }
   .ripple { position: absolute; z-index: 41; overflow: hidden; pointer-events: none; transform-origin: 50% 50%; }
   .ripple i { position: absolute; border-radius: 50%; background: var(--sel); opacity: 0; will-change: transform, opacity; }
@@ -2172,8 +2172,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_197';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.74';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_198';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.75';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -9469,7 +9469,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (laserPage !== pages[cur]) { laserEl.textContent = ''; laserPage = pages[cur]; }   // another page: the old lines go
     const g = document.createElementNS(NS, 'g');
     g.setAttribute('class', 'lz'); g.style.setProperty('--lc', it.color);
-    g.innerHTML = `<path class="lz-glow" stroke-width="${it.size * 2.6}"/><path class="lz-line" stroke-width="${it.size}"/><path class="lz-core" stroke-width="${it.size * 0.36}"/>`;
+    const w = it.size;
+    g.innerHTML = [4.4, 3.7, 3.1, 2.6, 2.1, 1.7, 1.35].map(k => `<path class="lz-g" stroke-width="${(w * k).toFixed(2)}"/>`).join('') + `<path class="lz-line" stroke-width="${w}"/>`;   // glow: soft towards the outside
     laserEl.appendChild(g);
     const q = toMM(e);
     active = { id: e.pointerId, type: e.pointerType, laser: g, lzD: `M${q[0].toFixed(2)} ${q[1].toFixed(2)}l0 0`, lzLast: q, lzFade: it.fade };
