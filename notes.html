@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_201';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.78';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_202';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.79';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3184,6 +3184,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     layout(); centrePage();
     renderPage();
     if (!$('overview').hidden) buildOverview();
+    if (typeof prepThumbs === 'function') prepThumbs();
     const shown = pages;
     ensureImages(pages).then(() => { if (pages === shown) { renderPage(); mapInkChanged(); } });
     if (srch.q) setTimeout(() => runSearch(srch.q), 0);   // the search now covers this notebook
@@ -4484,6 +4485,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     layout(); centrePage();
     renderPage();
     if (!$('overview').hidden) buildOverview();
+    if (typeof prepThumbs === 'function') prepThumbs();
     scheduleSave();
   }
   // dialog: edits a draft, Apply commits it
@@ -5202,6 +5204,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           if (b) imgSize.set(key, b.size);
         }
         np += imgSize.get(key) || 0; all.add(key); pdfsAll.add(key);
+        const tk = 'pthumbsz:' + id;                // its stored small page pictures
+        if (!imgSize.has(tk) || thumbBytes.has(id)) {
+          let n = thumbBytes.get(id);
+          if (n === undefined) { try { const v = await idb.get(tk); n = v && +v.bytes || 0; } catch (_) { n = 0; } }
+          imgSize.set(tk, n);
+        }
+        np += imgSize.get(tk); all.add(tk); pdfsAll.add(tk);
       }
       nbMem.set(m.id, n + np); nbPdfMem.set(m.id, np);
       total += new Blob([JSON.stringify(rec)]).size;
@@ -7154,7 +7163,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       for (const k of await idb.keys()) {
         if (typeof k === 'string' && k.startsWith('pdf:') && !used.has(k.slice(4))) { await idb.del(k); pdfStore.delete(k.slice(4)); continue; }
         if (typeof k === 'string' && k.startsWith('ptext:')) { await idb.del(k); continue; }
-        if (typeof k === 'string' && k.startsWith('pdfni:') && !used.has(k.slice(6))) { await idb.del(k); continue; }   // a PDF's copy without pictures   // the PDF text without line breaks (before 0.3.48)
+        if (typeof k === 'string' && k.startsWith('pdfni:') && !used.has(k.slice(6))) { await idb.del(k); continue; }
+        if (typeof k === 'string' && (k.startsWith('pthumb:') || k.startsWith('pthumbsz:')) && !used.has(k.split(':')[1])) { await idb.del(k); thumbBytes.delete(k.split(':')[1]); continue; }   // small page pictures of a PDF no notebook uses   // a PDF's copy without pictures   // the PDF text without line breaks (before 0.3.48)
         if (typeof k === 'string' && k.startsWith('ptext2:') && !used.has(k.slice(7))) { await idb.del(k); pdfTextMem.delete(k.slice(7)); continue; }   // searched text of a PDF no notebook uses
         if (typeof k !== 'string' || !k.startsWith('img:') || used.has(k.slice(4))) continue;
         await idb.del(k);
@@ -8257,11 +8267,37 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const bgRast = { S: new Map(), L: new Map() };  // key -> { url, blob, w, h } (large ones: most recently used last)
   let bgQueue = [], bgBusy = false, bgRefresh = 0, libWarned = false;
   const bgFailed = new Set(), bgDone = new Set();
+  // the small pictures (page overview) are also kept in the browser's storage, so they are drawn only once per PDF page
+  const thumbState = new Map();                    // key -> 'look' (being read) | 'miss' (not stored: drawn) | 'hit'
+  const thumbBytes = new Map();                    // PDF id -> bytes of its stored small pictures
+  let thumbBytesT = 0;
+  async function addThumbBytes(id, n) {
+    if (!thumbBytes.has(id)) {
+      let v = 0;
+      try { const r = await idb.get('pthumbsz:' + id); v = r && +r.bytes || 0; } catch (_) {}
+      if (!thumbBytes.has(id)) thumbBytes.set(id, v);
+    }
+    thumbBytes.set(id, thumbBytes.get(id) + n);
+    clearTimeout(thumbBytesT);
+    thumbBytesT = setTimeout(() => { for (const [k, v] of thumbBytes) idb.set('pthumbsz:' + k, { bytes: v }).catch(() => {}); }, 1500);
+  }
   function bgGet(b, size) {
     const k = bgKey(b), m = bgRast[size], r = m.get(k);
     if (r) { if (size === 'L') { m.delete(k); m.set(k, r); } return r; }
     const qk = size + k;
     if (LIVE_VIEW && !pdfStore.has(b.pdf)) return null;   // a viewer: the PDF is still on its way
+    if (size === 'S' && !LIVE_VIEW) {
+      const st = thumbState.get(k);
+      if (st === 'look') return null;
+      if (!st) {                                   // stored already? then no drawing
+        thumbState.set(k, 'look');
+        idb.get('pthumb:' + k).then(v => {
+          if (v && v.blob && !bgRast.S.has(k)) { bgRast.S.set(k, { blob: v.blob, w: v.w, h: v.h, url: URL.createObjectURL(v.blob) }); thumbState.set(k, 'hit'); bgChanged('S' + k); }
+          else { thumbState.set(k, 'miss'); bgGet(b, 'S'); }
+        }, () => { thumbState.set(k, 'miss'); bgGet(b, 'S'); });
+        return null;
+      }
+    }
     if (!bgFailed.has(qk) && !bgQueue.some(q => q.qk === qk)) { bgQueue.push({ b, size, qk }); bgPump(); }
     return size === 'L' ? bgRast.S.get(k) || null : null;   // meanwhile the small one, if there is one
   }
@@ -8296,13 +8332,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   async function bgPump() {
     if (bgBusy || !bgQueue.length) return;
     bgBusy = true;
-    // the page on screen first, then its neighbours; small pictures before large ones further away
-    const dist = q => { const i = pages.findIndex(pg => pg.bg && bgKey(pg.bg) === bgKey(q.b)); return (i < 0 ? 9999 : Math.abs(i - cur)) * (q.size === 'L' ? 3 : 1); };
+    // the page on screen first, then its neighbours; small pictures before large ones further away.
+    // With the page overview open, the small pictures of the pages in view come first.
+    const at = new Map(); pages.forEach((pg, i) => { if (pg.bg && !at.has(bgKey(pg.bg))) at.set(bgKey(pg.bg), i); });
+    const vis = ovInView();
+    const dist = q => {
+      const i = at.has(bgKey(q.b)) ? at.get(bgKey(q.b)) : -1;
+      if (i < 0) return 1e7;
+      if (vis && q.size === 'S') return i >= vis[0] && i <= vis[1] ? i - vis[0] : 1e4 + Math.min(Math.abs(i - vis[0]), Math.abs(i - vis[1]));
+      return (vis ? 1e5 : 0) + Math.abs(i - cur) * (q.size === 'L' ? 3 : 1);
+    };
     bgQueue.sort((p, q) => dist(p) - dist(q));
     const q = bgQueue.shift(), k = bgKey(q.b);
     try {
       const out = await (await renderPdfPage(q.b, BG_PX[q.size])).done, m = bgRast[q.size];
       m.set(k, { ...out, url: URL.createObjectURL(out.blob) });
+      if (q.size === 'S' && !LIVE_VIEW && out.blob) {   // kept for next time
+        thumbState.set(k, 'hit');
+        idb.set('pthumb:' + k, { blob: out.blob, w: out.w, h: out.h }).then(() => addThumbBytes(q.b.pdf, out.blob.size), () => {});
+      }
       if (q.size === 'L') while (m.size > BG_KEEP) { const [k0, r0] = m.entries().next().value; URL.revokeObjectURL(r0.url); m.delete(k0); }
       bgChanged(q.size + k);
     } catch (e) {
@@ -8311,6 +8359,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
     bgBusy = false;
     if (bgQueue.length) setTimeout(bgPump, 0);
+  }
+  // the pages shown in the page overview (first, last), or null when it is closed
+  function ovInView() {
+    const o = document.getElementById('overview'), g = document.getElementById('ovGrid');
+    if (!o || o.hidden || !g) return null;
+    const top = g.scrollTop - 40, bot = g.scrollTop + g.clientHeight + 40;
+    let a = -1, z = -1;
+    for (const t of g.querySelectorAll('.thumb[data-i]')) {
+      if (t.offsetTop + t.offsetHeight < top) continue;
+      if (t.offsetTop > bot) break;
+      if (a < 0) a = +t.dataset.i; z = +t.dataset.i;
+    }
+    return a < 0 ? null : [a, z];
+  }
+  // all small pictures of the notebook, drawn in the background (stored ones are only read)
+  let prepT = 0;
+  function prepThumbs(delay = 1500) {
+    clearTimeout(prepT);
+    prepT = setTimeout(() => { if (!LIVE_VIEW) pages.forEach(pg => { if (pg.bg) bgGet(pg.bg, 'S'); }); }, delay);
   }
   // a picture is ready: the places that wait for it get it (no full redraw of the overview or the turning pages)
   function bgChanged(qk) {
@@ -8508,7 +8575,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const at = pos === 'start' ? 0 : pos === 'end' ? pages.length : cur + 1;
       pages.splice(at, 0, ...add);
       cur = at;
-      renderPage(); scheduleSave();
+      renderPage(); scheduleSave(); prepThumbs();
       toast(`${add.length} PDF ${add.length === 1 ? 'page' : 'pages'} added`, 2000);
     }
   }
@@ -11080,6 +11147,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return best ? +best.dataset.i + 1 : 1;
   };
   ovGrid.addEventListener('scroll', ovBar);
+  ovGrid.addEventListener('scroll', () => { if (!bgBusy) bgPump(); }, { passive: true });   // the pages now in view get their pictures first
   window.addEventListener('resize', ovBar);
   {
     let d = null;
