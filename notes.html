@@ -2178,8 +2178,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_199';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.76';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_200';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.77';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4240,21 +4240,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.px, dy = e.clientY - drag.py;
       if (!drag.moved && Math.hypot(dx, dy) < 6) return;
-      if (!drag.moved) {
-        drag.moved = true; closePops(); drag.el.classList.add('dragging');
-        if (bar.dock) {                            // dragging an attached toolbar takes it off its side
-          bar.dock = null; drag.el.style.width = drag.el.style.height = '';
-          const r = drag.el.getBoundingClientRect(); drag.x = Math.min(r.left, drag.px - 20); drag.y = Math.min(r.top, drag.py - 20);
-        }
-      }
+      if (bar.dock) { drag.still = true; return; }  // an attached toolbar stays put: detach it first (Attach: Off)
+      if (!drag.moved) { drag.moved = true; closePops(); drag.el.classList.add('dragging'); }
       bar.pos = { x: drag.x + dx, y: drag.y + dy };
       placeToolbar();
     });
     handle.addEventListener('pointerup', e => {
       if (!drag || e.pointerId !== drag.id) return;
-      const moved = drag.moved;
+      const moved = drag.moved, still = drag.still;
       drag.el.classList.remove('dragging');
       drag = null;
+      if (still) return;                           // a drag on an attached toolbar: nothing happens
       if (moved) saveItems();
       else if (onTap) { ghostAt = { x: e.clientX, y: e.clientY, t: performance.now() }; onTap(); }
     });
