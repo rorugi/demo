@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_202';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.79';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_203';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.80';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8281,6 +8281,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     clearTimeout(thumbBytesT);
     thumbBytesT = setTimeout(() => { for (const [k, v] of thumbBytes) idb.set('pthumbsz:' + k, { bytes: v }).catch(() => {}); }, 1500);
   }
+  let filePrep = 0;                                // a file is being made: the background drawing waits
+  async function storedThumb(b) {                  // a page's small picture: in memory, or stored
+    const k = bgKey(b);
+    if (bgRast.S.has(k)) return bgRast.S.get(k);
+    try {
+      const v = await idb.get('pthumb:' + k);
+      if (v && v.blob) { const r = { blob: v.blob, w: v.w, h: v.h, url: URL.createObjectURL(v.blob) }; bgRast.S.set(k, r); thumbState.set(k, 'hit'); return r; }
+    } catch (_) {}
+    return null;
+  }
+  function keepThumb(b, out) {                     // a small picture just drawn: for the overview and the next time
+    const k = bgKey(b);
+    if (bgRast.S.has(k) || !out.blob) return;
+    bgRast.S.set(k, { ...out, url: URL.createObjectURL(out.blob) });
+    bgQueue = bgQueue.filter(q => q.qk !== 'S' + k);
+    if (!LIVE_VIEW) { thumbState.set(k, 'hit'); idb.set('pthumb:' + k, { blob: out.blob, w: out.w, h: out.h }).then(() => addThumbBytes(b.pdf, out.blob.size), () => {}); }
+    bgChanged('S' + k);
+  }
   function bgGet(b, size) {
     const k = bgKey(b), m = bgRast[size], r = m.get(k);
     if (r) { if (size === 'L') { m.delete(k); m.set(k, r); } return r; }
@@ -8330,7 +8348,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return { task, done: task.promise.then(() => new Promise(res => c.toBlob(bl => res({ blob: bl, w: c.width, h: c.height }), region ? 'image/png' : 'image/jpeg', quality))) };
   }
   async function bgPump() {
-    if (bgBusy || !bgQueue.length) return;
+    if (bgBusy || !bgQueue.length || filePrep) return;
     bgBusy = true;
     // the page on screen first, then its neighbours; small pictures before large ones further away.
     // With the page overview open, the small pictures of the pages in view come first.
@@ -8346,13 +8364,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const q = bgQueue.shift(), k = bgKey(q.b);
     try {
       const out = await (await renderPdfPage(q.b, BG_PX[q.size])).done, m = bgRast[q.size];
-      m.set(k, { ...out, url: URL.createObjectURL(out.blob) });
-      if (q.size === 'S' && !LIVE_VIEW && out.blob) {   // kept for next time
-        thumbState.set(k, 'hit');
-        idb.set('pthumb:' + k, { blob: out.blob, w: out.w, h: out.h }).then(() => addThumbBytes(q.b.pdf, out.blob.size), () => {});
-      }
+      if (q.size === 'S') keepThumb(q.b, out);    // (kept for next time as well)
+      else m.set(k, { ...out, url: URL.createObjectURL(out.blob) });
       if (q.size === 'L') while (m.size > BG_KEEP) { const [k0, r0] = m.entries().next().value; URL.revokeObjectURL(r0.url); m.delete(k0); }
-      bgChanged(q.size + k);
+      if (q.size === 'L') bgChanged(q.size + k);
     } catch (e) {
       bgFailed.add(q.qk);
       if (!libWarned) { libWarned = true; toast(navigator.onLine === false ? 'PDF pages need the PDF viewer, which loads once from the internet. Connect and try again.' : 'A PDF page could not be shown.', 5000); }
@@ -8624,18 +8639,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     // the pictures only serve other programs (RRnotes uses the PDF itself): smaller with more pages, none for very many,
     // so that a long PDF doesn't make the file huge (490 pages were over 100 MB) or the tablet run out of memory
     const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg), pg.bg])).values()];
-    const tier = preview ? { px: 360, q: 0.55 } : todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 540, q: 0.6 };
+    // The stored page previews (page overview) are used where they are good enough: always in a web page (it shows the
+    // PDF itself), and for very many pages. Only pages without one are drawn now (and kept as previews too).
+    const tier = preview ? { px: 360, q: 0.55 } : todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 360, q: 0.6 };
     let i = 0;
-    for (const b of todo) {
-      const k = bgKey(b);
-      i++;
-      if (busyDepth) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
-      try {
-        const big = bgRast.L.get(k), small = bgRast.S.get(k);
-        const r = big && tier.px >= 1200 ? big : preview && small ? await reencode(small.blob, tier.q) : await (await renderPdfPage(b, tier.px, null, tier.q)).done;
-        pics.set(k, await blobData(r.blob));
-      } catch (_) {}
-    }
+    filePrep++;                                    // the background drawing waits meanwhile
+    try {
+      for (const b of todo) {
+        const k = bgKey(b);
+        i++;
+        if (busyDepth && (i % 5 === 1 || i === todo.length)) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
+        try {
+          const big = bgRast.L.get(k), small = tier.px === 360 ? await storedThumb(b) : null;
+          let r;
+          if (big && tier.px >= 1200) r = big;
+          else if (small) r = await reencode(small.blob, tier.q);
+          else {
+            r = await (await renderPdfPage(b, tier.px, null, tier.px === 360 ? 0.9 : tier.q)).done;
+            if (tier.px === 360) { keepThumb(b, r); r = await reencode(r.blob, tier.q); }
+          }
+          pics.set(k, await blobData(r.blob));
+        } catch (_) {}
+      }
+    } finally { filePrep--; if (!filePrep) bgPump(); }
     return { pdfs, pics };
   }
   async function reencode(blob, q) {               // a picture again as JPEG of lower quality (small previews from the page thumbnails)
