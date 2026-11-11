@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sanskrit sandhi, step by step</title>
+<meta name="description" content="Type two Sanskrit words in IAST or Devanagari and see, rule by rule, how sandhi joins them, with the Pāṇini sūtra for each step.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Sanskrit&display=swap">
+<style>
+/* Layout: single column like the other demos — header, two word inputs with options and examples,
+   slate board with the result, then the derivation as numbered steps grouped by stage, then notes. */
+:root{
+  --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
+  --slate:#22302e; --slate-edge:#3a4a47; --chalk:#eef2e9; --chalk-dim:rgba(238,242,233,.62);
+  --accent:#e9a23b; --accent-ink:#2a1c05; --accent-soft:rgba(233,162,59,.16);
+  --skip:#8b958f;
+  --f-deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120;
+  --slate:#1c2826; --slate-edge:#33423f; --accent-soft:rgba(233,162,59,.18); --skip:#6f7a75; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 56px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+header{display:grid;gap:4px}
+.back{font-size:14px;color:var(--muted);text-decoration:none;width:max-content}
+.back:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:8px}
+h1{margin:0;font-size:clamp(26px,5vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+h1 .deva{font-family:var(--f-deva);font-weight:400;color:var(--accent)}
+.lede{margin:0;color:var(--muted);max-width:62ch}
+h2{margin:0;font-size:18px;font-weight:600}
+.deva,[lang="sa-Deva"]{font-family:var(--f-deva)}
+
+/* Inputs */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:start}
+.field{display:grid;gap:4px}
+.field>span{font-size:13px;color:var(--muted);font-weight:500}
+.field input{font:inherit;font-size:22px;font-family:var(--f-deva);color:var(--fg);background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:8px 12px;width:100%;min-width:0}
+.field input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.field input[aria-invalid="true"]{border-color:#c4553b}
+.readas{font-size:13px;color:var(--muted);min-height:1.5em}
+.readas .err{color:#c4553b}
+.readas b{font-weight:500;color:var(--fg)}
+.plus{align-self:center;margin-top:18px;font-size:26px;color:var(--muted);line-height:1}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{appearance:none;font:inherit;font-size:14px;font-weight:500;border:0;background:var(--panel);color:var(--muted);padding:7px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--fg)}
+.seg .deva{font-size:15px}
+.btn{appearance:none;font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:7px 14px;cursor:pointer}
+.btn:hover{color:var(--fg);border-color:var(--accent)}
+.tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer;font-size:14px;color:var(--muted)}
+.tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+button:focus-visible,.tog input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.examples{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px}
+.examples>span{font-size:13px;color:var(--muted);margin-right:2px}
+.chip{appearance:none;font:inherit;font-size:14px;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:3px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.chip.deva{font-size:16px;padding:2px 11px 0}
+
+/* Board: the result */
+.board{background:var(--slate);border:10px solid var(--slate-edge);border-radius:14px;color:var(--chalk);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.35);padding:18px 20px 16px;display:grid;gap:6px;min-height:150px;align-content:center}
+.board .eq{font-size:15px;color:var(--chalk-dim)}
+.board .res{font-size:clamp(30px,7vw,44px);line-height:1.25;font-weight:500;overflow-wrap:anywhere}
+.board .res.deva{font-weight:400}
+.board .other{font-size:18px;color:var(--chalk-dim)}
+.board .other.deva{font-size:21px}
+.board .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--chalk-dim);margin-top:6px}
+.badge{display:inline-block;border:1px solid rgba(238,242,233,.3);border-radius:999px;padding:0 10px;color:var(--chalk)}
+.badge.hot{border-color:var(--accent);color:var(--accent)}
+.board .meta b{color:var(--chalk);font-weight:500}
+.board .msg{color:var(--chalk-dim)}
+
+/* Steps */
+.stage{display:grid;gap:8px}
+.stage h3{margin:0;font-size:15px;font-weight:600;display:flex;gap:10px;align-items:baseline}
+.stage h3 .n{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px}
+.step.apply{border-left:4px solid var(--accent)}
+.step .t{font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.sutra{font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+.sutra .num{font-variant-numeric:tabular-nums;color:var(--fg)}
+.sutra.deva{font-size:15px}
+.step p{margin:0;color:var(--muted);font-size:15px}
+.step p b,.snd{font-weight:600;color:var(--fg)}
+.snd.deva{font-weight:400;font-size:1.12em}
+.formula{font-size:20px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.formula .op{color:var(--muted);font-size:16px}
+.formula .deva{font-size:22px}
+.state{font-size:18px;color:var(--fg);border-top:1px dashed var(--line);padding-top:6px}
+.state .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:8px;font-family:var(--f-ui)}
+.state.deva .txt{font-size:22px}
+mark{background:var(--accent-soft);color:inherit;border-radius:3px;box-shadow:0 0 0 1px var(--accent) inset;padding:0 1px}
+.step.skip{background:transparent;border-style:dashed;padding:8px 14px;gap:2px}
+.step.skip .t{font-weight:500;color:var(--skip);font-size:15px}
+.step.skip .t::before{content:"–";margin-right:2px}
+.step.skip p{font-size:14px}
+.sounds{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.sounds .w{font-size:13px;color:var(--muted);width:56px}
+.sounds .s{border:1px solid var(--line);border-radius:6px;padding:0 7px;font-size:18px;background:var(--bg);min-width:28px;text-align:center}
+.sounds .s.deva{font-size:20px}
+.sounds .s.hl{border-color:var(--accent);background:var(--accent-soft)}
+.variant{font-size:14px;color:var(--muted)}
+.variant b{color:var(--fg);font-weight:500}
+
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600}
+details p,details li{color:var(--muted);font-size:15px}
+details ol,details ul{padding-left:20px;margin:8px 0}
+details p{margin:8px 0}
+.foot{font-size:13px;color:var(--muted)}
+@media (max-width:520px){
+  .pair{grid-template-columns:minmax(0,1fr)}
+  .plus{margin:0;justify-self:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">← Demos</a>
+    <div class="eyebrow">Sanskrit grammar</div>
+    <h1>Sandhi, step by step <span class="deva">सन्धि</span></h1>
+    <p class="lede">Type two words in IAST or Devanagari. The page checks the sandhi rules in order, shows each one that applies with its Pāṇini sūtra, and says why the others don't.</p>
+  </header>
+
+  <section aria-label="Words">
+    <div class="pair">
+      <label class="field"><span>Word 1</span>
+        <input id="w1" lang="sa" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="bhū or भू">
+        <small class="readas" id="r1"></small></label>
+      <div class="plus" aria-hidden="true">+</div>
+      <label class="field"><span>Word 2</span>
+        <input id="w2" lang="sa" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="buddha or बुद्ध">
+        <small class="readas" id="r2"></small></label>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Join as">
+        <button type="button" data-mode="sentence" aria-pressed="true">In a sentence</button>
+        <button type="button" data-mode="compound" aria-pressed="false">Compound</button>
+      </div>
+      <div class="seg" role="group" aria-label="Show in">
+        <button type="button" data-script="iast" aria-pressed="true">IAST</button>
+        <button type="button" data-script="deva" aria-pressed="false" class="deva">नागरी</button>
+      </div>
+      <button type="button" class="btn" id="swap" title="Swap the two words">⇄ Swap</button>
+      <label class="tog"><input type="checkbox" id="dual"><span>Word 1 is a dual (pragṛhya)</span></label>
+    </div>
+    <div class="examples" id="examples"><span>Try:</span></div>
+  </section>
+
+  <section class="board" id="board" aria-live="polite"></section>
+
+  <section id="trace" class="stage-list" style="display:grid;gap:18px" aria-label="Steps"></section>
+
+  <details>
+    <summary>How the page works</summary>
+    <p>Each pair goes through the same checks, in this order:</p>
+    <ol>
+      <li><b>Read the words.</b> The input is split into sounds. IAST and Devanagari both work. Without diacritics, type long vowels doubled or as capitals (<i>bhuu</i> or <i>bhU</i> for <i>bhū</i>), <i>H</i> for <i>ḥ</i>, <i>M</i> for <i>ṃ</i>, <i>sh</i> and <i>Sh</i> for <i>ś</i> and <i>ṣ</i>, and <i>T D N</i> for <i>ṭ ḍ ṇ</i>. The line under each field shows how the word was read.</li>
+      <li><b>End of word 1.</b> A Sanskrit word may only end in a vowel or in <i>k ṭ t p ṅ ṇ n m ḥ</i>. Other final consonants are reduced first; final <i>s</i> and <i>r</i> become visarga. In a compound, a stem-final <i>n</i> drops (<i>rājan</i> → <i>rāja-</i>).</li>
+      <li><b>Where the words meet.</b> Depending on the last sound of word 1 and the first sound of word 2, the vowel, visarga or consonant rules are tried one after another. The first rule that fits is applied; the ones before it are listed as not applicable.</li>
+      <li><b>Result.</b> In IAST the words stay apart unless two vowels merge into one; in Devanagari a word ending in a consonant is written together with the next word, as in printed texts.</li>
+    </ol>
+    <p>Covered: the external sandhi rules found in the standard tables (vowel sandhi, visarga, final <i>m</i>, <i>n</i> and stops, <i>ch</i> doubling). Not covered: internal sandhi inside a word (for example <i>budh + ta → buddha</i>), the change of <i>n</i> to <i>ṇ</i> after <i>r ṛ ṣ</i>, Vedic exceptions, and words with irregular behaviour beyond <i>saḥ</i> and <i>eṣaḥ</i>. A visarga typed as <i>ḥ</i> is treated as coming from <i>s</i>, except in common <i>r</i>-words such as <i>punaḥ</i>, <i>antaḥ</i>, <i>prātaḥ</i>; type the word with a final <i>r</i> to say it explicitly.</p>
+    <p>Sūtra numbers refer to Pāṇini's Aṣṭādhyāyī (book.chapter.rule).</p>
+  </details>
+  <p class="foot">The link updates as you type, so you can share a pair.</p>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ---------- Sound inventory ---------- */
+const VOW = ['a','ā','i','ī','u','ū','ṛ','ṝ','ḷ','ḹ','e','ai','o','au'];
+const isV = t => VOW.includes(t);
+const SHORT = new Set(['a','i','u','ṛ','ḷ']);
+const GROUP = {a:'a','ā':'a',i:'i','ī':'i',u:'u','ū':'u','ṛ':'ṛ','ṝ':'ṛ','ḷ':'ḷ','ḹ':'ḷ'};
+const LONG = {a:'ā',i:'ī',u:'ū','ṛ':'ṝ','ḷ':'ḹ'};
+const ROWS = {
+  velar:['k','kh','g','gh','ṅ'], palatal:['c','ch','j','jh','ñ'], retroflex:['ṭ','ṭh','ḍ','ḍh','ṇ'],
+  dental:['t','th','d','dh','n'], labial:['p','ph','b','bh','m']
+};
+const C = {};
+for (const [place, row] of Object.entries(ROWS)) row.forEach((t, i) =>
+  C[t] = {place, row, kind: i === 4 ? 'nasal' : 'stop', voiced: i >= 2, asp: i === 1 || i === 3});
+Object.assign(C, {
+  y:{place:'palatal',kind:'semivowel',voiced:true}, r:{place:'retroflex',kind:'semivowel',voiced:true},
+  l:{place:'dental',kind:'semivowel',voiced:true}, v:{place:'labial',kind:'semivowel',voiced:true},
+  'ś':{place:'palatal',kind:'sibilant',voiced:false}, 'ṣ':{place:'retroflex',kind:'sibilant',voiced:false},
+  s:{place:'dental',kind:'sibilant',voiced:false}, h:{place:'glottal',kind:'h',voiced:true},
+  'l̐':{place:'dental',kind:'semivowel',voiced:true}
+});
+const isC = t => !!C[t];
+const isStop = t => C[t] && C[t].kind === 'stop';
+const isNasal = t => C[t] && C[t].kind === 'nasal';
+const voiced = t => isV(t) || (C[t] && C[t].voiced);
+const last = a => a[a.length - 1];
+
+function describe(t) {
+  if (!t) return '';
+  if (isV(t)) return ['e','ai','o','au'].includes(t) ? 'diphthong' : (SHORT.has(t) ? 'short vowel' : 'long vowel');
+  if (t === 'ḥ') return 'visarga';
+  if (t === 'ṃ') return 'anusvāra';
+  const c = C[t]; if (!c) return '';
+  if (c.kind === 'stop') return `${c.voiced ? 'voiced' : 'voiceless'} ${c.asp ? 'aspirated ' : ''}${c.place} stop`;
+  if (c.kind === 'nasal') return `${c.place} nasal`;
+  if (c.kind === 'semivowel') return `${c.place} semivowel`;
+  if (c.kind === 'sibilant') return `${c.place} sibilant`;
+  return 'voiced h';
+}
+
+/* ---------- Devanagari ---------- */
+const DC = {k:'क',kh:'ख',g:'ग',gh:'घ','ṅ':'ङ',c:'च',ch:'छ',j:'ज',jh:'झ','ñ':'ञ','ṭ':'ट','ṭh':'ठ','ḍ':'ड','ḍh':'ढ','ṇ':'ण',
+  t:'त',th:'थ',d:'द',dh:'ध',n:'न',p:'प',ph:'फ',b:'ब',bh:'भ',m:'म',y:'य',r:'र',l:'ल',v:'व','ś':'श','ṣ':'ष',s:'स',h:'ह'};
+const DV = {a:'अ','ā':'आ',i:'इ','ī':'ई',u:'उ','ū':'ऊ','ṛ':'ऋ','ṝ':'ॠ','ḷ':'ऌ','ḹ':'ॡ',e:'ए',ai:'ऐ',o:'ओ',au:'औ'};
+const DM = {a:'','ā':'ा',i:'ि','ī':'ी',u:'ु','ū':'ू','ṛ':'ृ','ṝ':'ॄ','ḷ':'ॢ','ḹ':'ॣ',e:'े',ai:'ै',o:'ो',au:'ौ'};
+const RC = Object.fromEntries(Object.entries(DC).map(([k, v]) => [v, k]));
+const RV = Object.fromEntries(Object.entries(DV).map(([k, v]) => [v, k]));
+const RM = Object.fromEntries(Object.entries(DM).filter(([k]) => k !== 'a').map(([k, v]) => [v, k]));
+
+/* tokens → Devanagari. In running text a space after a consonant (or before an avagraha) is dropped,
+   as printed texts write तदपि, not तद् अपि. fragment: a lone ṃ/ḥ gets a dotted circle. */
+function toDeva(tokens, fragment) {
+  const tk = [];
+  tokens.forEach((t, i) => {
+    if (t === '·') return;
+    if (t === ' ') {
+      const prev = tk[tk.length - 1], next = tokens[i + 1];
+      if (!fragment && (isC(prev) || next === "'")) return;
+    }
+    tk.push(t);
+  });
+  let out = '';
+  for (let i = 0; i < tk.length; i++) {
+    const t = tk[i];
+    if (t === ' ') out += ' ';
+    else if (t === "'") out += 'ऽ';
+    else if (t === 'ṃ' || t === 'ḥ') {
+      const prev = tk[i - 1];
+      if (prev === undefined || prev === ' ') out += '◌';
+      out += t === 'ṃ' ? 'ं' : 'ः';
+    } else if (t === 'l̐') out += 'ँल्';
+    else if (isC(t)) {
+      out += DC[t];
+      const n = tk[i + 1];
+      if (isV(n)) { out += DM[n]; i++; } else out += '्';
+    } else if (isV(t)) out += DV[t];
+    else out += t;
+  }
+  return out;
+}
+const toIast = tokens => tokens.join('').replace(/'/g, '’');
+
+/* ---------- Parsing ---------- */
+const IAST_MULTI = ['l̐','kh','gh','ch','jh','ṭh','ḍh','th','dh','ph','bh','ai','au'];
+const IAST_ONE = new Set([...VOW, ...Object.keys(DC), 'ṃ', 'ḥ', "'"]);
+const ASCII = [ // ITRANS-style long vowels and capitals (plus a few Harvard-Kyoto letters); ch stays ch as in IAST, so plain 'gacchati' works
+  ['RRi','ṛ'],['R^i','ṛ'],['RRI','ṝ'],['R^I','ṝ'],['LLi','ḷ'],['L^i','ḷ'],['LLI','ḹ'],['L^I','ḹ'],
+  ['chh','ch'],['shh','ṣ'],['kSh',['k','ṣ']],['GY',['j','ñ']],['dny',['j','ñ']],
+  ['aa','ā'],['ii','ī'],['ee','ī'],['uu','ū'],['oo','ū'],['ai','ai'],['au','au'],
+  ['kh','kh'],['gh','gh'],['~N','ṅ'],['N^','ṅ'],['Ch','ch'],['ch','ch'],['jh','jh'],['~n','ñ'],['JN','ñ'],
+  ['Th','ṭh'],['Dh','ḍh'],['th','th'],['dh','dh'],['ph','ph'],['bh','bh'],['Sh','ṣ'],['sh','ś'],
+  ['.m','ṃ'],['.n','ṃ'],['.a',"'"],['RR','ṝ'],
+  ['A','ā'],['I','ī'],['U','ū'],['R','ṛ'],['M','ṃ'],['H','ḥ'],['T','ṭ'],['D','ḍ'],['N','ṇ'],['G','ṅ'],['J','ñ'],
+  ['z','ś'],['S','ṣ'],['x',['k','ṣ']],['w','v'],['W','v'],['V','v'],["'","'"]
+];
+for (const ch of 'aiueokgcjtdnpbmyrlvsh') ASCII.push([ch, ch]);
+ASCII.sort((a, b) => b[0].length - a[0].length);
+
+function tidy(tokens) {
+  const out = [];
+  for (const t of tokens) if (!(t === ' ' && (!out.length || last(out) === ' '))) out.push(t);
+  while (last(out) === ' ') out.pop();
+  return out;
+}
+function parseIast(s) {
+  s = s.toLowerCase().replace(/ṁ/g, 'ṃ').replace(/r̥̄/g, 'ṝ').replace(/r̥/g, 'ṛ').replace(/l̥̄/g, 'ḹ').replace(/l̥/g, 'ḷ')
+       .replace(/m̐/g, 'ṃ').replace(/[’ʼ‘`]/g, "'");
+  const out = [];
+  for (let i = 0; i < s.length;) {
+    if (/\s|-/.test(s[i])) { out.push(' '); i++; continue; }
+    const m = IAST_MULTI.find(x => s.startsWith(x, i));
+    if (m) { out.push(m); i += m.length; continue; }
+    if (IAST_ONE.has(s[i])) { out.push(s[i]); i++; continue; }
+    return {err: s[i]};
+  }
+  return {tokens: tidy(out)};
+}
+function parseAscii(s) {
+  const out = [];
+  for (let i = 0; i < s.length;) {
+    if (/\s|-/.test(s[i])) { out.push(' '); i++; continue; }
+    const m = ASCII.find(([k]) => s.startsWith(k, i));
+    if (!m) return {err: s[i]};
+    out.push(...[].concat(m[1])); i += m[0].length;
+  }
+  return {tokens: tidy(out)};
+}
+function parseDeva(s) {
+  const out = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (/[‌‍़।॥]/.test(ch)) continue;
+    if (/\s|-/.test(ch)) { out.push(' '); continue; }
+    if (RC[ch]) {
+      out.push(RC[ch]);
+      let n = s[i + 1];
+      while (n === '़') { i++; n = s[i + 1]; }
+      if (RM[n]) { out.push(RM[n]); i++; }
+      else if (n === '्') i++;
+      else out.push('a');
+      continue;
+    }
+    if (RV[ch]) { out.push(RV[ch]); continue; }
+    if (ch === 'ं' || ch === 'ँ') { out.push('ṃ'); continue; }
+    if (ch === 'ः') { out.push('ḥ'); continue; }
+    if (ch === 'ऽ') { out.push("'"); continue; }
+    if (ch === 'ॐ') { out.push('o', 'ṃ'); continue; }
+    return {err: ch};
+  }
+  return {tokens: tidy(out)};
+}
+function parse(raw) {
+  const s = (raw || '').normalize('NFC').trim();
+  if (!s) return {tokens: []};
+  if (/[ऀ-ॿ]/.test(s)) return parseDeva(s);
+  if (/^[\x00-\x7F]*$/.test(s)) return parseAscii(s);
+  return parseIast(s);
+}
+
+/* ---------- The sandhi engine ---------- */
+// Words whose visarga stands for r (punar, antar …); everything else is taken as s.
+const R_WORDS = new Set(['punaḥ','antaḥ','prātaḥ','svaḥ','catuḥ','ahaḥ','dvāḥ','gīḥ','mātaḥ','pitaḥ','bhrātaḥ','dhūḥ','pūḥ']);
+const SA_WORDS = new Set(['saḥ','eṣaḥ']);
+const S = (num, name) => ({num, name});
+const STAGES = {read: 'Read the words', end: 'End of word 1', join: 'Where the words meet', result: 'Result'};
+
+function run(aTok, bTok, opt) {
+  let A = [...aTok], B = [...bTok], sep = 'space';
+  const steps = [], variants = [];
+  let stage = 'read', joinTitle = '';
+  const snap = (hlA, hlB) => ({A: [...A], B: [...B], sep, hlA, hlB});
+  const apply = o => steps.push(Object.assign({type: 'apply', stage, sutras: []}, o, {state: snap(o.hlA ?? 1, o.hlB ?? 0)}));
+  const skip = (title, why) => steps.push({type: 'skip', stage, title, why});
+  const variant = (label, a, b, s) => variants.push({label, state: {A: a, B: b, sep: s, hlA: 0, hlB: 0}});
+  const lastWord = () => { const i = A.lastIndexOf(' '); return A.slice(i + 1); };
+
+  /* 1. Read */
+  steps.push({type: 'read', stage});
+
+  /* 2. End of word 1 */
+  stage = 'end';
+  let origin = null, changed = false;
+  if (last(A) === 'ṃ') {
+    A[A.length - 1] = 'm'; changed = true;
+    apply({title: 'Final anusvāra is read as m',
+      text: 'At the end of a word ⟦ṃ⟧ is only a spelling of ⟦m⟧ before a consonant; the junction rules start from ⟦m⟧.',
+      formula: ['ṃ', '→', 'm']});
+  }
+  while (A.length >= 2 && isC(last(A)) && isC(A[A.length - 2])) {
+    const d = A.pop(), p = last(A); changed = true;
+    apply({title: 'Only one consonant at the end of a word', sutras: [S('8.2.23', 'saṃyogāntasya lopaḥ')],
+      text: `A word cannot end in a cluster, so the last consonant ⟦${d}⟧ is dropped.`,
+      formula: [p + d, '→', p]});
+  }
+  const fin = last(A);
+  if (fin === 's') {
+    origin = 's'; A[A.length - 1] = 'ḥ'; changed = true;
+    apply({title: 'Final s becomes visarga', sutras: [S('8.2.66', 'sasajuṣo ruḥ'), S('8.3.15', 'kharavasānayor visarjanīyaḥ')],
+      text: 'Pāṇini replaces a word-final ⟦s⟧ by ⟦ru⟧, which before a pause or a voiceless sound is pronounced ⟦ḥ⟧. What it finally becomes depends on the next sound.',
+      formula: ['s', '→', 'ru', '→', 'ḥ']});
+  } else if (fin === 'r') {
+    origin = 'r'; A[A.length - 1] = 'ḥ'; changed = true;
+    apply({title: 'Final r becomes visarga', sutras: [S('8.3.15', 'kharavasānayor visarjanīyaḥ')],
+      text: 'Before a pause or a voiceless sound a final ⟦r⟧ is pronounced ⟦ḥ⟧. Because it comes from ⟦r⟧, it turns back into ⟦r⟧ before voiced sounds, even after ⟦a⟧.',
+      formula: ['r', '→', 'ḥ']});
+  } else if (fin === 'ḥ') {
+    origin = R_WORDS.has(lastWord().join('')) ? 'r' : 's';
+  } else if (isC(fin) && !['k','ṭ','t','p','ṅ','ṇ','n','m'].includes(fin)) {
+    const c = C[fin]; let to, sutras, why;
+    if (c.place === 'palatal' && c.kind === 'stop') { to = 'k'; sutras = [S('8.2.30', 'coḥ kuḥ'), S('8.2.39', "jhalāṃ jaśo 'nte")];
+      why = 'A final palatal turns into a velar (in a few words, such as rāj, it becomes ṭ instead).'; }
+    else if (fin === 'ś' || fin === 'ṣ') { to = 'ṭ'; sutras = [S('8.2.36', 'vraścabhrasjasṛjamṛjayajarājabhrājacchaśāṃ ṣaḥ'), S('8.2.39', "jhalāṃ jaśo 'nte")];
+      why = 'A final sibilant ⟦' + fin + '⟧ becomes a retroflex stop (some words, such as diś, have k instead).'; }
+    else if (fin === 'h') { to = 'ṭ'; sutras = [S('8.2.31', 'ho ḍhaḥ'), S('8.2.39', "jhalāṃ jaśo 'nte")];
+      why = 'A final ⟦h⟧ becomes a retroflex stop (in roots beginning with d, such as duh, k instead).'; }
+    else if (c.kind === 'stop') { to = c.row[0]; sutras = [S('8.2.39', "jhalāṃ jaśo 'nte"), S('8.4.56', 'vāvasāne')];
+      why = 'A final stop loses aspiration and voice: only the plain voiceless stop of its row can end a word.'; }
+    if (to) {
+      A[A.length - 1] = to; changed = true;
+      apply({title: 'Final consonant reduced', sutras, text: why + ' The next step decides whether it becomes voiced again.', formula: [fin, '→', to]});
+    }
+  }
+  if (opt.mode === 'compound' && last(A) === 'n' && isV(A[A.length - 2])) {
+    A.pop(); changed = true;
+    apply({title: 'Stem-final n drops in a compound', sutras: [S('8.2.7', 'nalopaḥ prātipadikāntasya')],
+      text: 'The first member of a compound is a stem; a stem-final ⟦n⟧ is lost, as in rājan → rāja-.',
+      formula: ['n', '→', '∅'], hlA: 1});
+  }
+  if (!changed) {
+    const f = last(A);
+    if (isV(f)) skip('Nothing to simplify', `Word 1 ends in the vowel ⟦${f}⟧, and any vowel may end a word.`);
+    else if (f === 'ḥ') skip('Nothing to simplify', `Word 1 ends in visarga ⟦ḥ⟧, which here stands for ${origin === 'r' ? 'an original ⟦r⟧ (as in punar)' : 'an original ⟦s⟧, as in most case endings'}.`);
+    else skip('Nothing to simplify', `⟦${f}⟧ is one of the sounds a word may end in (⟦k⟧ ⟦ṭ⟧ ⟦t⟧ ⟦p⟧ ⟦ṅ⟧ ⟦ṇ⟧ ⟦n⟧ ⟦m⟧ ⟦ḥ⟧).`);
+  }
+
+  /* 3. Junction */
+  stage = 'join';
+  const L = last(A), F = B[0], P = A[A.length - 2];
+  junction: {
+    if (isV(L) && isV(F)) {
+      joinTitle = 'vowel + vowel';
+      if (opt.dual && ['ī','ū','e'].includes(L)) {
+        sep = 'hiatus';
+        apply({title: 'Dual ending: no sandhi', sutras: [S('1.1.11', 'īdūded dvivacanaṃ pragṛhyam'), S('6.1.125', 'plutapragṛhyā aci nityam')],
+          text: `Dual endings in ⟦ī⟧, ⟦ū⟧ and ⟦e⟧ are pragṛhya: they keep their form before a vowel and the two words stay apart.`,
+          formula: [L, '+', F, '→', L, '·', F]});
+        break junction;
+      }
+      const g1 = GROUP[L], g2 = GROUP[F];
+      if (g1 && g1 === g2) {
+        const r = LONG[g1]; A.pop(); B.shift(); A.push(r); sep = 'fuse';
+        apply({title: 'Two similar vowels merge into one long vowel', sutras: [S('6.1.101', 'akaḥ savarṇe dīrghaḥ')],
+          text: `⟦${L}⟧ and ⟦${F}⟧ are the same vowel, short or long; together they become long ⟦${r}⟧.`,
+          formula: [L, '+', F, '→', r]});
+        break junction;
+      }
+      skip('Two similar vowels merge', g1 && g2 ? `⟦${L}⟧ and ⟦${F}⟧ are different vowels.` : `A diphthong is involved, so this rule doesn't fit.`);
+      if (g1 === 'a') {
+        if (g2 && g2 !== 'a') {
+          const r = {i: ['e'], u: ['o'], 'ṛ': ['a','r'], 'ḷ': ['a','l']}[g2];
+          A.pop(); B.shift(); A.push(...r); sep = 'fuse';
+          apply({title: 'a + i, u, ṛ: guṇa', sutras: [S('6.1.87', 'ād guṇaḥ')],
+            text: `⟦${L}⟧ and the following ⟦${F}⟧ are replaced by the guṇa vowel ⟦${r.join('')}⟧.`,
+            formula: [L, '+', F, '→', r.join('')], hlA: r.length});
+        } else {
+          const r = (F === 'e' || F === 'ai') ? 'ai' : 'au';
+          A.pop(); B.shift(); A.push(r); sep = 'fuse';
+          apply({title: 'a + diphthong: vṛddhi', sutras: [S('6.1.88', 'vṛddhir eci')],
+            text: `⟦${L}⟧ followed by the diphthong ⟦${F}⟧ becomes the vṛddhi vowel ⟦${r}⟧.`,
+            formula: [L, '+', F, '→', r]});
+        }
+        break junction;
+      }
+      skip('a or ā + vowel: guṇa or vṛddhi', `Word 1 doesn't end in ⟦a⟧ or ⟦ā⟧.`);
+      if (g1) {
+        const y = {i: 'y', u: 'v', 'ṛ': 'r', 'ḷ': 'l'}[g1];
+        A[A.length - 1] = y; sep = 'space';
+        apply({title: 'i, u, ṛ before another vowel become y, v, r', sutras: [S('6.1.77', 'iko yaṇ aci')],
+          text: `Before the different vowel ⟦${F}⟧, ⟦${L}⟧ turns into the matching semivowel ⟦${y}⟧. In IAST the words are still written apart; in Devanagari they join.`,
+          formula: [L, '+', F, '→', y + F]});
+        break junction;
+      }
+      skip('i, u, ṛ + vowel → y, v, r', `Word 1 ends in the diphthong ⟦${L}⟧.`);
+      if ((L === 'e' || L === 'o') && F === 'a') {
+        B[0] = "'"; sep = 'space';
+        apply({title: 'e or o swallows a following a', sutras: [S('6.1.109', "eṅaḥ padāntād ati")],
+          text: `After a word-final ⟦${L}⟧ the initial ⟦a⟧ of word 2 disappears. The avagraha ⟦'⟧ marks where it was.`,
+          formula: [L, '+', 'a', '→', L + "'"], hlA: 1, hlB: 1});
+        break junction;
+      }
+      if (L === 'e' || L === 'o') {
+        const sv = L === 'e' ? 'y' : 'v';
+        A[A.length - 1] = 'a'; A.push(sv);
+        apply({title: `${L} before a vowel becomes a${sv}`, sutras: [S('6.1.78', "eco 'yavāyāvaḥ")],
+          text: `Before ⟦${F}⟧ the diphthong ⟦${L}⟧ is split into ⟦a⟧ + ⟦${sv}⟧.`,
+          formula: [L, '+', F, '→', 'a' + sv + F], hlA: 2});
+        const keepA = [...A], keepB = [...B];
+        A.pop(); sep = 'hiatus';
+        apply({title: `The ${sv} is dropped`, sutras: [S('8.3.19', 'lopaḥ śākalyasya')],
+          text: `Following Śākalya, ⟦${sv}⟧ after ⟦a⟧ is dropped before a vowel. The gap (hiatus) stays: no further vowel sandhi applies.`,
+          formula: ['a' + sv, '+', F, '→', 'a', '·', F]});
+        variant(`keeping the ${sv} (${L === 'e' ? 'rare' : 'also found'})`, keepA, keepB, 'space');
+        break junction;
+      }
+      if (L === 'ai') {
+        A[A.length - 1] = 'ā'; A.push('y');
+        apply({title: 'ai before a vowel becomes āy', sutras: [S('6.1.78', "eco 'yavāyāvaḥ")],
+          text: `Before ⟦${F}⟧ the diphthong ⟦ai⟧ is split into ⟦ā⟧ + ⟦y⟧.`,
+          formula: ['ai', '+', F, '→', 'āy' + F], hlA: 2});
+        A.pop(); sep = 'hiatus';
+        apply({title: 'The y is dropped', sutras: [S('8.3.19', 'lopaḥ śākalyasya')],
+          text: '⟦y⟧ is dropped before the vowel and the two words stay apart.',
+          formula: ['āy', '+', F, '→', 'ā', '·', F]});
+        break junction;
+      }
+      if (L === 'au') {
+        A[A.length - 1] = 'ā'; A.push('v'); sep = 'space';
+        apply({title: 'au before a vowel becomes āv', sutras: [S('6.1.78', "eco 'yavāyāvaḥ")],
+          text: `Before ⟦${F}⟧ the diphthong ⟦au⟧ is split into ⟦ā⟧ + ⟦v⟧. The ⟦v⟧ is normally kept.`,
+          formula: ['au', '+', F, '→', 'āv' + F], hlA: 2});
+        variant('dropping the v (8.3.19)', [...A.slice(0, -1)], [...B], 'hiatus');
+        break junction;
+      }
+    }
+
+    if (isV(L)) {
+      joinTitle = 'vowel + consonant';
+      skip('Vowel sandhi', `Word 2 begins with the consonant ⟦${F}⟧, so none of the vowel + vowel rules can apply.`);
+      if (F === 'ch') {
+        if (SHORT.has(L)) {
+          B.unshift('c');
+          apply({title: 'ch is doubled after a short vowel', sutras: [S('6.1.73', 'che ca'), S('8.4.40', 'stoḥ ścunā ścuḥ')],
+            text: `After the short vowel ⟦${L}⟧ a ⟦t⟧ is inserted before ⟦ch⟧ (6.1.73) and turns palatal next to it (8.4.40), so ⟦ch⟧ is written ⟦cch⟧.`,
+            formula: [L, '+', 'ch', '→', L, '·', 'cch'], hlA: 0, hlB: 2});
+        } else {
+          skip('ch doubling', `After the long vowel ⟦${L}⟧ at the end of a word, doubling ⟦ch⟧ is optional (6.1.76 padāntād vā).`);
+          variant('with doubled ch (6.1.76)', [...A], ['c', ...B], 'space');
+        }
+      } else skip('ch doubling', `After a vowel only an initial ⟦ch⟧ changes (it is doubled); ⟦${F}⟧ is not ⟦ch⟧.`);
+      skip('Consonant and visarga rules', `Word 1 ends in a vowel, not in a consonant or a visarga.`);
+      break junction;
+    }
+
+    if (L === 'ḥ') {
+      joinTitle = 'visarga + ' + (isV(F) ? 'vowel' : 'consonant');
+      skip('Vowel sandhi', 'Word 1 ends in a visarga, not a vowel.');
+      const isSa = SA_WORDS.has(lastWord().join('')) && origin === 's';
+      if (isSa && isC(F)) {
+        A.pop();
+        apply({title: 'saḥ and eṣaḥ lose the visarga before a consonant', sutras: [S('6.1.132', "etattadoḥ sulopo 'kor anañsamāse hali")],
+          text: `The pronouns ⟦${lastWord().join('')}ḥ⟧ drop their ending before any consonant, so the ⟦ḥ⟧ disappears.`,
+          formula: [lastWord().join('') + 'ḥ', '+', F, '→', lastWord().join(''), '·', F], hlA: 1});
+        break junction;
+      }
+      const vc = {c: 'ś', ch: 'ś', 'ṭ': 'ṣ', 'ṭh': 'ṣ', t: 's', th: 's'}[F];
+      if (vc) {
+        A[A.length - 1] = vc;
+        apply({title: `Visarga before ${F} becomes ${vc}`,
+          sutras: [S('8.3.34', 'visarjanīyasya saḥ')].concat(vc === 'ś' ? [S('8.4.40', 'stoḥ ścunā ścuḥ')] : vc === 'ṣ' ? [S('8.4.41', 'ṣṭunā ṣṭuḥ')] : []),
+          text: `Before a voiceless ⟦${F}⟧ the visarga becomes ⟦s⟧${vc !== 's' ? `, which takes on the place of ⟦${F}⟧: ⟦${vc}⟧` : ''}.`,
+          formula: ['ḥ', '+', F, '→', vc + F]});
+        break junction;
+      }
+      if (['k','kh','p','ph'].includes(F)) {
+        skip('Visarga before k, kh, p, ph', `The visarga stays as it is before ⟦${F}⟧ (8.3.37; in old texts it could become a velar or labial breath).`);
+        break junction;
+      }
+      if (['ś','ṣ','s'].includes(F)) {
+        skip('Visarga before a sibilant', `The visarga normally stays before ⟦${F}⟧ (8.3.36 vā śari).`);
+        variant(`assimilated to ${F} (8.3.34)`, [...A.slice(0, -1), F], [...B], 'space');
+        break junction;
+      }
+      // F is a vowel or voiced consonant
+      if (origin === 'r' || !['a','ā'].includes(P)) {
+        if (F === 'r') {
+          const lp = LONG[P] || P;
+          A.pop(); A[A.length - 1] = lp;
+          apply({title: 'r before r is dropped, the vowel lengthens', sutras: [S('8.3.14', 'ro ri'), S('6.3.111', "ḍhralope pūrvasya dīrgho 'ṇaḥ")],
+            text: `The visarga stands for ⟦r⟧. Before another ⟦r⟧ it is dropped (8.3.14), and the vowel before it becomes long: ⟦${P}⟧ → ⟦${lp}⟧ (6.3.111).`,
+            formula: [P + 'ḥ', '+', 'r', '→', lp, '·', 'r']});
+        } else {
+          A[A.length - 1] = 'r';
+          apply({title: 'Visarga before a voiced sound becomes r',
+            sutras: origin === 's' ? [S('8.2.66', 'sasajuṣo ruḥ')] : [],
+            text: origin === 'r'
+              ? `The visarga stands for an original ⟦r⟧, which reappears before the voiced ⟦${F}⟧.`
+              : `After ⟦${P}⟧ (not ⟦a⟧ or ⟦ā⟧), the ⟦ru⟧ from ⟦s⟧ is pronounced ⟦r⟧ before the voiced ⟦${F}⟧.`,
+            formula: ['ḥ', '+', F, '→', 'r' + F]});
+        }
+        break junction;
+      }
+      if (P === 'a') {
+        if (F === 'a') {
+          A.pop(); A.push('·', 'u');
+          apply({title: 'ru becomes u before a', sutras: [S('6.1.113', 'ato ror aplutād aplute')],
+            text: `After short ⟦a⟧, the ⟦ru⟧ that stands for final ⟦s⟧ becomes ⟦u⟧ before another short ⟦a⟧.`,
+            formula: ['ḥ', '→', 'u'], hlA: 1});
+          A.splice(-3, 3, 'o');
+          apply({title: 'a + u becomes o (guṇa)', sutras: [S('6.1.87', 'ād guṇaḥ')],
+            text: '⟦a⟧ and ⟦u⟧ merge into the guṇa vowel ⟦o⟧.',
+            formula: ['a', '+', 'u', '→', 'o']});
+          B[0] = "'";
+          apply({title: 'o swallows the following a', sutras: [S('6.1.109', 'eṅaḥ padāntād ati')],
+            text: 'After word-final ⟦o⟧ the initial ⟦a⟧ disappears, marked by the avagraha ⟦\'⟧.',
+            formula: ['o', '+', 'a', '→', "o'"], hlB: 1});
+        } else if (isV(F)) {
+          A[A.length - 1] = 'y';
+          apply({title: 'ru after a becomes y before a vowel', sutras: [S('8.3.17', "bhobhagoaghoapūrvasya yo 'śi")],
+            text: `After ⟦a⟧, the ⟦ru⟧ from ⟦s⟧ becomes ⟦y⟧ before the vowel ⟦${F}⟧.`,
+            formula: ['aḥ', '+', F, '→', 'ay' + F]});
+          A.pop(); sep = 'hiatus';
+          apply({title: 'The y is dropped', sutras: [S('8.3.19', 'lopaḥ śākalyasya')],
+            text: '⟦y⟧ is dropped, the gap stays, and no further vowel sandhi applies.',
+            formula: ['ay', '+', F, '→', 'a', '·', F]});
+        } else {
+          A.pop(); A.push('·', 'u');
+          apply({title: 'ru becomes u before a voiced consonant', sutras: [S('6.1.114', 'haśi ca')],
+            text: `After short ⟦a⟧, the ⟦ru⟧ from ⟦s⟧ becomes ⟦u⟧ before the voiced consonant ⟦${F}⟧.`,
+            formula: ['ḥ', '→', 'u'], hlA: 1});
+          A.splice(-3, 3, 'o');
+          apply({title: 'a + u becomes o (guṇa)', sutras: [S('6.1.87', 'ād guṇaḥ')],
+            text: '⟦a⟧ and ⟦u⟧ merge into the guṇa vowel ⟦o⟧.',
+            formula: ['a', '+', 'u', '→', 'o']});
+        }
+        break junction;
+      }
+      // P === 'ā'
+      A[A.length - 1] = 'y';
+      apply({title: 'ru after ā becomes y', sutras: [S('8.3.17', "bhobhagoaghoapūrvasya yo 'śi")],
+        text: `After ⟦ā⟧, the ⟦ru⟧ from ⟦s⟧ becomes ⟦y⟧ before the voiced ⟦${F}⟧.`,
+        formula: ['āḥ', '+', F, '→', 'āy', '·', F]});
+      A.pop(); sep = isV(F) ? 'hiatus' : 'space';
+      apply({title: 'The y is dropped', sutras: isV(F) ? [S('8.3.19', 'lopaḥ śākalyasya')] : [S('8.3.22', 'hali sarveṣām')],
+        text: isV(F) ? '⟦y⟧ is dropped before the vowel; the gap stays.' : '⟦y⟧ is always dropped before a consonant.',
+        formula: ['āy', '+', F, '→', 'ā', '·', F]});
+      break junction;
+    }
+
+    // Consonant-final word 1
+    joinTitle = 'consonant + ' + (isV(F) ? 'vowel' : 'consonant');
+    skip('Vowel and visarga rules', `Word 1 ends in the consonant ⟦${L}⟧.`);
+
+    if (L === 'm') {
+      if (isC(F)) {
+        A[A.length - 1] = 'ṃ';
+        apply({title: 'm before a consonant becomes anusvāra', sutras: [S('8.3.23', "mo 'nusvāraḥ")],
+          text: `Word-final ⟦m⟧ before the consonant ⟦${F}⟧ is pronounced as anusvāra ⟦ṃ⟧.`,
+          formula: ['m', '+', F, '→', 'ṃ', '·', F]});
+        if (isStop(F) || isNasal(F)) variant(`with the nasal of the ${C[F].place} row (8.4.59)`, [...A.slice(0, -1), C[F].row[4]], [...B], 'space');
+      } else skip('m before a vowel', `Before the vowel ⟦${F}⟧, ⟦m⟧ stays (in Devanagari the words are written together).`);
+      break junction;
+    }
+
+    if (['n','ṅ','ṇ'].includes(L)) {
+      if (isV(F)) {
+        if (SHORT.has(P)) {
+          A.push(L);
+          apply({title: `${L} after a short vowel is doubled before a vowel`, sutras: [S('8.3.32', 'ṅamo hrasvād aci ṅamuṇ nityam')],
+            text: `⟦${L}⟧ follows the short vowel ⟦${P}⟧ and stands before the vowel ⟦${F}⟧, so it is doubled.`,
+            formula: [P + L, '+', F, '→', P + L + L, '·', F], hlA: 1});
+        } else skip(`${L} before a vowel`, `⟦${L}⟧ is doubled only after a short vowel; here it follows ⟦${P}⟧.`);
+        break junction;
+      }
+      if (L === 'n') {
+        const sib = {c: 'ś', ch: 'ś', 'ṭ': 'ṣ', 'ṭh': 'ṣ', t: 's', th: 's'}[F];
+        if (sib) {
+          A[A.length - 1] = 'ṃ'; A.push(sib);
+          apply({title: `n before ${F} becomes ṃ${sib}`, sutras: [S('8.3.7', 'naś chavy apraśān'), S('8.3.4', "anunāsikāt paro 'nusvāraḥ")],
+            text: `Before the voiceless ⟦${F}⟧, final ⟦n⟧ is replaced by ⟦ru⟧, which becomes the sibilant ⟦${sib}⟧ of ⟦${F}⟧'s row; the nasal survives as anusvāra.`,
+            formula: ['n', '+', F, '→', 'ṃ' + sib + F], hlA: 2});
+          break junction;
+        }
+        if (['j','jh','ñ','ś'].includes(F)) {
+          A[A.length - 1] = 'ñ';
+          apply({title: 'n becomes palatal ñ', sutras: [S('8.4.40', 'stoḥ ścunā ścuḥ')],
+            text: `Next to the palatal ⟦${F}⟧, the dental ⟦n⟧ becomes palatal ⟦ñ⟧.`,
+            formula: ['n', '+', F, '→', 'ñ' + F]});
+          if (F === 'ś') variant('with ś → ch (8.4.63)', [...A], ['ch', ...B.slice(1)], 'space');
+          break junction;
+        }
+        if (['ḍ','ḍh','ṇ'].includes(F)) {
+          A[A.length - 1] = 'ṇ';
+          apply({title: 'n becomes retroflex ṇ', sutras: [S('8.4.41', 'ṣṭunā ṣṭuḥ')],
+            text: `Next to the retroflex ⟦${F}⟧, ⟦n⟧ becomes ⟦ṇ⟧.`, formula: ['n', '+', F, '→', 'ṇ' + F]});
+          break junction;
+        }
+        if (F === 'l') {
+          A[A.length - 1] = 'l̐';
+          apply({title: 'n before l becomes a nasal l', sutras: [S('8.4.60', 'tor li')],
+            text: '⟦n⟧ assimilates to the following ⟦l⟧ and keeps its nasality: a nasalised ⟦l̐⟧.',
+            formula: ['n', '+', 'l', '→', 'l̐l']});
+          break junction;
+        }
+      }
+      skip(`${L} before ${F}`, `⟦${L}⟧ doesn't change before ⟦${F}⟧.`);
+      break junction;
+    }
+
+    if (isStop(L)) {
+      const row = C[L].row;
+      if (L === 't' && ['c','ch','j','jh','ṭ','ṭh','ḍ','ḍh','l','ś'].includes(F)) {
+        if (F === 'l') {
+          A[A.length - 1] = 'l';
+          apply({title: 't before l becomes l', sutras: [S('8.4.60', 'tor li')],
+            text: 'A dental before ⟦l⟧ assimilates completely.', formula: ['t', '+', 'l', '→', 'll']});
+          break junction;
+        }
+        const pal = ['c','ch','j','jh','ś'].includes(F);
+        const to = pal ? (voiced(F) ? 'j' : 'c') : (voiced(F) ? 'ḍ' : 'ṭ');
+        if (voiced(F)) {
+          A[A.length - 1] = 'd';
+          apply({title: 't before a voiced sound becomes d', sutras: [S('8.2.39', "jhalāṃ jaśo 'nte")],
+            text: `Before the voiced ⟦${F}⟧, ⟦t⟧ becomes voiced ⟦d⟧.`, formula: ['t', '+', F, '→', 'd' + F]});
+        }
+        A[A.length - 1] = to;
+        apply({title: `Dental becomes ${pal ? 'palatal' : 'retroflex'}`, sutras: [pal ? S('8.4.40', 'stoḥ ścunā ścuḥ') : S('8.4.41', 'ṣṭunā ṣṭuḥ')],
+          text: `Next to the ${pal ? 'palatal' : 'retroflex'} ⟦${F}⟧ the dental takes the same place: ⟦${to}⟧.`,
+          formula: [voiced(F) ? 'd' : 't', '+', F, '→', to + F]});
+        if (F === 'ś' && (isV(B[1]) || ['y','v','r','h'].includes(B[1]))) {
+          B[0] = 'ch';
+          apply({title: 'ś after a stop becomes ch', sutras: [S('8.4.63', "śaś cho 'ṭi")],
+            text: '⟦ś⟧ followed by a vowel or ⟦y v r h⟧ becomes ⟦ch⟧ after a stop. This is optional, but usual after ⟦t⟧.',
+            formula: ['c', '+', 'ś', '→', 'cch'], hlA: 1, hlB: 1});
+          variant('keeping ś', [...A], ['ś', ...B.slice(1)], 'space');
+        }
+        break junction;
+      }
+      if (isNasal(F)) {
+        A[A.length - 1] = row[4];
+        apply({title: 'Stop before a nasal becomes a nasal', sutras: [S('8.4.45', "yaro 'nunāsike 'nunāsiko vā")],
+          text: `Before the nasal ⟦${F}⟧, ⟦${L}⟧ turns into the nasal of its own row, ⟦${row[4]}⟧. This is optional, but it is the usual form.`,
+          formula: [L, '+', F, '→', row[4] + F]});
+        variant('only voiced (also allowed)', [...A.slice(0, -1), row[2]], [...B], 'space');
+        break junction;
+      }
+      if (F === 'h') {
+        A[A.length - 1] = row[2];
+        apply({title: 'Stop before a voiced sound becomes voiced', sutras: [S('8.2.39', "jhalāṃ jaśo 'nte")],
+          text: `⟦h⟧ is voiced, so ⟦${L}⟧ becomes ⟦${row[2]}⟧.`, formula: [L, '+', 'h', '→', row[2] + 'h']});
+        B[0] = row[3];
+        apply({title: 'h after a stop takes its place: aspirate', sutras: [S('8.4.62', "jhayo ho 'nyatarasyām")],
+          text: `After ⟦${row[2]}⟧ the ⟦h⟧ becomes the aspirate of the same row, ⟦${row[3]}⟧.`,
+          formula: [row[2], '+', 'h', '→', row[2] + row[3]], hlA: 1, hlB: 1});
+        break junction;
+      }
+      if (voiced(F)) {
+        A[A.length - 1] = row[2];
+        apply({title: 'Stop before a voiced sound becomes voiced', sutras: [S('8.2.39', "jhalāṃ jaśo 'nte")],
+          text: `⟦${F}⟧ is voiced, so ⟦${L}⟧ becomes voiced ⟦${row[2]}⟧.${isV(F) ? ' In Devanagari the two words are written together.' : ''}`,
+          formula: [L, '+', F, '→', row[2] + F]});
+        break junction;
+      }
+      if (F === 'ś' && (isV(B[1]) || ['y','v','r','h'].includes(B[1]))) {
+        skip('ś after a stop', `⟦ś⟧ may become ⟦ch⟧ after ⟦${L}⟧ (8.4.63), but this is optional.`);
+        variant('with ś → ch (8.4.63)', [...A], ['ch', ...B.slice(1)], 'space');
+        break junction;
+      }
+      skip(`${L} before ${F}`, `⟦${F}⟧ is voiceless like ⟦${L}⟧, so ⟦${L}⟧ stays.`);
+      break junction;
+    }
+    skip(`${L} before ${F}`, `No rule changes ⟦${L}⟧ before ⟦${F}⟧.`);
+  }
+
+  stage = 'result';
+  return {steps, variants, final: {A, B, sep}, joinTitle, origin};
+}
+
+/* ---------- Rendering ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const state = {mode: 'sentence', script: 'iast'};
+
+function tok(s) { const r = parseIast(s); return r.tokens || [s]; }
+function frag(s, cls = '') { // a sound or short sequence, in the current script
+  if (state.script === 'deva') return `<span class="deva ${cls}" lang="sa-Deva">${esc(toDeva(tok(s), true))}</span>`;
+  return `<span class="${cls}" lang="sa-Latn"><i>${esc(s.replace(/'/g, '’'))}</i></span>`;
+}
+function rich(text) { return esc(text).replace(/⟦(.*?)⟧/g, (_, x) => frag(x.replace(/&#39;|&amp;/g, m => m === '&amp;' ? '&' : "'"), 'snd')); }
+function sepTokens(sep) { return sep === 'fuse' ? [] : sep === 'hiatus' ? [' '] : (state.mode === 'compound' ? [] : [' ']); }
+function phraseTokens(st) { return [...st.A, ...sepTokens(st.sep), ...st.B]; }
+function phrase(st, hl) {
+  if (state.script === 'deva') return `<span class="deva" lang="sa-Deva">${esc(toDeva(phraseTokens(st)))}</span>`;
+  const mk = (t, on) => on ? `<mark>${esc(t)}</mark>` : esc(t);
+  const a = st.A.map((t, i) => mk(t.replace(/'/g, '’'), hl && i >= st.A.length - st.hlA)).join('');
+  const b = st.B.map((t, i) => mk(t.replace(/'/g, '’'), hl && i < st.hlB)).join('');
+  const s = sepTokens(st.sep).join('');
+  return `<i lang="sa-Latn">${(a + s + b).replace(/<\/mark><mark>/g, '')}</i>`;
+}
+function plain(st, script) {
+  const t = phraseTokens(st);
+  return script === 'deva' ? toDeva(t) : toIast(t);
+}
+function sutraHtml(s) {
+  const name = state.script === 'deva'
+    ? `<span class="deva" lang="sa-Deva">${esc(toDeva(tok(s.name)))}</span>`
+    : `<i>${esc(s.name.replace(/'/g, '’'))}</i>`;
+  return `<span class="sutra${state.script === 'deva' ? ' deva' : ''}"><span class="num">${s.num}</span> ${name}</span>`;
+}
+function formulaHtml(f) {
+  return '<div class="formula">' + f.map(p =>
+    p === '+' || p === '→' ? `<span class="op">${p}</span>` :
+    p === '·' ? '<span class="op">␣</span>' :
+    p === '∅' ? '<span class="op">∅</span>' : frag(p)).join('') + '</div>';
+}
+
+let words = {a: [], b: []};
+
+function readHtml(aT, bT) {
+  const row = (lbl, t, hlIdx) => `<div class="sounds"><span class="w">${lbl}</span>` +
+    t.filter(x => x !== ' ').map((x, i, arr) => `<span class="s${state.script === 'deva' ? ' deva' : ''}${(hlIdx === 'last' ? i === arr.length - 1 : i === 0) ? ' hl' : ''}"${state.script === 'deva' ? ' lang="sa-Deva"' : ''}>${esc(state.script === 'deva' ? toDeva([x], true) : x.replace(/'/g, '’'))}</span>`).join('') + '</div>';
+  const L = last(aT), F = bT[0];
+  return `<li class="step">${row('Word 1', aT, 'last')}${row('Word 2', bT, 'first')}
+    <p>${rich(`Word 1 ends in ⟦${L}⟧ (${describe(L)}); word 2 begins with ⟦${F}⟧ (${describe(F)}).`)}</p></li>`;
+}
+
+function render() {
+  const pa = parse($('#w1').value), pb = parse($('#w2').value);
+  for (const [p, el, inp] of [[pa, '#r1', '#w1'], [pb, '#r2', '#w2']]) {
+    const box = $(el);
+    $(inp).setAttribute('aria-invalid', p.err ? 'true' : 'false');
+    if (p.err) box.innerHTML = `<span class="err">Can't read “${esc(p.err)}”. Use IAST or Devanagari.</span>`;
+    else if (p.tokens.length) box.innerHTML = `read as <b><i>${esc(toIast(p.tokens))}</i></b> · <b class="deva">${esc(toDeva(p.tokens))}</b>`;
+    else box.textContent = '';
+  }
+  syncUrl();
+  const board = $('#board'), trace = $('#trace');
+  if (pa.err || pb.err || !pa.tokens.length || !pb.tokens.length) {
+    board.innerHTML = `<div class="msg">${pa.err || pb.err ? 'Fix the input above to see the sandhi.' : 'Type two words to join them.'}</div>`;
+    trace.innerHTML = '';
+    return;
+  }
+  const aT = pa.tokens, bT = pb.tokens;
+  const dual = $('#dual').checked;
+  const r = run(aT, bT, {mode: state.mode, dual});
+  const otherMode = state.mode === 'sentence' ? 'compound' : 'sentence';
+  const r2 = run(aT, bT, {mode: otherMode, dual});
+  const otherScript = state.script === 'deva' ? 'iast' : 'deva';
+
+  // Board
+  const naive = {A: aT, B: bT, sep: 'space'};
+  const resMain = plain(r.final, state.script);
+  const unchanged = resMain === plain(naive, state.script);
+  const applied = r.steps.filter(s => s.type === 'apply').length;
+  const saved = state.mode; state.mode = otherMode;
+  const altMode = plain(r2.final, state.script); state.mode = saved;
+  const inp = state.script === 'deva' ? `${toDeva(aT)} + ${toDeva(bT)}` : `${toIast(aT)} + ${toIast(bT)}`;
+  board.innerHTML = `
+    <div class="eq ${state.script === 'deva' ? 'deva' : ''}">${esc(inp)}</div>
+    <div class="res ${state.script === 'deva' ? 'deva' : ''}" lang="${state.script === 'deva' ? 'sa-Deva' : 'sa-Latn'}">${esc(resMain)}</div>
+    <div class="other ${otherScript === 'deva' ? 'deva' : ''}" lang="${otherScript === 'deva' ? 'sa-Deva' : 'sa-Latn'}">${esc(plain(r.final, otherScript))}</div>
+    <div class="meta">
+      <span class="badge${unchanged ? '' : ' hot'}">${unchanged ? 'No change' : applied + (applied === 1 ? ' rule applied' : ' rules applied')}</span>
+      <span>${otherMode === 'compound' ? 'As a compound' : 'In a sentence'}: <b class="${state.script === 'deva' ? 'deva' : ''}">${esc(altMode)}</b></span>
+      ${r.variants.map(v => `<span>Also: <b class="${state.script === 'deva' ? 'deva' : ''}">${esc(plain(v.state, state.script))}</b> (${esc(v.label)})</span>`).join('')}
+    </div>`;
+
+  // Trace
+  const groups = {read: [], end: [], join: [], result: []};
+  r.steps.forEach(s => groups[s.stage].push(s));
+  let n = 0;
+  const stepHtml = s => {
+    if (s.type === 'read') return readHtml(aT, bT);
+    if (s.type === 'skip') return `<li class="step skip"><div class="t">${esc(s.title)}</div><p>${rich(s.why)}</p></li>`;
+    n++;
+    return `<li class="step apply"><div class="t"><span>${n}. ${esc(s.title)}</span>${s.sutras.map(sutraHtml).join('')}</div>
+      <p>${rich(s.text)}</p>${s.formula ? formulaHtml(s.formula) : ''}
+      <div class="state${state.script === 'deva' ? ' deva' : ''}"><span class="lbl">now</span><span class="txt">${phrase(s.state, true)}</span></div></li>`;
+  };
+  let resultText;
+  if (unchanged) {
+    resultText = r.joinTitle === 'vowel + consonant'
+      ? 'No sandhi rule applies: a vowel at the end of a word stays as it is before a consonant (other than ch). The words keep their form.'
+      : 'No sandhi rule changes these sounds, so the words keep their form.';
+  } else {
+    resultText = `${applied === 1 ? 'One rule' : applied + ' rules'} applied. ` +
+      (state.script === 'deva' ? 'In Devanagari a word ending in a consonant, or followed by an avagraha, is written together with the next word.' : 'In IAST the words stay apart unless two vowels have merged into one.');
+  }
+  const stagesHtml = [
+    ['read', STAGES.read], ['end', STAGES.end], ['join', `${STAGES.join}: ${r.joinTitle}`]
+  ].map(([k, title], i) => `<div class="stage"><h3><span class="n">Stage ${i + 1}</span>${esc(title)}</h3><ol class="steps">${groups[k].map(stepHtml).join('')}</ol></div>`).join('');
+  trace.innerHTML = `<h2>Step by step</h2>` + stagesHtml +
+    `<div class="stage"><h3><span class="n">Stage 4</span>${STAGES.result}</h3><ol class="steps"><li class="step">
+      <div class="formula">${frag(toIast(aT).replace(/’/g, "'"))}<span class="op">+</span>${frag(toIast(bT).replace(/’/g, "'"))}<span class="op">→</span><span class="${state.script === 'deva' ? 'deva' : ''}">${phrase(r.final, false)}</span></div>
+      <p>${esc(resultText)}</p>
+      ${r.variants.map(v => `<p class="variant">Also possible: <b>${phrase(v.state, false)}</b> (${esc(v.label)})</p>`).join('')}
+    </li></ol></div>`;
+  markExample();
+}
+
+/* ---------- Examples, controls, URL ---------- */
+const EXAMPLES = [
+  ['bhū', 'buddha'], ['deva', 'indra'], ['mahā', 'ṛṣi'], ['na', 'eva'], ['iti', 'api'], ['te', 'api'], ['vane', 'iha'],
+  ['rāmaḥ', 'atra'], ['rāmaḥ', 'gacchati'], ['devāḥ', 'iha'], ['agniḥ', 'ratham'], ['punaḥ', 'api'], ['saḥ', 'gacchati'],
+  ['tat', 'ca'], ['tat', 'hi'], ['tat', 'śrutvā'], ['vāk', 'me'], ['tān', 'ca'], ['kim', 'ca'], ['āsan', 'atra'],
+  ['tava', 'chāyā'], ['rājan', 'putra', 'compound'], ['guru', 'upadeśa', 'compound']
+];
+const exBox = $('#examples');
+EXAMPLES.forEach(([a, b, m]) => {
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'chip'; btn.dataset.a = a; btn.dataset.b = b; btn.dataset.m = m || 'sentence';
+  btn.textContent = `${a} + ${b}`;
+  btn.addEventListener('click', () => { $('#w1').value = a; $('#w2').value = b; $('#dual').checked = false; setMode(m || 'sentence'); });
+  exBox.appendChild(btn);
+});
+function markExample() {
+  const a = toIast(parse($('#w1').value).tokens || []), b = toIast(parse($('#w2').value).tokens || []);
+  exBox.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-current', String(c.dataset.a === a && c.dataset.b === b)));
+}
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+  render();
+}
+function setScript(s) {
+  state.script = s;
+  document.querySelectorAll('[data-script]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.script === s)));
+  exBox.querySelectorAll('.chip').forEach(c => {
+    c.textContent = s === 'deva' ? `${toDeva(tok(c.dataset.a))} + ${toDeva(tok(c.dataset.b))}` : `${c.dataset.a} + ${c.dataset.b}`;
+    c.classList.toggle('deva', s === 'deva');
+  });
+  render();
+}
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+document.querySelectorAll('[data-script]').forEach(b => b.addEventListener('click', () => setScript(b.dataset.script)));
+$('#swap').addEventListener('click', () => { const a = $('#w1').value; $('#w1').value = $('#w2').value; $('#w2').value = a; render(); });
+$('#w1').addEventListener('input', render);
+$('#w2').addEventListener('input', render);
+$('#dual').addEventListener('change', render);
+
+function syncUrl() {
+  const q = new URLSearchParams();
+  q.set('a', $('#w1').value.trim()); q.set('b', $('#w2').value.trim());
+  if (state.mode !== 'sentence') q.set('m', state.mode);
+  if (state.script !== 'iast') q.set('s', state.script);
+  if ($('#dual').checked) q.set('dual', '1');
+  try { history.replaceState(null, '', '?' + q.toString()); } catch (e) {}
+}
+
+const q = new URLSearchParams(location.search);
+$('#w1').value = q.get('a') ?? 'bhū';
+$('#w2').value = q.get('b') ?? 'buddha';
+$('#dual').checked = q.get('dual') === '1';
+state.mode = q.get('m') === 'compound' ? 'compound' : 'sentence';
+document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
+setScript(q.get('s') === 'deva' ? 'deva' : 'iast');
+
+window.__sandhi = {parse, run, toDeva, toIast};
+})();
+</script>
+</body>
+</html>
