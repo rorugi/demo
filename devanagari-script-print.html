@@ -11,13 +11,26 @@
 <style>
 /* Uttara (© Mihail Bayaryn, GNU GPL, northern/Calcutta style): installed copy first, else the file next to this page */
 @font-face{font-family:"Uttara";src:local("Uttara"),url("fonts/uttara.woff2") format("woff2"),url("fonts/uttara.ttf") format("truetype");font-display:swap}
+/* Fonts for the Sanskrit forms: Devanagari subsets with all OpenType features (fonts/sets/), Sanskrit 2020 and Siddhanta Calcutta files */
+@font-face{font-family:"Tiro Devanagari Hindi Sets";src:url("fonts/sets/TiroDevanagariHindi-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Tiro Devanagari Sanskrit Sets";src:url("fonts/sets/TiroDevanagariSanskrit-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Tiro Devanagari Marathi Sets";src:url("fonts/sets/TiroDevanagariMarathi-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Noto Sans Devanagari Sets";src:url("fonts/sets/NotoSansDevanagari-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Gotu Sets";src:url("fonts/sets/Gotu-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Eczar Sets";src:url("fonts/sets/Eczar-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Asar Sets";src:url("fonts/sets/Asar-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Mukta Sets";src:url("fonts/sets/Mukta-deva.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Palanquin Sets";src:url("fonts/sets/Palanquin-deva.woff2") format("woff2");font-display:swap}
+/* Sanskrit 2020 (SIL OFL, Omkarananda Ashram) and Siddhanta Calcutta (© Mihail Bayaryn, CC BY-NC-ND 3.0, file unmodified): installed copy first, else the file next to this page */
+@font-face{font-family:"Sanskrit 2020";src:local("Sanskrit 2020"),url("fonts/Sanskrit2020.otf") format("opentype");font-display:swap}
+@font-face{font-family:"Siddhanta Calcutta";src:local("Siddhanta Calcutta"),local("Siddhanta-Calcutta"),url("fonts/siddhanta-calcutta.ttf") format("truetype");font-display:swap}
 /* Printable script chart (Devanagari is an abugida, not an alphabet), A4 landscape or portrait. Vowels (letter | sign on a carrier), consonants by place and manner, extra letters, signs, digits.
    Checkboxes pick the traditions; a tile shows one form per tradition only where the forms differ, and letters of a tradition only when it is on. */
 :root{
   --fg:#1c2321; --muted:#5d6762; --line:#cfd4cd; --card:#fff;
   --sa:#b8670c; --no:#2c5a8c; --mr:#2e7d5b;
   --f-hi:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
-  --f-sa:"Tiro Devanagari Sanskrit","Noto Serif Devanagari",serif;
+  --f-sa:"Sanskrit 2020","Noto Serif Devanagari",serif;
   --f-no:"Uttara",serif;
   --f-mr:"Tiro Devanagari Marathi","Noto Serif Devanagari",serif;
   --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
@@ -170,6 +183,9 @@ html.thumb .sheet~.sheet{display:none}
       <label><input type="checkbox" value="no"><b class="no">क</b>Sanskrit north</label>
       <label><input type="checkbox" value="mr"><b class="mr">क</b>Marathi</label>
     </div>
+    <label class="car"><b class="sa" style="font-weight:400;font-size:20px;line-height:1">क</b>Sanskrit font
+      <select id="fsa"></select>
+    </label>
     <label class="xopt"><input type="checkbox" id="xopt">Extra letters</label>
     <label class="xopt"><input type="checkbox" id="popt">Vowel places</label>
     <label class="xopt"><input type="checkbox" id="ropt">Rules</label>
@@ -216,7 +232,7 @@ html.thumb .sheet~.sheet{display:none}
   </div>
 
   <footer>
-    <span>Further forms only where traditions differ · Tiro Devanagari: southern (Bombay) style · Uttara: northern (Calcutta) style</span>
+    <span id="fnote">Further forms only where traditions differ</span>
     <span>rorugi.github.io/demo</span>
   </footer>
 </main>
@@ -226,10 +242,51 @@ const $ = id => document.getElementById(id);
 const el = (cls, html) => { const d = document.createElement("div"); d.className = cls; if (html != null) d.innerHTML = html; return d; };
 const txt = (p, s, cls) => { const e = document.createElement("span"); if (cls) e.className = cls; e.textContent = s; p.append(e); };
 
-// Traditions, in display order; each draws with its own font
+// Fonts for the Sanskrit forms: [id, family, name, source, letters in the Sanskrit (southern) form, letters in the northern form]
+// source: t = loaded in <head>, f = file in fonts/, s = fonts/sets/ copy, g = Google Fonts (loaded when chosen).
+// The forms were sorted by eye against Tiro Hindi (Hindi forms), Tiro Sanskrit and Uttara; letters not listed have the Hindi form.
+const SA_FORMS = "ऋ ॠ ल श १ ५ ८ ९ पू मू कू ◌ू";
+const DIG_FORMS = "१ ५ ८ ९", RI_DIG = "ऋ ॠ १ ५ ८ ९";
+const NORTH = "अ आ ओ औ अं अः ऑ ऋ ॠ झ ण ल श १ ५ ८ ९";
+const FONTS = [
+  ["s2","Sanskrit 2020","Sanskrit 2020","f",SA_FORMS,""],
+  ["ts","Tiro Devanagari Sanskrit","Tiro Sanskrit","t",SA_FORMS,""],
+  ["th","Tiro Devanagari Hindi","Tiro Hindi","t","",""],
+  ["tm","Tiro Devanagari Marathi","Tiro Marathi","t","ल श १ ५ ८ ९",""],
+  ["sc","Siddhanta Calcutta","Siddhanta Calcutta","f","५","अ आ ओ औ अं अः ऑ ऋ ॠ झ ण ल श १ ८ ९ पू मू कू ◌ू"],
+  ["ut","Uttara","Uttara","f","",NORTH],
+  ["ns","Noto Serif Devanagari","Noto Serif","g",RI_DIG,""],
+  ["nn","Noto Sans Devanagari","Noto Sans","s",RI_DIG,""],
+  ["ma","Martel","Martel","g",RI_DIG,""],
+  ["ka","Kalam","Kalam · handwritten","g",RI_DIG,""],
+  ["go","Gotu","Gotu","s",DIG_FORMS,""],
+  ["ec","Eczar","Eczar","s",DIG_FORMS,""],
+  ["as","Asar","Asar","s",DIG_FORMS,""],
+  ["mu","Mukta","Mukta","s",DIG_FORMS,""],
+  ["pa","Palanquin","Palanquin","s",DIG_FORMS,""],
+  ["ku","Kurale","Kurale","g",DIG_FORMS,""],
+];
+const fontById = id => FONTS.find(f => f[0] === id);
+let saFont = "s2";
+const SA_FONT = () => fontById(saFont);
+const loadedFonts = new Set();
+function applySaFont(){
+  const [id, fam, , src] = SA_FONT();
+  if (src === "g" && !loadedFonts.has(id)){
+    loadedFonts.add(id);
+    const l = document.createElement("link"); l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/ /g, "+") + "&display=swap";
+    document.head.append(l);
+  }
+  const f = src === "s" ? `"${fam} Sets","${fam}"` : `"${fam}"`;
+  document.documentElement.style.setProperty("--f-sa", `${f},"Noto Serif Devanagari",serif`);
+  TRAD[1].font = SA_FONT()[2].split(" · ")[0];
+}
+
+// Traditions, in display order; each draws with its own font (the Sanskrit one is chosen above)
 const TRAD = [
   {id:"hi", name:"Hindi", font:"Tiro", lang:"hi"},
-  {id:"sa", name:"Sanskrit", font:"Tiro", lang:"sa"},
+  {id:"sa", name:"Sanskrit", font:"Sanskrit 2020", lang:"sa"},
   {id:"no", name:"Sanskrit north", font:"Uttara", lang:"sa"},
   {id:"mr", name:"Marathi", font:"Tiro", lang:"mr"},
 ];
@@ -237,15 +294,14 @@ const ALL = TRAD.map(t => t.id);
 let on = new Set(["sa"]);
 const primary = () => ALL.find(f => on.has(f));
 
-// Where the fonts draw a form differently (Tiro outlines compared with HarfBuzz; Uttara checked by eye).
-// Shape 0 = the Tiro Hindi form. Tiro Marathi uses the Sanskrit form for ल श and the digits, the Hindi form otherwise.
-const SA = new Set("ऋ ॠ ल श १ ५ ८ ९ पू मू कू ◌ू".split(" "));
-const MR = new Set("ल श १ ५ ८ ९".split(" "));
-const NO = new Set("अ आ ओ औ अं अः ऑ ऋ ॠ झ ण ल श १ ५ ८ ९".split(" "));
+// Where the fonts draw a form differently (Tiro outlines compared with HarfBuzz; the other fonts sorted by eye).
+// Shape 0 = the Tiro Hindi form, 1 = the Sanskrit (southern) form, 2 = the northern (Calcutta) form.
+// Tiro Marathi uses the Sanskrit form for ल श and the digits, the Hindi form otherwise.
+const has = (list, x) => list.split(" ").includes(x);
 function shape(x, f){
-  if (f === "sa") return SA.has(x) ? 1 : 0;
-  if (f === "mr") return MR.has(x) ? 1 : 0;
-  if (f === "no") return NO.has(x) ? 2 : 0;
+  if (f === "sa"){ const F = SA_FONT(); return has(F[5], x) ? 2 : has(F[4], x) ? 1 : 0; }
+  if (f === "mr") return has("ल श १ ५ ८ ९", x) ? 1 : 0;
+  if (f === "no") return has(NORTH, x) ? 2 : 0;
   return 0;
 }
 // The forms a tile shows: one per switched-on tradition that has this letter, skipping repeats.
@@ -416,7 +472,7 @@ function buildKey(){
   });
 }
 
-// State: orientation, traditions and carrier, kept in the URL hash (#o=portrait&t=hi.sa.no&c=m&x=1&pl=0&r=0; default: landscape, Sanskrit only, pa, no extra letters, places and rules shown)
+// State: orientation, traditions, Sanskrit font and carrier, kept in the URL hash (#o=portrait&t=hi.sa.no&f=ts&c=m&x=1&pl=0&r=0; default: landscape, Sanskrit only in Sanskrit 2020, pa, no extra letters, places and rules shown)
 let portrait = false;
 function save(){
   const h = new URLSearchParams();
@@ -427,6 +483,7 @@ function save(){
   if (extra) h.set("x", "1");
   if (!places) h.set("pl", "0");
   if (!rules) h.set("r", "0");
+  if (saFont !== "s2") h.set("f", saFont);
   try { history.replaceState(null, "", h.toString() ? "#" + h.toString().replace(/%2E/g, ".") : location.pathname); } catch(e){}
 }
 function render(){
@@ -440,6 +497,9 @@ function render(){
   $("ropt").checked = rules;
   $("vcar").textContent = car === "0" ? "sign" : "sign on " + CARRIERS[car][0];
   $("scar").textContent = car === "0" ? "" : "on " + CARRIERS[car][0];
+  applySaFont();
+  $("fsa").value = saFont;
+  $("fnote").textContent = "Further forms only where traditions differ · " + [...new Set(TRAD.filter(t => on.has(t.id)).map(t => t.id === "no" ? "Uttara: northern (Calcutta) style" : t.id === "sa" ? "Sanskrit: " + t.font : "Tiro Devanagari " + t.name))].join(" · ");
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();
   save();
 }
@@ -453,7 +513,10 @@ try {
   extra = h.get("x") === "1";
   places = h.get("pl") !== "0";
   rules = h.get("r") !== "0";
+  if (fontById(h.get("f"))) saFont = h.get("f");
 } catch(e){}
+FONTS.forEach(([v, , name]) => $("fsa").add(new Option(name, v)));
+$("fsa").onchange = e => { saFont = e.target.value; render(); };
 $("car").onchange = e => { car = e.target.value; render(); };
 $("xopt").onchange = e => { extra = e.target.checked; render(); };
 $("popt").onchange = e => { places = e.target.checked; render(); };
