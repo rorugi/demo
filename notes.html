@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_203';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.80';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_204';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.81';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4938,7 +4938,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const [W, H] = setupDims(setup), GRID_D = buildGrid(setup, W, H);
     await ensureImages(pages);
     await ensureImageData(pages);
-    const bgd = await bgFileData(pages, preview);
+    const bgd = await bgFileData(pages, preview, setup);
     const GAP = 10, n = pages.length, total = n * H + (n - 1) * GAP;
     let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}mm" height="${total}mm" viewBox="0 0 ${W} ${total}" data-notizblock="1" data-format-version="2" data-pages="${n}" data-page-size="${setup.size}" data-page-orient="${setup.orient}" data-page-width="${W}" data-page-height="${H}" data-grid="${setup.grid}" data-grid-mm="${setup.gridMm}"${setup.pdfNoGrid ? ' data-pdf-no-grid="1"' : ''}${setup.pdfNoImages ? ' data-pdf-no-images="1"' : ''}${bms.length ? ` data-bookmarks="${esc(JSON.stringify(bms))}"` : ''}>\n<title>RRnotes</title>\n<rect width="${W}" height="${total}" fill="#e6e6e1"/>\n`;
     // the grid is stored once and reused by every page
@@ -4946,7 +4946,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const gridUse = GRID_D ? `<use class="grid" href="#nb-grid" xlink:href="#nb-grid"/>\n` : '';
     pages.forEach((p, i) => {
       s += `<g id="page-${i + 1}" data-page="${i + 1}" transform="translate(0 ${i * (H + GAP)})">\n<rect width="${W}" height="${H}" fill="#ffffff"/>\n${gridD(p, setup, gridUse)}`;
-      if (p.bg) s += `<g class="pdfbg">${bgMarkup(p, 'file', bgd.pics.get(bgKey(p.bg)) || '', setup)}</g>\n`;
+      if (p.bg) s += `<g class="pdfbg">${bgMarkup(p, 'file', bgd.pics.get(bgKey(p.bg, setup)) || '', setup)}</g>\n`;
       if (p.images && p.images.some(m => !m.over)) s += `<g class="pictures">${imagesMarkup(p, 'file')}</g>\n`;
       if (p.texts && p.texts.length) s += `<g class="texts">${textsMarkup(p, 'file')}</g>\n`;
       s += `<g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">\n`;
@@ -5002,8 +5002,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   // ---- Share: the system share sheet (OneDrive, Drive, a network app, mail…). Allowed are SVG and PDF, not ZIP. ----
   const canShareFiles = (() => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.svg', { type: 'image/svg+xml' })] })); } catch (_) { return false; } })();
   if (canShareFiles) $('saveShare').hidden = $('pdfShare').hidden = $('nbShareAll').hidden = false;
+  // Chrome shares files up to 50 MB each; a larger one is refused ("not allowed"), so it is offered for saving instead
+  const SHARE_MAX = 50 * 1024 * 1024;
   async function shareFiles(files) {
     const go = () => navigator.share({ files, title: files.length === 1 ? files[0].name : `${files.length} notebooks` });
+    const big = files.find(f => f.size > SHARE_MAX);
+    if (big) {
+      const mb = Math.round(big.size / 1048576);
+      if (!await ask('Too large to share', `${big.name} is ${mb} MB. Android shares files up to 50 MB. Save it instead (then share or upload it from the Files app)?`, 'Save')) return false;
+      const ext = (big.name.match(/\.[^.]+$/) || ['.html'])[0].toLowerCase();
+      return await saveBlob(big, big.name, 'RRnotes file', big.type || 'application/octet-stream', ext);
+    }
     try {
       if (!navigator.canShare({ files })) { toast('These files can’t be shared from here.'); return false; }
       await go(); return true;
@@ -5011,9 +5020,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       if (e && e.name === 'AbortError') return false;
       if (e && e.name === 'NotAllowedError') {          // preparing took too long for the tap: one more tap
         if (!await ask('Ready to share', files.length === 1 ? `${files[0].name} is ready.` : `${files.length} files are ready.`, 'Share')) return false;
-        try { await go(); return true; } catch (e2) { if (!e2 || e2.name !== 'AbortError') toast('The file could not be shared.'); return false; }
+        try { await go(); return true; } catch (e2) { if (!e2 || e2.name !== 'AbortError') toast(`The file could not be shared (${(e2 && (e2.message || e2.name)) || 'unknown reason'}).`, 6000); return false; }
       }
-      toast('The file could not be shared.'); return false;
+      toast(`The file could not be shared (${(e && (e.message || e.name)) || 'unknown reason'}).`, 6000); return false;
     }
   }
   async function notebookFile(fmt, name) {
@@ -8263,7 +8272,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const pdfIdsOf = list => { const s = new Set(); list.forEach(pg => { if (pg.bg) s.add(pg.bg.pdf); }); return s; };
   // pictures of the PDF pages: small ones (page overview) are kept, large ones (the page, turning, sliding) for the pages used lately
   const BG_PX = { S: 360, L: 1600 }, BG_KEEP = 60;
-  const bgKey = b => b.pdf + ':' + b.n + (setup.pdfNoImages ? ':t' : '');   // (:t a picture without the PDF's own pictures)
+  const bgKey = (b, st = setup) => b.pdf + ':' + b.n + (st.pdfNoImages ? ':t' : '');   // (:t a picture without the PDF's own pictures; st: the notebook's page setup)
   const bgRast = { S: new Map(), L: new Map() };  // key -> { url, blob, w, h } (large ones: most recently used last)
   let bgQueue = [], bgBusy = false, bgRefresh = 0, libWarned = false;
   const bgFailed = new Set(), bgDone = new Set();
@@ -8282,8 +8291,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     thumbBytesT = setTimeout(() => { for (const [k, v] of thumbBytes) idb.set('pthumbsz:' + k, { bytes: v }).catch(() => {}); }, 1500);
   }
   let filePrep = 0;                                // a file is being made: the background drawing waits
-  async function storedThumb(b) {                  // a page's small picture: in memory, or stored
-    const k = bgKey(b);
+  async function storedThumb(b, st = setup) {      // a page's small picture: in memory, or stored
+    const k = bgKey(b, st);
     if (bgRast.S.has(k)) return bgRast.S.get(k);
     try {
       const v = await idb.get('pthumb:' + k);
@@ -8291,16 +8300,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     } catch (_) {}
     return null;
   }
-  function keepThumb(b, out) {                     // a small picture just drawn: for the overview and the next time
-    const k = bgKey(b);
+  function keepThumb(b, out, st = setup) {         // a small picture just drawn: for the overview and the next time
+    const k = bgKey(b, st);
     if (bgRast.S.has(k) || !out.blob) return;
     bgRast.S.set(k, { ...out, url: URL.createObjectURL(out.blob) });
     bgQueue = bgQueue.filter(q => q.qk !== 'S' + k);
     if (!LIVE_VIEW) { thumbState.set(k, 'hit'); idb.set('pthumb:' + k, { blob: out.blob, w: out.w, h: out.h }).then(() => addThumbBytes(b.pdf, out.blob.size), () => {}); }
     bgChanged('S' + k);
   }
-  function bgGet(b, size) {
-    const k = bgKey(b), m = bgRast[size], r = m.get(k);
+  function bgGet(b, size, st = setup) {
+    const k = bgKey(b, st), m = bgRast[size], r = m.get(k);
     if (r) { if (size === 'L') { m.delete(k); m.set(k, r); } return r; }
     const qk = size + k;
     if (LIVE_VIEW && !pdfStore.has(b.pdf)) return null;   // a viewer: the PDF is still on its way
@@ -8311,17 +8320,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         thumbState.set(k, 'look');
         idb.get('pthumb:' + k).then(v => {
           if (v && v.blob && !bgRast.S.has(k)) { bgRast.S.set(k, { blob: v.blob, w: v.w, h: v.h, url: URL.createObjectURL(v.blob) }); thumbState.set(k, 'hit'); bgChanged('S' + k); }
-          else { thumbState.set(k, 'miss'); bgGet(b, 'S'); }
-        }, () => { thumbState.set(k, 'miss'); bgGet(b, 'S'); });
+          else { thumbState.set(k, 'miss'); bgGet(b, 'S', st); }
+        }, () => { thumbState.set(k, 'miss'); bgGet(b, 'S', st); });
         return null;
       }
     }
-    if (!bgFailed.has(qk) && !bgQueue.some(q => q.qk === qk)) { bgQueue.push({ b, size, qk }); bgPump(); }
+    if (!bgFailed.has(qk) && !bgQueue.some(q => q.qk === qk)) { bgQueue.push({ b, size, qk, st }); bgPump(); }
     return size === 'L' ? bgRast.S.get(k) || null : null;   // meanwhile the small one, if there is one
   }
-  async function renderPdfPage(b, longPx, region, quality = 0.9) {   // region: { x, y, w, h } in mm of the background box, drawn at longPx for the whole page
+  async function renderPdfPage(b, longPx, region, quality = 0.9, st = setup) {   // region: { x, y, w, h } in mm of the background box, drawn at longPx for the whole page
     let doc = null;
-    if (setup.pdfNoImages) {                       // without the PDF's pictures, unless the page would be empty then
+    if (st.pdfNoImages) {                          // without the PDF's pictures, unless the page would be empty then
       const k = b.pdf + ':' + b.n;
       try {
         const d = await pdfDocNoImg(b.pdf);
@@ -8355,16 +8364,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const at = new Map(); pages.forEach((pg, i) => { if (pg.bg && !at.has(bgKey(pg.bg))) at.set(bgKey(pg.bg), i); });
     const vis = ovInView();
     const dist = q => {
-      const i = at.has(bgKey(q.b)) ? at.get(bgKey(q.b)) : -1;
+      const i = q.st === setup && at.has(bgKey(q.b)) ? at.get(bgKey(q.b)) : -1;   // (other notebooks: last)
       if (i < 0) return 1e7;
       if (vis && q.size === 'S') return i >= vis[0] && i <= vis[1] ? i - vis[0] : 1e4 + Math.min(Math.abs(i - vis[0]), Math.abs(i - vis[1]));
       return (vis ? 1e5 : 0) + Math.abs(i - cur) * (q.size === 'L' ? 3 : 1);
     };
     bgQueue.sort((p, q) => dist(p) - dist(q));
-    const q = bgQueue.shift(), k = bgKey(q.b);
+    const q = bgQueue.shift(), k = bgKey(q.b, q.st);
     try {
-      const out = await (await renderPdfPage(q.b, BG_PX[q.size])).done, m = bgRast[q.size];
-      if (q.size === 'S') keepThumb(q.b, out);    // (kept for next time as well)
+      const out = await (await renderPdfPage(q.b, BG_PX[q.size], null, 0.9, q.st)).done, m = bgRast[q.size];
+      if (q.size === 'S') keepThumb(q.b, out, q.st);   // (kept for next time as well)
       else m.set(k, { ...out, url: URL.createObjectURL(out.blob) });
       if (q.size === 'L') while (m.size > BG_KEEP) { const [k0, r0] = m.entries().next().value; URL.revokeObjectURL(r0.url); m.delete(k0); }
       if (q.size === 'L') bgChanged(q.size + k);
@@ -8392,7 +8401,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let prepT = 0;
   function prepThumbs(delay = 1500) {
     clearTimeout(prepT);
-    prepT = setTimeout(() => { if (!LIVE_VIEW) pages.forEach(pg => { if (pg.bg) bgGet(pg.bg, 'S'); }); }, delay);
+    prepT = setTimeout(async () => {
+      if (LIVE_VIEW) return;
+      pages.forEach(pg => { if (pg.bg) bgGet(pg.bg, 'S'); });
+      for (const m of nbIdx.loaded) {              // the other open notebooks after it (for saving and sharing them)
+        if (m.id === nbIdx.current) continue;
+        let rec = null;
+        try { rec = await readNotebook(m.id); } catch (_) {}
+        if (!rec || !Array.isArray(rec.pages)) continue;
+        const st = cleanSetup(rec.setup);
+        rec.pages.forEach(p => { const b = cleanBg(p.bg); if (b) bgGet(b, 'S', st); });
+      }
+    }, delay);
   }
   // a picture is ready: the places that wait for it get it (no full redraw of the overview or the turning pages)
   function bgChanged(qk) {
@@ -8633,12 +8653,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     out.push(text.slice(at));
     return out;
   }
-  async function bgFileData(list, preview = false) {
+  async function bgFileData(list, preview = false, st = setup) {
     const ids = pdfIdsOf(list), pdfs = [], pics = new Map();
     for (const id of ids) { const r = await pdfRec(id); if (r) { await pdfB64Part(id, r.blob); pdfs.push({ id, name: r.name, data: PDF_MARK + id + PDF_MARK_END }); } }
     // the pictures only serve other programs (RRnotes uses the PDF itself): smaller with more pages, none for very many,
     // so that a long PDF doesn't make the file huge (490 pages were over 100 MB) or the tablet run out of memory
-    const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg), pg.bg])).values()];
+    const todo = [...new Map(list.filter(pg => pg.bg).map(pg => [bgKey(pg.bg, st), pg.bg])).values()];
     // The stored page previews (page overview) are used where they are good enough: always in a web page (it shows the
     // PDF itself), and for very many pages. Only pages without one are drawn now (and kept as previews too).
     const tier = preview ? { px: 360, q: 0.55 } : todo.length <= 30 ? { px: 1200, q: 0.82 } : todo.length <= 120 ? { px: 700, q: 0.7 } : { px: 360, q: 0.6 };
@@ -8646,17 +8666,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     filePrep++;                                    // the background drawing waits meanwhile
     try {
       for (const b of todo) {
-        const k = bgKey(b);
+        const k = bgKey(b, st);
         i++;
         if (busyDepth && (i % 5 === 1 || i === todo.length)) await busy(`Preparing PDF pages ${i} of ${todo.length}…`, i / todo.length);
         try {
-          const big = bgRast.L.get(k), small = tier.px === 360 ? await storedThumb(b) : null;
+          const big = bgRast.L.get(k), small = tier.px === 360 ? await storedThumb(b, st) : null;
           let r;
           if (big && tier.px >= 1200) r = big;
           else if (small) r = await reencode(small.blob, tier.q);
           else {
-            r = await (await renderPdfPage(b, tier.px, null, tier.px === 360 ? 0.9 : tier.q)).done;
-            if (tier.px === 360) { keepThumb(b, r); r = await reencode(r.blob, tier.q); }
+            r = await (await renderPdfPage(b, tier.px, null, tier.px === 360 ? 0.9 : tier.q, st)).done;
+            if (tier.px === 360) { keepThumb(b, r, st); r = await reencode(r.blob, tier.q); }
           }
           pics.set(k, await blobData(r.blob));
         } catch (_) {}
