@@ -45,6 +45,11 @@ p{margin:0}
 .toolbar button{font:inherit;font-size:14px;font-weight:600;color:var(--fg);background:var(--panel);border:1px solid var(--line);
   border-radius:999px;padding:5px 14px;cursor:pointer}
 .toolbar button:hover{border-color:var(--accent)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toolbar button:disabled{opacity:.4;cursor:default;border-color:var(--line)}
+.zoom{display:inline-flex;align-items:center;gap:4px}
+.zoom button{width:34px;height:32px;padding:0;font-size:18px;line-height:1}
+.zoom output{min-width:52px;text-align:center;font-size:14px;font-variant-numeric:tabular-nums;color:var(--muted)}
 .hint{font-size:13px;color:var(--muted)}
 .scroll{display:flex;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--panel);border:1px solid var(--line);border-radius:14px}
 svg{display:block;flex:none;height:auto;font-family:var(--f-ui)}
@@ -102,8 +107,13 @@ svg .conn.on .badge text,svg .dyn .badge text{fill:var(--ink)}
 
   <section class="stage">
     <div class="toolbar">
+      <div class="zoom" role="group" aria-label="Zoom">
+        <button id="zout" type="button" aria-label="Verkleinern">−</button>
+        <output id="zval" aria-live="polite">100 %</output>
+        <button id="zin" type="button" aria-label="Vergrößern">+</button>
+      </div>
       <button id="fit" type="button">Ganze Grafik zeigen</button>
-      <span class="hint">Tippe auf ein Rechteck oder eine Nummer. Die Grafik lässt sich seitlich schieben.</span>
+      <span class="hint">Tippe auf ein Rechteck oder eine Nummer. Die Grafik lässt sich seitlich schieben; Strg/⌘ + Mausrad zoomt.</span>
     </div>
     <div class="scroll" id="scroller">
       <svg id="axis" aria-hidden="true"></svg>
@@ -593,23 +603,53 @@ function selectConn(n, scroll){
 }
 svg.addEventListener("click", () => { clearSel(); panel.innerHTML = defaultPanel; });
 
-/* Reading size vs. whole chart */
-let fit = false;
-const fitBtn = document.getElementById("fit");
-function scale(){ return fit ? Math.min(1, (scroller.clientWidth - 2) / (AXW + W)) : 1; }
-function applySize(){
+const stage = document.querySelector(".stage");
+/* Zoom: − / + in steps, "whole chart" fits width and height into the window, Ctrl/⌘ + wheel (and trackpad pinch) zooms at the pointer */
+const ZMIN = 0.1, ZMAX = 2.5, STEP = 1.25;
+let zoom = 1, fit = false;
+const fitBtn = document.getElementById("fit"), zin = document.getElementById("zin"), zout = document.getElementById("zout"), zval = document.getElementById("zval");
+function fitScale(){
+  const w = (scroller.clientWidth - 2) / (AXW + W);
+  const h = (innerHeight - 24) / H; // whole height on screen too
+  return Math.max(ZMIN, Math.min(1, w, h));
+}
+function scale(){ return fit ? fitScale() : zoom; }
+// Keep the chart point at (px, py) (relative to the scroller's top left) in place while the size changes;
+// without a pointer, use the middle of the visible part of the chart
+function applySize(px, py, keep = true){
+  const r = scroller.getBoundingClientRect();
+  if (px == null){
+    px = scroller.clientWidth / 2;
+    py = (Math.max(r.top, 0) + Math.min(r.bottom, innerHeight)) / 2 - r.top;
+  }
+  const old = svg.getBoundingClientRect().width / W || 1;
+  const cx = (scroller.scrollLeft + px) / old, cy = py / old; // chart units under the point
   const s = scale();
   axis.style.width = (AXW * s) + "px";
   svg.style.width = (W * s) + "px";
+  if (keep){
+    scroller.scrollLeft = cx * s - px;
+    if (py > 0) scrollTo({top: scrollY + cy * s - py, behavior: "instant"});
+  }
+  zval.textContent = Math.round(s * 100) + " %";
+  zout.disabled = s <= ZMIN + 1e-3; zin.disabled = s >= ZMAX - 1e-3;
   fitBtn.textContent = fit ? "Lesegröße" : "Ganze Grafik zeigen";
 }
-fitBtn.onclick = () => { fit = !fit; applySize(); };
-addEventListener("resize", applySize);
-applySize();
+function setZoom(z, px, py){ zoom = Math.max(ZMIN, Math.min(ZMAX, z)); fit = false; applySize(px, py); }
+zin.onclick = () => setZoom(scale() * STEP);
+zout.onclick = () => setZoom(scale() / STEP);
+fitBtn.onclick = () => { if (fit){ fit = false; zoom = 1; } else fit = true; applySize(); if (fit) stage.scrollIntoView({block:"start", behavior:"smooth"}); };
+scroller.addEventListener("wheel", e => {
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault();
+  const r = scroller.getBoundingClientRect();
+  setZoom(scale() * Math.exp(-e.deltaY * 0.0025), e.clientX - r.left, e.clientY - r.top);
+}, {passive: false});
+addEventListener("resize", () => applySize(null, null, false));
+applySize(null, null, false);
 
 /* Connection list */
 const ol = document.getElementById("conns");
-const stage = document.querySelector(".stage");
 conns.forEach(c => {
   const li = document.createElement("li");
   li.innerHTML = `<b class="n${c.d ? "" : " dy"}">${c.n}</b><span><strong>${names(c.froms)} → ${names(c.tos)}.</strong> ${c.txt}</span>`;
