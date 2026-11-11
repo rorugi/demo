@@ -508,7 +508,30 @@ function render(){
   $("fnote").textContent = "Further forms only where traditions differ · " + ORDER().map(id => TRAD.find(t => t.id === id)).filter(t => on.has(t.id)).map(t => t.name + ": " + t.font).join(" · ");
   buildKey(); buildVow(portrait); buildCons(); buildExtra(); buildSig(); buildDig();
   save();
+  document.fonts.ready.then(fitGlyphs);
 }
+// Fonts reach above and below their line box by different amounts (Sanskrit 2020's ई and ौ go high, ॢ ॄ low).
+// So each tile's letters are moved until their ink sits in the middle of the line box, clear of the border and the caption.
+const measure = document.createElement("canvas").getContext("2d");
+function fitGlyphs(){
+  document.querySelectorAll(".duo").forEach(duo => {
+    let top = Infinity, bot = -Infinity, lh = 0;
+    duo.querySelectorAll("span").forEach(sp => {
+      const cs = getComputedStyle(sp);
+      measure.font = `${cs.fontSize} ${cs.fontFamily}`;
+      const m = measure.measureText(sp.textContent);
+      const h = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.15;
+      const base = (h - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 + m.fontBoundingBoxAscent;
+      top = Math.min(top, base - m.actualBoundingBoxAscent);
+      bot = Math.max(bot, base + m.actualBoundingBoxDescent);
+      lh = Math.max(lh, h);
+    });
+    if (!isFinite(top)) return;
+    const shift = Math.max(-6, Math.min(6, (lh - top - bot) / 2));
+    duo.style.transform = Math.abs(shift) < .3 ? "" : `translateY(${shift.toFixed(1)}px)`;
+  });
+}
+document.fonts.addEventListener("loadingdone", () => fitGlyphs());
 try {
   const raw = location.hash.slice(1);
   const h = new URLSearchParams(raw);
