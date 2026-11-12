@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_210';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.87';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_211';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.88';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -9845,7 +9845,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     // while writing on a sticky note, the live ink is cut at its edge like the finished stroke
     liveWrap.style.clipPath = note ? `inset(${view.ty + note.y * S()}px ${vw - view.tx - (note.x + noteW(note)) * S()}px ${vh - view.ty - (note.y + noteHt(note)) * S()}px ${view.tx + note.x * S()}px)` : '';
     active.kind = br.highlighter ? 'pen' : br.kind || 'pen';
-    active.snap = br.snap != null && !note && !img ? br.snap : null;
+    active.snap = br.snap != null ? br.snap : null;   // (on sticky notes and images too)
     liveWrap.style.opacity = br.opacity * (active.kind === 'pencil' ? 0.92 : 1);   // whole stroke at one opacity, no darker overlaps
     // a highlighter blends with the paper while drawing, so the text already looks on top of it
     liveWrap.style.mixBlendMode = br.highlighter ? (paperDark && !note ? 'screen' : 'multiply') : 'normal';
