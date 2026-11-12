@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_208';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.85';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_209';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.86';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6721,7 +6721,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
   }
   // decoding: directly, or (very large photos, some formats) through an <img>, drawn smaller right away
+  // A picture from the gallery is read into memory right away (with a few tries): Android hands it over from the gallery
+  // app, and reading it later, or while the phone is still fetching it, sometimes fails.
+  const IMG_SIG = [[[0xff, 0xd8, 0xff], 'image/jpeg'], [[0x89, 0x50, 0x4e, 0x47], 'image/png'], [[0x47, 0x49, 0x46, 0x38], 'image/gif']];
+  async function imageInMemory(f) {
+    let last;
+    for (let i = 0; i < 4; i++) {
+      try {
+        const buf = await f.arrayBuffer();
+        if (!buf.byteLength) throw new Error('the file is empty');
+        const h = new Uint8Array(buf, 0, Math.min(16, buf.byteLength));
+        let type = f.type;
+        if (!/^image\//.test(type)) {                 // no type given: from its first bytes
+          const sig = IMG_SIG.find(([b]) => b.every((v, j) => h[j] === v));
+          type = sig ? sig[1] : String.fromCharCode(...h.slice(8, 12)) === 'WEBP' ? 'image/webp' : type;
+        }
+        const b = new Blob([buf], { type });
+        try { Object.defineProperty(b, 'name', { value: f.name }); } catch (_) {}
+        return b;
+      } catch (e) { last = e; await new Promise(r => setTimeout(r, 250 * (i + 1))); }
+    }
+    throw last || new Error('unknown error');
+  }
   async function decodeImage(blob) {
+    try { return await createImageBitmap(blob); } catch (_) {}
+    await new Promise(r => setTimeout(r, 150));     // (sometimes it only works on a second try)
     try { return await createImageBitmap(blob); } catch (_) {}
     const url = URL.createObjectURL(blob), img = new Image();
     try {
@@ -6795,6 +6819,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   let nextImgAt = null;
   async function insertImageBlob(blob, at) {
+    if (blob instanceof File) {                    // (dropped or pasted files too: read into memory first)
+      try { blob = await imageInMemory(blob); }
+      catch (er) { toast(`The image could not be loaded (${(er && (er.message || er.name)) || 'unknown error'}). Try again.`, 6000); return; }
+    }
     if (!blob || !/^image\//.test(blob.type)) { toast('That is not an image.'); return; }
     viewNeed('obj', 'Text and images');
     nextImgAt = at || null;
@@ -7053,8 +7081,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   $('imgPick').addEventListener('click', () => { closePops(); imgPickAt = null; $('imgIn').click(); });
   $('imgIn').addEventListener('change', async e => {
     const files = [...(e.target.files || [])], at = imgPickAt;
-    e.target.value = ''; imgPickAt = null;
-    for (const f of files) await insertImageBlob(f, at);
+    imgPickAt = null;
+    const mem = [];
+    for (const f of files) {                       // read before the choice is cleared
+      try { mem.push(await imageInMemory(f)); }
+      catch (er) { toast(`The image could not be loaded from the gallery (${(er && (er.message || er.name)) || 'unknown error'}). If it is only in the cloud, open it in the gallery once, then try again.`, 7000); }
+    }
+    e.target.value = '';
+    for (const b of mem) await insertImageBlob(b, at);
   });
   $('imgPaste').addEventListener('click', async () => {
     closePops();
