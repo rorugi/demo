@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_205';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.82';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_206';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.83';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -3180,8 +3180,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       compactPages(pages);
       applySetup(cleanSetup(nb.setup), true);
     } else { pages = [{ strokes: [] }]; cur = 0; marks = []; }
-    view.zoom = 1;
-    layout(); centrePage();
+    const mv = !LIVE_VIEW && nbMeta() && nbMeta().view;   // the zoom and place it had when it was left
+    view.zoom = mv && mv.z > 0 ? mv.z : 1;
+    layout();
+    if (mv && mv.z > 0) { const sc = S(); view.tx = vw / 2 - mv.cx * sc; view.ty = vh / 2 - mv.cy * sc; clampView(); applyView(); }
+    else centrePage();
     renderPage();
     if (!$('overview').hidden) buildOverview();
     if (typeof prepThumbs === 'function') prepThumbs();
@@ -3190,8 +3193,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (srch.q) setTimeout(() => runSearch(srch.q), 0);   // the search now covers this notebook
   }
   const markOpened = m => { if (m) m.openedAt = Date.now(); };   // the notebook list shows the latest opened first
+  // each notebook keeps its zoom and the place in view (the middle of the screen, in page millimetres)
+  function keepView() {
+    const m = nbMeta();
+    if (!m || LIVE_VIEW) return;
+    const sc = S();
+    m.view = { z: +view.zoom.toFixed(4), cx: +((vw / 2 - view.tx) / sc).toFixed(2), cy: +((vh / 2 - view.ty) / sc).toFixed(2) };
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { keepView(); saveIdx(); } });
+  window.addEventListener('pagehide', () => { keepView(); saveIdx(); });
   async function switchNotebook(id) {
     if (id === nbIdx.current || !nbMeta(id)) return;
+    keepView();
     await flushSave();
     const nb = await readNotebook(id);
     nbIdx.current = id; markOpened(nbMeta(id)); saveIdx();
@@ -3200,6 +3213,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // adds a notebook (empty, or read from a file) and shows it
   async function addNotebook(meta, nb) {
+    keepView();
     await flushSave();
     nbIdx.loaded.push(meta); nbIdx.current = meta.id; markOpened(meta);
     showNotebook(nb);
