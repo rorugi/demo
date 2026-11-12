@@ -129,7 +129,7 @@
   .tbgrp.wrapped > .sep.soft { display: none; }
   .toolbar.dragging { box-shadow: 0 10px 30px rgba(0, 0, 0, .24); }
   /* attached toolbar: full width (top, bottom) or full height (left, right) at that side; the page keeps clear of it */
-  .toolbar.docked { max-width: none; max-height: none; border-radius: 0; box-shadow: 0 1px 8px rgba(0, 0, 0, .08); }
+  .toolbar.docked { max-width: none; max-height: none; border-radius: 0; box-shadow: 0 1px 8px rgba(0, 0, 0, .08); z-index: 9; }   /* floating toolbars stay above attached ones */
   .toolbar.dock-top { border-width: 0 0 1px; }
   .toolbar.dock-bottom { border-width: 1px 0 0; }
   .toolbar.dock-left { border-width: 0 1px 0 0; }
@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_211';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.88';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_212';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.89';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
