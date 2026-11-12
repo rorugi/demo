@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_204';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.81';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_205';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.82';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -10687,6 +10687,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     preLift();
     return true;
   }
+  // ---- Palm rejection: a hand that lands just before the pen comes ----
+  // When the pen touches or hovers, every touch that went down shortly before is taken for the palm: what it started
+  // (turning or sliding pages, moving the page, erasing…) is undone, and the touch is ignored until it lifts.
+  const PALM_MS = 1500;
+  const touchAt = new Map(), palmIds = new Set();
+  function palmCheck() {
+    if (!touches.size || !penSeen) return;
+    const now = performance.now(), ids = [...touches.keys()].filter(id => now - (touchAt.get(id) || 0) < PALM_MS);
+    if (!ids.length || (pinch && pinch.mode === 'temp')) return;   // a hand holding a temporary zoom stays
+    const mine = id => ids.includes(id);
+    if (nav && (mine(nav.id) || (nav.z2 && mine(nav.z2.id)))) cancelNav();
+    if (fpan && mine(fpan.id)) { if (!fpan.swipe) { view.tx = fpan.tx0; view.ty = fpan.ty0; clampView(); applyView(); } fpan = null; }
+    if (fpend && mine(fpend.id)) { clearTimeout(fpend.timer); fpend = null; }
+    if (fhold && mine(fhold.id)) cancelHold1();
+    if (active && active.type === 'touch' && mine(active.id)) {
+      const a = active, undoIt = a.erase && a.changed;
+      finishStroke(null, false);
+      if (undoIt) undo();                          // what the palm erased comes back
+    }
+    if (pinch && ids.some(mine)) { clearTimeout(pinch.holdT); pinch = null; }
+    if (fingTag) fingTag.hidden = true;
+    for (const id of ids) { touches.delete(id); palmIds.add(id); }
+  }
   const FING_WAIT = 140;                         // ms a lone finger waits before erasing / selecting / highlighting
   let fpend = null;
   const fingTag = $('fingTag');
@@ -10874,6 +10897,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     if (e.pointerType === 'pen') {
       if (!penSeen) setStylusMode(true); lastPen = performance.now();
+      palmCheck();
       if (active && active.loose && e.pointerId === active.id) finishStroke(e, true);   // a fresh touch ends a "button held" stroke
       if (active) return;
       if (pinch && pinch.mode !== 'temp') { clearTimeout(pinch.holdT); pinch = null; }   // temporary zoom stays while the pen writes
@@ -10891,7 +10915,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (e.pointerType === 'touch') {
       if (Math.max(e.width || 0, e.height || 0) > 40) return;
       if (!touches.size && e.clientY > vh - SYS_EDGE) return;   // the system's own swipe from the bottom (leave the app): not ours
-      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY }); touchAt.set(e.pointerId, performance.now());
       tapDown(e);
       if (touches.size === 2) {
         if (fpend) { clearTimeout(fpend.timer); fpend = null; }   // a pinch after all: the finger action never started
@@ -10977,6 +11001,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return false;
   }
   stage.addEventListener('pointermove', e => {
+    if (palmIds.has(e.pointerId)) return;           // a palm: ignored until it lifts
     if (linkPend && e.pointerId === linkPend.id) {      // moved away from the link: what the touch would have done anyway
       if (Math.hypot(e.clientX - linkPend.x, e.clientY - linkPend.y) < 8) return;
       const p = linkPend;
@@ -10986,7 +11011,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       try { stage.dispatchEvent(new PointerEvent('pointerdown', p.e0)); } finally { linkReplay = false; }
     }
     if (fhold) moveHold1(e);
-    if (e.pointerType === 'pen') { lastPen = performance.now(); mapShy(e.clientX, e.clientY); }
+    if (e.pointerType === 'pen') { lastPen = performance.now(); mapShy(e.clientX, e.clientY); if (touches.size) palmCheck(); }   // (hovering too)
     if (!active && e.buttons === 0 && e.pointerType !== 'touch' && handleMode === 'quiet') hoverNear(e);   // stylus hovering or mouse
     if (mapDrag && e.pointerId === mapDrag.id) { moveMapDrag(e); return; }
     if (touches.has(e.pointerId)) {
@@ -11045,6 +11070,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   });
 
   function onUp(e) {
+    if (palmIds.has(e.pointerId)) { palmIds.delete(e.pointerId); touchAt.delete(e.pointerId); return; }
+    touchAt.delete(e.pointerId);
     if (linkPend && e.pointerId === linkPend.id) {      // a tap on a link: it opens
       const p = linkPend;
       linkPend = null; touches.delete(e.pointerId);
