@@ -1683,7 +1683,7 @@
       </select>
       <span>Double tap with one finger<span class="sub" id="tap1Sub"></span></span>
       <select class="dd" id="tap1Act" aria-label="Double tap with one finger">
-        <option value="zoom">Zoom: whole page ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
+        <option value="zoom">Zoom: current ↔ 1:1</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="overview">Page overview</option><option value="off">Nothing</option>
       </select>
       <span>Double tap with two fingers<span class="sub" id="tap2Sub"></span></span>
       <select class="dd" id="tap2Act" aria-label="Double tap with two fingers">
@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_206';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.83';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_207';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.84';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -10626,7 +10626,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const TAP2 = { undo: 'Undo', redo: 'Redo', overview: 'Opens the page overview', lock: 'Locks or unlocks the zoom', off: 'Does nothing' };
   let tap2Act = (v => TAP2[v] ? v : 'undo')(store.get('tap2', 'undo'));
   let tap2 = null, tap2Last = 0, tap1Last = null;
-  const TAP1 = { zoom: 'Toggles between the whole page and 1:1 (2× without screen calibration), around the tapped spot', undo: 'Undo', redo: 'Redo', overview: 'Opens the page overview', off: 'Does nothing' };
+  const TAP1 = { zoom: 'Goes to 1:1 around the tapped spot (2× without screen calibration); again: back to the zoom and place you had', undo: 'Undo', redo: 'Redo', overview: 'Opens the page overview', off: 'Does nothing' };
   let tap1Act = (v => TAP1[v] ? v : 'zoom')(store.get('tap1', 'zoom'));
   function tapDown(e) {
     const now = performance.now();
@@ -10650,22 +10650,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     tap2Last = 0;
     runTap2();
   }
+  let tapBack = null;                               // the zoom before a double tap went to 1:1
   function runTap1(x, y) {
     if (active || pinch || nav || tap1Act === 'off' || ted) return;
     { const q = toMM({ clientX: x, clientY: y }); if (textAt(q[0], q[1])) return; }   // on a text box the second tap writes in it
     if (tap1Act === 'undo') { if (undoStack.length) { undo(); toast('Undo', 1000); } else toast('Nothing to undo', 1200); }
     else if (tap1Act === 'redo') { if (redoStack.length) { redo(); toast('Redo', 1000); } else toast('Nothing to redo', 1200); }
     else if (tap1Act === 'overview') openOverview();
-    else if (tap1Act === 'zoom') {
-      const rz = realZoom(), atFit = Math.abs(view.zoom - 1) < 0.02;
-      const to = atFit ? (rz && Math.abs(rz - 1) > 0.05 ? rz : 2) : 1;
+    else if (tap1Act === 'zoom') {                // between the zoom you had and 1:1 (real size), and back to exactly that
+      const rz = realZoom() || 2, atReal = Math.abs(view.zoom - rz) / rz < 0.02;
       const was = { zoom: view.zoom, tx: view.tx, ty: view.ty };
-      zoomAt(to, x, y, view.zoom, view.tx, view.ty);              // where it should end up…
-      if (to === 1) Object.assign(view, centred());                 // (the whole page: in the middle)
-      const b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
-      Object.assign(view, was);
-      zoomBack(b);                                                  // …and glide there
-      toast(to === 1 ? 'Whole page' : rz && to === rz ? '1:1' : `${Math.round(to * 100)}%`, 900);
+      let b;
+      if (atReal) {
+        b = tapBack && tapBack.page === pages[cur] ? tapBack.v : { zoom: 1, ...centred() };   // (none kept: the whole page)
+        tapBack = null;
+      } else {
+        tapBack = { page: pages[cur], v: was };
+        zoomAt(rz, x, y, view.zoom, view.tx, view.ty);            // 1:1 around the tapped spot
+        b = { zoom: view.zoom, tx: view.tx, ty: view.ty };
+        Object.assign(view, was);
+      }
+      zoomBack(b);                                                  // glide there
+      toast(atReal ? (Math.abs(b.zoom - 1) < 0.02 ? 'Whole page' : `${Math.round(b.zoom * 100)}%`) : realZoom() ? '1:1' : '200%', 900);
     }
   }
   // ---- Finger or stylus mode, and what one finger does in stylus mode ----
