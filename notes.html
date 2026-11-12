@@ -2194,8 +2194,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_209';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.86';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_210';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.87';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -6480,7 +6480,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   function startPeek(e, n, delay, at, hold = delay > 0, ripple = false) {
     revealHandles(n.id);
     const a = { id: e.pointerId, type: e.pointerType, peek: true, note: n, on: false, moved: false, start: at, off: [at[0] - n.x, at[1] - n.y], before: snapshot(), hold,
-      t0: performance.now(), wasSel: n === objSel, cx: e.clientX, cy: e.clientY };
+      t0: performance.now(), wasSel: n === objSel, cx: e.clientX, cy: e.clientY, e0: { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY, timeStamp: e.timeStamp } };
     a.timer = setTimeout(() => {
       if (active !== a || a.dead) return;
       a.on = true;
@@ -6497,7 +6497,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const a = active, n = a.note, [x, y] = toMM(e);
     if (n.lock || a.dead || LIVE_VIEW) return;
     if (!a.moved && Math.hypot(x - a.start[0], y - a.start[1]) < 1.5) return;
-    if (!a.on && a.hold) { clearTimeout(a.timer); a.dead = true; return; }   // moved before the hold: leave it where it is
+    if (!a.on && a.hold) {                         // moved before the hold: leave it where it is
+      clearTimeout(a.timer); a.dead = true;
+      if (a.type === 'touch' && penSeen && fingAct !== 'off') {   // the finger does what it does elsewhere on the page (swipe, move the page…)
+        active = null;
+        fpan = null; fpend = null;
+        fingerStart(a.e0);
+        if (fpend) fpend.t0 = a.t0; if (fpan) fpan.t0 = a.t0;
+        return 'go';
+      }
+      return;
+    }
     if (!a.on) { clearTimeout(a.timer); a.on = true; }
     a.moved = true;
     if (n.src) { n.x = Math.max(-n.w + 5, Math.min(W - 5, x - a.off[0])); n.y = Math.max(-n.h + 5, Math.min(H - 5, y - a.off[1])); }
@@ -11008,11 +11018,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         const q = toMM(e), n = noteAt(q[0], q[1]) || textAt(q[0], q[1]) || imageAt(q[0], q[1]);
         if (n) { startPeek(e, n, n === objSel ? 150 : PEEK_HOLD, q, n !== objSel); return; }   // selected: a finger drags it right away
         startHold1(e);
-        if (fingAct === 'pan' || fingAct === 'swipe') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty, t0: performance.now(), swipe: fingAct === 'swipe' };
-        else if (fingAct !== 'off') {               // erase / lasso / highlight: wait a moment — a second finger means a pinch, not this
-          const e0 = { pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 };
-          fpend = { id: e.pointerId, e0, pts: [], timer: setTimeout(fingGo, FING_WAIT), mix: fingAct === 'swipelasso', t0: performance.now(), tx0: view.tx, ty0: view.ty };
-        }
+        fingerStart(e);
         return;
       }
       if (tool === 'sticky') { placeNote(e); return; }
@@ -11030,6 +11036,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     else tool === 'laser' ? startLaser(e) : tool === 'magnifier' ? startMagSel(e) : tool === 'lasso' ? startLasso(e) : erasing() ? startErase(e) : startStroke(e);
   });
 
+  // stylus mode: what one finger does (move the page, swipe pages, erase, select, highlight)
+  function fingerStart(e) {
+    if (fingAct === 'pan' || fingAct === 'swipe') fpan = { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: view.tx, ty0: view.ty, t0: performance.now(), swipe: fingAct === 'swipe' };
+    else if (fingAct !== 'off') {               // erase / lasso / highlight: wait a moment — a second finger means a pinch, not this
+      const e0 = { pointerId: e.pointerId, pointerType: 'touch', clientX: e.clientX, clientY: e.clientY, pressure: 0.5, timeStamp: e.timeStamp, buttons: 1 };
+      fpend = { id: e.pointerId, e0, pts: [], timer: setTimeout(fingGo, FING_WAIT), mix: fingAct === 'swipelasso', t0: performance.now(), tx0: view.tx, ty0: view.ty };
+    }
+  }
   // the stylus button: on a sticky note or image it grabs it (a tap opens its options), elsewhere it erases
   function btnDown(e) {
     const side = !(e.buttons & 32) && e.button !== 5;               // the side button, not the eraser end
@@ -11123,7 +11137,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (active.textDrag) { textDragMove(e); return; }
     if (active.textTool) { textToolMove(e); return; }
     if (active.imgDrag) { imgDragMove(e); return; }
-    if (active.peek) { peekMove(e); return; }
+    if (active.peek) { if (peekMove(e) === 'go') stage.dispatchEvent(new PointerEvent('pointermove', e)); return; }
     if (active.erase) { eraseMove(list.length ? list : [e]); if (active.type === 'touch' && !fingTag.hidden) showFingTag(e); return; }
     if (active.lasso) { lassoMove(list.length ? list : [e]); return; }
     if (active.magsel) { magSelMove(e); return; }
