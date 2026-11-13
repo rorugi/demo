@@ -2195,8 +2195,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_213';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.90';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_214';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.91';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -4975,11 +4975,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   // Saving goes through the system's file picker where there is one (Android: also OneDrive, Drive… when their apps are
   // installed). onHandle gets the chosen file, so the notebook can be saved there again directly.
-  async function saveBlob(blob, name, description, mime, ext, onHandle) {
+  // The picker only opens right after a tap. So for files that take a while to make, it is opened first (pickSaveFile)
+  // and the file is written once it is ready; if it still comes too late, the app asks once more (a new tap).
+  async function pickSaveFile(name, description, mime, ext) {   // a file to save to; false: cancelled; null: no picker (download)
+    if (!window.showSaveFilePicker) return null;
+    try { return await window.showSaveFilePicker({ suggestedName: name, types: [{ description, accept: { [mime]: [ext] } }] }); }
+    catch (e) { return e && e.name === 'AbortError' ? false : null; }
+  }
+  async function saveBlob(blob, name, description, mime, ext, onHandle, pre) {
     let why = '';
-    if (window.showSaveFilePicker) {
+    if (pre === false) return null;
+    if (pre || (pre === undefined && window.showSaveFilePicker)) {
       try {
-        const h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description, accept: { [mime]: [ext] } }] });
+        let h = pre;
+        if (!h) {
+          try { h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description, accept: { [mime]: [ext] } }] }); }
+          catch (e) {
+            if (!e || (e.name !== 'SecurityError' && e.name !== 'NotAllowedError')) throw e;
+            if (!await ask('Ready to save', `${name} is ready.`, 'Save')) return null;   // the tap was too long ago
+            h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description, accept: { [mime]: [ext] } }] });
+          }
+        }
         const w = await h.createWritable(); await w.write(blob); await w.close();
         toast(`Saved as ${h.name}`);
         if (onHandle) await onHandle(h);
@@ -5122,6 +5138,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     store.set('saveFmt2', fmt);
     saveDlg.close();
     const m = nbMeta(), rev = m.rev;                 // what is written now; later changes stay unsaved
+    const desc = fmt === 'html' ? 'RRnotes notebook (web page)' : fmt === 'svgz' ? 'RRnotes notebook (compressed SVG)' : 'RRnotes notebook (SVG)';
+    const mime = fmt === 'html' ? 'text/html' : 'image/svg+xml';
+    let pre;
+    if (!share) {                                    // the place first (right after the tap), then the file
+      pre = await pickSaveFile(`${name}.${fmt}`, desc, mime, '.' + fmt);
+      if (pre === false) return;
+      if (pre && fileFmt(pre.name) === fmt) name = fileBase(pre.name);
+    }
     let file;
     try { file = await busyWhile(`Saving ${name}…`, () => notebookFile(fmt, name)); }
     catch (err) { toast(saveFailText(err), 8000); return; }
@@ -5129,8 +5153,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (share) saved = await shareFiles([file]) ? file.name : null;
     else {
       const keep = h => linkFile(m, h);                // later saves go straight to this file
-      saved = fmt === 'html' ? await saveBlob(file, file.name, 'RRnotes notebook (web page)', 'text/html', '.html', keep)
-        : await saveBlob(file, file.name, fmt === 'svgz' ? 'RRnotes notebook (compressed SVG)' : 'RRnotes notebook (SVG)', 'image/svg+xml', '.' + fmt, keep);
+      saved = await saveBlob(file, file.name, desc, mime, '.' + fmt, keep, pre);
     }
     if (!saved || !nbMeta(m.id)) return;
     Object.assign(m, { savedRev: rev, savedName: saved, savedAt: Date.now(), savedZip: '', name: fileBase(saved) });
@@ -5639,14 +5662,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
   const toBase64 = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
   async function saveAll(share, fmt = 'zip', fileName = `RRnotes_${stamp()}`) {
-    let out, files;
+    let out, files, pre;
+    const zip = fmt === 'zip', desc = zip ? 'RRnotes notebooks (ZIP)' : 'RRnotes notebooks (web page)', mime = zip ? 'application/zip' : 'text/html', ext = zip ? '.zip' : '.html';
+    if (!share) {                                    // the place first (right after the tap), then the file
+      pre = await pickSaveFile(fileName + ext, desc, mime, ext);
+      if (pre === false) return;
+      if (pre) fileName = pre.name.replace(/\.(html?|zip)$/i, '');
+    }
     try { [out, files] = await busyWhile('Saving all notebooks…', () => buildAll(fmt, fileName)); }
     catch (err) { toast(saveFailText(err), 8000); return; }
     if (!out) return;
     let saved;
     if (share) saved = await shareFiles([out]) ? out.name : null;
-    else saved = fmt === 'zip' ? await saveBlob(out, out.name, 'RRnotes notebooks (ZIP)', 'application/zip', '.zip')
-      : await saveBlob(out, out.name, 'RRnotes notebooks (web page)', 'text/html', '.html');
+    else saved = await saveBlob(out, out.name, desc, mime, ext, null, pre);
     if (!saved) return;
     const now = Date.now();
     for (const f of files) if (nbMeta(f.m.id)) Object.assign(f.m, { savedRev: f.rev, savedName: f.name, savedAt: now, savedZip: saved });
