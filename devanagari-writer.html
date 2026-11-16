@@ -201,8 +201,8 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
     <div class="controls">
       <span class="ctl">Language
         <span class="seg" role="group" aria-label="Language" data-for="dw-language">
-          <button type="button" data-value="hi" aria-pressed="true">Hindi</button>
-          <button type="button" data-value="sa" aria-pressed="false">Sanskrit</button>
+          <button type="button" data-value="hi" aria-pressed="false">Hindi</button>
+          <button type="button" data-value="sa" aria-pressed="true">Sanskrit</button>
         </span>
       </span>
       <span class="ctl main-only">Input
@@ -212,7 +212,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
         </span>
       </span>
       <label class="ctl fontsel" for="dw-font">Font <select id="dw-font"></select><span class="fontmsg" id="dw-font-msg" aria-live="polite"></span></label>
-      <select id="dw-language" hidden><option value="hi">Hindi</option><option value="sa">Sanskrit</option></select>
+      <select id="dw-language" hidden><option value="hi">Hindi</option><option value="sa" selected>Sanskrit</option></select>
       <select id="dw-method" hidden><option value="itrans">ITRANS / IAST / mixed text</option><option value="nagari">Devanagari keyboard</option></select>
     </div>
     <p class="note main-only" id="dw-mode-note"></p>
@@ -226,7 +226,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="board main-only" aria-label="Result" aria-live="polite">
     <span class="tag">Devanagari <button type="button" class="copy" data-copy="out" aria-label="Copy Devanagari" title="Copy Devanagari"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 6.5V4.5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></span>
-    <div class="big" id="out" lang="hi"></div>
+    <div class="big" id="out" lang="sa"></div>
     <div class="roman-wrap"><span class="lbl"><span id="dw-iast-title">IAST / Hindi learner transliteration</span> <button type="button" class="copy" data-copy="outiast" aria-label="Copy IAST" title="Copy IAST"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 6.5V4.5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></span><div class="roman" id="outiast"></div></div>
     <dl class="facts">
       <dt>ITRANS <button type="button" class="copy" data-copy="outitrans" aria-label="Copy ITRANS" title="Copy ITRANS"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 6.5V4.5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></dt><dd id="outitrans"></dd>
@@ -1548,7 +1548,7 @@ Sanscript.schemes['itrans_naga'] = {
     // A fresh URL each time, so a cached or already open old copy of the window is replaced.
     url.search += '&t=' + Date.now().toString(36);
     if ($('dw-layer').value === 'all') url.search += '&layers=all';
-    if ($('dw-language').value === 'sa') url.search += '&lang=sa';
+    if ($('dw-language').value === 'hi') url.search += '&lang=hi';
     const w = window.open(url.href, 'dw-keyboard', `popup=yes,width=${s.width},height=${s.height}`);
     if (w) { e.preventDefault(); w.focus(); }
   });
@@ -1557,7 +1557,7 @@ Sanscript.schemes['itrans_naga'] = {
     const params = new URLSearchParams(location.search);
     const pick = (id, value) => { const sel = $(id); if (sel.value !== value) { sel.value = value; sel.dispatchEvent(new Event('change')); } };
     if (params.get('layers') === 'all') pick('dw-layer', 'all');
-    if (params.get('lang') === 'sa') pick('dw-language', 'sa');
+    if (['hi', 'sa'].includes(params.get('lang'))) pick('dw-language', params.get('lang'));
     document.querySelectorAll('.seg[data-for]').forEach(sync); setLang();
 
     const input = $('inputText'), state = $('dw-copy-state'), hint = state.textContent;
