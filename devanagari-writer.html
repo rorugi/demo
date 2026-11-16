@@ -280,12 +280,12 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Write <code>ROOT</code> in capitals for the root sign √ used in grammar: <code>ROOTgam</code> → <span class="ex">√गम्</span>, <code>ROOTbhū</code> → <span class="ex">√भू</span>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Write <code>ROOT</code> in capitals for the root sign √ used in grammar: <code>ROOTgam</code> → <span class="ex">√गम्</span>, <code>ROOTbhū</code> → <span class="ex">√भू</span>. Arrows: <code>-&gt;</code> → <span class="ex">→</span>, <code>&lt;-</code> → <span class="ex">←</span>, e.g. <code>a + i -&gt; e</code>. Vedic accents go right after their vowel: <code>UDATTA</code> → <span class="ex">◌॑</span>, <code>ANUDATTA</code> → <span class="ex">◌॒</span>, e.g. <code>aANUDATTAgnimIUDATTALe</code> → <span class="ex">अ॒ग्निमी॑ळे</span> (or the ITRANS codes <code>\'</code> and <code>\_</code>). Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
     <h3>Hindi and Sanskrit</h3>
     <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
     <p>“Drop final a” exists for Hindi only: it removes the last short “a” as a simple learning aid and is no substitute for a full pronunciation analysis.</p>
-    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST input is not (capitals are read as small letters). In IAST <code>c</code> is <span class="ex">च</span> and <code>ch</code> is <span class="ex">छ</span>; a halant must be visible in the spelling, so <code>pūrṇa</code> gives <span class="ex">पूर्ण</span> but <code>pūraṇa</code> gives <span class="ex">पूरण</span>. Text in which a vowel sign is written with an extra a (<code>paū</code> for <i>pū</i>, <code>maā</code> for <i>mā</i>) is repaired, and there <code>ch</code> is read as <span class="ex">च</span>. Designed for classical Sanskrit, without full support for all Vedic accent marks.</p>
+    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST input is not (capitals are read as small letters). In IAST <code>c</code> is <span class="ex">च</span> and <code>ch</code> is <span class="ex">छ</span>; a halant must be visible in the spelling, so <code>pūrṇa</code> gives <span class="ex">पूर्ण</span> but <code>pūraṇa</code> gives <span class="ex">पूरण</span>. Text in which a vowel sign is written with an extra a (<code>paū</code> for <i>pū</i>, <code>maā</code> for <i>mā</i>) is repaired, and there <code>ch</code> is read as <span class="ex">च</span>. Designed for classical Sanskrit; of the Vedic accent marks only udātta and anudātta are supported.</p>
     <h3>Fonts</h3>
     <p>The font menu sets the Devanagari face for the text box, the results, the keyboard and the table. <i>Auto</i> uses Tiro Devanagari Hindi, or Tiro Devanagari Sanskrit in Sanskrit mode. The web fonts load from Google Fonts when chosen. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License), Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License) come with the page as files. Under “Load a font file …” you can use your own font; it is kept only in this browser. The choice is remembered and carried into the pop-out keyboard.</p>
     <h3>Keyboard</h3>
@@ -1244,10 +1244,13 @@ Sanscript.schemes['itrans_naga'] = {
     return transliterate(clean, 'iast', 'devanagari', !isSanskrit());
   }
   const isIast = word => IAST_ONLY.test(word.normalize('NFC'));
-  // Upper-case abbreviations for signs that are not Devanagari letters. They are replaced before
+  // Abbreviations for signs that are not Devanagari letters. They are replaced before
   // ITRANS/IAST detection, so ROOTgam and ROOTbhū both work. Case-sensitive: "root" stays ITRANS.
-  const ABBREVIATIONS = {ROOT: '√'};
-  const ABBREVIATION_RE = new RegExp('(' + Object.keys(ABBREVIATIONS).join('|') + ')');
+  // Accents follow the vowel they mark: aUDATTAgnim → अ॑ग्निम्.
+  const ABBREVIATIONS = {ROOT: '√', UDATTA: '\u0951', ANUDATTA: '\u0952', '->': '→', '<-': '←'};
+  // Longest first, so ANUDATTA is not read as AN + UDATTA.
+  const ABBREVIATION_RE = new RegExp('(' + Object.keys(ABBREVIATIONS).sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')');
   function toNagari(source, strict = false) {
     return source.split('##').map((part, index) => {
       if (index % 2) return part;
@@ -1281,10 +1284,12 @@ Sanscript.schemes['itrans_naga'] = {
     }
     return out;
   }
+  // Vedic accents in roman script: udātta as acute (á), anudātta as macron below (a̱).
+  const romanAccents = s => s.replace(/[\u032d\u0951]/gu, '\u0301').replace(/\u0952/gu, '\u0331');
   const separator = s => s.replace(/\[TAB\]/g, '\t').replace(/<br\s*\/?>/gi, '\n');
   function render() {
     devanagari = $('method').value === 'itrans' ? toNagari(input.value) : input.value;
-    const roman = isSanskrit() ? transliterate(devanagari, 'devanagari', 'iast') : hindiRoman(devanagari);
+    const roman = romanAccents(isSanskrit() ? transliterate(devanagari, 'devanagari', 'iast') : hindiRoman(devanagari));
     $('nagari').textContent = devanagari;
     $('iast').textContent = roman;
     $('itrans').textContent = transliterate(devanagari, 'nagari', 'itrans');
@@ -1402,6 +1407,10 @@ Sanscript.schemes['itrans_naga'] = {
     rows.push(['Halant (shown on क)', 'k (Sanskrit) / k.h', 'k', 'क्']);
     for (const n of ['ॐ','ऽ','।','॥']) add('Special signs', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
     rows.push(['Special signs (root sign, e.g. ROOTgam → √गम्)', 'ROOT', '√', '√']);
+    rows.push(['Special signs (arrow: becomes)', '->', '→', '→']);
+    rows.push(['Special signs (arrow: derived from)', '<-', '←', '←']);
+    rows.push(['Vedic accent udātta (shown on अ, after the vowel)', "aUDATTA / a\\'", 'á', 'अ॑']);
+    rows.push(['Vedic accent anudātta (shown on अ, after the vowel)', 'aANUDATTA / a\\_', 'a̱', 'अ॒']);
     for (const n of '०१२३४५६७८९') add('Digits', it.symbols[n], n);
     for (const [n, code] of Object.entries(it.extra_consonants)) add('Extended consonants', code + 'a', n);
     for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit examples', code, n);
