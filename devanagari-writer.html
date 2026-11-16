@@ -61,7 +61,7 @@ code{font-family:var(--f-mono);font-size:.9em;background:var(--accent-soft);bord
 .tog{display:inline-flex;gap:8px;align-items:center;cursor:pointer;font-size:14px;color:var(--muted)}
 .tog input{accent-color:var(--accent);width:16px;height:16px;margin:0}
 .tog input:disabled+span{opacity:.5}
-.seg button:focus-visible,.tog input:focus-visible,textarea:focus-visible,input:focus-visible,.dw-char:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg button:focus-visible,.tog input:focus-visible,textarea:focus-visible,input:focus-visible,.dw-char:focus-visible,.dw-action:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fontsel{flex-wrap:wrap;max-width:100%;min-width:0}
 .fontsel select{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0;max-width:100%;flex:1 1 160px}
 .fontsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -132,7 +132,13 @@ details p{margin:0 0 8px;color:var(--muted);font-size:14px;max-width:65ch}
 .dw-level-2{grid-column:3;grid-row:2;border-left:1px solid var(--line)}
 .dw-level-3{grid-column:3;grid-row:1;border-left:1px solid var(--line)}
 /* Narrow screens (set by fitKeyboard): no QWERTZ labels, tighter gaps, taller keys; then zoomed to fit. */
+.dw-actions{display:flex;gap:5px}
+.dw-action{appearance:none;height:40px;min-width:64px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);font:inherit;font-size:16px;cursor:pointer}
+.dw-action-space{flex:1;font-size:13px;color:var(--muted)}
+@media (hover:hover){.dw-action:hover{background:var(--accent);color:var(--accent-ink)}}
+.dw-action:active{background:var(--accent);color:var(--accent-ink)}
 .dw-compact,.dw-compact .dw-keyrow{gap:3px}
+.dw-compact .dw-action{height:46px;min-width:72px}
 .dw-compact .dw-keyrow:nth-child(2){padding-left:12px}
 .dw-compact .dw-keyrow:nth-child(3){padding-left:18px}
 .dw-compact .dw-keyrow:nth-child(4){padding-left:6px}
@@ -1410,6 +1416,16 @@ Sanscript.schemes['itrans_naga'] = {
     input.focus();
     render();
   }
+  function editKey(kind) {
+    let start = input.selectionStart;
+    const end = input.selectionEnd;
+    if (kind === 'back') {
+      if (start === end && start > 0) start -= 1;
+      input.setRangeText('', start, end, 'end');
+    } else input.setRangeText(kind === 'space' ? ' ' : '\n', start, end, 'end');
+    input.focus();
+    render();
+  }
   function keyboard() {
     const container = $('keyboard'); container.replaceChildren();
     const layers = $('layer').value === 'all' ? [0, 1, 2, 3] : [0, 1];
@@ -1430,6 +1446,16 @@ Sanscript.schemes['itrans_naga'] = {
       });
       row.append(keycap);
     });
+    // Bottom row: space, delete and new line, needed where the phone keyboard stays closed.
+    const actions = document.createElement('div'); actions.className = 'dw-keyrow dw-actions';
+    for (const [kind, label, name] of [['space', 'Space', 'Space'], ['back', '⌫', 'Delete'], ['enter', '↵', 'New line']]) {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'dw-action dw-action-' + kind;
+      button.textContent = label; button.title = name; button.setAttribute('aria-label', name);
+      button.addEventListener('click', () => editKey(kind));
+      actions.append(button);
+    }
+    container.append(actions);
     fitKeyboard();
   }
   // Fit the keyboard to the screen width: first the compact layout, then zoom down if needed.
@@ -1553,7 +1579,7 @@ Sanscript.schemes['itrans_naga'] = {
   };
 
   // Size of the pop-out window: fits the keyboard and the compose box.
-  const popoutSize = layer => ({width: layer === 'all' ? 1060 : 720, height: 540});
+  const popoutSize = layer => ({width: layer === 'all' ? 1060 : 720, height: 590});
   function fitWindow() {
     if (!popout) return;
     requestAnimationFrame(() => {
