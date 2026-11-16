@@ -234,6 +234,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
   </section>
   <div class="board-foot main-only">
     <label class="tog"><input type="checkbox" id="removea" value="on" checked><span>Drop final “a” (Hindi only)</span></label>
+    <label class="tog" title="Only the Devanagari line: after a word ending in a consonant (halant) the space is removed, as in printed Sanskrit. IAST and ITRANS keep your spaces."><input type="checkbox" id="dw-join"><span>Join words in Devanagari (sandhi)</span></label>
   </div>
 
   <div class="row main-only"><small>Combined list</small><div id="outcombined"></div></div>
@@ -281,7 +282,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Signs such as the root sign √ have short codes, see <a href="#dw-abbreviations">Abbreviations</a> below. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. <i>Join words in Devanagari</i> writes the Devanagari line the way printed Sanskrit does: after a word ending in a consonant the space goes, so <code>ity uvāca</code> → <span class="ex">इत्युवाच</span> and <code>tat tvam asi</code> → <span class="ex">तत्त्वमसि</span>; after a vowel, ṃ or ḥ it stays. IAST and ITRANS keep your spaces. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Signs such as the root sign √ have short codes, see <a href="#dw-abbreviations">Abbreviations</a> below. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
     <h3 id="dw-abbreviations">Abbreviations</h3>
     <p>Type these codes in ITRANS or IAST text; capitals matter, so <code>root</code> stays ITRANS (<span class="ex">रूत्</span>). Vedic accents go right after their vowel.</p>
@@ -1300,16 +1301,25 @@ Sanscript.schemes['itrans_naga'] = {
   }
   // Vedic accents in roman script: udātta as acute (á), anudātta as macron below (a̱).
   const romanAccents = s => s.replace(/[\u032d\u0951]/gu, '\u0301').replace(/\u0952/gu, '\u0331');
+  // Join words in the Devanagari line only, as printed Sanskrit does: a word ending in a halant
+  // joins the next word (tat tvam → तत्त्वम्, ity uvāca → इत्युवाच). After a vowel, ṃ or ḥ the space
+  // stays. Line breaks are kept. IAST and ITRANS are built from the spaced text, so nothing is lost.
+  const MATRA = {'अ':'','आ':'ा','इ':'ि','ई':'ी','उ':'ु','ऊ':'ू','ऋ':'ृ','ॠ':'ॄ','ऌ':'ॢ','ॡ':'ॣ',
+    'ए':'े','ऐ':'ै','ओ':'ो','औ':'ौ','ऎ':'ॆ','ऒ':'ॊ','ऍ':'ॅ','ऑ':'ॉ'};
+  const joinWords = s => s
+    .replace(/्[ \t\u00a0]+(?=[\u0915-\u0939\u0958-\u095f\u0978-\u097f])/gu, '्')
+    .replace(/्[ \t\u00a0]+([\u0904-\u0914\u0960\u0961])/gu, (m, v) => v in MATRA ? MATRA[v] : m);
   const separator = s => s.replace(/\[TAB\]/g, '\t').replace(/<br\s*\/?>/gi, '\n');
   function render() {
     devanagari = $('method').value === 'itrans' ? toNagari(input.value) : input.value;
     const roman = romanAccents(isSanskrit() ? transliterate(devanagari, 'devanagari', 'iast') : hindiRoman(devanagari));
-    $('nagari').textContent = devanagari;
+    const shown = $('join').checked ? joinWords(devanagari) : devanagari;
+    $('nagari').textContent = shown;
     $('iast').textContent = roman;
     $('itrans').textContent = transliterate(devanagari, 'nagari', 'itrans');
     // Work with text, never interpret user input or separator values as HTML.
     if (/[\r\n;]/.test(devanagari)) {
-      const a = devanagari.split(/\r\n|[\r\n;]/), b = roman.split(/\r\n|[\r\n;]/);
+      const a = shown.split(/\r\n|[\r\n;]/), b = roman.split(/\r\n|[\r\n;]/);
       $('combined').textContent = a.map((s, i) => s.trim() + separator($('separator').value) + (b[i] || '').trim()).join(separator($('break').value));
     } else $('combined').textContent = '';
   }
@@ -1447,6 +1457,11 @@ Sanscript.schemes['itrans_naga'] = {
   input.addEventListener('input', render);
   $('language').addEventListener('change', changeLanguage);
   $('remove-a').addEventListener('change', () => {hindiRemoveA = $('remove-a').checked; render();});
+  try { $('join').checked = localStorage.getItem('dw-join-words') === '1'; } catch (e) {}
+  $('join').addEventListener('change', () => {
+    try { localStorage.setItem('dw-join-words', $('join').checked ? '1' : '0'); } catch (e) {}
+    render();
+  });
   $('method').addEventListener('change', () => {
     if (previousMethod !== $('method').value) {
       input.value = $('method').value === 'nagari' ? toNagari(input.value) : transliterate(input.value, 'nagari', 'itrans');
