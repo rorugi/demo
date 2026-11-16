@@ -148,6 +148,7 @@ td:nth-child(2){font-family:var(--f-mono);font-size:14px}
 td:nth-child(3){font-style:italic;color:var(--accent)}
 td:nth-child(4){font-family:var(--f-deva);font-size:22px;line-height:1.4}
 @media (prefers-color-scheme: light){td:nth-child(3){color:#9a5f0c}}
+.abbr td,.abbr td:nth-child(n){font:inherit;font-size:14px;color:var(--fg);font-style:normal;line-height:1.5}.abbr td:nth-child(2){font-family:var(--f-deva);font-size:20px}.abbr td:nth-child(3){color:var(--muted)}.abbr .ex{font-size:17px}
 
 /* Notes */
 .how{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px}
@@ -233,6 +234,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
   </section>
   <div class="board-foot main-only">
     <label class="tog"><input type="checkbox" id="removea" value="on" checked><span>Drop final “a” (Hindi only)</span></label>
+    <label class="tog" title="Only the Devanagari line: after a word ending in a consonant (halant) the space is removed, as in printed Sanskrit. IAST and ITRANS keep your spaces."><input type="checkbox" id="dw-join"><span>Join words in Devanagari (sandhi)</span></label>
   </div>
 
   <div class="row main-only"><small>Combined list</small><div id="outcombined"></div></div>
@@ -280,12 +282,25 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. <i>Join words in Devanagari</i> writes the Devanagari line the way printed Sanskrit does: after a word ending in a consonant the space goes, so <code>ity uvāca</code> → <span class="ex">इत्युवाच</span> and <code>tat tvam asi</code> → <span class="ex">तत्त्वमसि</span>; after a vowel, ṃ or ḥ it stays. IAST and ITRANS keep your spaces. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Signs such as the root sign √ have short codes, see <a href="#dw-abbreviations">Abbreviations</a> below. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
+    <h3 id="dw-abbreviations">Abbreviations</h3>
+    <p>Type these codes in ITRANS or IAST text; capitals matter, so <code>root</code> stays ITRANS (<span class="ex">रूत्</span>). Vedic accents go right after their vowel.</p>
+    <div class="table abbr"><table><thead><tr><th>Type</th><th>Gives</th><th>Meaning</th><th>Example</th></tr></thead><tbody>
+      <tr><td><code>ROOT</code></td><td><span class="ex">√</span></td><td>root sign (dhātu)</td><td><code>ROOTgam</code> → <span class="ex">√गम्</span>, <code>ROOTbhū</code> → <span class="ex">√भू</span></td></tr>
+      <tr><td><code>-&gt;</code></td><td>→</td><td>becomes</td><td><code>a + i -&gt; e</code> → <span class="ex">अ + इ → ए</span></td></tr>
+      <tr><td><code>&lt;-</code></td><td>←</td><td>derived from</td><td><code>gam &lt;- ROOTgam</code> → <span class="ex">गम् ← √गम्</span></td></tr>
+      <tr><td><code>UDATTA</code> / <code>\'</code></td><td><span class="ex">◌॑</span></td><td>Vedic udātta (IAST á)</td><td rowspan="2"><code>aANUDATTAgnimIUDATTALe</code> → <span class="ex">अ॒ग्निमी॑ळे</span></td></tr>
+      <tr><td><code>ANUDATTA</code> / <code>\_</code></td><td><span class="ex">◌॒</span></td><td>Vedic anudātta (IAST a̱)</td></tr>
+      <tr><td><code>OM</code></td><td><span class="ex">ॐ</span></td><td>om</td><td><code>OM namaH</code> → <span class="ex">ॐ नमः</span></td></tr>
+      <tr><td><code>.a</code></td><td><span class="ex">ऽ</span></td><td>avagraha</td><td><code>so.aham</code> → <span class="ex">सोऽहम्</span></td></tr>
+      <tr><td><code>|</code> · <code>||</code></td><td><span class="ex">। ॥</span></td><td>daṇḍa, double daṇḍa</td><td><code>namaH ||</code> → <span class="ex">नमः ॥</span></td></tr>
+      <tr><td><code>##…##</code></td><td></td><td>keep text unconverted</td><td><code>##not##</code> → not</td></tr>
+    </tbody></table></div>
     <h3>Hindi and Sanskrit</h3>
     <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
     <p>“Drop final a” exists for Hindi only: it removes the last short “a” as a simple learning aid and is no substitute for a full pronunciation analysis.</p>
-    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST input is not (capitals are read as small letters). In IAST <code>c</code> is <span class="ex">च</span> and <code>ch</code> is <span class="ex">छ</span>; a halant must be visible in the spelling, so <code>pūrṇa</code> gives <span class="ex">पूर्ण</span> but <code>pūraṇa</code> gives <span class="ex">पूरण</span>. Text in which a vowel sign is written with an extra a (<code>paū</code> for <i>pū</i>, <code>maā</code> for <i>mā</i>) is repaired, and there <code>ch</code> is read as <span class="ex">च</span>. Designed for classical Sanskrit, without full support for all Vedic accent marks.</p>
+    <p>Devanagari keys: <span class="ex">क + ् + ष = क्ष</span>; vowel signs follow the consonant, including <span class="ex">ि</span>. ITRANS is case-sensitive; IAST input is not (capitals are read as small letters). In IAST <code>c</code> is <span class="ex">च</span> and <code>ch</code> is <span class="ex">छ</span>; a halant must be visible in the spelling, so <code>pūrṇa</code> gives <span class="ex">पूर्ण</span> but <code>pūraṇa</code> gives <span class="ex">पूरण</span>. Text in which a vowel sign is written with an extra a (<code>paū</code> for <i>pū</i>, <code>maā</code> for <i>mā</i>) is repaired, and there <code>ch</code> is read as <span class="ex">च</span>. Designed for classical Sanskrit; of the Vedic accent marks only udātta and anudātta are supported.</p>
     <h3>Fonts</h3>
     <p>The font menu sets the Devanagari face for the text box, the results, the keyboard and the table. <i>Auto</i> uses Tiro Devanagari Hindi, or Tiro Devanagari Sanskrit in Sanskrit mode. The web fonts load from Google Fonts when chosen. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License), Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License) come with the page as files. Under “Load a font file …” you can use your own font; it is kept only in this browser. The choice is remembered and carried into the pop-out keyboard.</p>
     <h3>Keyboard</h3>
@@ -1244,21 +1259,32 @@ Sanscript.schemes['itrans_naga'] = {
     return transliterate(clean, 'iast', 'devanagari', !isSanskrit());
   }
   const isIast = word => IAST_ONLY.test(word.normalize('NFC'));
+  // Abbreviations for signs that are not Devanagari letters. They are replaced before
+  // ITRANS/IAST detection, so ROOTgam and ROOTbhū both work. Case-sensitive: "root" stays ITRANS.
+  // Accents follow the vowel they mark: aUDATTAgnim → अ॑ग्निम्.
+  const ABBREVIATIONS = {ROOT: '√', UDATTA: '\u0951', ANUDATTA: '\u0952', '->': '→', '<-': '←'};
+  // Longest first, so ANUDATTA is not read as AN + UDATTA.
+  const ABBREVIATION_RE = new RegExp('(' + Object.keys(ABBREVIATIONS).sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')');
   function toNagari(source, strict = false) {
     return source.split('##').map((part, index) => {
       if (index % 2) return part;
-      if (!isIast(part)) return itransToNagari(part, strict);
-      const loose = new RegExp(VOWEL_ARTEFACT.source, 'iu').test(part.normalize('NFC'));
-      // Split into words, keep runs of ITRANS words together so .h and spacing behave as before.
-      let out = '', run = '';
-      for (const token of part.split(/(\s+)/)) {
-        if (token && !/^\s+$/.test(token) && isIast(token)) {
-          if (run) { out += itransToNagari(run, strict); run = ''; }
-          out += iastToNagari(token, loose);
-        } else run += token;
-      }
-      return out + (run ? itransToNagari(run, strict) : '');
+      return part.split(ABBREVIATION_RE).map((piece, i) => i % 2 ? ABBREVIATIONS[piece] : textToNagari(piece, strict)).join('');
     }).join('');
+  }
+  function textToNagari(part, strict) {
+    if (!part) return '';
+    if (!isIast(part)) return itransToNagari(part, strict);
+    const loose = new RegExp(VOWEL_ARTEFACT.source, 'iu').test(part.normalize('NFC'));
+    // Split into words, keep runs of ITRANS words together so .h and spacing behave as before.
+    let out = '', run = '';
+    for (const token of part.split(/(\s+)/)) {
+      if (token && !/^\s+$/.test(token) && isIast(token)) {
+        if (run) { out += itransToNagari(run, strict); run = ''; }
+        out += iastToNagari(token, loose);
+      } else run += token;
+    }
+    return out + (run ? itransToNagari(run, strict) : '');
   }
 
   function hindiRoman(s) {
@@ -1273,16 +1299,27 @@ Sanscript.schemes['itrans_naga'] = {
     }
     return out;
   }
+  // Vedic accents in roman script: udātta as acute (á), anudātta as macron below (a̱).
+  const romanAccents = s => s.replace(/[\u032d\u0951]/gu, '\u0301').replace(/\u0952/gu, '\u0331');
+  // Join words in the Devanagari line only, as printed Sanskrit does: a word ending in a halant
+  // joins the next word (tat tvam → तत्त्वम्, ity uvāca → इत्युवाच). After a vowel, ṃ or ḥ the space
+  // stays. Line breaks are kept. IAST and ITRANS are built from the spaced text, so nothing is lost.
+  const MATRA = {'अ':'','आ':'ा','इ':'ि','ई':'ी','उ':'ु','ऊ':'ू','ऋ':'ृ','ॠ':'ॄ','ऌ':'ॢ','ॡ':'ॣ',
+    'ए':'े','ऐ':'ै','ओ':'ो','औ':'ौ','ऎ':'ॆ','ऒ':'ॊ','ऍ':'ॅ','ऑ':'ॉ'};
+  const joinWords = s => s
+    .replace(/्[ \t\u00a0]+(?=[\u0915-\u0939\u0958-\u095f\u0978-\u097f])/gu, '्')
+    .replace(/्[ \t\u00a0]+([\u0904-\u0914\u0960\u0961])/gu, (m, v) => v in MATRA ? MATRA[v] : m);
   const separator = s => s.replace(/\[TAB\]/g, '\t').replace(/<br\s*\/?>/gi, '\n');
   function render() {
     devanagari = $('method').value === 'itrans' ? toNagari(input.value) : input.value;
-    const roman = isSanskrit() ? transliterate(devanagari, 'devanagari', 'iast') : hindiRoman(devanagari);
-    $('nagari').textContent = devanagari;
+    const roman = romanAccents(isSanskrit() ? transliterate(devanagari, 'devanagari', 'iast') : hindiRoman(devanagari));
+    const shown = $('join').checked ? joinWords(devanagari) : devanagari;
+    $('nagari').textContent = shown;
     $('iast').textContent = roman;
     $('itrans').textContent = transliterate(devanagari, 'nagari', 'itrans');
     // Work with text, never interpret user input or separator values as HTML.
     if (/[\r\n;]/.test(devanagari)) {
-      const a = devanagari.split(/\r\n|[\r\n;]/), b = roman.split(/\r\n|[\r\n;]/);
+      const a = shown.split(/\r\n|[\r\n;]/), b = roman.split(/\r\n|[\r\n;]/);
       $('combined').textContent = a.map((s, i) => s.trim() + separator($('separator').value) + (b[i] || '').trim()).join(separator($('break').value));
     } else $('combined').textContent = '';
   }
@@ -1393,6 +1430,11 @@ Sanscript.schemes['itrans_naga'] = {
     add('Visarga', 'H', 'ः'); add('Candrabindu', '.N', 'ँ');
     rows.push(['Halant (shown on क)', 'k (Sanskrit) / k.h', 'k', 'क्']);
     for (const n of ['ॐ','ऽ','।','॥']) add('Special signs', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
+    rows.push(['Abbreviations: root sign (ROOTgam → √गम्)', 'ROOT', '√', '√']);
+    rows.push(['Abbreviations: arrow, becomes', '->', '→', '→']);
+    rows.push(['Abbreviations: arrow, derived from', '<-', '←', '←']);
+    rows.push(['Abbreviations: Vedic udātta (on अ, after the vowel)', "aUDATTA / a\\'", 'á', 'अ॑']);
+    rows.push(['Abbreviations: Vedic anudātta (on अ, after the vowel)', 'aANUDATTA / a\\_', 'a̱', 'अ॒']);
     for (const n of '०१२३४५६७८९') add('Digits', it.symbols[n], n);
     for (const [n, code] of Object.entries(it.extra_consonants)) add('Extended consonants', code + 'a', n);
     for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit examples', code, n);
@@ -1415,6 +1457,11 @@ Sanscript.schemes['itrans_naga'] = {
   input.addEventListener('input', render);
   $('language').addEventListener('change', changeLanguage);
   $('remove-a').addEventListener('change', () => {hindiRemoveA = $('remove-a').checked; render();});
+  try { $('join').checked = localStorage.getItem('dw-join-words') === '1'; } catch (e) {}
+  $('join').addEventListener('change', () => {
+    try { localStorage.setItem('dw-join-words', $('join').checked ? '1' : '0'); } catch (e) {}
+    render();
+  });
   $('method').addEventListener('change', () => {
     if (previousMethod !== $('method').value) {
       input.value = $('method').value === 'nagari' ? toNagari(input.value) : transliterate(input.value, 'nagari', 'itrans');
