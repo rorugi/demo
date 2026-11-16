@@ -282,7 +282,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. <i>Join words in Devanagari</i> writes the Devanagari line the way printed Sanskrit does: after a word ending in a consonant the space goes, so <code>ity uvāca</code> → <span class="ex">इत्युवाच</span> and <code>tat tvam asi</code> → <span class="ex">तत्त्वमसि</span>; after a vowel, ṃ or ḥ it stays. IAST and ITRANS keep your spaces. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Signs such as the root sign √ have short codes, see <a href="#dw-abbreviations">Abbreviations</a> below. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A line with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ anywhere is read entirely as IAST, so <code>rāmo gacchati</code> gives <span class="ex">रामो गच्छति</span>; every other line is ITRANS (there <code>gacchati</code> would be <span class="ex">गच्चति</span>, write <code>gacChati</code>). You can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. <i>Join words in Devanagari</i> writes the Devanagari line the way printed Sanskrit does: after a word ending in a consonant the space goes, so <code>ity uvāca</code> → <span class="ex">इत्युवाच</span> and <code>tat tvam asi</code> → <span class="ex">तत्त्वमसि</span>; after a vowel, ṃ or ḥ it stays. IAST and ITRANS keep your spaces. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Signs such as the root sign √ have short codes, see <a href="#dw-abbreviations">Abbreviations</a> below. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
     <h3 id="dw-abbreviations">Abbreviations</h3>
     <p>Type these codes in ITRANS or IAST text; capitals matter, so <code>root</code> stays ITRANS (<span class="ex">रूत्</span>). Vedic accents go right after their vowel.</p>
@@ -304,7 +304,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
     <h3>Fonts</h3>
     <p>The font menu sets the Devanagari face for the text box, the results, the keyboard and the table. <i>Auto</i> uses Tiro Devanagari Hindi, or Tiro Devanagari Sanskrit in Sanskrit mode. The web fonts load from Google Fonts when chosen. Sanskrit 2020 (© Omkarananda Ashram, SIL Open Font License), Siddhanta Calcutta (© Mihail Bayaryn, Creative Commons BY-NC-ND 3.0, unmodified, non-commercial use) and Uttara (© Mihail Bayaryn, GNU General Public License) come with the page as files. Under “Load a font file …” you can use your own font; it is kept only in this browser. The choice is remembered and carried into the pop-out keyboard.</p>
     <h3>Keyboard</h3>
-    <p>The keyboard shows which key carries each Devanagari character, which helps when learning to type. Open it in its own window with the window icon to keep it beside your word processor or browser: type or click into its small text box, then copy and paste. To type Hindi directly in every program, add the Hindi Traditional (InScript) layout in your operating system; the pop-out window then serves as a key map.</p>
+    <p>The keyboard shows which key carries each Devanagari character, which helps when learning to type. Open it in its own window with the window icon to keep it beside your word processor or browser: type or click into its small text box, then copy and paste. On a phone the pop-out window keeps the phone's own keyboard closed, so you type only with the Devanagari keys. To type Hindi directly in every program, add the Hindi Traditional (InScript) layout in your operating system; the pop-out window then serves as a key map.</p>
     <h3>Sources and links</h3>
     <ul>
       <li><a href="https://github.com/indic-transliteration/sanscript.js" target="_blank" rel="noreferrer">Sanscript.js</a> and the <a href="https://github.com/indic-transliteration/common_maps" target="_blank" rel="noreferrer">Sanscript character maps</a></li>
@@ -323,6 +323,13 @@ if (document.documentElement.classList.contains('popout')) {
   document.getElementById('dw-method').value = 'nagari';
   document.getElementById('inputText').rows = 2;
   document.getElementById('inputText').placeholder = 'Click keys or type …';
+  // On touch screens the on-screen keys are the keyboard: inputmode=none keeps the cursor and
+  // selection (and paste via long press) but stops the phone's own keyboard from opening.
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    document.getElementById('inputText').inputMode = 'none';
+    document.getElementById('inputText').placeholder = 'Tap the keys below …';
+    document.getElementById('dw-copy-state').textContent = 'Tap keys, then copy and paste wherever you are writing.';
+  }
 }
 </script>
 
@@ -1266,25 +1273,29 @@ Sanscript.schemes['itrans_naga'] = {
   // Longest first, so ANUDATTA is not read as AN + UDATTA.
   const ABBREVIATION_RE = new RegExp('(' + Object.keys(ABBREVIATIONS).sort((a, b) => b.length - a.length)
     .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')');
+  // A line is read as IAST as soon as it has one IAST-only letter anywhere outside ##…##, so
+  // rāmo gacchati gives रामो गच्छति (in ITRANS gacchati would be गच्चति). Other lines are ITRANS.
+  // Literal ##…## spans may run across lines.
+  const lineParts = (line, literal) => line.split('##').map((text, k) => ({text, literal: (k + literal) % 2 === 1}));
+  const isIastLine = parts => parts.some(p => !p.literal && isIast(p.text));
   function toNagari(source, strict = false) {
-    return source.split('##').map((part, index) => {
-      if (index % 2) return part;
-      return part.split(ABBREVIATION_RE).map((piece, i) => i % 2 ? ABBREVIATIONS[piece] : textToNagari(piece, strict)).join('');
+    let literal = 0;
+    return source.split(/(\r\n|\r|\n)/).map((line, index) => {
+      if (index % 2) return line;
+      const parts = lineParts(line, literal);
+      literal = (literal + parts.length - 1) % 2;
+      const iast = isIastLine(parts);
+      const loose = iast && parts.some(p => !p.literal && new RegExp(VOWEL_ARTEFACT.source, 'iu').test(p.text.normalize('NFC')));
+      return parts.map(p => p.literal ? p.text : p.text.split(ABBREVIATION_RE).map((piece, i) => i % 2 ? ABBREVIATIONS[piece]
+        : !piece ? '' : iast ? iastToNagari(piece, loose) : itransToNagari(piece, strict)).join('')).join('');
     }).join('');
   }
-  function textToNagari(part, strict) {
-    if (!part) return '';
-    if (!isIast(part)) return itransToNagari(part, strict);
-    const loose = new RegExp(VOWEL_ARTEFACT.source, 'iu').test(part.normalize('NFC'));
-    // Split into words, keep runs of ITRANS words together so .h and spacing behave as before.
-    let out = '', run = '';
-    for (const token of part.split(/(\s+)/)) {
-      if (token && !/^\s+$/.test(token) && isIast(token)) {
-        if (run) { out += itransToNagari(run, strict); run = ''; }
-        out += iastToNagari(token, loose);
-      } else run += token;
-    }
-    return out + (run ? itransToNagari(run, strict) : '');
+  // Is the line around the cursor IAST? Then the on-screen keyboard inserts IAST instead of ITRANS.
+  function cursorLineIsIast(value, start, end) {
+    const before = value.slice(0, start), lineStart = Math.max(before.lastIndexOf('\n'), before.lastIndexOf('\r')) + 1;
+    const lineEnd = value.slice(end).search(/[\r\n]/);
+    const literal = (value.slice(0, lineStart).split('##').length - 1) % 2;
+    return isIastLine(lineParts(value.slice(lineStart, lineEnd < 0 ? undefined : end + lineEnd), literal));
   }
 
   function hindiRoman(s) {
@@ -1353,12 +1364,24 @@ Sanscript.schemes['itrans_naga'] = {
     if (/[\u0900-\u097f]/u.test(token)) return '##' + text + '##';
     return token;
   }
+  // IAST spelling for a key, used when the cursor is in an IAST line. Vowel signs replace the
+  // inherent a as in ITRANS (ka + ā → kā). Signs IAST cannot spell are inserted literally.
+  const ACCENT_CODES = {'\u0951': 'UDATTA', '\u0952': 'ANUDATTA'};
+  function toKeyboardIast(text) {
+    if (ACCENT_CODES[text]) return ACCENT_CODES[text];
+    const token = transliterate(text, 'devanagari', 'iast');
+    const replacesA = /^[\u093e-\u094d\u0962\u0963]/u.test(text);
+    const dependent = /^[\u0900-\u0903\u093a-\u094f\u0955-\u0957\u0962\u0963]/u.test(text);
+    const back = transliterate(dependent ? (replacesA ? 'k' : 'ka') + token : token, 'iast', 'devanagari');
+    return back === (dependent ? 'क' + text : text) && !/[\u0900-\u097f]/u.test(token) ? token : '##' + text + '##';
+  }
   function insert(text) {
     let start = input.selectionStart;
     const end = input.selectionEnd;
     let token = text;
     if ($('method').value === 'itrans') {
-      token = toKeyboardItrans(text);
+      const iastLine = cursorLineIsIast(input.value, start, end);
+      token = iastLine ? toKeyboardIast(text) : toKeyboardItrans(text);
       const prefix = input.value.slice(0, start);
       const insideLiteral = (prefix.split('##').length - 1) % 2 === 1;
       const isMatra = /^[\u093e-\u094c\u0962\u0963]$/u.test(text);
@@ -1368,7 +1391,7 @@ Sanscript.schemes['itrans_naga'] = {
         const previous = toNagari(prefix, true);
         if (prefix.endsWith('a') && /[क-हळऱऴक़-य़]़?$/u.test(previous)) start -= 1;
         // A dependent vowel after an explicit halant completes that consonant.
-        else if (isMatra && prefix.endsWith('.h') && previous.endsWith('्')) start -= 2;
+        else if (!iastLine && isMatra && prefix.endsWith('.h') && previous.endsWith('्')) start -= 2;
       }
       // In an existing literal ITRANS span insert the character literally.
       if (insideLiteral) token = text;
