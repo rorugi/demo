@@ -148,6 +148,7 @@ td:nth-child(2){font-family:var(--f-mono);font-size:14px}
 td:nth-child(3){font-style:italic;color:var(--accent)}
 td:nth-child(4){font-family:var(--f-deva);font-size:22px;line-height:1.4}
 @media (prefers-color-scheme: light){td:nth-child(3){color:#9a5f0c}}
+.abbr td,.abbr td:nth-child(n){font:inherit;font-size:14px;color:var(--fg);font-style:normal;line-height:1.5}.abbr td:nth-child(2){font-family:var(--f-deva);font-size:20px}.abbr td:nth-child(3){color:var(--muted)}.abbr .ex{font-size:17px}
 
 /* Notes */
 .how{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px}
@@ -280,8 +281,21 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Write <code>ROOT</code> in capitals for the root sign √ used in grammar: <code>ROOTgam</code> → <span class="ex">√गम्</span>, <code>ROOTbhū</code> → <span class="ex">√भू</span>. Arrows: <code>-&gt;</code> → <span class="ex">→</span>, <code>&lt;-</code> → <span class="ex">←</span>, e.g. <code>a + i -&gt; e</code>. Vedic accents go right after their vowel: <code>UDATTA</code> → <span class="ex">◌॑</span>, <code>ANUDATTA</code> → <span class="ex">◌॒</span>, e.g. <code>aANUDATTAgnimIUDATTALe</code> → <span class="ex">अ॒ग्निमी॑ळे</span> (or the ITRANS codes <code>\'</code> and <code>\_</code>). Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Signs such as the root sign √ have short codes, see <a href="#dw-abbreviations">Abbreviations</a> below. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
+    <h3 id="dw-abbreviations">Abbreviations</h3>
+    <p>Type these codes in ITRANS or IAST text; capitals matter, so <code>root</code> stays ITRANS (<span class="ex">रूत्</span>). Vedic accents go right after their vowel.</p>
+    <div class="table abbr"><table><thead><tr><th>Type</th><th>Gives</th><th>Meaning</th><th>Example</th></tr></thead><tbody>
+      <tr><td><code>ROOT</code></td><td><span class="ex">√</span></td><td>root sign (dhātu)</td><td><code>ROOTgam</code> → <span class="ex">√गम्</span>, <code>ROOTbhū</code> → <span class="ex">√भू</span></td></tr>
+      <tr><td><code>-&gt;</code></td><td>→</td><td>becomes</td><td><code>a + i -&gt; e</code> → <span class="ex">अ + इ → ए</span></td></tr>
+      <tr><td><code>&lt;-</code></td><td>←</td><td>derived from</td><td><code>gam &lt;- ROOTgam</code> → <span class="ex">गम् ← √गम्</span></td></tr>
+      <tr><td><code>UDATTA</code> / <code>\'</code></td><td><span class="ex">◌॑</span></td><td>Vedic udātta (IAST á)</td><td rowspan="2"><code>aANUDATTAgnimIUDATTALe</code> → <span class="ex">अ॒ग्निमी॑ळे</span></td></tr>
+      <tr><td><code>ANUDATTA</code> / <code>\_</code></td><td><span class="ex">◌॒</span></td><td>Vedic anudātta (IAST a̱)</td></tr>
+      <tr><td><code>OM</code></td><td><span class="ex">ॐ</span></td><td>om</td><td><code>OM namaH</code> → <span class="ex">ॐ नमः</span></td></tr>
+      <tr><td><code>.a</code></td><td><span class="ex">ऽ</span></td><td>avagraha</td><td><code>so.aham</code> → <span class="ex">सोऽहम्</span></td></tr>
+      <tr><td><code>|</code> · <code>||</code></td><td><span class="ex">। ॥</span></td><td>daṇḍa, double daṇḍa</td><td><code>namaH ||</code> → <span class="ex">नमः ॥</span></td></tr>
+      <tr><td><code>##…##</code></td><td></td><td>keep text unconverted</td><td><code>##not##</code> → not</td></tr>
+    </tbody></table></div>
     <h3>Hindi and Sanskrit</h3>
     <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
     <p>“Drop final a” exists for Hindi only: it removes the last short “a” as a simple learning aid and is no substitute for a full pronunciation analysis.</p>
@@ -1406,11 +1420,11 @@ Sanscript.schemes['itrans_naga'] = {
     add('Visarga', 'H', 'ः'); add('Candrabindu', '.N', 'ँ');
     rows.push(['Halant (shown on क)', 'k (Sanskrit) / k.h', 'k', 'क्']);
     for (const n of ['ॐ','ऽ','।','॥']) add('Special signs', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
-    rows.push(['Special signs (root sign, e.g. ROOTgam → √गम्)', 'ROOT', '√', '√']);
-    rows.push(['Special signs (arrow: becomes)', '->', '→', '→']);
-    rows.push(['Special signs (arrow: derived from)', '<-', '←', '←']);
-    rows.push(['Vedic accent udātta (shown on अ, after the vowel)', "aUDATTA / a\\'", 'á', 'अ॑']);
-    rows.push(['Vedic accent anudātta (shown on अ, after the vowel)', 'aANUDATTA / a\\_', 'a̱', 'अ॒']);
+    rows.push(['Abbreviations: root sign (ROOTgam → √गम्)', 'ROOT', '√', '√']);
+    rows.push(['Abbreviations: arrow, becomes', '->', '→', '→']);
+    rows.push(['Abbreviations: arrow, derived from', '<-', '←', '←']);
+    rows.push(['Abbreviations: Vedic udātta (on अ, after the vowel)', "aUDATTA / a\\'", 'á', 'अ॑']);
+    rows.push(['Abbreviations: Vedic anudātta (on अ, after the vowel)', 'aANUDATTA / a\\_', 'a̱', 'अ॒']);
     for (const n of '०१२३४५६७८९') add('Digits', it.symbols[n], n);
     for (const [n, code] of Object.entries(it.extra_consonants)) add('Extended consonants', code + 'a', n);
     for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit examples', code, n);
