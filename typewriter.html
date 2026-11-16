@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Typewriter</title>
+<meta name="description" content="Write like it's 1952: the line stays put, the paper moves, the bell rings at the margin.">
+<meta name="theme-color" content="#e4e1da">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='10' fill='%23f6f1e4'/%3E%3Ctext x='32' y='44' font-family='Courier New,monospace' font-size='34' font-weight='700' text-anchor='middle' fill='%23221f1b'%3ETt%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Cutive+Mono&family=Special+Elite&display=swap">
+<style>
+:root{
+  --desk:#e4e1da; --paper:#fffdf7; --ink:#24211d; --red:#b02a1f;
+  --ui:#38342e; --ui-muted:#8b857b; --panel:#fffdf8; --line:#e3ddd0; --accent:#b02a1f;
+  --fs:20px; --cw:12px; --lh:30px; --ml:108px; --vvt:0px;
+  --font:'Special Elite','Courier New',Courier,monospace;
+  --f-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+:root[data-theme=night]{
+  --desk:#0e0d0b; --paper:#f4ecda; --ink:#201c17; --red:#a3271d;
+  --ui:#dcd5c8; --ui-muted:#81796d; --panel:#1b1916; --line:#34302a; --accent:#e0a24a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--desk);overscroll-behavior:none}
+body{font-family:var(--f-ui);color:var(--ui);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:background .4s}
+body.typing{cursor:none}
+button{font:inherit;color:inherit}
+
+/* ---------- the machine ---------- */
+#stage{position:fixed;inset:0;overflow:hidden;touch-action:none}
+#carriage{position:absolute;left:0;top:0;will-change:transform;transition:transform 55ms linear}
+#carriage.ret{transition:transform .4s cubic-bezier(.22,.85,.25,1)}
+#platen{position:relative;background-color:var(--paper);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .33 0 0 0 .075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  box-shadow:0 0 0 1px rgba(0,0,0,.04),0 18px 50px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);
+  will-change:transform;transition:transform .17s ease-out}
+.drag,.drag #platen{transition:none!important}
+#lines{position:absolute;inset:0}
+.ln{position:absolute;left:var(--ml);height:var(--lh);line-height:var(--lh);white-space:pre;font-family:var(--font);font-size:var(--fs);color:var(--ink)}
+.c{display:inline-block;position:relative;width:var(--cw);height:var(--lh);text-align:center;vertical-align:top;transform:var(--tf,none);text-shadow:0 0 .045em rgba(30,20,10,.45)}
+.c>.o{position:absolute;left:0;top:0;width:100%;transform:var(--tf,none)}
+.r{color:var(--red);text-shadow:0 0 .045em rgba(120,20,10,.4)}
+.hit{animation:hit .13s ease-out}
+@keyframes hit{0%{transform:var(--tf,none) translateY(-.08em) scale(1.14);opacity:.25;filter:blur(.7px)}100%{transform:var(--tf,none)}}
+
+/* card holder with scale + pointer, the paper rolling away below it */
+#below{position:absolute;left:0;right:0;bottom:0;pointer-events:none;
+  background:linear-gradient(to bottom,transparent 0,var(--desk) calc(var(--fs)*3.4))}
+#holder{position:absolute;height:calc(var(--fs)*.8);pointer-events:none;border-radius:2px;
+  background:
+    repeating-linear-gradient(90deg,rgba(60,50,40,.32) 0 1px,transparent 1px var(--cw)) top/100% 32% no-repeat,
+    repeating-linear-gradient(90deg,rgba(60,50,40,.42) 0 1px,transparent 1px calc(var(--cw)*5)) top/100% 55% no-repeat,
+    linear-gradient(to bottom,rgba(255,255,255,.55),rgba(225,228,232,.35));
+  border:1px solid rgba(80,80,90,.18);box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 3px 8px rgba(0,0,0,.06);
+  -webkit-backdrop-filter:blur(1.2px);backdrop-filter:blur(1.2px)}
+:root[data-theme=night] #holder{background:
+    repeating-linear-gradient(90deg,rgba(60,50,40,.35) 0 1px,transparent 1px var(--cw)) top/100% 32% no-repeat,
+    repeating-linear-gradient(90deg,rgba(60,50,40,.45) 0 1px,transparent 1px calc(var(--cw)*5)) top/100% 55% no-repeat,
+    linear-gradient(to bottom,rgba(255,240,215,.4),rgba(200,190,170,.25));border-color:rgba(0,0,0,.25)}
+#pointer{position:absolute;width:0;height:0;pointer-events:none;
+  border-left:calc(var(--fs)*.22) solid transparent;border-right:calc(var(--fs)*.22) solid transparent;
+  border-bottom:calc(var(--fs)*.3) solid var(--red);transform:translateX(-50%);filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+#topfade{position:absolute;left:0;right:0;top:0;pointer-events:none;background:linear-gradient(to bottom,var(--desk) 0,transparent 100%);opacity:.92}
+#glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 55% 45% at 66% 30%,rgba(255,232,186,.38),transparent 72%)}
+:root[data-theme=night] #glow{mix-blend-mode:multiply;
+  background:radial-gradient(ellipse 62% 58% at 54% 38%,#fff6e4 0,#f0d2a2 38%,#7a5a36 72%,#1d150d 100%)}
+#hint{position:absolute;left:0;right:0;text-align:center;pointer-events:none;font-size:14px;color:var(--ui-muted);line-height:1.6;transition:opacity .6s}
+#hint b{display:block;font-family:var(--font);font-weight:400;font-size:calc(var(--fs)*.95);color:var(--ui);opacity:.75;margin-bottom:2px}
+#hint.gone{opacity:0}
+#kbd{position:fixed;left:0;top:var(--vvt);width:2px;height:2px;padding:0;border:0;margin:0;opacity:0;resize:none;font-size:16px;color:transparent;caret-color:transparent;background:transparent;outline:none;z-index:-1}
+
+/* ---------- UI ---------- */
+#bar{position:fixed;left:0;right:0;top:var(--vvt);display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));
+  transition:opacity .5s;z-index:5}
+body.typing #bar{opacity:0;pointer-events:none}
+.count{font-size:13px;color:var(--ui-muted);font-variant-numeric:tabular-nums;min-width:0}
+.count b{color:var(--ui);font-weight:600;font-size:15px}
+.prog{height:2px;width:min(220px,40vw);background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+.btns{display:flex;gap:4px}
+.ib{width:38px;height:38px;border:0;border-radius:10px;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--ui)}
+.ib:hover{background:color-mix(in srgb,var(--ui) 9%,transparent)}
+.ib:focus-visible,.seg button:focus-visible,.act:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ib svg{width:20px;height:20px}
+.rib{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#25221e 50%,var(--red) 50%);border:1.5px solid var(--ui);position:relative}
+.rib.on-red{box-shadow:0 0 0 2px var(--red)}
+#back{position:absolute;left:50%;transform:translateX(-50%);border:1px solid var(--line);background:var(--panel);color:var(--ui);border-radius:99px;padding:7px 14px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:4}
+#toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--ui);color:var(--desk);border-radius:99px;padding:8px 16px;font-size:14px;transition:.25s;pointer-events:none;z-index:30;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+.scrim{position:fixed;inset:0;background:rgba(10,8,6,.32);z-index:10;opacity:0;transition:opacity .2s}
+.scrim.show{opacity:1}
+#menu{position:fixed;top:0;right:0;bottom:0;width:min(360px,100vw);background:var(--panel);border-left:1px solid var(--line);z-index:11;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:max(14px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));
+  transform:translateX(102%);transition:transform .25s cubic-bezier(.3,.8,.3,1);-webkit-user-select:none;user-select:none}
+#menu.show{transform:none}
+#menu header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+#menu h2{font-family:var(--font);font-weight:400;font-size:24px;margin:0}
+#menu h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-muted);margin:22px 0 8px;font-weight:600}
+.fld{margin:12px 0}
+.fld>label,.lbl{display:block;font-size:13px;color:var(--ui-muted);margin-bottom:6px}
+.seg{display:flex;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:8px 6px;cursor:pointer;font-size:14px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ui);color:var(--panel)}
+.seg .val{flex:1.3;display:grid;place-items:center;font-size:14px;border-right:1px solid var(--line);font-variant-numeric:tabular-nums}
+.seg[data-set=font] button{font-family:var(--fam)}
+.tg{display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin:14px 0}
+.tg input{appearance:none;-webkit-appearance:none;flex:none;width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;margin:1px 0 0;transition:background .2s}
+.tg input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.tg input:checked{background:var(--accent)}
+.tg input:checked::after{transform:translateX(16px)}
+.tg input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tg span{font-size:15px}
+.tg small{display:block;color:var(--ui-muted);font-size:13px;line-height:1.45;margin-top:3px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number]{width:100%;font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ui);-webkit-user-select:text;user-select:text}
+.acts{display:grid;gap:8px}
+.act{border:1px solid var(--line);background:transparent;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;font-size:15px}
+.act:hover{border-color:var(--ui-muted)}
+.act.danger{color:var(--red)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px;color:var(--ui-muted);align-items:baseline}
+kbd{font-family:var(--f-ui);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ui);white-space:nowrap}
+
+#reader{position:fixed;inset:0;z-index:12;background:var(--desk);display:flex;flex-direction:column}
+#reader .top{display:flex;gap:8px;align-items:center;padding:max(10px,env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#reader .top .info{flex:1;font-size:13px;color:var(--ui-muted);min-width:120px}
+#reader .top .act{padding:7px 12px;font-size:14px}
+#reader .scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:24px 12px 60px}
+#rdText{margin:0 auto;max-width:calc(var(--rdw,65) * 1ch + 96px);background:var(--paper);color:var(--ink);padding:56px 48px;font-family:var(--font);font-size:17px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;box-shadow:0 10px 40px rgba(0,0,0,.15);-webkit-user-select:text;user-select:text;min-height:60vh}
+@media (max-width:520px){#rdText{padding:28px 18px;font-size:15px}}
+
+#confirm{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:21;width:min(380px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#confirm h4{margin:0 0 6px;font-size:18px}
+#confirm p{margin:0 0 18px;color:var(--ui-muted);font-size:15px}
+#confirm .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#confirm .act{text-align:center}
+#confirm .act.primary{background:var(--red);border-color:var(--red);color:#fff}
+#confirmScrim{z-index:20}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){#carriage,#carriage.ret,#platen,#menu{transition:none}.hit{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="carriage"><div id="platen"><div id="lines"></div></div></div>
+  <div id="glow"></div>
+  <div id="topfade"></div>
+  <div id="below"></div>
+  <div id="holder"></div>
+  <div id="pointer"></div>
+  <div id="hint"><b data-i="hint1">Just start typing.</b><span id="hint2"></span></div>
+  <button id="back" hidden data-act="home"></button>
+</div>
+<textarea id="kbd" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" aria-label="Typewriter input" enterkeyhint="enter"></textarea>
+
+<div id="bar">
+  <div class="count">
+    <div><b id="words">0</b> <span id="goalTxt"></span></div>
+    <div class="prog"><i id="progI"></i></div>
+  </div>
+  <div class="btns">
+    <button class="ib" id="bRibbon" data-act="ribbon"><span class="rib"></span></button>
+    <button class="ib" id="bSound" data-act="sound"></button>
+    <button class="ib" id="bRead" data-act="read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 15.5h7M9 19h4"/></svg></button>
+    <button class="ib" id="bMenu" data-act="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside id="menu" aria-hidden="true">
+  <header><h2 data-i="title">Typewriter</h2><button class="ib" data-act="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+
+  <h3 data-i="hMachine">Machine</h3>
+  <div class="fld"><span class="lbl" data-i="typeface">Typeface</span>
+    <div class="seg" data-set="font"><button data-v="elite" style="--fam:'Special Elite',monospace">Elite</button><button data-v="courier" style="--fam:'Courier Prime',monospace">Courier</button><button data-v="cutive" style="--fam:'Cutive Mono',monospace">Cutive</button></div></div>
+  <div class="fld"><span class="lbl" data-i="size">Size</span>
+    <div class="seg"><button data-act="smaller" aria-label="Smaller">A−</button><span class="val" id="fsVal"></span><button data-act="bigger" aria-label="Bigger">A+</button></div></div>
+  <div class="fld"><span class="lbl" data-i="spacing">Line spacing</span>
+    <div class="seg" data-set="spacing"><button data-v="1">1</button><button data-v="1.5">1½</button><button data-v="2">2</button></div></div>
+  <div class="fld"><span class="lbl" data-i="width">Line width</span>
+    <div class="seg" data-set="width"><button data-v="50">50</button><button data-v="65">65</button><button data-v="80">80</button></div></div>
+  <div class="fld"><span class="lbl" data-i="ribbon">Ribbon</span>
+    <div class="seg" data-set="red"><button data-v="false" data-i="black">Black</button><button data-v="true" data-i="red">Red</button></div></div>
+  <label class="tg"><input type="checkbox" id="tape"><span><span data-i="tape">Correction tape</span><small data-i="tapeHelp"></small></span></label>
+
+  <h3 data-i="hRoom">Room</h3>
+  <div class="fld"><span class="lbl" data-i="theme">Light</span>
+    <div class="seg" data-set="theme"><button data-v="auto" data-i="auto">Auto</button><button data-v="day" data-i="day">Day</button><button data-v="night" data-i="night">Lamp</button></div></div>
+  <label class="tg"><input type="checkbox" id="sound"><span data-i="sound">Sound</span></label>
+  <div class="fld"><span class="lbl" data-i="volume">Volume</span><input type="range" id="vol" min="0" max="1" step="0.05"></div>
+  <div class="fld"><span class="lbl" data-i="goal">Word goal</span><input type="number" id="goal" min="100" step="1000" inputmode="numeric"></div>
+
+  <h3 data-i="hSheet">Sheet</h3>
+  <div class="acts">
+    <button class="act" data-act="read" data-i="read">Read through</button>
+    <button class="act" data-act="copy" data-i="copy">Copy text</button>
+    <button class="act" data-act="download" data-i="download">Download .txt</button>
+    <button class="act danger" data-act="new" data-i="newSheet">New sheet…</button>
+  </div>
+
+  <h3 data-i="keys">Keys</h3>
+  <div class="keys">
+    <kbd>Esc</kbd><span data-i="kEsc"></span>
+    <kbd>⌫</kbd><span data-i="kBack"></span>
+    <kbd>← →</kbd><span data-i="kLR"></span>
+    <kbd>Tab</kbd><span data-i="kTab"></span>
+    <kbd>↵</kbd><span data-i="kRet"></span>
+    <kbd>⇅</kbd><span data-i="kScroll"></span>
+  </div>
+</aside>
+
+<div id="reader" hidden>
+  <div class="top"><span class="info" id="rdInfo"></span>
+    <button class="act" data-act="copy" data-i="copy">Copy text</button>
+    <button class="act" data-act="download" data-i="download">Download .txt</button>
+    <button class="act" data-act="close" data-i="close">Close</button></div>
+  <div class="scroll"><pre id="rdText"></pre></div>
+</div>
+
+<div class="scrim" id="confirmScrim" hidden></div>
+<div id="confirm" hidden role="dialog" aria-modal="true">
+  <h4 data-i="newQ">Start a new sheet?</h4>
+  <p data-i="newBody"></p>
+  <div class="row">
+    <button class="act" data-act="download" data-i="downloadFirst">Download first</button>
+    <button class="act" data-act="cancel" data-i="cancel">Cancel</button>
+    <button class="act primary" data-act="doNew" data-i="confirmNew">New sheet</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* ---------- words ---------- */
+const LANG = (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en';
+const T = {
+  en: {title:'Typewriter', words:'words', hMachine:'Machine', hRoom:'Room', hSheet:'Sheet', typeface:'Typeface', size:'Size', spacing:'Line spacing', width:'Line width (characters)', ribbon:'Ribbon', black:'Black', red:'Red',
+    tape:'Correction tape', tapeHelp:'Backspace erases. When off, Backspace only moves the carriage back and you type over the letter, like on the real thing.',
+    theme:'Light', auto:'Auto', day:'Day', night:'Desk lamp', sound:'Sound', volume:'Volume', goal:'Word goal',
+    read:'Read through', copy:'Copy text', download:'Download .txt', newSheet:'New sheet…', keys:'Keys',
+    kEsc:'Options', kBack:'Carriage back', kLR:'Move the carriage without striking', kTab:'Jump to the next tab stop', kRet:'Carriage return', kScroll:'Scroll or drag the paper to look back',
+    hint1:'Just start typing.', hintKeys:'Esc for options · no delete key, only strike-over', hintKeysTape:'Esc for options', hintTouch:'Tap the paper to bring up the keyboard',
+    back:'Back to the line', copied:'Copied', newQ:'Put in a new sheet?', newBody:'Everything on this sheet will be gone.', downloadFirst:'Download first', cancel:'Cancel', confirmNew:'New sheet', close:'Close',
+    saveFail:'This browser won’t save the sheet. Download your text to keep it.', ribbonT:'Ribbon: black / red', soundT:'Sound on/off', readT:'Read through', menuT:'Options (Esc)', of:'of', lines:'lines'},
+  de: {title:'Schreibmaschine', words:'Wörter', hMachine:'Maschine', hRoom:'Raum', hSheet:'Blatt', typeface:'Schrift', size:'Größe', spacing:'Zeilenabstand', width:'Zeilenbreite (Zeichen)', ribbon:'Farbband', black:'Schwarz', red:'Rot',
+    tape:'Korrekturband', tapeHelp:'Die Rücktaste löscht. Wenn aus, schiebt sie nur den Wagen zurück und du schreibst über den Buchstaben, wie bei der echten Maschine.',
+    theme:'Licht', auto:'Auto', day:'Tag', night:'Schreibtischlampe', sound:'Ton', volume:'Lautstärke', goal:'Wortziel',
+    read:'Durchlesen', copy:'Text kopieren', download:'Als .txt herunterladen', newSheet:'Neues Blatt…', keys:'Tasten',
+    kEsc:'Optionen', kBack:'Wagen zurück', kLR:'Wagen bewegen, ohne anzuschlagen', kTab:'Zum nächsten Tabstopp', kRet:'Wagenrücklauf', kScroll:'Papier scrollen oder ziehen, um zurückzulesen',
+    hint1:'Einfach lostippen.', hintKeys:'Esc für Optionen · keine Löschtaste, nur Überschreiben', hintKeysTape:'Esc für Optionen', hintTouch:'Aufs Papier tippen, um die Tastatur zu öffnen',
+    back:'Zurück zur Zeile', copied:'Kopiert', newQ:'Neues Blatt einspannen?', newBody:'Alles auf diesem Blatt ist dann weg.', downloadFirst:'Erst herunterladen', cancel:'Abbrechen', confirmNew:'Neues Blatt', close:'Schließen',
+    saveFail:'Dieser Browser speichert das Blatt nicht. Lade den Text herunter, um ihn zu behalten.', ribbonT:'Farbband: schwarz / rot', soundT:'Ton an/aus', readT:'Durchlesen', menuT:'Optionen (Esc)', of:'von', lines:'Zeilen'}
+}[LANG];
+document.documentElement.lang = LANG;
+document.title = T.title;
+document.querySelectorAll('[data-i]').forEach(el => { const k = el.dataset.i; if (T[k]) el.textContent = T[k]; });
+$('#bRibbon').title = T.ribbonT; $('#bSound').title = T.soundT; $('#bRead').title = T.readT; $('#bMenu').title = T.menuT;
+$('#back').textContent = '↓ ' + T.back;
+const nf = new Intl.NumberFormat(LANG === 'de' ? 'de-AT' : 'en-US');
+
+/* ---------- state ---------- */
+const KEY = 'typewriter.v1';
+const DEF = {font:'elite', fs:0, spacing:1.5, width:65, red:false, tape:false, sound:true, vol:0.6, theme:'auto', goal:100000};
+const FONTS = {elite:"'Special Elite','Courier New',Courier,monospace", courier:"'Courier Prime','Courier New',Courier,monospace", cutive:"'Cutive Mono','Courier New',Courier,monospace"};
+let S = {...DEF};
+let lines = [[]];         // line -> cells -> glyphs {c, r}
+let li = 0, col = 0;      // the current line is always the last one
+let wc = [0], enc = [''], total = 0;
+const dirty = new Set(), saveDirty = new Set(), countDirty = new Set();
+let lastHit = null, returned = false;
+let viewDx = 0, viewDy = 0;
+const isTouch = matchMedia('(pointer:coarse)').matches;
+
+/* storage: a line is one string; \u0001 after a glyph = red ribbon, \u0002 = next glyph struck in the same cell, space = empty cell */
+function encodeLine(L){
+  let s = '';
+  for (const cell of L){
+    if (!cell.length){ s += ' '; continue; }
+    cell.forEach((g, k) => { if (k) s += '\u0002'; s += g.c + (g.r ? '\u0001' : ''); });
+  }
+  return s;
+}
+function decodeLine(s){
+  const L = []; let join = false;
+  for (const ch of s){
+    if (ch === '\u0002'){ join = true; continue; }
+    if (ch === '\u0001'){ const cell = L[L.length-1]; if (cell && cell.length) cell[cell.length-1].r = true; continue; }
+    if (ch === ' ' && !join){ L.push([]); continue; }
+    const g = {c: ch, r: false};
+    if (join && L.length) L[L.length-1].push(g); else L.push([g]);
+    join = false;
+  }
+  return L;
+}
+function load(){
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) {}
+  if (!d) return;
+  if (d.s) S = {...DEF, ...d.s};
+  if (Array.isArray(d.lines) && d.lines.length){
+    enc = d.lines.slice();
+    lines = enc.map(decodeLine);
+    li = lines.length - 1;
+    col = typeof d.col === 'number' ? Math.min(Math.max(0, d.col), lines[li].length) : lines[li].length;
+  }
+  wc = lines.map((_, i) => countLine(i));
+  total = wc.reduce((a, b) => a + b, 0);
+}
+let saveTimer = 0, warned = false;
+function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(save, 700); }
+function save(){
+  clearTimeout(saveTimer);
+  for (const i of saveDirty) if (i < lines.length) enc[i] = encodeLine(lines[i]);
+  saveDirty.clear();
+  enc.length = lines.length;
+  try { localStorage.setItem(KEY, JSON.stringify({v:1, s:S, lines:enc, col})); }
+  catch(e){ if (!warned){ warned = true; toast(T.saveFail, 5000); } }
+}
+addEventListener('pagehide', save);
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+
+/* ---------- text helpers ---------- */
+const glyphOf = cell => cell.length ? cell[cell.length-1].c : ' ';
+function plain(i){ return lines[i].map(glyphOf).join('').replace(/\s+$/, ''); }
+function allText(){ return lines.map((_, i) => plain(i)).join('\n').replace(/\s+$/, '') + '\n'; }
+const WORD = /[\p{L}\p{N}][\p{L}\p{N}'’\-]*/gu;
+function countLine(i){ const m = plain(i).match(WORD); return m ? m.length : 0; }
+function markLine(i){ dirty.add(i); saveDirty.add(i); countDirty.add(i); }
+
+/* ---------- sound (all synthesized) ---------- */
+const Snd = {
+  ctx:null, out:null, nb:null,
+  unlock(){
+    if (!S.sound) return;
+    if (!this.ctx){
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      try { this.ctx = new AC({latencyHint:'interactive'}); } catch(e){ return; }
+      const c = this.ctx;
+      this.out = c.createGain(); this.out.gain.value = S.vol;
+      const comp = c.createDynamicsCompressor(); this.out.connect(comp); comp.connect(c.destination);
+      const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+      this.nb = b;
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  setVol(v){ if (this.out) this.out.gain.value = v; },
+  ok(){ return S.sound && this.ctx && this.ctx.state === 'running'; },
+  nz(t, dur, type, f, q, g, atk = 0.0015){
+    const c = this.ctx, s = c.createBufferSource(); s.buffer = this.nb;
+    const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    const gn = c.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + atk); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(fl); fl.connect(gn); gn.connect(this.out); s.start(t, Math.random()*0.8); s.stop(t + dur + 0.03);
+  },
+  tone(t, f0, f1, dur, g){
+    const c = this.ctx, o = c.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const gn = c.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.002); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(gn); gn.connect(this.out); o.start(t); o.stop(t + dur + 0.02);
+  },
+  key(){ if (!this.ok()) return; const t = this.ctx.currentTime + 0.002, v = 0.88 + Math.random()*0.24;
+    this.nz(t, 0.024, 'bandpass', 3300*v, 1.3, 0.95);           // slug hits the platen
+    this.nz(t, 0.08, 'bandpass', 1350*v, 3.5, 0.32);            // the body rings
+    this.tone(t, 165*v, 70, 0.07, 0.6);                         // thump
+    this.nz(t + 0.05 + Math.random()*0.025, 0.014, 'highpass', 2600, 0.7, 0.16); // typebar falls back
+  },
+  space(){ if (!this.ok()) return; const t = this.ctx.currentTime + 0.002;
+    this.nz(t, 0.045, 'lowpass', 850, 0.8, 0.75); this.tone(t, 105, 55, 0.09, 0.5); this.nz(t + 0.03, 0.018, 'bandpass', 2300, 2, 0.14); },
+  back(){ if (!this.ok()) return; const t = this.ctx.currentTime + 0.002;
+    this.nz(t, 0.022, 'bandpass', 1900, 3, 0.5); this.tone(t, 140, 85, 0.05, 0.3); },
+  bell(){ if (!this.ok()) return; const t = this.ctx.currentTime + 0.01;
+    [[2093, 0.32, 1.9], [2093*2.76, 0.11, 0.9], [2093*5.4, 0.045, 0.4]].forEach(([f, g, d]) => this.tone(t, f, f*0.997, d, g)); },
+  ret(){ if (!this.ok()) return; const t = this.ctx.currentTime + 0.002;
+    for (let i = 0; i < 6; i++) this.nz(t + i*0.03, 0.014, 'bandpass', 2500 + Math.random()*500, 4, 0.3);
+    this.nz(t, 0.32, 'lowpass', 600, 0.7, 0.2, 0.06);
+    const e = t + 0.3; this.tone(e, 120, 48, 0.15, 0.85); this.nz(e, 0.05, 'lowpass', 1300, 0.8, 0.7); }
+};
+
+/* ---------- geometry ---------- */
+const root = document.documentElement, stage = $('#stage'), carriage = $('#carriage'), platen = $('#platen'), linesBox = $('#lines');
+let fs, cw, lineH, topPad, ML = 9, paperW, cx, sy, metricsKey = '';
+function autoFs(){ const w = innerWidth; return w < 600 ? 17 : w < 1100 ? 20 : 22; }
+function layout(){
+  fs = S.fs || autoFs(); cw = Math.round(fs*0.6*100)/100; lineH = Math.round(fs*S.spacing*100)/100; topPad = fs*4.5;
+  paperW = (S.width + ML*2) * cw;
+  const vv = window.visualViewport, vh = vv ? vv.height : innerHeight, vt = vv ? vv.offsetTop : 0;
+  cx = vv ? vv.offsetLeft + vv.width/2 : innerWidth/2;
+  sy = vt + vh * 0.55;
+  const st = root.style;
+  st.setProperty('--fs', fs + 'px'); st.setProperty('--cw', cw + 'px'); st.setProperty('--lh', lineH + 'px');
+  st.setProperty('--ml', ML*cw + 'px'); st.setProperty('--font', FONTS[S.font] || FONTS.elite); st.setProperty('--vvt', vt + 'px');
+  carriage.style.width = platen.style.width = paperW + 'px';
+  const k = Math.floor(Math.min(innerWidth*0.94, 1150) / 2 / cw);
+  const hTop = sy + fs*0.56, hH = fs*0.8;
+  Object.assign($('#holder').style, {left: (cx - cw/2 - k*cw) + 'px', width: (2*k + 1)*cw + 'px', top: hTop + 'px'});
+  Object.assign($('#pointer').style, {left: cx + 'px', top: (hTop + hH*0.36) + 'px'});
+  $('#below').style.top = (hTop + hH*0.4) + 'px';
+  $('#topfade').style.height = Math.max(0, sy - lineH*2.5) + 'px';
+  $('#hint').style.top = (hTop + hH + fs*1.1) + 'px';
+  $('#back').style.top = (hTop + hH + fs*1.2) + 'px';
+  const key = [fs, S.spacing, S.font].join('|');
+  if (key !== metricsKey){ metricsKey = key; linesBox.textContent = ''; rendered.clear(); }
+  renderWindow(); place('instant');
+  $('#fsVal').textContent = fs + ' px';
+}
+
+/* ---------- drawing ---------- */
+const rendered = new Map();
+function rnd(i, c, k){ // deterministic jitter per glyph so the page never "reshuffles"
+  let h = (i*73856093) ^ (c*19349663) ^ (k*83492791) ^ 0x9e3779b9;
+  const out = [];
+  for (let n = 0; n < 5; n++){ h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d); h = Math.imul(h ^ (h >>> 12), 0x297a2d39); h ^= h >>> 15; out.push((h >>> 0) / 4294967296); }
+  return out;
+}
+const esc = ch => ch === '<' ? '&lt;' : ch === '&' ? '&amp;' : ch === '>' ? '&gt;' : ch;
+function glyphHTML(g, i, c, k, solo){
+  const r = rnd(i, c, k), u = fs/20;
+  const tf = `translate(${((r[0]-.5)*0.9*u).toFixed(2)}px,${((r[1]-.5)*1.5*u).toFixed(2)}px) rotate(${((r[2]-.5)*2.4).toFixed(2)}deg)`;
+  let op = 0.74 + r[3]*0.26; if (r[4] < 0.035) op = 0.6;
+  const hit = lastHit && lastHit.i === i && lastHit.c === c && lastHit.k === k;
+  return `<span class="${solo ? 'c' : 'o'}${g.r ? ' r' : ''}${hit ? ' hit' : ''}" style="--tf:${tf};opacity:${op.toFixed(2)}">${esc(g.c)}</span>`;
+}
+function buildLine(el, i){
+  const L = lines[i]; let h = '';
+  for (let c = 0; c < L.length; c++){
+    const cell = L[c];
+    if (!cell.length) h += '<span class="c"></span>';
+    else if (cell.length === 1) h += glyphHTML(cell[0], i, c, 0, true);
+    else h += '<span class="c">' + cell.map((g, k) => glyphHTML(g, i, c, k, false)).join('') + '</span>';
+  }
+  el.innerHTML = h;
+}
+function renderWindow(){
+  const above = Math.ceil((sy + Math.max(0, viewDy)) / lineH) + 4;
+  const from = Math.max(0, li - above), to = li;
+  for (const [i, el] of rendered) if (i < from || i > to || i >= lines.length){ el.remove(); rendered.delete(i); }
+  for (let i = from; i <= to; i++){
+    let el = rendered.get(i);
+    if (!el){ el = document.createElement('div'); el.className = 'ln'; el.style.top = (topPad + i*lineH) + 'px'; buildLine(el, i); rendered.set(i, el); linesBox.appendChild(el); }
+    else if (dirty.has(i)) buildLine(el, i);
+  }
+  dirty.clear(); lastHit = null;
+}
+function place(mode){
+  const instant = mode === 'instant' || mode === 'drag';
+  carriage.classList.toggle('drag', instant);
+  carriage.classList.toggle('ret', mode === 'return');
+  const x = cx - (ML + col)*cw - cw/2 + viewDx;
+  const y = sy - (topPad + li*lineH + lineH/2) + viewDy;
+  carriage.style.transform = `translate3d(${x.toFixed(2)}px,0,0)`;
+  platen.style.transform = `translate3d(0,${y.toFixed(2)}px,0)`;
+  platen.style.height = (topPad + (li + 1)*lineH + innerHeight*1.5) + 'px';
+  if (instant) void carriage.offsetWidth;
+  $('#back').hidden = !(Math.abs(viewDy) > lineH*1.5 || Math.abs(viewDx) > cw*6);
+}
+
+/* ---------- the mechanism ---------- */
+function newLine(carry){
+  const L = lines[li];
+  while (L.length && !L[L.length-1].length) L.pop();
+  markLine(li);
+  lines.push(carry || []); wc.push(0); enc.push('');
+  li = lines.length - 1; col = lines[li].length; markLine(li);
+  returned = true;
+}
+function wrapWord(){
+  const L = lines[li]; let s = -1;
+  for (let k = L.length - 1; k >= 0; k--) if (!L[k].length){ s = k; break; }
+  if (s > 0 && L.length - s - 1 < S.width*0.5) newLine(L.splice(s + 1));
+  else newLine([]);
+}
+function strike(ch, quiet){
+  if (col >= S.width && col >= lines[li].length){ wrapWord(); if (!quiet) Snd.ret(); }
+  const L = lines[li], g = {c: ch, r: S.red};
+  if (col >= L.length){ L.push([g]); }
+  else if (S.tape || !L[col].length) L[col] = [g];
+  else if (L[col].length < 4) L[col].push(g);
+  else L[col][3] = g;
+  lastHit = {i: li, c: col, k: L[col].length - 1};
+  markLine(li); col++;
+  if (!quiet){ Snd.key(); if (col === S.width - 8) Snd.bell(); }
+}
+function space(quiet){
+  if (col >= S.width){ newLine(); if (!quiet) Snd.ret(); return; }
+  const L = lines[li];
+  if (col >= L.length){ L.push([]); markLine(li); }
+  col++;
+  if (!quiet){ Snd.space(); if (col === S.width - 8) Snd.bell(); }
+}
+function backspace(quiet){
+  const L = lines[li];
+  if (S.tape){
+    if (col > 0){
+      col--;
+      if (col < L.length){ if (col === L.length - 1) L.pop(); else L[col] = []; markLine(li); }
+      if (!quiet) Snd.back();
+    } else if (!L.length && li > 0){
+      total -= wc[li]; lines.pop(); wc.pop(); enc.pop();
+      const el = rendered.get(li); if (el){ el.remove(); rendered.delete(li); }
+      li--; col = lines[li].length; returned = true;
+      if (!quiet) Snd.back();
+    }
+  } else if (col > 0){ col--; if (!quiet) Snd.back(); }
+}
+function typeChar(ch, quiet){
+  if (ch === '\n' || ch === '\r'){ newLine(); if (!quiet) Snd.ret(); }
+  else if (ch === '\t') tab(quiet);
+  else if (ch === ' ' || ch === ' ') space(quiet);
+  else if (ch.charCodeAt(0) < 32 || ch === '\u0001' || ch === '\u0002') return;
+  else strike(ch, quiet);
+}
+function tab(quiet){
+  const target = Math.min(S.width, (Math.floor(col/5) + 1)*5), L = lines[li];
+  while (col < target){ if (col >= L.length) L.push([]); col++; }
+  markLine(li); if (!quiet) Snd.space();
+}
+function moveBack(){ if (col > 0){ col--; Snd.back(); after(); } }
+
+let typingTimer = 0;
+function after(){
+  viewDx = 0; viewDy = 0;
+  const mode = returned ? 'return' : 'type'; returned = false;
+  renderWindow(); place(mode);
+  updateCount(); scheduleSave(); updateHint();
+  document.body.classList.add('typing');
+  clearTimeout(typingTimer); typingTimer = setTimeout(() => document.body.classList.remove('typing'), isTouch ? 2500 : 60000);
+}
+function updateCount(){
+  for (const i of countDirty) if (i < lines.length){ const n = countLine(i); total += n - (wc[i] || 0); wc[i] = n; }
+  countDirty.clear();
+  $('#words').textContent = nf.format(total);
+  $('#goalTxt').textContent = `/ ${nf.format(S.goal)} ${T.words}`;
+  $('#progI').style.width = Math.min(100, total / S.goal * 100) + '%';
+}
+function isEmpty(){ return lines.length === 1 && !lines[0].length; }
+function updateHint(){
+  $('#hint').classList.toggle('gone', !isEmpty());
+  $('#hint2').textContent = isTouch ? T.hintTouch : (S.tape ? T.hintKeysTape : T.hintKeys);
+}
+
+/* ---------- keyboard: a hidden textarea, diffed, so desktop, phones and IMEs all work ---------- */
+const kbd = $('#kbd');
+let shadow = '', composing = false;
+function upToCol(){ const L = lines[li]; let s = ''; for (let c = Math.max(0, col - 24); c < col; c++) s += L[c] ? glyphOf(L[c]) : ' '; return s; }
+function resetKbd(){ shadow = upToCol(); kbd.value = shadow; try { kbd.setSelectionRange(shadow.length, shadow.length); } catch(e) {} }
+function handleDiff(){
+  const v = kbd.value; if (v === shadow) return;
+  let p = 0; const m = Math.min(v.length, shadow.length);
+  while (p < m && v.charCodeAt(p) === shadow.charCodeAt(p)) p++;
+  const del = Array.from(shadow.slice(p)).length, ins = Array.from(v.slice(p));
+  shadow = v;
+  const quiet = ins.length > 4 || del > 4;
+  Snd.unlock();
+  for (let k = 0; k < del; k++) backspace(quiet);
+  for (const ch of ins) typeChar(ch, quiet);
+  after();
+}
+kbd.addEventListener('compositionstart', () => { composing = true; });
+kbd.addEventListener('compositionend', () => { composing = false; handleDiff(); resetKbd(); });
+kbd.addEventListener('input', e => { handleDiff(); if (!composing && !e.isComposing) resetKbd(); });
+kbd.addEventListener('keydown', e => {
+  Snd.unlock();
+  if (e.isComposing || e.keyCode === 229) return;
+  const k = e.key;
+  if (k === 'Escape'){ e.preventDefault(); openMenu(); return; }
+  if (k === 'Tab'){ e.preventDefault(); tab(false); after(); resetKbd(); return; }
+  if ((e.ctrlKey || e.metaKey) && !e.altKey){
+    const l = k.toLowerCase();
+    if (l === 's'){ e.preventDefault(); download(); return; }
+    if ('azyx'.includes(l) || k === 'Backspace' || k === 'Delete'){ e.preventDefault(); return; }
+    return;
+  }
+  if (['ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Delete'].includes(k)){ e.preventDefault(); return; }
+  if (k === 'ArrowLeft'){ e.preventDefault(); moveBack(); resetKbd(); return; }
+  if (k === 'ArrowRight'){ e.preventDefault(); space(false); after(); resetKbd(); return; }
+  if (k === 'Backspace' && (e.altKey || kbd.value === '')){ e.preventDefault(); backspace(false); after(); resetKbd(); return; }
+});
+function focusKbd(){ if (document.activeElement !== kbd){ resetKbd(); kbd.focus({preventScroll:true}); } }
+// typing anywhere goes to the machine
+document.addEventListener('keydown', e => {
+  if (overlayOpen()){ if (e.key === 'Escape'){ e.preventDefault(); closeAll(); } return; }
+  if (document.activeElement !== kbd && !e.metaKey && !e.ctrlKey){
+    if (e.key === 'Escape'){ e.preventDefault(); openMenu(); return; }
+    focusKbd();
+  }
+}, true);
+addEventListener('mousemove', () => { if (!isTouch) document.body.classList.remove('typing'); });
+
+/* ---------- looking back: wheel and drag ---------- */
+function clampView(){
+  viewDy = Math.min(Math.max(viewDy, -lineH*2), li*lineH + topPad);
+  viewDx = Math.min(Math.max(viewDx, -paperW*0.8), paperW*0.8);
+}
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  const mul = e.deltaMode === 1 ? lineH : 1;
+  viewDy -= e.deltaY*mul; viewDx -= e.deltaX*mul; clampView();
+  renderWindow(); place('drag');
+}, {passive:false});
+let drag = null, suppressClick = false;
+stage.addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  drag = {x: e.clientX, y: e.clientY, dx: viewDx, dy: viewDy, moved: false, id: e.pointerId};
+});
+addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const mx = e.clientX - drag.x, my = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(mx, my) < 7) return;
+  drag.moved = true;
+  viewDx = drag.dx + mx; viewDy = drag.dy + my; clampView();
+  renderWindow(); place('drag');
+});
+addEventListener('pointerup', e => { if (drag && e.pointerId === drag.id){ suppressClick = drag.moved; drag = null; } });
+addEventListener('pointercancel', () => { drag = null; });
+stage.addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  if (suppressClick){ suppressClick = false; return; }
+  Snd.unlock(); focusKbd();
+});
+function home(){ viewDx = 0; viewDy = 0; place('return'); focusKbd(); }
+
+/* ---------- UI ---------- */
+const menu = $('#menu'), scrim = $('#scrim');
+function overlayOpen(){ return menu.classList.contains('show') || !$('#reader').hidden || !$('#confirm').hidden; }
+function openMenu(){ syncMenu(); scrim.hidden = false; requestAnimationFrame(() => { scrim.classList.add('show'); menu.classList.add('show'); }); menu.setAttribute('aria-hidden', 'false'); kbd.blur(); }
+function closeMenu(){ menu.classList.remove('show'); scrim.classList.remove('show'); menu.setAttribute('aria-hidden', 'true'); setTimeout(() => { if (!menu.classList.contains('show')) scrim.hidden = true; }, 220); }
+function closeAll(){
+  if (!$('#confirm').hidden){ $('#confirm').hidden = true; $('#confirmScrim').hidden = true; return; }
+  if (!$('#reader').hidden){ $('#reader').hidden = true; if (!menu.classList.contains('show')) focusKbd(); return; }
+  closeMenu(); if (!isTouch) focusKbd();
+}
+scrim.addEventListener('click', closeAll);
+$('#confirmScrim').addEventListener('click', closeAll);
+function syncMenu(){
+  document.querySelectorAll('.seg[data-set]').forEach(seg => {
+    const key = seg.dataset.set;
+    seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(S[key])));
+  });
+  $('#tape').checked = S.tape; $('#sound').checked = S.sound; $('#vol').value = S.vol; $('#goal').value = S.goal;
+  $('#fsVal').textContent = fs + ' px';
+  $('#bSound').innerHTML = S.sound
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  $('.rib').classList.toggle('on-red', S.red);
+}
+function applyTheme(){
+  const night = S.theme === 'night' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  root.dataset.theme = night ? 'night' : 'day';
+  document.querySelector('meta[name=theme-color]').content = night ? '#0e0d0b' : '#e4e1da';
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
+function setS(key, val){
+  S[key] = val; save();
+  if (key === 'theme') applyTheme();
+  if (key === 'font' || key === 'spacing' || key === 'width' || key === 'fs') layout();
+  if (key === 'tape') updateHint();
+  if (key === 'sound' && val) Snd.unlock();
+  syncMenu();
+}
+document.querySelectorAll('.seg[data-set]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const key = seg.dataset.set, raw = b.dataset.v;
+  setS(key, key === 'red' ? raw === 'true' : (key === 'spacing' || key === 'width') ? Number(raw) : raw);
+}));
+$('#tape').addEventListener('change', e => setS('tape', e.target.checked));
+$('#sound').addEventListener('change', e => setS('sound', e.target.checked));
+$('#vol').addEventListener('input', e => { S.vol = Number(e.target.value); Snd.setVol(S.vol); scheduleSave(); });
+$('#vol').addEventListener('change', () => { Snd.unlock(); Snd.key(); });
+$('#goal').addEventListener('change', e => { const n = Math.round(Number(e.target.value)); if (n >= 1){ S.goal = n; save(); updateCount(); } });
+
+function download(){
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  const name = `typewriter-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.txt`;
+  const url = URL.createObjectURL(new Blob([allText()], {type:'text/plain;charset=utf-8'}));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+async function copyText(){
+  const t = allText();
+  try { await navigator.clipboard.writeText(t); }
+  catch(e){ const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(_) {} ta.remove(); }
+  toast(T.copied);
+}
+function openReader(){
+  closeMenu();
+  $('#rdText').textContent = allText();
+  $('#rdText').style.setProperty('--rdw', S.width);
+  $('#rdInfo').textContent = `${nf.format(total)} ${T.words} · ${nf.format(lines.length)} ${T.lines}`;
+  $('#reader').hidden = false; kbd.blur();
+  $('#reader .scroll').scrollTop = $('#reader .scroll').scrollHeight;
+}
+function newSheet(){
+  lines = [[]]; li = 0; col = 0; wc = [0]; enc = ['']; total = 0;
+  linesBox.textContent = ''; rendered.clear(); viewDx = viewDy = 0;
+  $('#confirm').hidden = true; $('#confirmScrim').hidden = true; closeMenu();
+  save(); renderWindow(); place('instant'); updateCount(); updateHint(); Snd.unlock(); Snd.ret();
+  if (!isTouch) focusKbd();
+}
+let toastTimer = 0;
+function toast(msg, ms = 1600){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'menu') openMenu();
+  else if (a === 'close') closeAll();
+  else if (a === 'ribbon'){ setS('red', !S.red); if (!isTouch) focusKbd(); }
+  else if (a === 'sound'){ setS('sound', !S.sound); if (!isTouch) focusKbd(); }
+  else if (a === 'read') openReader();
+  else if (a === 'copy') copyText();
+  else if (a === 'download') download();
+  else if (a === 'new'){ $('#confirmScrim').hidden = false; $('#confirmScrim').classList.add('show'); $('#confirm').hidden = false; }
+  else if (a === 'cancel') closeAll();
+  else if (a === 'doNew') newSheet();
+  else if (a === 'smaller') setS('fs', Math.max(12, fs - 1));
+  else if (a === 'bigger') setS('fs', Math.min(40, fs + 1));
+  else if (a === 'home') home();
+});
+
+/* ---------- start ---------- */
+load();
+applyTheme();
+let rt = 0;
+const relayout = () => { cancelAnimationFrame(rt); rt = requestAnimationFrame(layout); };
+addEventListener('resize', relayout);
+window.visualViewport?.addEventListener('resize', relayout);
+window.visualViewport?.addEventListener('scroll', relayout);
+layout(); updateCount(); updateHint(); syncMenu();
+if (document.fonts) document.fonts.ready.then(() => { metricsKey = ''; layout(); });
+if (!isTouch) focusKbd();
+})();
+</script>
+</body>
+</html>
