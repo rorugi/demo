@@ -307,7 +307,7 @@
   .bmhint { font: 12px/1.3 var(--ui); opacity: .55; padding: 0 2px; }
   .bmrow { display: grid; grid-template-columns: 38px 1fr 42px; gap: 6px; align-items: center; transition: transform .15s; }
   .bmrow.lifted { transition: none; position: relative; z-index: 2; filter: drop-shadow(0 4px 10px rgba(0,0,0,.28)); }
-  .bmbox { touch-action: none; -webkit-user-select: none; user-select: none; }
+  .bmbox { touch-action: pan-y; -webkit-user-select: none; user-select: none; }   /* the list scrolls on the boxes too; a held box is dragged (touchmove below) */
   .bmrow > button, .bmbox button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; display: grid; place-items: center; }
   .bmset, .bmgo { height: 38px; border-radius: 9px; }
   .bmset:hover, .bmgo:hover { background: var(--active); }
@@ -2195,8 +2195,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <script>
 (() => {
-  const VERSION = 'RRnotes_214';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
-  const APP_VERSION = '0.3.91';     // the version people see: x.y.z (z counts up with every release)
+  const VERSION = 'RRnotes_215';   // internal build (counts every release; the update check compares it); storage keys keep the name 'notizblock'
+  const APP_VERSION = '0.3.92';     // the version people see: x.y.z (z counts up with every release)
   const VERSION_LABEL = `RRnotes ${APP_VERSION}`;
 
   // ---- Paper (all drawing coordinates are millimetres) ----
@@ -8272,6 +8272,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     renderMarks();
   };
   let bmSkipClick = false;
+  // a lifted box: the finger drags it and the list must not scroll (the first move after the hold can still be stopped)
+  bmList.addEventListener('touchmove', e => { if (bmDrag && bmDrag.on) e.preventDefault(); }, { passive: false });
   bmList.addEventListener('pointerup', bmDrop);
   bmList.addEventListener('pointercancel', bmDrop);
   bmList.addEventListener('contextmenu', e => { if (e.target.closest('.bmbox')) e.preventDefault(); });
