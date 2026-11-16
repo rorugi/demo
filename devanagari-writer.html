@@ -280,7 +280,7 @@ if (/[?&]keyboard\b/.test(location.search)) { document.documentElement.classList
 
   <section class="how main-only">
     <h2>How it works</h2>
-    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
+    <p>In the text field you can write <b>ITRANS</b>, <b>IAST</b> or <b>Devanagari</b>; Devanagari, IAST and ITRANS are produced automatically. A word with an IAST letter such as ā, ṛ, ṣ, ś, ṃ or ḥ is read as IAST, any other word as ITRANS, so you can paste IAST text directly: <code>oṃ pūrṇamadaḥ pūrṇamidam</code> → <span class="ex">ॐ पूर्णमदः पूर्णमिदम्</span>. The small copy icons copy each result. Wrap characters or words in <code>##</code> to keep them unconverted, e.g. <code>##not##</code>. Write <code>ROOT</code> in capitals for the root sign √ used in grammar: <code>ROOTgam</code> → <span class="ex">√गम्</span>, <code>ROOTbhū</code> → <span class="ex">√भू</span>. Example: <code>devanaagarii</code> → <span class="ex">देवनागरी</span> → <i>devanāgarī</i>.</p>
     <p>Check the result: some conversions are ambiguous. For example, an “a” inside a word is sometimes not pronounced in Hindi, but it is not removed automatically here.</p>
     <h3>Hindi and Sanskrit</h3>
     <p>Sanskrit mode uses a strict transliteration: <code>aham</code> → <span class="ex">अहम्</span> → <i>aham</i>; <code>saMskRRitam</code> → <span class="ex">संस्कृतम्</span> → <i>saṃskṛtam</i>. Final consonants get a halant <span class="ex">्</span>, anusvāra <span class="ex">ं</span> becomes ṃ and visarga <span class="ex">ः</span> becomes ḥ. The simplified nasal notation is limited to Hindi and is not strict IAST.</p>
@@ -1244,21 +1244,29 @@ Sanscript.schemes['itrans_naga'] = {
     return transliterate(clean, 'iast', 'devanagari', !isSanskrit());
   }
   const isIast = word => IAST_ONLY.test(word.normalize('NFC'));
+  // Upper-case abbreviations for signs that are not Devanagari letters. They are replaced before
+  // ITRANS/IAST detection, so ROOTgam and ROOTbhū both work. Case-sensitive: "root" stays ITRANS.
+  const ABBREVIATIONS = {ROOT: '√'};
+  const ABBREVIATION_RE = new RegExp('(' + Object.keys(ABBREVIATIONS).join('|') + ')');
   function toNagari(source, strict = false) {
     return source.split('##').map((part, index) => {
       if (index % 2) return part;
-      if (!isIast(part)) return itransToNagari(part, strict);
-      const loose = new RegExp(VOWEL_ARTEFACT.source, 'iu').test(part.normalize('NFC'));
-      // Split into words, keep runs of ITRANS words together so .h and spacing behave as before.
-      let out = '', run = '';
-      for (const token of part.split(/(\s+)/)) {
-        if (token && !/^\s+$/.test(token) && isIast(token)) {
-          if (run) { out += itransToNagari(run, strict); run = ''; }
-          out += iastToNagari(token, loose);
-        } else run += token;
-      }
-      return out + (run ? itransToNagari(run, strict) : '');
+      return part.split(ABBREVIATION_RE).map((piece, i) => i % 2 ? ABBREVIATIONS[piece] : textToNagari(piece, strict)).join('');
     }).join('');
+  }
+  function textToNagari(part, strict) {
+    if (!part) return '';
+    if (!isIast(part)) return itransToNagari(part, strict);
+    const loose = new RegExp(VOWEL_ARTEFACT.source, 'iu').test(part.normalize('NFC'));
+    // Split into words, keep runs of ITRANS words together so .h and spacing behave as before.
+    let out = '', run = '';
+    for (const token of part.split(/(\s+)/)) {
+      if (token && !/^\s+$/.test(token) && isIast(token)) {
+        if (run) { out += itransToNagari(run, strict); run = ''; }
+        out += iastToNagari(token, loose);
+      } else run += token;
+    }
+    return out + (run ? itransToNagari(run, strict) : '');
   }
 
   function hindiRoman(s) {
@@ -1393,6 +1401,7 @@ Sanscript.schemes['itrans_naga'] = {
     add('Visarga', 'H', 'ः'); add('Candrabindu', '.N', 'ँ');
     rows.push(['Halant (shown on क)', 'k (Sanskrit) / k.h', 'k', 'क्']);
     for (const n of ['ॐ','ऽ','।','॥']) add('Special signs', it.symbols[n], n, it.alternates[it.symbols[n]] || []);
+    rows.push(['Special signs (root sign, e.g. ROOTgam → √गम्)', 'ROOT', '√', '√']);
     for (const n of '०१२३४५६७८९') add('Digits', it.symbols[n], n);
     for (const [n, code] of Object.entries(it.extra_consonants)) add('Extended consonants', code + 'a', n);
     for (const [code, n] of Object.entries({aham: 'अहम्', rAmaH: 'रामः', saMskRRitam: 'संस्कृतम्', kRRiShNa: 'कृष्ण', 'so.aham': 'सोऽहम्', kLLipta: 'कॢप्त', pitRRINAm: 'पितॄणाम्'})) add('Sanskrit examples', code, n);
