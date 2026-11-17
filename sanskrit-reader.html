@@ -80,6 +80,23 @@ select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px sol
 .w.read{color:var(--chalk-dim)}
 .w.here{box-shadow:inset 0 -3px 0 var(--accent)}
 .p{color:var(--chalk-dim);white-space:nowrap}
+/* Akṣaras inside a word: heavy ones in orange (whole akṣara), optional IAST in small letters underneath */
+.w .g.h{color:var(--accent)}
+.w .g.h.pos .b{text-decoration:underline dotted 2px;text-underline-offset:.28em;text-decoration-skip-ink:none}
+body.under .w .g.h.pos .b{text-decoration:none} /* with the small line, the dotted mark moves onto it */
+.w .g.h.pos rt{text-decoration:underline dotted 1.5px;text-underline-offset:.22em}
+.w.read .g.h{color:rgba(233,162,59,.6)}
+.w.spk .g.h{color:#8f2400}
+body.under .reader{line-height:2.75;word-spacing:.4em} /* wider gaps between words than the ones the small line opens inside a word */
+body.under .reader .src,body.under .reader .p{word-spacing:normal}
+body.under .w{padding-bottom:.62em} /* hover and speaking chips reach down over the small line */
+.w ruby{ruby-position:under;-webkit-ruby-position:after;ruby-align:center}
+.w rt{font-family:var(--f-sa);font-size:.4em;line-height:1.1;font-weight:400;color:var(--chalk-dim);letter-spacing:0;padding:0 .08em;text-decoration:none}
+.w .g.h rt{color:var(--accent)}
+.w:hover rt,.w.on rt{color:var(--chalk)}
+.w:hover .g.h rt,.w.on .g.h rt{color:var(--accent)}
+.w.spk rt{color:var(--accent-ink)}
+.w.spk .g.h rt{color:#8f2400}
 
 .pop{position:fixed;z-index:20;pointer-events:none;background:var(--panel);color:var(--fg);border:1px solid var(--line);
   border-radius:10px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.22);max-width:min(88vw,420px);opacity:0;transform:translateY(4px);
@@ -154,10 +171,10 @@ button:disabled{opacity:.45;cursor:default}
           <option value='"Kalam"'>Kalam (handwritten)</option>
         </select>
       </div>
-      <div class="opt"><label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange (IAST)</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoLong" title="About heavy syllables">i</button></div>
+      <div class="opt"><label class="check"><input type="checkbox" id="optLong"> Heavy syllables in orange</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoLong" title="About heavy syllables">i</button></div>
       <div class="info" id="infoLong" hidden>
         <h3>Syllable weight (guru and laghu)</h3>
-        <p>Sanskrit metre counts every syllable as either <b>light</b> (laghu, ⏑, one mātrā) or <b>heavy</b> (guru, –, two mātrās). The orange marks the vowel of each heavy syllable.</p>
+        <p>Sanskrit metre counts every syllable as either <b>light</b> (laghu, ⏑, one mātrā) or <b>heavy</b> (guru, –, two mātrās). The orange marks each heavy syllable: the whole akṣara in the Devanagari, and its vowel in the IAST.</p>
         <ul>
           <li><b>Short vowels:</b> a, i, u, ṛ, ḷ. <b>Long vowels:</b> ā, ī, ū, ṝ, ḹ, and e, ai, o, au, which are always long.</li>
           <li><b>Heavy by nature:</b> any syllable with a long vowel, e.g. <span class="ex">n<span class="o">ā</span>yaṃ</span>.</li>
@@ -170,6 +187,14 @@ button:disabled{opacity:.45;cursor:default}
           <li><b>Everything else is light:</b> a short vowel followed by at most one consonant, or by a vowel.</li>
         </ul>
         <p>Weight belongs to the syllable, not the vowel: a short vowel before a conjunct is still pronounced short, but the syllable takes two mātrās in metre. Aspirates (kh, gh, th, bh …) are single consonants, and candrabindu (m̐) does not make a syllable heavy. Metres often treat the last syllable of a verse quarter as heavy regardless (anceps); that is not marked here. The popup also shows the word's weight pattern, e.g. – – ⏑.</p>
+        <p><b>In Devanagari</b> an akṣara and a spoken syllable do not always match. In <span class="ex"><span class="o u">ध</span>र्म</span> (dhar-ma) the r closes the first syllable and makes it heavy, but it is written in the second akṣara, as the hook on top of म. The orange therefore falls on the akṣara that holds the vowel, here ध.</p>
+      </div>
+      <div class="opt"><label class="check"><input type="checkbox" id="optUnder"> Transcription under each syllable</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoUnder" title="About the transcription under each syllable">i</button></div>
+      <div class="info" id="infoUnder" hidden>
+        <h3>Transcription under each syllable</h3>
+        <p><b>What it does:</b> writes the IAST transliteration in small letters under every akṣara of the text, e.g. <span class="ex">ध</span> dha, <span class="ex">र्म</span> rma, <span class="ex">क्षे</span> kṣe. With <i>Heavy syllables in orange</i> also on, the heavy ones are orange in both lines.</p>
+        <p><b>Why it helps:</b> you can read the whole text at once with the help underneath, without tapping word by word. Cover the small line with a finger or switch it off again once the Devanagari feels familiar.</p>
+        <p>The line follows the written akṣaras, so a closing consonant appears under the next akṣara, as in <span class="ex">ध</span> dha · <span class="ex">र्म</span> rma for dhar-ma.</p>
       </div>
       <div class="opt"><label class="check"><input type="checkbox" id="optTimer"> Reading timer</label><button class="info-btn" type="button" aria-expanded="false" aria-controls="infoTimer" title="About the reading timer">i</button></div>
       <div class="info" id="infoTimer" hidden>
@@ -244,7 +269,7 @@ button:disabled{opacity:.45;cursor:default}
 </footer>
 
 <script>
-const APP_VERSION = '0.1.25'; // the version people see: x.y.z (z counts up with every release)
+const APP_VERSION = '0.1.26'; // the version people see: x.y.z (z counts up with every release)
 document.getElementById("ver").textContent = `Version ${APP_VERSION}`;
 
 // ---------- Sample texts ----------
@@ -473,6 +498,53 @@ function syllables(s){
   return n;
 }
 
+// Splits a written word into akṣaras: leading consonants with virama + one vowel-bearing letter (with its
+// vowel sign) + anusvāra / visarga / candrabindu / accent marks. A consonant with virama at the end of a
+// word joins the akṣara before it (जगत् → ज · गत्). v = index of the akṣara's vowel among the word's vowels
+// (same order as the "V" parts from toIASTParts), or -1 for signs without a vowel (daṇḍa, digits, avagraha).
+const MARK_RE=/[ँ-ः़॑-॔᳐-᳿꣠-꣱‌‍]/;
+function aksharas(word){
+  const s=word.normalize("NFD"), segs=[]; let pend="", nv=0;
+  const marks=i=>{ let t=""; while(i<s.length && MARK_RE.test(s[i])) t+=s[i++]; return t; };
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(CON[c]){
+      let t=c; if(s[i+1]===NUK){ t+=NUK; i++; }
+      if(s[i+1]===VIRAMA){ t+=VIRAMA; i++; while(s[i+1]==="‌"||s[i+1]==="‍") t+=s[++i]; pend+=t; continue; }
+      if(MAT[s[i+1]]) t+=s[++i];
+      const m=marks(i+1); i+=m.length;
+      segs.push({d:pend+t+m, v:nv++}); pend="";
+    } else if(VOW[c]||c==="ॐ"){
+      const m=marks(i+1); i+=m.length;
+      segs.push({d:pend+c+m, v:nv++}); pend="";
+    } else if(MARK_RE.test(c) && segs.length && !pend){ segs[segs.length-1].d+=c; }
+    else {
+      if(pend){ if(segs.length) segs[segs.length-1].d+=pend; else segs.push({d:pend,v:-1}); pend=""; }
+      segs.push({d:c, v:-1});
+    }
+  }
+  if(pend){ if(segs.length && segs[segs.length-1].v>=0) segs[segs.length-1].d+=pend; else segs.push({d:pend,v:-1}); }
+  return segs;
+}
+// Fills a word's span: plain text, or akṣaras coloured by weight and/or with IAST underneath.
+function paintWord(w){
+  const heavy=optLong.checked, under=optUnder.checked;
+  if(!heavy && !under){ w.el.textContent=w.text; return; }
+  const vowels=w.parts.filter(p=>p.k==="V");
+  w.el.textContent="";
+  for(const a of w.segs || (w.segs=aksharas(w.text))){
+    const p=a.v>=0 ? vowels[a.v] : null;
+    const lat=/[\p{L}\p{M}]/u.test(a.d) && a.d!=="ऽ" ? toIAST(a.d) : "";
+    if(!p && !(under && lat)){ w.el.appendChild(document.createTextNode(a.d)); continue; }
+    const g=document.createElement(under && lat ? "ruby" : "span");
+    g.className="g"+(heavy && p && p.heavy ? (p.pos?" h pos":" h") : "");
+    const b=document.createElement("span"); b.className="b"; b.textContent=a.d; g.appendChild(b);
+    if(under && lat){ const rt=document.createElement("rt"); rt.textContent=lat; g.appendChild(rt); }
+    w.el.appendChild(g);
+  }
+}
+function paintAll(){ document.body.classList.toggle("under",optUnder.checked); words.forEach(paintWord); }
+
 // ---------- Rendering ----------
 const $=id=>document.getElementById(id);
 const pick=$("pick"), input=$("input"), reader=$("reader"), pop=$("pop");
@@ -526,6 +598,7 @@ function render(){
     if(!ld.childNodes.length) ld.innerHTML="&nbsp;";
     reader.appendChild(ld);
   }
+  paintAll(); // after weigh(), which needs the whole verse quarter
   resetTimer();
 }
 function punct(s){ // keep "॥ २.२० ॥" together; leading space stays breakable
@@ -849,7 +922,7 @@ input.addEventListener("input",()=>{
   render();
 });
 // ---------- Options (remembered per browser) ----------
-const fontSel=$("font"), optLong=$("optLong"), optTimer=$("optTimer"), optWord=$("optWord"), optIast=$("optIast"), optTap=$("optTap");
+const fontSel=$("font"), optLong=$("optLong"), optUnder=$("optUnder"), optTimer=$("optTimer"), optWord=$("optWord"), optIast=$("optIast"), optTap=$("optTap");
 function store(k,v){ try{ localStorage.setItem("sr."+k,v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem("sr."+k); }catch(e){ return null; } }
 function applyFont(){ document.documentElement.style.setProperty("--f-read",`${fontSel.value},"Noto Serif Devanagari",serif`); }
@@ -860,6 +933,7 @@ function applyTimer(){
 }
 const f0=load("font"); if(f0 && [...fontSel.options].some(o=>o.value===f0)) fontSel.value=f0;
 optLong.checked=load("long")==="1";
+optUnder.checked=load("under")==="1";
 optTimer.checked=false; // timer is off by default on every visit
 optWord.checked=load("word")==="1";
 optIast.checked=load("iast")==="1";
@@ -869,7 +943,8 @@ optIast.addEventListener("change",()=>{ store("iast",optIast.checked?"1":"0");
   if(optIast.checked && sState!=="idle" && cur>=0) showPop(cur,false); else if(!optIast.checked && popWord===cur) hidePop(); });
 optWord.addEventListener("change",()=>{ store("word",optWord.checked?"1":"0"); render(); }); // re-split the text; stops any playback
 fontSel.addEventListener("change",()=>{ applyFont(); store("font",fontSel.value); if(popWord!==null) showPop(popWord); });
-optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); if(popWord!==null) showPop(popWord); });
+optLong.addEventListener("change",()=>{ store("long",optLong.checked?"1":"0"); paintAll(); if(popWord!==null) showPop(popWord); });
+optUnder.addEventListener("change",()=>{ store("under",optUnder.checked?"1":"0"); paintAll(); if(popWord!==null) showPop(popWord); });
 optTimer.addEventListener("change",applyTimer);
 document.querySelectorAll(".info-btn").forEach(b=>b.addEventListener("click",()=>{ const box=$(b.getAttribute("aria-controls")); box.hidden=!box.hidden; b.setAttribute("aria-expanded",String(!box.hidden)); }));
 addEventListener("resize",sizeBar);
