@@ -1478,19 +1478,29 @@ function loadText(str, onFinish, limit) {
   clearInterval(T.ticker);
   textbox.classList.toggle('dev', LAYOUTS[settings.layout].dev);
   textbox.innerHTML = '';
+  // Nur ein Stück voraus rendern: der Tempotest-Text hat ~6000 Zeichen, sichtbar sind 3 Zeilen.
+  // Tausende Spans bei jedem Neustart neu aufzubauen und zu layouten blockiert schwächere Rechner.
+  renderAhead();
+  document.getElementById('startHint').textContent = 'Tippe einfach los – die Zeit startet mit der ersten Taste. Esc beginnt neu.';
+  textbox.scrollTop = 0;
+  resultEl.classList.remove('show');
+  for (let c = 0; c < T.els.length; c++) paintCluster(c);
+  updateStats(); updateNext();
+}
+const RENDER_AHEAD = 400;
+function renderAhead() {
+  const cur = T.cpCluster[Math.min(T.pos, T.text.length - 1)] || 0;
+  if (T.els.length >= T.clusters.length || T.els.length - cur > RENDER_AHEAD / 2) return;
+  const end = Math.min(T.clusters.length, cur + RENDER_AHEAD);
   const frag = document.createDocumentFragment();
-  T.clusters.forEach(([, , seg], ci) => {
+  for (let ci = T.els.length; ci < end; ci++) {
+    const seg = T.clusters[ci][2];
     const s = document.createElement('span');
     s.className = 'c' + (seg === ' ' ? ' sp' : '');
     s.textContent = seg;
     frag.appendChild(s); T.els.push(s);
-  });
+  }
   textbox.appendChild(frag);
-  document.getElementById('startHint').textContent = 'Tippe einfach los – die Zeit startet mit der ersten Taste. Esc beginnt neu.';
-  textbox.scrollTop = 0;
-  resultEl.classList.remove('show');
-  for (let c = 0; c < T.clusters.length; c++) paintCluster(c);
-  updateStats(); updateNext();
 }
 function paintCluster(ci) {
   const el = T.els[ci]; if (!el) return;
@@ -1652,6 +1662,7 @@ function handleInput(ch, code) {
     }
   }
   const newCi = T.cpCluster[Math.min(T.pos, T.text.length - 1)];
+  renderAhead();
   for (let c = Math.min(oldCi, newCi); c <= Math.max(oldCi, newCi); c++) paintCluster(c);
   if (T.pos >= T.text.length) { finish(); return; }
   if (newCi !== oldCi) scrollToCurrent();
