@@ -38,6 +38,7 @@ button{font:inherit;color:inherit}
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .33 0 0 0 .075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   box-shadow:0 0 0 1px rgba(0,0,0,.04),0 18px 50px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);
   will-change:transform;transition:transform .17s ease-out}
+:root[data-paper=white] #platen{background-image:none}
 .drag,.drag #platen{transition:none!important}
 #lines{position:absolute;inset:0}
 .ln{position:absolute;left:var(--ml);height:var(--lh);line-height:var(--lh);white-space:pre;font-family:var(--font);font-size:var(--fs);color:var(--ink)}
@@ -111,6 +112,9 @@ body.typing #bar{opacity:0;pointer-events:none}
 .seg button.on{background:var(--ui);color:var(--panel)}
 .seg .val{flex:1.3;display:grid;place-items:center;font-size:14px;border-right:1px solid var(--line);font-variant-numeric:tabular-nums}
 .seg[data-set=font] button{font-family:var(--fam)}
+.seg .pick{flex:1;position:relative;display:grid;place-items:center;padding:8px 6px;font-size:14px;cursor:pointer}
+.seg .pick.on{background:var(--ui);color:var(--panel)}
+.seg .pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 .tg{display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin:14px 0}
 .tg input{appearance:none;-webkit-appearance:none;flex:none;width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;margin:1px 0 0;transition:background .2s}
 .tg input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
@@ -184,8 +188,10 @@ kbd{font-family:var(--f-ui);font-size:12px;border:1px solid var(--line);border-b
     <div class="seg"><button data-act="smaller" aria-label="Smaller">A−</button><span class="val" id="fsVal"></span><button data-act="bigger" aria-label="Bigger">A+</button></div></div>
   <div class="fld"><span class="lbl" data-i="spacing">Line spacing</span>
     <div class="seg" data-set="spacing"><button data-v="1">1</button><button data-v="1.5">1½</button><button data-v="2">2</button></div></div>
-  <div class="fld"><span class="lbl" data-i="width">Line width</span>
-    <div class="seg" data-set="width"><button data-v="50">50</button><button data-v="65">65</button><button data-v="80">80</button></div></div>
+  <div class="fld"><span class="lbl"><span data-i="width">Line width</span>: <b id="widthVal"></b></span>
+    <input type="range" id="width" min="40" max="100" step="1"></div>
+  <div class="fld"><span class="lbl" data-i="paper">Paper</span>
+    <div class="seg" data-set="paper"><button data-v="cream" data-i="cream">Cream</button><button data-v="white" data-i="white">White</button><label class="pick" id="paperPick"><span data-i="custom">Custom</span><input type="color" id="paperColor"></label></div></div>
   <div class="fld"><span class="lbl" data-i="ribbon">Ribbon</span>
     <div class="seg" data-set="red"><button data-v="false" data-i="black">Black</button><button data-v="true" data-i="red">Red</button></div></div>
   <label class="tg"><input type="checkbox" id="tape"><span><span data-i="tape">Correction tape</span><small data-i="tapeHelp"></small></span></label>
@@ -244,7 +250,7 @@ const $ = s => document.querySelector(s);
 /* ---------- words ---------- */
 const LANG = (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en';
 const T = {
-  en: {title:'Typewriter', words:'words', hMachine:'Machine', hRoom:'Room', hSheet:'Sheet', typeface:'Typeface', size:'Size', spacing:'Line spacing', width:'Line width (characters)', ribbon:'Ribbon', black:'Black', red:'Red',
+  en: {title:'Typewriter', words:'words', hMachine:'Machine', hRoom:'Room', hSheet:'Sheet', typeface:'Typeface', size:'Size', spacing:'Line spacing', width:'Line width (characters)', ribbon:'Ribbon', black:'Black', red:'Red', paper:'Paper', cream:'Cream', white:'White', custom:'Custom',
     tape:'Correction tape', tapeHelp:'Backspace erases. When off, Backspace only moves the carriage back and you type over the letter, like on the real thing.',
     theme:'Light', auto:'Auto', day:'Day', night:'Desk lamp', sound:'Sound', volume:'Volume', goal:'Word goal',
     read:'Read through', copy:'Copy text', download:'Download .txt', newSheet:'New sheet…', keys:'Keys',
@@ -252,7 +258,7 @@ const T = {
     hint1:'Just start typing.', hintKeys:'Esc for options · no delete key, only strike-over', hintKeysTape:'Esc for options', hintTouch:'Tap the paper to bring up the keyboard',
     back:'Back to the line', copied:'Copied', newQ:'Put in a new sheet?', newBody:'Everything on this sheet will be gone.', downloadFirst:'Download first', cancel:'Cancel', confirmNew:'New sheet', close:'Close',
     saveFail:'This browser won’t save the sheet. Download your text to keep it.', ribbonT:'Ribbon: black / red', soundT:'Sound on/off', readT:'Read through', menuT:'Options (Esc)', of:'of', lines:'lines'},
-  de: {title:'Schreibmaschine', words:'Wörter', hMachine:'Maschine', hRoom:'Raum', hSheet:'Blatt', typeface:'Schrift', size:'Größe', spacing:'Zeilenabstand', width:'Zeilenbreite (Zeichen)', ribbon:'Farbband', black:'Schwarz', red:'Rot',
+  de: {title:'Schreibmaschine', words:'Wörter', hMachine:'Maschine', hRoom:'Raum', hSheet:'Blatt', typeface:'Schrift', size:'Größe', spacing:'Zeilenabstand', width:'Zeilenbreite (Zeichen)', ribbon:'Farbband', black:'Schwarz', red:'Rot', paper:'Papier', cream:'Creme', white:'Weiß', custom:'Eigene',
     tape:'Korrekturband', tapeHelp:'Die Rücktaste löscht. Wenn aus, schiebt sie nur den Wagen zurück und du schreibst über den Buchstaben, wie bei der echten Maschine.',
     theme:'Licht', auto:'Auto', day:'Tag', night:'Schreibtischlampe', sound:'Ton', volume:'Lautstärke', goal:'Wortziel',
     read:'Durchlesen', copy:'Text kopieren', download:'Als .txt herunterladen', newSheet:'Neues Blatt…', keys:'Tasten',
@@ -270,7 +276,10 @@ const nf = new Intl.NumberFormat(LANG === 'de' ? 'de-AT' : 'en-US');
 
 /* ---------- state ---------- */
 const KEY = 'typewriter.v1';
-const DEF = {font:'elite', fs:0, spacing:1.5, width:65, red:false, tape:false, sound:true, vol:0.6, theme:'auto', goal:100000};
+const DEF = {font:'elite', fs:0, spacing:1.5, width:65, red:false, tape:false, sound:true, vol:0.6, theme:'auto', goal:100000, paper:'cream'};
+// 'cream' keeps the theme's own paper tone (lighter by day, warmer under the lamp)
+const PAPERS = {white:'#ffffff'};
+const MIN_W = 40, MAX_W = 100;
 const FONTS = {elite:"'Special Elite','Courier New',Courier,monospace", courier:"'Courier Prime','Courier New',Courier,monospace", cutive:"'Cutive Mono','Courier New',Courier,monospace"};
 let S = {...DEF};
 let lines = [[]];         // line -> cells -> glyphs {c, r}
@@ -307,6 +316,7 @@ function load(){
   try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) {}
   if (!d) return;
   if (d.s) S = {...DEF, ...d.s};
+  S.width = Math.min(MAX_W, Math.max(MIN_W, Math.round(Number(S.width)) || DEF.width));
   if (Array.isArray(d.lines) && d.lines.length){
     enc = d.lines.slice();
     lines = enc.map(decodeLine);
@@ -479,8 +489,9 @@ function wrapWord(){
   if (s > 0 && L.length - s - 1 < S.width*0.5) newLine(L.splice(s + 1));
   else newLine([]);
 }
+// The bell rings when the paper moves on to the next line at the margin, together with the return.
 function strike(ch, quiet){
-  if (col >= S.width && col >= lines[li].length){ wrapWord(); if (!quiet) Snd.ret(); }
+  if (col >= S.width && col >= lines[li].length){ wrapWord(); if (!quiet){ Snd.bell(); Snd.ret(); } }
   const L = lines[li], g = {c: ch, r: S.red};
   if (col >= L.length){ L.push([g]); }
   else if (S.tape || !L[col].length) L[col] = [g];
@@ -488,14 +499,14 @@ function strike(ch, quiet){
   else L[col][3] = g;
   lastHit = {i: li, c: col, k: L[col].length - 1};
   markLine(li); col++;
-  if (!quiet){ Snd.key(); if (col === S.width - 8) Snd.bell(); }
+  if (!quiet) Snd.key();
 }
 function space(quiet){
-  if (col >= S.width){ newLine(); if (!quiet) Snd.ret(); return; }
+  if (col >= S.width){ newLine(); if (!quiet){ Snd.bell(); Snd.ret(); } return; }
   const L = lines[li];
   if (col >= L.length){ L.push([]); markLine(li); }
   col++;
-  if (!quiet){ Snd.space(); if (col === S.width - 8) Snd.bell(); }
+  if (!quiet) Snd.space();
 }
 function backspace(quiet){
   const L = lines[li];
@@ -647,6 +658,10 @@ function syncMenu(){
     seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(S[key])));
   });
   $('#tape').checked = S.tape; $('#sound').checked = S.sound; $('#vol').value = S.vol; $('#goal').value = S.goal;
+  $('#width').value = S.width; $('#widthVal').textContent = S.width;
+  const custom = /^#[0-9a-f]{6}$/i.test(S.paper);
+  $('#paperPick').classList.toggle('on', custom);
+  $('#paperColor').value = custom ? S.paper : (PAPERS[S.paper] || getComputedStyle(root).getPropertyValue('--paper').trim() || '#fffdf7');
   $('#fsVal').textContent = fs + ' px';
   $('#bSound').innerHTML = S.sound
     ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
@@ -657,11 +672,18 @@ function applyTheme(){
   const night = S.theme === 'night' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   root.dataset.theme = night ? 'night' : 'day';
   document.querySelector('meta[name=theme-color]').content = night ? '#0e0d0b' : '#e4e1da';
+  applyPaper();
+}
+function applyPaper(){
+  const c = PAPERS[S.paper] || (/^#[0-9a-f]{6}$/i.test(S.paper) ? S.paper : '');
+  if (c) root.style.setProperty('--paper', c); else root.style.removeProperty('--paper');
+  root.dataset.paper = S.paper === 'white' ? 'white' : '';
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function setS(key, val){
   S[key] = val; save();
   if (key === 'theme') applyTheme();
+  if (key === 'paper') applyPaper();
   if (key === 'font' || key === 'spacing' || key === 'width' || key === 'fs') layout();
   if (key === 'tape') updateHint();
   if (key === 'sound' && val) Snd.unlock();
@@ -672,6 +694,11 @@ document.querySelectorAll('.seg[data-set]').forEach(seg => seg.addEventListener(
   const key = seg.dataset.set, raw = b.dataset.v;
   setS(key, key === 'red' ? raw === 'true' : (key === 'spacing' || key === 'width') ? Number(raw) : raw);
 }));
+$('#width').addEventListener('input', e => {
+  const n = Math.min(MAX_W, Math.max(MIN_W, Math.round(Number(e.target.value))));
+  if (n !== S.width){ S.width = n; $('#widthVal').textContent = n; layout(); scheduleSave(); }
+});
+$('#paperColor').addEventListener('input', e => setS('paper', e.target.value));
 $('#tape').addEventListener('change', e => setS('tape', e.target.checked));
 $('#sound').addEventListener('change', e => setS('sound', e.target.checked));
 $('#vol').addEventListener('input', e => { S.vol = Number(e.target.value); Snd.setVol(S.vol); scheduleSave(); });
