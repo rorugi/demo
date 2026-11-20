@@ -192,6 +192,8 @@ input[type=text],select,textarea{font:inherit;font-size:16px;padding:10px 12px;b
 .vocab td .dv{font-size:22px}
 .conv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .convout{font-family:var(--dv);font-size:40px;min-height:60px;line-height:1.4}
+.svform{display:grid;gap:10px;margin-top:10px}.svform label{display:grid;gap:4px;font-size:14px;font-weight:600}.svform input{width:100%}
+.svmsg{min-height:1.4em;font-size:14px}.svmsg.bad{color:var(--bad)}.svmsg.ok{color:var(--ok)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:60;padding:16px}.modal[hidden]{display:none}
 .mbox{position:relative;background:var(--bg);color:var(--ink);border-radius:16px;max-width:620px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:24px clamp(18px,4vw,32px)}
 .mclose{position:absolute;top:10px;right:10px;width:44px;height:44px;padding:0;font-size:24px;line-height:1;background:transparent;border:0}
@@ -257,6 +259,9 @@ textarea{width:100%;min-height:90px}
     <button type="button" data-prog="load">Load progress from file</button>
     <p class="small mut">Loading merges: for every card, the more recent state wins. Mock exams are included.</p>
     <p class="small" id="progmsg" role="status"></p>
+    <p class="mh" style="margin-top:6px">Own server</p>
+    <p class="small" id="svmenu"></p>
+    <button type="button" id="svbtn">Connect own server…</button>
     <a href="#today" id="menuset">Settings &amp; backup as text</a>
     <button type="button" id="cmnav">Comments and marks <span class="mut" id="cmcount"></span></button>
     <button type="button" id="aboutbtn">About</button>
@@ -378,6 +383,11 @@ textarea{width:100%;min-height:90px}
 <footer><div class="wrap">Study companion for A. M. Ruppel, <i>The Cambridge Introduction to Sanskrit</i> (Cambridge University Press, 2017), Chapters 1–10. Explanations are condensed and reworded; check details against the book. Audio uses a Hindi voice where your browser has one, so treat it as approximate. <span id="fver"></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <button type="button" class="selcm" id="selcm" hidden>Comment</button>
+<div class="modal" id="svdlg" hidden role="dialog" aria-modal="true" aria-labelledby="svh"><div class="mbox">
+ <button type="button" class="mclose" id="svx" aria-label="Close">×</button>
+ <h2 id="svh">Own server</h2>
+ <div id="svbody"></div>
+</div></div>
 <div class="modal" id="about" hidden role="dialog" aria-modal="true" aria-labelledby="abouth"><div class="mbox">
  <button type="button" class="mclose" id="aboutx" aria-label="Close">×</button>
  <h2 id="abouth">About this tool</h2>
@@ -386,9 +396,9 @@ textarea{width:100%;min-height:90px}
  <h3>What it does</h3>
  <ul><li><b>Learn</b> — the chapters condensed on one page, with exam traps and self-test questions.</li><li><b>Review</b> — flashcards scheduled with <b>FSRS-5</b> (Free Spaced Repetition Scheduler by the open-spaced-repetition project, default parameters). Each card comes back when your predicted recall drops to your target (90% by default; change it in Settings).</li><li><b>Drill</b> — unlimited generated questions, mixed across topics.</li><li><b>Mock exam</b> — timed, auto-marked papers; each one is stored with your progress.</li><li><b>Overview</b> — every knowledge nugget as a circle, so you see where you stand.</li><li><b>Marks and comments</b> — colour any section of the notes by how well you know it, and select any text to comment on it; see them all under ☰ → Comments and marks.</li></ul>
  <h3>Your data</h3>
- <p>Progress stays in your browser, syncs to your Claude account on the published page, and can be saved to or loaded from a file in the ☰ menu. Nothing is sent anywhere else.</p>
+ <p>Progress stays in your browser, syncs to your Claude account on the claude.ai page, can be saved to or loaded from a file in the ☰ menu, and — if you connect one — syncs to your own PHP server. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -673,7 +683,7 @@ const blank=()=>({v:1,cards:{},log:{},exams:[],drill:{},marks:{},comments:{},set
 let S=(()=>{try{const x=JSON.parse(localStorage.getItem(KEY));return x?Object.assign(blank(),x):blank()}catch(e){return blank()}})();
 function migrate(){let ch=false;for(const [id,c] of Object.entries(S.cards)){if(c&&c.S==null){ch=true;if(!c.reps){c.st='relearn';c.S=.4;c.D=6}else{c.st='review';c.S=Math.max(1,c.ivl||1);c.D=clampD(5+(2.5-(c.ease||2.5))*4)}delete c.ease}}if(!S.settings.ret)S.settings.ret=0.9;const c=S.settings.chs||[];if(!S.settings.v2){if(c.length>=6&&!c.includes('6'))S.settings.chs=CHIDS.slice();S.settings.v2=1}if(ch){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}}
 let dbRef=null,exRef=null,examsDirty=false,writing=false,again=false,wt=null;
-function save(){S.updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(dbRef){clearTimeout(wt);wt=setTimeout(flush,2000)}}
+function save(){S.updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(dbRef){clearTimeout(wt);wt=setTimeout(flush,2000)}if(window.__svSched)window.__svSched()}
 async function flush(){if(!dbRef)return;if(writing){again=true;return}writing=true;try{const main=JSON.parse(JSON.stringify(S));main.exams=main.exams.map(({items,...r})=>r);await dbRef.set(main);if(exRef&&examsDirty){examsDirty=false;let det=S.exams.filter(e=>e.items).slice(-6).map(e=>({t:e.t,items:e.items}));while(det.length>1&&JSON.stringify(det).length>200000)det.shift();await exRef.set({exams:JSON.parse(JSON.stringify(det)),updated:Date.now()})}$('#sync').textContent='Synced to your Claude account'}catch(e){$('#sync').textContent='Saved on this device (sync paused)'}writing=false;if(again){again=false;flush()}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&dbRef){clearTimeout(wt);flush()}});
 async function initSync(){
@@ -901,13 +911,13 @@ async function saveProgress(){const data=JSON.stringify(Object.assign({app:'rupp
  if(dlNS){try{await dlNS.save({filename:fn,data});progMsg('Progress saved to '+fn);return}catch(e){if(e&&(e.code=='declined'||e.code=='rate_limited')){progMsg('Save cancelled.');return}}}
  if(!window.claude){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);progMsg('Downloaded '+fn+' — check your Downloads folder.');return}catch(e){}}
  try{await navigator.clipboard.writeText(data);progMsg('File saving is not available here — progress copied as text instead; paste it into a file.')}catch(e){const t=$('#imp');if(t){t.value=data;t.closest('details').open=true;location.hash='today'}progMsg('File saving is not available here — copy the text in the settings box.')}}
-function mergeProgress(x){if(!x||typeof x!='object'||typeof x.cards!='object')throw new Error('bad');
+function mergeProgress(x,quiet){if(!x||typeof x!='object'||typeof x.cards!='object')throw new Error('bad');
  let added=0,updated=0;for(const [id,c] of Object.entries(x.cards)){if(!CARD[id]||!c||typeof c.due!='number')continue;const m=S.cards[id];if(!m){S.cards[id]=c;added++}else if((c.last||0)>(m.last||0)){S.cards[id]=c;updated++}}
  for(const [d,l] of Object.entries(x.log||{})){const m=S.log[d]||(S.log[d]={});for(const k of ['r','n','ok','d'])m[k]=Math.max(m[k]||0,+l[k]||0)}
  for(const e of (x.exams||[])){if(!e||!e.t)continue;const m=S.exams.find(y=>y.t==e.t);if(!m)S.exams.push(e);else if(!m.items&&e.items)m.items=e.items}pruneExams();examsDirty=true;
  for(const k of ['marks','comments'])for(const [id,v] of Object.entries(x[k]||{})){if(!v||typeof v!='object')continue;const m=S[k][id];if(!m||(v.t||0)>(m.t||0))S[k][id]=v}
  for(const [t,d] of Object.entries(x.drill||{})){if(!S.drill[t]||(d.t||0)>(S.drill[t].t||0))S.drill[t]=d}
- migrate();save();return {added,updated}}
+ migrate();if(!quiet)save();else{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}return {added,updated}}
 $('#loadfile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const x=JSON.parse(await f.text());const r=mergeProgress(x);route();progMsg(`Loaded ${f.name}: ${r.added} new and ${r.updated} newer cards taken over.`)}catch(err){progMsg('That file is not a progress file from this site.')}};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-prog]');if(!b)return;if(b.dataset.prog=='save')saveProgress();else $('#loadfile').click()});
 $('#exp').onclick=async()=>{const t=JSON.stringify(S);try{await navigator.clipboard.writeText(t);$('#datamsg').textContent='Progress copied — paste it somewhere safe.'}catch(e){$('#imp').value=t;$('#datamsg').textContent='Copy the text in the box above.'}};
@@ -1109,14 +1119,16 @@ function decorateNotes(){
  applyMarks();document.querySelectorAll('#lnote [data-lid]').forEach(el=>renderCm(el.dataset.lid))}
 function applyMarks(){document.querySelectorAll('#lnote [data-hid]').forEach(w=>{const c=(S.marks[w.dataset.hid]||{}).c||'';w.dataset.c=c;const sel=w.querySelector(':scope>h2>.mstat,:scope>h3>.mstat');if(sel){sel.value=c;sel.dataset.c=c}});
  document.querySelectorAll('#ltabs [data-lt]').forEach(a=>{const w=document.querySelector(`#chap-${a.dataset.lt.toLowerCase()} .l2`);const c=w&&w.dataset.c;a.style.boxShadow=c?`inset 5px 0 0 ${MHEX[c]}`:''});updCmCount()}
-function updCmCount(){const n=Object.keys(S.comments).length,m=Object.keys(S.marks).length;const el=$('#cmcount');if(el)el.textContent=n||m?`(${n} · ${m})`:''}
+function updCmCount(){const n=Object.values(S.comments).filter(c=>c&&!c.del).length,m=Object.values(S.marks).filter(x=>x&&x.c).length;const el=$('#cmcount');if(el)el.textContent=n||m?`(${n} · ${m})`:''}
+const liveCm=id=>{const c=S.comments[id];return c&&!c.del?c:null};
+function tombCm(id){const o=S.comments[id]||{};S.comments[id]={del:1,t:Date.now(),ch:o.ch,x:o.x}}
 const lineEl=id=>document.querySelector(`#lnote [data-lid="${CSS.escape(id)}"]`);
 function placeAfter(el,node){const tg=el.tagName;if(tg=='LI')el.append(node);else if(tg=='TR'){const tr=document.createElement('tr');tr.className='cmrow';const td=document.createElement('td');td.colSpan=el.cells.length||1;td.append(node);tr.append(td);el.after(tr)}else if(tg=='SUMMARY')el.parentElement.after(node);else el.after(node)}
 function removeCm(id){document.querySelectorAll(`#lnote [data-cmfor="${CSS.escape(id)}"]`).forEach(n=>{const tr=n.closest('tr.cmrow');(tr||n).remove()})}
-function renderCm(id){removeCm(id);const el=lineEl(id);if(!el)return;const c=S.comments[id];el.classList.toggle('hascm',!!c);if(!c)return;const d=document.createElement('div');d.className='cmt';d.dataset.cmfor=id;d.innerHTML=`${c.q?`<span class="cmq">“${esc(c.q)}”</span>`:''}<span class="cmtx">${esc(c.text).replace(/\n/g,'<br>')}</span><span class="cmact"><button type="button" class="chip" data-cmedit="${esc(id)}">Edit</button><button type="button" class="chip" data-cmdel="${esc(id)}">Delete</button></span>`;placeAfter(el,d)}
-function openEditor(id,quote){removeCm(id);const el=lineEl(id);if(!el)return;const c=S.comments[id];const q=quote!==undefined?quote:(c&&c.q)||'';const d=document.createElement('div');d.className='cmt edit';d.dataset.cmfor=id;d.dataset.q=q;d.innerHTML=`${q?`<span class="cmq">“${esc(q)}”</span>`:''}<textarea class="raw" aria-label="Comment on this line" placeholder="Your comment on this line">${c?esc(c.text):''}</textarea><span class="cmact"><button type="button" class="pri chip" data-cmsave="${esc(id)}">Save</button><button type="button" class="chip" data-cmcancel="${esc(id)}">Cancel</button>${c?`<button type="button" class="chip" data-cmdel="${esc(id)}">Delete</button>`:''}</span>`;placeAfter(el,d);const ta=d.querySelector('textarea');ta.focus();ta.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveCm(id,ta.value,d.dataset.q)}if(e.key=='Escape'){e.stopPropagation();renderCm(id)}})}
-function saveCm(id,text,q){text=String(text).trim();const el=lineEl(id);if(!text){delete S.comments[id]}else{const old=S.comments[id];S.comments[id]={ch:el?el.closest('.chap').dataset.ch:(old&&old.ch),x:el?ltxt(el).slice(0,200):(old&&old.x)||'',q:(q!==undefined?q:(old&&old.q))||'',text,t:Date.now(),c0:old&&old.c0||Date.now()}}save();renderCm(id);updCmCount()}
-function delCm(b,id){if(!b.dataset.c){b.dataset.c=1;b.textContent='Really delete?';return}delete S.comments[id];save();renderCm(id);updCmCount();if($('#v-comments').classList.contains('on'))renderComments()}
+function renderCm(id){removeCm(id);const el=lineEl(id);if(!el)return;const c=liveCm(id);el.classList.toggle('hascm',!!c);if(!c)return;const d=document.createElement('div');d.className='cmt';d.dataset.cmfor=id;d.innerHTML=`${c.q?`<span class="cmq">“${esc(c.q)}”</span>`:''}<span class="cmtx">${esc(c.text).replace(/\n/g,'<br>')}</span><span class="cmact"><button type="button" class="chip" data-cmedit="${esc(id)}">Edit</button><button type="button" class="chip" data-cmdel="${esc(id)}">Delete</button></span>`;placeAfter(el,d)}
+function openEditor(id,quote){removeCm(id);const el=lineEl(id);if(!el)return;const c=liveCm(id);const q=quote!==undefined?quote:(c&&c.q)||'';const d=document.createElement('div');d.className='cmt edit';d.dataset.cmfor=id;d.dataset.q=q;d.innerHTML=`${q?`<span class="cmq">“${esc(q)}”</span>`:''}<textarea class="raw" aria-label="Comment on this line" placeholder="Your comment on this line">${c?esc(c.text):''}</textarea><span class="cmact"><button type="button" class="pri chip" data-cmsave="${esc(id)}">Save</button><button type="button" class="chip" data-cmcancel="${esc(id)}">Cancel</button>${c?`<button type="button" class="chip" data-cmdel="${esc(id)}">Delete</button>`:''}</span>`;placeAfter(el,d);const ta=d.querySelector('textarea');ta.focus();ta.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveCm(id,ta.value,d.dataset.q)}if(e.key=='Escape'){e.stopPropagation();renderCm(id)}})}
+function saveCm(id,text,q){text=String(text).trim();const el=lineEl(id);if(!text){tombCm(id)}else{const old=liveCm(id);S.comments[id]={ch:el?el.closest('.chap').dataset.ch:(old&&old.ch),x:el?ltxt(el).slice(0,200):(old&&old.x)||'',q:(q!==undefined?q:(old&&old.q))||'',text,t:Date.now(),c0:old&&old.c0||Date.now()}}save();renderCm(id);updCmCount()}
+function delCm(b,id){if(!b.dataset.c){b.dataset.c=1;b.textContent='Really delete?';return}tombCm(id);save();renderCm(id);updCmCount();if($('#v-comments').classList.contains('on'))renderComments()}
 /* select text -> "Comment" popup */
 let selLine=null,selT=null;const selBtn=$('#selcm');
 function hideSel(){selBtn.hidden=true;selLine=null}
@@ -1134,13 +1146,13 @@ document.addEventListener('selectionchange',()=>{clearTimeout(selT);selT=setTime
 selBtn.addEventListener('mousedown',e=>e.preventDefault());
 selBtn.addEventListener('click',()=>{if(!selLine)return;const id=selLine,q=selQuote;hideSel();try{window.getSelection().removeAllRanges()}catch(e){}openEditor(id,q)});
 document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!selBtn.hidden)hideSel()});
-$('#lnote').addEventListener('change',e=>{const s=e.target.closest('.mstat');if(!s)return;const id=s.dataset.mid;const w=s.closest('[data-hid]');if(s.value)S.marks[id]={c:s.value,x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,t:Date.now()};else delete S.marks[id];save();applyMarks()});
+$('#lnote').addEventListener('change',e=>{const s=e.target.closest('.mstat');if(!s)return;const id=s.dataset.mid;const w=s.closest('[data-hid]');if(s.value)S.marks[id]={c:s.value,x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,t:Date.now()};else S.marks[id]={c:'',x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,t:Date.now()};save();applyMarks()});
 $('#lnote').addEventListener('click',e=>{const b=e.target.closest('[data-cmedit],[data-cmdel],[data-cmsave],[data-cmcancel]');
  if(b){e.preventDefault();if(b.dataset.cmedit)openEditor(b.dataset.cmedit);else if(b.dataset.cmdel)delCm(b,b.dataset.cmdel);else if(b.dataset.cmsave){const box=b.closest('.cmt');saveCm(b.dataset.cmsave,box.querySelector('textarea').value,box.dataset.q)}else renderCm(b.dataset.cmcancel);return}});
 function gotoNote(id){pendingLine=id;if(location.hash.toLowerCase()=='#learn')route();else location.hash='learn'}
 function revealPending(){if(!pendingLine)return;const id=pendingLine;pendingLine=null;const el=lineEl(id)||document.querySelector(`#lnote [data-hid="${CSS.escape(id)}"]`);if(!el){toast('That line is no longer in the notes');return}const d=el.closest('details');if(d)d.open=true;el.scrollIntoView({block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
 function renderComments(){const order=Object.fromEntries(CHIDS.map((c,i)=>[c,i]));order['0']=-1;
- const cms=Object.entries(S.comments).sort((a,b)=>(order[a[1].ch]-order[b[1].ch])||(a[1].c0||a[1].t)-(b[1].c0||b[1].t));
+ const cms=Object.entries(S.comments).filter(([,c])=>c&&!c.del).sort((a,b)=>(order[a[1].ch]-order[b[1].ch])||(a[1].c0||a[1].t)-(b[1].c0||b[1].t));
  const COL=['red','orange','yellow','blue','gray','green'];const LBL={red:'Red',orange:'Orange',yellow:'Yellow',blue:'Blue',gray:'Gray',green:'Green'};
  const mks=Object.entries(S.marks).filter(([,m])=>m&&m.c).sort((a,b)=>(COL.indexOf(a[1].c)-COL.indexOf(b[1].c))||(order[a[1].ch]-order[b[1].ch]));
  const chl=c=>c=='0'?'How to study':'Chapter '+c;
@@ -1148,9 +1160,9 @@ function renderComments(){const order=Object.fromEntries(CHIDS.map((c,i)=>[c,i])
  <h2 style="margin-top:32px">Section marks <span class="mut" style="font-size:.6em">${mks.length}</span></h2>${mks.length?mks.map(([id,m])=>`<div class="mkrow"><span class="dot" style="background:${MHEX[m.c]}"></span><b>${LBL[m.c]}</b><span>${esc(m.x||'')}</span><span class="small mut">${chl(m.ch)}</span><button class="chip" data-goto="${esc(id)}">Show in notes</button></div>`).join(''):'<p class="mut">No sections marked yet. Use the status menu next to a heading in Learn.</p>'}`}
 $('#cmlist').addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){gotoNote(g.dataset.goto);return}
  const ed=e.target.closest('[data-cpedit]');if(ed){const id=ed.dataset.cpedit;const box=ed.closest('.cmitem');box.querySelector('.tx').innerHTML=`<textarea class="raw" style="width:100%" aria-label="Edit comment">${esc(S.comments[id].text)}</textarea><div class="row" style="margin-top:6px"><button class="pri chip" data-cpsave="${esc(id)}">Save</button><button class="chip" data-cpcancel="1">Cancel</button></div>`;box.querySelector('textarea').focus();return}
- const sv=e.target.closest('[data-cpsave]');if(sv){const id=sv.dataset.cpsave;const t=sv.closest('.cmitem').querySelector('textarea').value.trim();if(t){S.comments[id].text=t;S.comments[id].t=Date.now()}else delete S.comments[id];save();if(learnBuilt)renderCm(id);updCmCount();renderComments();return}
+ const sv=e.target.closest('[data-cpsave]');if(sv){const id=sv.dataset.cpsave;const t=sv.closest('.cmitem').querySelector('textarea').value.trim();if(t){S.comments[id].text=t;S.comments[id].t=Date.now()}else tombCm(id);save();if(learnBuilt)renderCm(id);updCmCount();renderComments();return}
  if(e.target.closest('[data-cpcancel]')){renderComments();return}
- const dl=e.target.closest('[data-cpdel]');if(dl){if(!dl.dataset.c){dl.dataset.c=1;dl.textContent='Really delete?';return}const id=dl.dataset.cpdel;delete S.comments[id];save();if(learnBuilt)renderCm(id);updCmCount();renderComments()}});
+ const dl=e.target.closest('[data-cpdel]');if(dl){if(!dl.dataset.c){dl.dataset.c=1;dl.textContent='Really delete?';return}const id=dl.dataset.cpdel;tombCm(id);save();if(learnBuilt)renderCm(id);updCmCount();renderComments()}});
 
 function renderLearn(sub){
  if(!learnBuilt){const tabs=[['0','How to study'],...CHAPS.map(c=>[c.id,c.id+' · '+c.t])];
@@ -1316,8 +1328,65 @@ function renderRef(){
  const rv=$('#rv');if(rv)rv.onchange=()=>$('#rvt').innerHTML=paradigm(VERBS[+rv.value])}
 $('#rtabs').addEventListener('click',e=>{const b=e.target.closest('[data-rt]');if(b){rcur=b.dataset.rt;renderRef()}});
 
+/* ================= OWN SERVER (PHP API) ================= */
+const SKEY='ruppel15-server',SAPP='ruppel-sanskrit';
+let SV=(()=>{try{return JSON.parse(localStorage.getItem(SKEY))||{}}catch(e){return {}}})();
+const svSave=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SV))}catch(e){}};
+const svOn=()=>!!(SV.url&&SV.token);
+const inClaude=!!window.claude;
+let svBusy=false,svAgain=false,svT=null,svPulled=false;
+function svUrl(u){u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;if(!/\.php(\?.*)?$/i.test(u))u=u.replace(/\/?$/,'/api.php');return u}
+async function svCall(r,{method='GET',body,url}={}){const base=url||SV.url;const u=base+(base.includes('?')?'&':'?')+'r='+r+(r=='data'?'&app='+SAPP:'');
+ const res=await fetch(u,{method,headers:{'Content-Type':'application/json',...(SV.token&&!url?{Authorization:'Bearer '+SV.token}:{})},body:body?JSON.stringify(body):undefined});
+ let j={};try{j=await res.json()}catch(e){}return {status:res.status,...j}}
+function svStatus(m){SV.msg=m;const a=$('#svmenu');if(a)a.textContent=svOn()?`Logged in as ${SV.user} · ${m}`:'';if(svOn())$('#sync').textContent=m}
+function svRefreshUI(){const b=$('#svbtn');if(b)b.textContent=svOn()?'Server: sync now, log out…':'Connect own server…';const a=$('#svmenu');if(a)a.textContent=svOn()?`Logged in as ${SV.user} · ${SV.msg||''}`:(inClaude?'Not available inside claude.ai':'Not connected')}
+function softRefresh(){updNav();updCmCount();const v=document.querySelector('.view.on');if(!v)return;
+ if(v.id=='v-today')renderToday();else if(v.id=='v-overview')renderOverview();else if(v.id=='v-comments')renderComments();
+ else if(v.id=='v-learn'&&learnBuilt){applyMarks();document.querySelectorAll('#lnote [data-lid]').forEach(el=>{if(!el.nextElementSibling||!el.nextElementSibling.classList.contains('edit'))renderCm(el.dataset.lid)})}
+ else if(v.id=='v-review'&&!sess)renderReviewHome()}
+const payload=()=>JSON.parse(JSON.stringify(S));
+async function svSync(){if(!svOn())return;if(svBusy){svAgain=true;return}svBusy=true;svStatus('syncing…');
+ try{let rev=SV.rev||0;
+  if(!svPulled){const g=await svCall('data');if(g.status==401)return svLost();if(g.status!=200)throw new Error(g.error||g.status);
+   if(g.data){mergeProgress(g.data,true);softRefresh()}rev=g.rev;svPulled=true}
+  for(let k=0;k<4;k++){const p=await svCall('data',{method:'PUT',body:{rev,data:payload()}});
+   if(p.status==200){SV.rev=p.rev;SV.last=Date.now();svSave();svStatus('saved to your server '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));break}
+   if(p.status==409){if(p.data){mergeProgress(p.data,true);softRefresh()}rev=p.rev;continue}
+   if(p.status==401)return svLost();
+   throw new Error(p.error||p.status)}}
+ catch(e){svStatus('server not reachable — saved on this device')}
+ finally{svBusy=false;svRefreshUI();if(svAgain){svAgain=false;setTimeout(svSync,500)}}}
+function svLost(){SV.token='';svSave();svBusy=false;svStatus('');$('#sync').textContent='Server session ended — log in again';svRefreshUI();toast('Server session ended — please log in again')}
+window.__svSched=()=>{if(!svOn())return;clearTimeout(svT);svT=setTimeout(svSync,3000)};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&svOn()){clearTimeout(svT);svSync()}});
+function svDialog(){const m=$('#svdlg'),b=$('#svbody');$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');
+ if(inClaude){b.innerHTML=`<p>Syncing with your own server works in the <b>GitHub</b> and <b>local-file</b> versions of this tool. Pages inside claude.ai may not connect to other servers; here your progress syncs to your Claude account instead.</p>`}
+ else if(svOn()){b.innerHTML=`<p>Logged in as <b>${esc(SV.user)}</b> on<br><code>${esc(SV.url)}</code></p><p class="small mut">${esc(SV.msg||'')}${SV.last?' · last saved '+new Date(SV.last).toLocaleString():''}</p><div class="row"><button class="pri" id="svsync">Sync now</button><button id="svout">Log out</button></div><p class="small mut" style="margin-top:12px">Progress, mock exams, section marks and comments are saved to your server automatically a few seconds after each change and merged with your other devices (for every card, the more recent state wins).</p><div class="svmsg" id="svm"></div>`;
+  $('#svsync').onclick=async()=>{svPulled=false;await svSync();$('#svm').textContent=SV.msg||''};
+  $('#svout').onclick=async()=>{try{await svCall('logout',{method:'POST'})}catch(e){}SV.token='';SV.rev=0;svPulled=false;svSave();$('#sync').textContent='Progress saved on this device';svRefreshUI();svDialog()}}
+ else{b.innerHTML=`<p class="small mut">Log in to the progress API on your own PHP server (see the server’s README). Your progress is then saved there and shared between devices.</p>
+  <form class="svform" id="svf" autocomplete="on"><label>API address<input type="text" class="raw" id="svu" name="url" placeholder="https://example.com/progress/api.php" value="${esc(SV.url||'')}" autocomplete="url" autocapitalize="off" spellcheck="false" required></label>
+  <label>User name<input type="text" class="raw" id="svn" name="username" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(SV.user||'')}" required></label>
+  <label>Password<input type="password" id="svp" name="password" autocomplete="current-password" required minlength="8"></label>
+  <div class="row"><button class="pri" type="submit" data-act="login">Log in</button><button type="submit" data-act="register">Create account</button></div><div class="svmsg" id="svm" role="status"></div></form>`;
+  let act='login';b.querySelectorAll('[data-act]').forEach(x=>x.onclick=()=>{act=x.dataset.act});
+  $('#svf').onsubmit=async e=>{e.preventDefault();const msg=$('#svm');msg.className='svmsg';msg.textContent='Connecting…';
+   const url=svUrl($('#svu').value),username=$('#svn').value.trim(),password=$('#svp').value;
+   try{const ping=await svCall('',{url});if(ping.api!=='progress-api'){msg.className='svmsg bad';msg.textContent='No progress API found at this address.';return}
+    const r=await svCall(act,{url,method:'POST',body:{username,password}});
+    if(!r.token){msg.className='svmsg bad';msg.textContent=r.error||('Error '+r.status);return}
+    SV={url,token:r.token,user:r.username,rev:0};svPulled=false;svSave();msg.className='svmsg ok';msg.textContent='Logged in. Syncing…';
+    await svSync();svDialog()}
+   catch(err){msg.className='svmsg bad';msg.textContent='Could not reach the server. Check the address, HTTPS and the allowed origins in config.php.'}}}
+ m.hidden=false;const f=m.querySelector('input,button.pri');if(f)f.focus()}
+$('#svbtn').onclick=svDialog;
+$('#svx').onclick=()=>{$('#svdlg').hidden=true};$('#svdlg').addEventListener('click',e=>{if(e.target.id=='svdlg')$('#svdlg').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#svdlg').hidden)$('#svdlg').hidden=true});
+svRefreshUI();
+
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.1.3';
+const VERSION='0.2.0';
 $('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
@@ -1382,6 +1451,7 @@ window.addEventListener('hashchange',route);
 document.addEventListener('click',e=>{const b=e.target.closest('.conv [data-k]');if(!b)return;e.stopImmediatePropagation();const inp=$('#cv');const s=document.activeElement===inp?(inp.selectionStart??inp.value.length):inp.value.length;inp.value=inp.value.slice(0,s)+b.dataset.k+inp.value.slice(document.activeElement===inp?(inp.selectionEnd??s):s);inp.focus();inp.setSelectionRange(s+1,s+1);inp.dispatchEvent(new Event('input',{bubbles:true}))},true);
 migrate();
 route();
+if(svOn())setTimeout(svSync,300);
 try{if(window.speechSynthesis)speechSynthesis.getVoices()}catch(e){}
 initSync();
 if(window.claude&&window.claude.use){window.claude.use('tts').then(t=>{ttsNS=t}).catch(()=>{});window.claude.use('downloads').then(d=>{dlNS=d}).catch(()=>{})}
