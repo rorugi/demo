@@ -101,7 +101,28 @@ input[type=text],select,textarea{font:inherit;font-size:16px;padding:10px 12px;b
 .ltabs a{flex:none}
 @media(min-width:900px){.ltabs{position:sticky;top:var(--toph,58px);z-index:5}}
 .chap{scroll-margin-top:calc(var(--toph,58px) + 70px);padding-bottom:28px;margin-bottom:28px;border-bottom:2px solid var(--line)}
-.chap>h2:first-child{color:var(--red)}
+.chap .l2>h2:first-child{color:var(--red)}
+.ltools{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 14px}
+.ltools .small{max-width:70ch}
+.sec{border-left:5px solid transparent;padding-left:14px;margin-left:-19px;border-radius:2px}
+.sec.l3{margin-left:-12px;padding-left:7px}
+@media(max-width:600px){.sec{margin-left:-16px;padding-left:11px}.sec.l3{margin-left:-9px;padding-left:4px}}
+.sec[data-c=green]{border-left-color:#2e9e5b}.sec[data-c=yellow]{border-left-color:#e9b500}.sec[data-c=orange]{border-left-color:#f08a24}.sec[data-c=red]{border-left-color:#d93a2b}.sec[data-c=blue]{border-left-color:#2f6fdb}.sec[data-c=gray]{border-left-color:#8f8a86}
+.mstat{font-size:13px;font-weight:600;min-height:32px;padding:3px 8px;margin-left:8px;vertical-align:middle;border-radius:16px;color:var(--ink);font-family:var(--sans)}
+.mstat[data-c=green]{background:#2e9e5b;color:#fff}.mstat[data-c=yellow]{background:#e9b500;color:#1d1613}.mstat[data-c=orange]{background:#f08a24;color:#1d1613}.mstat[data-c=red]{background:#d93a2b;color:#fff}.mstat[data-c=blue]{background:#2f6fdb;color:#fff}.mstat[data-c=gray]{background:#8f8a86;color:#fff}
+.cmmode .cml{cursor:text;border-radius:4px}
+.cmmode .cml:hover,.cmmode .cml:focus-visible{outline:2px dashed var(--yel);outline-offset:2px}
+.cml.hascm{box-shadow:inset 3px 0 0 var(--yel)}
+.cmt{background:color-mix(in srgb,var(--yel) 22%,var(--bg));border:1px solid color-mix(in srgb,var(--yel) 60%,var(--bg));border-radius:10px;padding:8px 10px;margin:6px 0 10px;font-size:15px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:flex-start;color:var(--ink);font-weight:400}
+.cmt .cmtx{flex:1 1 240px;white-space:normal}
+.cmt textarea{flex:1 1 100%;min-height:70px}
+.cmt .cmact{display:flex;gap:6px}.cmt .chip{min-height:34px;padding:4px 10px;font-size:13px}
+.flash{animation:flash 1.6s ease}@keyframes flash{0%,40%{background:color-mix(in srgb,var(--yel) 45%,transparent)}100%{background:transparent}}
+.cmitem{border-bottom:1px solid var(--line);padding:12px 0}
+.cmitem .ex{color:var(--mut);font-size:14px;border-left:3px solid var(--line);padding-left:10px;margin:4px 0 8px}
+.cmitem .tx{white-space:pre-wrap}
+.mkrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%}
 .saverow{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px;margin-top:4px;font-size:14px}
 .saverow button{min-height:40px;padding:6px 12px;font-size:14px}
 .note{max-width:820px}
@@ -235,6 +256,7 @@ textarea{width:100%;min-height:90px}
     <p class="small mut">Loading merges: for every card, the more recent state wins. Mock exams are included.</p>
     <p class="small" id="progmsg" role="status"></p>
     <a href="#today" id="menuset">Settings &amp; backup as text</a>
+    <button type="button" id="cmnav">Comments and marks <span class="mut" id="cmcount"></span></button>
     <button type="button" id="aboutbtn">About</button>
    </div>
   </div>
@@ -277,6 +299,7 @@ textarea{width:100%;min-height:90px}
    <details class="box"><summary><b>Settings and your data</b></summary>
     <p class="row" style="margin-top:10px"><label for="npd">New cards per day</label> <select id="npd"><option>5</option><option>10</option><option>15</option><option>20</option><option>30</option><option>50</option></select></p>
     <p class="row" style="margin-top:6px"><label for="ret">Target recall (FSRS desired retention)</label> <select id="ret"><option value="0.85">85% · fewer reviews</option><option value="0.9">90% · recommended</option><option value="0.95">95% · before an exam</option></select></p>
+    <p><a href="#comments">Your comments and section marks →</a></p>
     <p class="small mut">To save or load your progress as a file, use the menu (☰) at the top right. Copying as text is a fallback.</p>
     <div class="row" style="margin-top:8px"><button id="exp">Copy as text</button><button id="impbtn">Restore from text</button><button id="reset">Reset progress</button></div>
     <textarea id="imp" placeholder="Paste a backup here, then press Restore" style="margin-top:8px"></textarea>
@@ -295,11 +318,19 @@ textarea{width:100%;min-height:90px}
  <div id="ovlist"></div>
 </div></section>
 
+<!-- COMMENTS -->
+<section class="view band" id="v-comments"><div class="wrap"><div class="stage" style="max-width:860px">
+ <h1>Comments and section marks</h1>
+ <p class="mut">Everything you noted in the chapter notes. Saved with your progress and in the progress file.</p>
+ <div id="cmlist"></div>
+</div></div></section>
+
 <!-- LEARN -->
 <section class="view band" id="v-learn"><div class="wrap">
  <h1>All chapters on one page</h1>
  <p class="mut">Chapters 1–10 condensed from the book, with exam traps and memory aids, in order on one page. Jump with the chapter bar; each chapter ends with questions to test yourself.</p>
  <nav class="ltabs scroll" id="ltabs" aria-label="Chapters"></nav>
+ <div class="ltools"><button type="button" class="chip" id="cmmode" aria-pressed="false">Comment mode</button><span class="small mut" id="cmhint">Use the status menu next to each heading to colour a section: e.g. green = know it, yellow = mostly, orange = shaky, red = repeat, blue = working on it, gray = later. Turn on comment mode, then click any line to comment on it.</span><a class="small" href="#comments">All comments and marks →</a></div>
  <article class="note" id="lnote"></article>
 </div></section>
 
@@ -350,11 +381,11 @@ textarea{width:100%;min-height:90px}
  <p class="mut">Version <b id="ver"></b></p>
  <p>A study companion for A. M. Ruppel, <i>The Cambridge Introduction to Sanskrit</i> (Cambridge University Press, 2017), Chapters 1–10. It is meant to get the material into long-term memory and to prepare you for exams on it.</p>
  <h3>What it does</h3>
- <ul><li><b>Learn</b> — the chapters condensed on one page, with exam traps and self-test questions.</li><li><b>Review</b> — flashcards scheduled with <b>FSRS-5</b> (Free Spaced Repetition Scheduler by the open-spaced-repetition project, default parameters). Each card comes back when your predicted recall drops to your target (90% by default; change it in Settings).</li><li><b>Drill</b> — unlimited generated questions, mixed across topics.</li><li><b>Mock exam</b> — timed, auto-marked papers; each one is stored with your progress.</li><li><b>Overview</b> — every knowledge nugget as a circle, so you see where you stand.</li></ul>
+ <ul><li><b>Learn</b> — the chapters condensed on one page, with exam traps and self-test questions.</li><li><b>Review</b> — flashcards scheduled with <b>FSRS-5</b> (Free Spaced Repetition Scheduler by the open-spaced-repetition project, default parameters). Each card comes back when your predicted recall drops to your target (90% by default; change it in Settings).</li><li><b>Drill</b> — unlimited generated questions, mixed across topics.</li><li><b>Mock exam</b> — timed, auto-marked papers; each one is stored with your progress.</li><li><b>Overview</b> — every knowledge nugget as a circle, so you see where you stand.</li><li><b>Marks and comments</b> — colour any section of the notes by how well you know it, and comment on any line; see them all under ☰ → Comments and marks.</li></ul>
  <h3>Your data</h3>
  <p>Progress stays in your browser, syncs to your Claude account on the published page, and can be saved to or loaded from a file in the ☰ menu. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -635,7 +666,7 @@ const CARD=Object.fromEntries(CARDS.map(c=>[c.id,c]));
 
 /* ================= STATE ================= */
 const KEY='ruppel15-v1';
-const blank=()=>({v:1,cards:{},log:{},exams:[],drill:{},settings:{newPerDay:15,chs:CHIDS.slice()},updated:0});
+const blank=()=>({v:1,cards:{},log:{},exams:[],drill:{},marks:{},comments:{},settings:{newPerDay:15,chs:CHIDS.slice()},updated:0});
 let S=(()=>{try{const x=JSON.parse(localStorage.getItem(KEY));return x?Object.assign(blank(),x):blank()}catch(e){return blank()}})();
 function migrate(){let ch=false;for(const [id,c] of Object.entries(S.cards)){if(c&&c.S==null){ch=true;if(!c.reps){c.st='relearn';c.S=.4;c.D=6}else{c.st='review';c.S=Math.max(1,c.ivl||1);c.D=clampD(5+(2.5-(c.ease||2.5))*4)}delete c.ease}}if(!S.settings.ret)S.settings.ret=0.9;const c=S.settings.chs||[];if(!S.settings.v2){if(c.length>=6&&!c.includes('6'))S.settings.chs=CHIDS.slice();S.settings.v2=1}if(ch){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}}
 let dbRef=null,exRef=null,examsDirty=false,writing=false,again=false,wt=null;
@@ -860,6 +891,7 @@ let dlNS=null;
  mb.onclick=e=>{e.stopPropagation();setM(mn.hidden)};
  document.addEventListener('click',e=>{if(!mn.hidden&&!e.target.closest('.menuwrap'))setM(false)});
  document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!mn.hidden){setM(false);mb.focus()}});
+ $('#cmnav').onclick=()=>{setM(false);location.hash='comments'};
  $('#menuset').onclick=()=>{setM(false);setTimeout(()=>{const d=document.querySelector('#v-today details.box');if(d){d.open=true;d.scrollIntoView({block:'center'})}},60)};}
 function progMsg(m){const a=$('#progmsg'),b=$('#datamsg');if(a)a.textContent=m;if(b)b.textContent=m;toast(m)}
 async function saveProgress(){const data=JSON.stringify(Object.assign({app:'ruppel-sanskrit',savedAt:new Date().toISOString()},S));const fn='ruppel-progress-'+dayKey()+'.json';
@@ -870,6 +902,7 @@ function mergeProgress(x){if(!x||typeof x!='object'||typeof x.cards!='object')th
  let added=0,updated=0;for(const [id,c] of Object.entries(x.cards)){if(!CARD[id]||!c||typeof c.due!='number')continue;const m=S.cards[id];if(!m){S.cards[id]=c;added++}else if((c.last||0)>(m.last||0)){S.cards[id]=c;updated++}}
  for(const [d,l] of Object.entries(x.log||{})){const m=S.log[d]||(S.log[d]={});for(const k of ['r','n','ok','d'])m[k]=Math.max(m[k]||0,+l[k]||0)}
  for(const e of (x.exams||[])){if(!e||!e.t)continue;const m=S.exams.find(y=>y.t==e.t);if(!m)S.exams.push(e);else if(!m.items&&e.items)m.items=e.items}pruneExams();examsDirty=true;
+ for(const k of ['marks','comments'])for(const [id,v] of Object.entries(x[k]||{})){if(!v||typeof v!='object')continue;const m=S[k][id];if(!m||(v.t||0)>(m.t||0))S[k][id]=v}
  for(const [t,d] of Object.entries(x.drill||{})){if(!S.drill[t]||(d.t||0)>(S.drill[t].t||0))S.drill[t]=d}
  migrate();save();return {added,updated}}
 $('#loadfile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const x=JSON.parse(await f.text());const r=mergeProgress(x);route();progMsg(`Loaded ${f.name}: ${r.added} new and ${r.updated} newer cards taken over.`)}catch(err){progMsg('That file is not a progress file from this site.')}};
@@ -1058,14 +1091,59 @@ Object.assign(NOTES,{
 
 let lcur='1';
 let learnBuilt=false,lspy=null;
+/* ----- section marks and line comments ----- */
+const MCOL=[['','No status'],['green','Green'],['yellow','Yellow'],['orange','Orange'],['red','Red'],['blue','Blue'],['gray','Gray']];
+const MHEX={green:'#2e9e5b',yellow:'#e9b500',orange:'#f08a24',red:'#d93a2b',blue:'#2f6fdb',gray:'#8f8a86'};
+function hsh(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
+const ltxt=el=>el.tagName=='TR'?[...el.cells].map(c=>c.textContent.replace(/\s+/g,' ').trim()).filter(Boolean).join(' · '):el.textContent.replace(/\s+/g,' ').trim();
+let cmMode=false,pendingLine=null;
+function decorateNotes(){
+ document.querySelectorAll('#lnote .chap').forEach(sec=>{const ch=sec.dataset.ch;const seen={};const mkid=(k,t)=>{const b=k+':'+ch+':'+hsh(t.slice(0,300));seen[b]=(seen[b]||0)+1;return seen[b]>1?b+'.'+seen[b]:b};
+  const kids=[...sec.children];sec.textContent='';let s2=null,s3=null;
+  for(const k of kids){if(k.tagName=='H2'){s2=document.createElement('div');s2.className='sec l2';sec.append(s2);s2.append(k);s3=null}else if(k.tagName=='H3'){s3=document.createElement('div');s3.className='sec l3';(s2||sec).append(s3);s3.append(k)}else (s3||s2||sec).append(k)}
+  sec.querySelectorAll('h2,h3').forEach(h=>{const t=ltxt(h);const id=mkid('h',t);h.parentElement.dataset.hid=id;h.parentElement.dataset.hx=t;h.insertAdjacentHTML('beforeend',`<select class="mstat" data-mid="${id}" aria-label="Status of ${esc(t)}">${MCOL.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>`)});
+  sec.querySelectorAll('p,li,tbody tr,summary,.box').forEach(el=>{if(el.classList.contains('box')&&el.querySelector('p,li,tr'))return;if(el.closest('.row'))return;const t=ltxt(el);if(!t)return;el.dataset.lid=mkid('l',el.tagName+':'+t);el.classList.add('cml')})});
+ applyMarks();document.querySelectorAll('#lnote [data-lid]').forEach(el=>renderCm(el.dataset.lid))}
+function applyMarks(){document.querySelectorAll('#lnote [data-hid]').forEach(w=>{const c=(S.marks[w.dataset.hid]||{}).c||'';w.dataset.c=c;const sel=w.querySelector(':scope>h2>.mstat,:scope>h3>.mstat');if(sel){sel.value=c;sel.dataset.c=c}});
+ document.querySelectorAll('#ltabs [data-lt]').forEach(a=>{const w=document.querySelector(`#chap-${a.dataset.lt.toLowerCase()} .l2`);const c=w&&w.dataset.c;a.style.boxShadow=c?`inset 5px 0 0 ${MHEX[c]}`:''});updCmCount()}
+function updCmCount(){const n=Object.keys(S.comments).length,m=Object.keys(S.marks).length;const el=$('#cmcount');if(el)el.textContent=n||m?`(${n} · ${m})`:''}
+const lineEl=id=>document.querySelector(`#lnote [data-lid="${CSS.escape(id)}"]`);
+function placeAfter(el,node){const tg=el.tagName;if(tg=='LI')el.append(node);else if(tg=='TR'){const tr=document.createElement('tr');tr.className='cmrow';const td=document.createElement('td');td.colSpan=el.cells.length||1;td.append(node);tr.append(td);el.after(tr)}else if(tg=='SUMMARY')el.parentElement.after(node);else el.after(node)}
+function removeCm(id){document.querySelectorAll(`#lnote [data-cmfor="${CSS.escape(id)}"]`).forEach(n=>{const tr=n.closest('tr.cmrow');(tr||n).remove()})}
+function renderCm(id){removeCm(id);const el=lineEl(id);if(!el)return;const c=S.comments[id];el.classList.toggle('hascm',!!c);if(!c)return;const d=document.createElement('div');d.className='cmt';d.dataset.cmfor=id;d.innerHTML=`<span class="cmtx">${esc(c.text).replace(/\n/g,'<br>')}</span><span class="cmact"><button type="button" class="chip" data-cmedit="${esc(id)}">Edit</button><button type="button" class="chip" data-cmdel="${esc(id)}">Delete</button></span>`;placeAfter(el,d)}
+function openEditor(id){removeCm(id);const el=lineEl(id);if(!el)return;const c=S.comments[id];const d=document.createElement('div');d.className='cmt edit';d.dataset.cmfor=id;d.innerHTML=`<textarea class="raw" aria-label="Comment on this line" placeholder="Your comment on this line">${c?esc(c.text):''}</textarea><span class="cmact"><button type="button" class="pri chip" data-cmsave="${esc(id)}">Save</button><button type="button" class="chip" data-cmcancel="${esc(id)}">Cancel</button>${c?`<button type="button" class="chip" data-cmdel="${esc(id)}">Delete</button>`:''}</span>`;placeAfter(el,d);const ta=d.querySelector('textarea');ta.focus();ta.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveCm(id,ta.value)}if(e.key=='Escape'){e.stopPropagation();renderCm(id)}})}
+function saveCm(id,text){text=String(text).trim();const el=lineEl(id);if(!text){delete S.comments[id]}else{const old=S.comments[id];S.comments[id]={ch:el?el.closest('.chap').dataset.ch:(old&&old.ch),x:el?ltxt(el).slice(0,200):(old&&old.x)||'',text,t:Date.now(),c0:old&&old.c0||Date.now()}}save();renderCm(id);updCmCount()}
+function delCm(b,id){if(!b.dataset.c){b.dataset.c=1;b.textContent='Really delete?';return}delete S.comments[id];save();renderCm(id);updCmCount();if($('#v-comments').classList.contains('on'))renderComments()}
+function setCmMode(on){cmMode=on;$('#cmmode').setAttribute('aria-pressed',on);$('#lnote').classList.toggle('cmmode',on);document.querySelectorAll('#lnote .cml').forEach(el=>on?el.setAttribute('tabindex','0'):el.removeAttribute('tabindex'));if(on)toast('Comment mode on: click a line to comment')}
+$('#cmmode').onclick=()=>setCmMode(!cmMode);
+$('#lnote').addEventListener('change',e=>{const s=e.target.closest('.mstat');if(!s)return;const id=s.dataset.mid;const w=s.closest('[data-hid]');if(s.value)S.marks[id]={c:s.value,x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,t:Date.now()};else delete S.marks[id];save();applyMarks()});
+$('#lnote').addEventListener('click',e=>{const b=e.target.closest('[data-cmedit],[data-cmdel],[data-cmsave],[data-cmcancel]');
+ if(b){e.preventDefault();if(b.dataset.cmedit)openEditor(b.dataset.cmedit);else if(b.dataset.cmdel)delCm(b,b.dataset.cmdel);else if(b.dataset.cmsave)saveCm(b.dataset.cmsave,b.closest('.cmt').querySelector('textarea').value);else renderCm(b.dataset.cmcancel);return}
+ if(!cmMode||e.target.closest('a,button,select,textarea,input,.cmt'))return;const el=e.target.closest('[data-lid]');if(!el)return;e.preventDefault();openEditor(el.dataset.lid)});
+$('#lnote').addEventListener('keydown',e=>{if(cmMode&&e.key=='Enter'&&e.target.matches('[data-lid]')){e.preventDefault();openEditor(e.target.dataset.lid)}});
+function gotoNote(id){pendingLine=id;if(location.hash.toLowerCase()=='#learn')route();else location.hash='learn'}
+function revealPending(){if(!pendingLine)return;const id=pendingLine;pendingLine=null;const el=lineEl(id)||document.querySelector(`#lnote [data-hid="${CSS.escape(id)}"]`);if(!el){toast('That line is no longer in the notes');return}const d=el.closest('details');if(d)d.open=true;el.scrollIntoView({block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+function renderComments(){const order=Object.fromEntries(CHIDS.map((c,i)=>[c,i]));order['0']=-1;
+ const cms=Object.entries(S.comments).sort((a,b)=>(order[a[1].ch]-order[b[1].ch])||(a[1].c0||a[1].t)-(b[1].c0||b[1].t));
+ const COL=['red','orange','yellow','blue','gray','green'];const LBL={red:'Red',orange:'Orange',yellow:'Yellow',blue:'Blue',gray:'Gray',green:'Green'};
+ const mks=Object.entries(S.marks).filter(([,m])=>m&&m.c).sort((a,b)=>(COL.indexOf(a[1].c)-COL.indexOf(b[1].c))||(order[a[1].ch]-order[b[1].ch]));
+ const chl=c=>c=='0'?'How to study':'Chapter '+c;
+ $('#cmlist').innerHTML=`<h2>Comments <span class="mut" style="font-size:.6em">${cms.length}</span></h2>${cms.length?cms.map(([id,c],i)=>`${i==0||cms[i-1][1].ch!=c.ch?`<h3>${chl(c.ch)}</h3>`:''}<div class="cmitem" data-cid="${esc(id)}"><div class="ex">${esc(c.x||'')}</div><div class="tx">${esc(c.text)}</div><div class="row" style="margin-top:8px"><span class="small mut">${new Date(c.t).toLocaleString()}</span><button class="chip" data-goto="${esc(id)}">Show in notes</button><button class="chip" data-cpedit="${esc(id)}">Edit</button><button class="chip" data-cpdel="${esc(id)}">Delete</button></div></div>`).join(''):'<p class="mut">No comments yet. In Learn, turn on comment mode and click a line.</p>'}
+ <h2 style="margin-top:32px">Section marks <span class="mut" style="font-size:.6em">${mks.length}</span></h2>${mks.length?mks.map(([id,m])=>`<div class="mkrow"><span class="dot" style="background:${MHEX[m.c]}"></span><b>${LBL[m.c]}</b><span>${esc(m.x||'')}</span><span class="small mut">${chl(m.ch)}</span><button class="chip" data-goto="${esc(id)}">Show in notes</button></div>`).join(''):'<p class="mut">No sections marked yet. Use the status menu next to a heading in Learn.</p>'}`}
+$('#cmlist').addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){gotoNote(g.dataset.goto);return}
+ const ed=e.target.closest('[data-cpedit]');if(ed){const id=ed.dataset.cpedit;const box=ed.closest('.cmitem');box.querySelector('.tx').innerHTML=`<textarea class="raw" style="width:100%" aria-label="Edit comment">${esc(S.comments[id].text)}</textarea><div class="row" style="margin-top:6px"><button class="pri chip" data-cpsave="${esc(id)}">Save</button><button class="chip" data-cpcancel="1">Cancel</button></div>`;box.querySelector('textarea').focus();return}
+ const sv=e.target.closest('[data-cpsave]');if(sv){const id=sv.dataset.cpsave;const t=sv.closest('.cmitem').querySelector('textarea').value.trim();if(t){S.comments[id].text=t;S.comments[id].t=Date.now()}else delete S.comments[id];save();if(learnBuilt)renderCm(id);updCmCount();renderComments();return}
+ if(e.target.closest('[data-cpcancel]')){renderComments();return}
+ const dl=e.target.closest('[data-cpdel]');if(dl){if(!dl.dataset.c){dl.dataset.c=1;dl.textContent='Really delete?';return}const id=dl.dataset.cpdel;delete S.comments[id];save();if(learnBuilt)renderCm(id);updCmCount();renderComments()}});
+
 function renderLearn(sub){
  if(!learnBuilt){const tabs=[['0','How to study'],...CHAPS.map(c=>[c.id,c.id+' · '+c.t])];
   $('#ltabs').innerHTML=tabs.map(([id,t])=>`<a class="btn chip" style="text-decoration:none" href="#learn-${id.toLowerCase()}" data-lt="${id}" aria-pressed="false">${esc(t)}</a>`).join('');
   $('#lnote').innerHTML=tabs.map(([id])=>{const qs=CQ.filter(c=>c[0]==id);return `<section class="chap" id="chap-${id.toLowerCase()}" data-ch="${id}">${mark(NOTES[id]())}${qs.length?`<h3>Check yourself</h3><div class="qa">${qs.map(c=>`<details><summary>${mark(esc(c[1]))}</summary><p>${mark(c[2])}</p></details>`).join('')}</div><div class="row" style="margin-top:18px"><button class="pri" data-revch="${id}">Review chapter ${id} cards</button><button data-drillch="${id}">Drill chapter ${id}</button></div>`:''}</section>`}).join('');
-  learnBuilt=true;
+  learnBuilt=true;decorateNotes();
   try{lspy=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){const id=e.target.dataset.ch;document.querySelectorAll('#ltabs [data-lt]').forEach(a=>{const on=a.dataset.lt==id;a.setAttribute('aria-pressed',on);if(on)a.scrollIntoView({block:'nearest',inline:'nearest'})})}},{rootMargin:'-30% 0px -65% 0px'});document.querySelectorAll('.chap').forEach(c=>lspy.observe(c))}catch(e){}}
  const el=sub?document.getElementById('chap-'+sub.toLowerCase()):null;
- requestAnimationFrame(()=>{if(el)el.scrollIntoView();else window.scrollTo(0,0)})}
+ requestAnimationFrame(()=>{if(pendingLine)revealPending();else if(el)el.scrollIntoView();else window.scrollTo(0,0)})}
 $('#ltabs').addEventListener('click',e=>{const a=e.target.closest('[data-lt]');if(!a)return;if(location.hash.toLowerCase()=='#learn-'+a.dataset.lt.toLowerCase()){e.preventDefault();document.getElementById('chap-'+a.dataset.lt.toLowerCase())?.scrollIntoView()}});
 function setTopH(){const h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--toph',h.offsetHeight+'px')}
 setTopH();window.addEventListener('resize',setTopH);
@@ -1223,7 +1301,7 @@ function renderRef(){
 $('#rtabs').addEventListener('click',e=>{const b=e.target.closest('[data-rt]');if(b){rcur=b.dataset.rt;renderRef()}});
 
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.1.1';
+const VERSION='0.1.2';
 $('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
@@ -1269,17 +1347,19 @@ $('#ovlist').addEventListener('click',e=>{const b=e.target.closest('[data-nug]')
 
 /* ================= ROUTER ================= */
 function updNav(){const n=dueList(CHIDS).length+Math.min(newLeft(),CARDS.filter(c=>!S.cards[c.id]).length);$('#navdue').textContent=n;$('#navdue').style.display=n?'':'none'}
-function route(){const h=(location.hash||'#today').slice(1).toLowerCase();let v=h.split('-')[0];if(!['today','overview','learn','review','drill','exam','ref'].includes(v))v='today';
+function route(){const h=(location.hash||'#today').slice(1).toLowerCase();let v=h.split('-')[0];if(!['today','overview','learn','review','drill','exam','ref','comments'].includes(v))v='today';
  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id=='v-'+v));
  document.querySelectorAll('#nav a').forEach(a=>a.getAttribute('href')=='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
  if(v=='today')renderToday();
+ if(v=='learn'&&learnBuilt){applyMarks();document.querySelectorAll('#lnote [data-lid]').forEach(el=>renderCm(el.dataset.lid))}
  if(v=='learn'){const sub=h.split('-')[1];renderLearn(sub?CHIDS.find(c=>c.toLowerCase()==sub)||(sub=='0'?'0':null):null)}
  if(v=='overview')renderOverview();
+ if(v=='comments')renderComments();
  if(v=='review'){sess=null;renderReviewHome();if(pendingStart){const n=pendingStart;pendingStart=null;startSess(CHIDS,'nug',n.ids)}}
  if(v=='drill')renderDrill(false);
  if(v=='exam'&&!ex)renderExamHome();
  if(v=='ref')renderRef();
- updNav();if(v!='learn')window.scrollTo(0,0)}
+ updNav();updCmCount();if(v!='learn')window.scrollTo(0,0)}
 window.addEventListener('hashchange',route);
 // make Velthuis keypad work in converter (no .card/form ancestor)
 document.addEventListener('click',e=>{const b=e.target.closest('.conv [data-k]');if(!b)return;e.stopImmediatePropagation();const inp=$('#cv');const s=document.activeElement===inp?(inp.selectionStart??inp.value.length):inp.value.length;inp.value=inp.value.slice(0,s)+b.dataset.k+inp.value.slice(document.activeElement===inp?(inp.selectionEnd??s):s);inp.focus();inp.setSelectionRange(s+1,s+1);inp.dispatchEvent(new Event('input',{bubbles:true}))},true);
