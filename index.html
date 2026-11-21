@@ -10,13 +10,13 @@
 <style>
 :root{
   --bg:#eceee9; --fg:#1c2321; --muted:#5d6762; --line:#d3d8d2; --panel:#f7f8f5;
-  --slate:#22302e; --chalk:#eef2e9; --accent:#e9a23b;
+  --slate:#22302e; --chalk:#eef2e9; --accent:#e9a23b; --es:#E8590C; --es-text:#D9480F;
   --f-deva:"Tiro Devanagari Hindi","Noto Serif Devanagari",serif;
   --f-sa:"Noto Serif Devanagari",serif;
   --f-ui:"Hind","Segoe UI",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root{
-  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120; --slate:#1c2826; color-scheme:dark}}
+  --bg:#121716; --fg:#e2e7e3; --muted:#97a19c; --line:#2a3331; --panel:#1a2120; --slate:#1c2826; --es:#D9480F; --es-text:#FF8A3D; color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.55}
 main{max-width:720px;margin:0 auto;padding:48px 16px;display:grid;gap:24px}
@@ -29,6 +29,10 @@ p{margin:0;color:var(--muted);max-width:60ch}
 .thumb{width:96px;height:96px;border-radius:10px;background:var(--slate);display:grid;place-items:center;
   font-family:var(--f-deva);font-size:56px;color:var(--chalk);line-height:1}
 .thumb.sa{font-family:var(--f-sa)}
+/* Spanisch: orange Kachel */
+.thumb.es{background:var(--es);color:#fff}
+.card.es:hover{border-color:var(--es)}
+.card.es .go{color:var(--es-text)}
 .card h2{margin:0 0 4px;font-size:19px;font-weight:600}
 .card p{font-size:15px}
 .go{display:inline-block;margin-top:8px;color:var(--accent);font-weight:600;font-size:14px}
@@ -106,16 +110,16 @@ p{margin:0;color:var(--muted);max-width:60ch}
       <span class="go">Öffnen →</span>
     </div>
   </a>
-  <a class="card" href="colombian-spanish.html">
-    <div class="thumb" aria-hidden="true">ñ</div>
+  <a class="card es" href="colombian-spanish.html">
+    <div class="thumb es" aria-hidden="true">ñ</div>
     <div>
       <h2>Hablar colombiano</h2>
       <p>A field guide to Colombian Spanish: a clickable map of fourteen dialect regions covering the whole country, pronunciation with IPA, usted, vos and sumercé, diminutives, and a searchable glossary of 200+ words with example sentences.</p>
       <span class="go">Öffnen →</span>
     </div>
   </a>
-  <a class="card" href="spanishverbs.html">
-    <div class="thumb" aria-hidden="true" style="font-family:var(--f-ui);font-size:40px;font-weight:600">-ar</div>
+  <a class="card es" href="spanishverbs.html">
+    <div class="thumb es" aria-hidden="true" style="font-family:var(--f-ui);font-size:40px;font-weight:600">-ar</div>
     <div>
       <h2>Spanische Verben in Farbe</h2>
       <p>Die Verbtabellen aus dem Buch: 60 Verben mit allen Zeiten, Endungen nach Zeit eingefärbt, Stammwechsel unterstrichen. Die Suche springt direkt zum Verb, auch von einer konjugierten Form (puedo, fui) oder vom deutschen Wort aus.</p>
