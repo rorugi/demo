@@ -400,7 +400,7 @@ textarea{width:100%;min-height:90px}
  <h3>Your data</h3>
  <p>Progress stays in your browser, syncs to your Claude account on the claude.ai page, can be saved to or loaded from a file in the ☰ menu, and — if you connect one — syncs to your own PHP server. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -1219,8 +1219,8 @@ function showCard(){
   ($('#cans').querySelector('.pri')||$('#cans').querySelector('[data-gr="2"]')).focus()};
  $('#revstage').onclick=e=>{const b=e.target.closest('[data-gr]');if(!b)return;doGrade(+b.dataset.gr)}}
 function doGrade(g){const id=sess.q.shift();const card=CARD[id];const first=!sess.seen?.has(id);sess.seen=sess.seen||new Set();
- if(sess.mode=='practice'&&g>0){const L=todayLog();L.r++;L.ok++;S.cards[id].last=Date.now();save()}else grade(card,g);if(first){sess.done++;if(g>0)sess.ok++}sess.seen.add(id);
- {const st=S.cards[id]&&S.cards[id].st;if(st=='learn'||st=='relearn')sess.q.splice(Math.min(g==0?3:g==1?5:8,sess.q.length),0,id)}
+ const keepPlan=sess.mode=='practice'&&g>0;if(keepPlan){const L=todayLog();L.r++;L.ok++;S.cards[id].last=Date.now();save()}else grade(card,g);if(first){sess.done++;if(g>0)sess.ok++}sess.seen.add(id);
+ {const st=S.cards[id]&&S.cards[id].st;if(!keepPlan&&(st=='learn'||st=='relearn'))sess.q.splice(Math.min(g==0?3:g==1?5:8,sess.q.length),0,id)}
  updNav();showCard()}
 document.addEventListener('keydown',e=>{if(!$('#v-review').classList.contains('on')||!sess)return;
  if(e.key==' '&&!e.target.matches('input')){e.preventDefault();const b=$('#cf button[type=submit]');if(b&&!b.disabled)$('#cf').requestSubmit()}
@@ -1391,7 +1391,7 @@ document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#svdlg').hidden)
 svRefreshUI();
 
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.2.2';
+const VERSION='0.2.3';
 $('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
