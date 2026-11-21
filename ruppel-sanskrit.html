@@ -80,6 +80,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .hero .pri{background:var(--yel);border-color:var(--yel);color:#1d1613}
 button:disabled{opacity:.45;cursor:default}
 .chip{padding:7px 12px;min-height:40px;font-size:14px;border-radius:20px}
+.chip .cn{display:inline-block;min-width:18px;margin-left:5px;padding:0 5px;border-radius:9px;background:var(--yel);color:#1d1613;font-size:11px;font-weight:800;line-height:18px;text-align:center;vertical-align:1px}
 .chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 input[type=text],select,textarea{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
@@ -398,7 +399,7 @@ textarea{width:100%;min-height:90px}
  <h3>Your data</h3>
  <p>Progress stays in your browser, syncs to your Claude account on the claude.ai page, can be saved to or loaded from a file in the ☰ menu, and — if you connect one — syncs to your own PHP server. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -1184,12 +1185,14 @@ function contBlock(chs){const fresh=CARDS.filter(c=>chs.includes(c.ch)&&!S.cards
  return `<div class="cont"><p><b>Keep going with ${esc(lab)}</b> <span class="mut small">(pick chapters above)</span></p><div class="row">${fresh?`<button class="pri" data-more="new">Learn 10 more new cards</button>`:''}${learned?`<button data-more="practice">Practise learned cards (${Math.min(20,learned)})</button>`:''}</div><p class="small mut">New cards go into your normal schedule. Practice doesn’t move any card’s next review unless you get it wrong (“Again”).</p></div>`}
 function renderReviewHome(keep){
  const chs=S.settings.chs&&S.settings.chs.length?S.settings.chs:CHIDS;
- $('#revch').innerHTML=`<span class="small mut">Chapters:</span>`+CHAPS.map(c=>`<button class="chip" aria-pressed="${chs.includes(c.id)}" data-rc="${c.id}">${c.id}</button>`).join('')+`<button class="chip" data-rc="all">All</button>`;
+ $('#revch').innerHTML=`<span class="small mut">Chapters:</span>`+CHAPS.map(c=>{const d=dueList([c.id]).length;return `<button class="chip" aria-pressed="${chs.includes(c.id)}" data-rc="${c.id}"${d?` aria-label="Chapter ${c.id}, ${d} due" title="${d} due"`:''}>${c.id}${d?`<span class="cn">${d}</span>`:''}</button>`}).join('')+(()=>{const d=dueList(CHIDS).length;return `<button class="chip" data-rc="all">All${d?`<span class="cn">${d}</span>`:''}</button>`})();
  const due=dueList(chs).length,fresh=CARDS.filter(c=>chs.includes(c.ch)&&!S.cards[c.id]).length;const nl=Math.min(newLeft(),fresh);
- $('#revinfo').textContent=`${due} due · ${nl} new available today (${fresh} unseen in the selected chapters).`;
- if(!sess&&!keep)$('#revstage').innerHTML=`<div class="card done">${due+nl?`<div class="k">${due+nl}</div><p>cards in today’s session</p><button class="pri" id="go">Start</button>`:`<div class="k">✓</div><p>Today’s session is done.</p>${contBlock(chs)}`}</div>`;
+ const oth=dueList(CHIDS).filter(c=>!chs.includes(c.ch));const othCh=CHIDS.filter(c=>oth.some(x=>x.ch==c));
+ $('#revinfo').innerHTML=`${due} due · ${nl} new available today (${fresh} unseen in the selected chapters).`+(oth.length?` <b style="color:var(--red)">${oth.length} more due in chapter${othCh.length>1?'s':''} ${othCh.join(', ')}.</b>`:'');
+ const othBtn=oth.length?`<div class="cont" style="border-top:0;margin-top:0;padding-top:0"><button class="pri" data-othdue="1">Review the ${oth.length} card${oth.length>1?'s':''} due in chapter${othCh.length>1?'s':''} ${othCh.join(', ')}</button></div>`:'';
+ if(!sess&&!keep)$('#revstage').innerHTML=`<div class="card done">${due+nl?`<div class="k">${due+nl}</div><p>cards in today’s session</p><button class="pri" id="go">Start</button>`:(oth.length?`<div class="k">${oth.length}</div><p>Nothing due in the selected chapter${chs.length>1?'s':''} — but ${oth.length} card${oth.length>1?'s are':' is'} due elsewhere.</p>${othBtn}`:`<div class="k">✓</div><p>Today’s session is done.</p>`)+contBlock(chs)}</div>`;
  const g=$('#go');if(g&&!keep)g.onclick=()=>startSess(chs,'')}
-$('#revstage').addEventListener('click',e=>{const b=e.target.closest('[data-more]');if(!b)return;const chs=S.settings.chs&&S.settings.chs.length?S.settings.chs:CHIDS;startSess(chs,b.dataset.more)});
+$('#revstage').addEventListener('click',e=>{const o=e.target.closest('[data-othdue]');if(o){const ch=CHIDS.filter(c=>dueList([c]).length);S.settings.chs=CHIDS.filter(c=>(S.settings.chs||[]).includes(c)||ch.includes(c));save();sess=null;renderReviewHome();startSess(S.settings.chs,'');return}const b=e.target.closest('[data-more]');if(!b)return;const chs=S.settings.chs&&S.settings.chs.length?S.settings.chs:CHIDS;startSess(chs,b.dataset.more)});
 $('#revch').addEventListener('click',e=>{const b=e.target.closest('[data-rc]');if(!b)return;let chs=new Set(S.settings.chs||CHIDS);const id=b.dataset.rc;if(id=='all')chs=new Set(CHIDS);else{chs.has(id)?chs.delete(id):chs.add(id);if(!chs.size)chs.add(id)}S.settings.chs=CHIDS.filter(c=>chs.has(c));save();sess=null;renderReviewHome()});
 function startSess(chs,mode,ids){
  const now=Date.now();let q;
@@ -1386,7 +1389,7 @@ document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#svdlg').hidden)
 svRefreshUI();
 
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.2.0';
+const VERSION='0.2.1';
 $('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
@@ -1431,7 +1434,7 @@ $('#ovlist').addEventListener('click',e=>{const b=e.target.closest('[data-nug]')
  const s=e.target.closest('[data-nugstudy]');if(s){pendingStart=NUGS[+s.dataset.nugstudy];location.hash='review'}});
 
 /* ================= ROUTER ================= */
-function updNav(){const n=dueList(CHIDS).length+Math.min(newLeft(),CARDS.filter(c=>!S.cards[c.id]).length);$('#navdue').textContent=n;$('#navdue').style.display=n?'':'none'}
+function updNav(){const d=dueList(CHIDS).length,nw=Math.min(newLeft(),CARDS.filter(c=>!S.cards[c.id]).length),n=d+nw;const el=$('#navdue');el.textContent=n;el.style.display=n?'':'none';el.title=`${d} due, ${nw} new today — all chapters`}
 function route(){const h=(location.hash||'#today').slice(1).toLowerCase();let v=h.split('-')[0];if(!['today','overview','learn','review','drill','exam','ref','comments'].includes(v))v='today';
  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id=='v-'+v));
  document.querySelectorAll('#nav a').forEach(a=>a.getAttribute('href')=='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
