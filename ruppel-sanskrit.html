@@ -109,6 +109,12 @@ input[type=text],select,textarea{font:inherit;font-size:16px;padding:10px 12px;b
 .sec.l3{margin-left:-12px;padding-left:7px}
 @media(max-width:600px){.sec{margin-left:-16px;padding-left:11px}.sec.l3{margin-left:-9px;padding-left:4px}}
 .sec[data-c=green]{border-left-color:#2e9e5b}.sec[data-c=yellow]{border-left-color:#e9b500}.sec[data-c=orange]{border-left-color:#f08a24}.sec[data-c=red]{border-left-color:#d93a2b}.sec[data-c=blue]{border-left-color:#2f6fdb}.sec[data-c=gray]{border-left-color:#8f8a86}
+.qi{display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 8px}.qi>details{flex:1 1 0;min-width:0}.qi>.cmt{flex-basis:100%}.qi>.mctl{padding-top:9px}
+.sec.lq{margin-left:-12px;padding-left:7px}@media(max-width:600px){.sec.lq{margin-left:-9px;padding-left:4px}}
+.mctl{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.qi .mstat{margin-left:0}
+.mdur{font-size:12px;min-height:32px;padding:3px 6px;border-radius:16px;font-family:var(--sans);color:var(--ink);vertical-align:middle}.mdur.on{border-color:var(--ink);font-weight:600}
+.qi{border-bottom:1px solid var(--line)}.qa .qi>details{border-bottom:0}
+.qi .mstat{-webkit-appearance:none;appearance:none;width:26px;height:26px;min-height:26px;padding:0;border-radius:50%;color:transparent;background:transparent;border:2px dashed #d6ccc3;cursor:pointer;font-size:13px}.qi .mstat option{color:#1d1613;background:#fff}.qi .mstat[data-c]{color:transparent}.qi .mstat[data-c]:not([data-c='']){border:2px solid rgba(0,0,0,.15)}.qi .mstat:hover{border-color:#8f8a86}
 .mstat{font-size:13px;font-weight:600;min-height:32px;padding:3px 8px;margin-left:8px;vertical-align:middle;border-radius:16px;color:var(--ink);font-family:var(--sans)}
 .mstat[data-c=green]{background:#2e9e5b;color:#fff}.mstat[data-c=yellow]{background:#e9b500;color:#1d1613}.mstat[data-c=orange]{background:#f08a24;color:#1d1613}.mstat[data-c=red]{background:#d93a2b;color:#fff}.mstat[data-c=blue]{background:#2f6fdb;color:#fff}.mstat[data-c=gray]{background:#8f8a86;color:#fff}
 .selcm{position:absolute;z-index:45;transform:translateX(-50%);background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:8px 14px;min-height:40px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.25)}
@@ -339,7 +345,7 @@ textarea{width:100%;min-height:90px}
  <h1>All chapters on one page</h1>
  <p class="mut">Chapters 1–10 condensed from the book, with exam traps and memory aids, in order on one page. Jump with the chapter bar; each chapter ends with questions to test yourself.</p>
  <nav class="ltabs scroll" id="ltabs" aria-label="Chapters"></nav>
- <div class="ltools"><span class="small mut" id="cmhint">Colour a section with the status menu next to its heading (e.g. green = know it, yellow = mostly, orange = shaky, red = repeat, blue = working on it, gray = later). To comment, select any text in the notes and click <b>Comment</b>.</span><a class="small" href="#comments">All comments and marks →</a></div>
+ <div class="ltools"><span class="small mut" id="cmhint">Colour a section or a self-test question with its status menu (e.g. green = know it, yellow = mostly, orange = shaky, red = repeat, blue = working on it, gray = later). The ⏱ menu next to it removes the colour again after 1 hour … 1 year — a reminder to look at it again. To comment, select any text in the notes and click <b>Comment</b>.</span><a class="small" href="#comments">All comments and marks →</a></div>
  <article class="note" id="lnote"></article>
 </div></section>
 
@@ -400,7 +406,7 @@ textarea{width:100%;min-height:90px}
  <h3>Your data</h3>
  <p>Progress stays in your browser, syncs to your Claude account on the claude.ai page, can be saved to or loaded from a file in the ☰ menu, and — if you connect one — syncs to your own PHP server. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.2.4</b> — Every “Check yourself” question has its own status colour. Any status (sections and questions) can get a timer (1h … 1y): when it runs out, the colour is removed again — a manual reminder. Active marks with their end time are listed on the Comments page.</li><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -1110,6 +1116,11 @@ let learnBuilt=false,lspy=null;
 /* ----- section marks and line comments ----- */
 const MCOL=[['','No status'],['green','Green'],['yellow','Yellow'],['orange','Orange'],['red','Red'],['blue','Blue'],['gray','Gray']];
 const MHEX={green:'#2e9e5b',yellow:'#e9b500',orange:'#f08a24',red:'#d93a2b',blue:'#2f6fdb',gray:'#8f8a86'};
+const MDUR=['1h','12h','1d','3d','5d','7d','2w','1m','3m','6m','1y'];
+function durEnd(d,from){const t=new Date(from),n=parseInt(d),u=d.slice(-1);if(u=='h')t.setTime(+t+n*36e5);else if(u=='d')t.setDate(t.getDate()+n);else if(u=='w')t.setDate(t.getDate()+7*n);else if(u=='m')t.setMonth(t.getMonth()+n);else if(u=='y')t.setFullYear(t.getFullYear()+n);return +t}
+const mEff=m=>m&&m.c&&!(m.exp&&m.exp<=Date.now())?m.c:'';
+function leftTxt(ms){const h=ms/36e5;if(ms<3570e3)return Math.max(1,Math.ceil(ms/6e4))+' min';if(h<47.5)return Math.round(h)+' h';const d=Math.round(h/24);return d<60?d+' d':Math.round(d/30.4)+' mo'}
+const mctl=(id,label,q)=>`<span class="mctl"><select class="mstat" data-mid="${id}" aria-label="Status of ${esc(label)}"${q?' title="Status of this question"':''}>${MCOL.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select><select class="mdur" data-mid="${id}" aria-label="Remove status after" hidden></select></span>`;
 function hsh(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
 const ltxt=el=>el.tagName=='TR'?[...el.cells].map(c=>c.textContent.replace(/\s+/g,' ').trim()).filter(Boolean).join(' · '):el.textContent.replace(/\s+/g,' ').trim();
 let pendingLine=null,selQuote='';
@@ -1117,12 +1128,14 @@ function decorateNotes(){
  document.querySelectorAll('#lnote .chap').forEach(sec=>{const ch=sec.dataset.ch;const seen={};const mkid=(k,t)=>{const b=k+':'+ch+':'+hsh(t.slice(0,300));seen[b]=(seen[b]||0)+1;return seen[b]>1?b+'.'+seen[b]:b};
   const kids=[...sec.children];sec.textContent='';let s2=null,s3=null;
   for(const k of kids){if(k.tagName=='H2'){s2=document.createElement('div');s2.className='sec l2';sec.append(s2);s2.append(k);s3=null}else if(k.tagName=='H3'){s3=document.createElement('div');s3.className='sec l3';(s2||sec).append(s3);s3.append(k)}else (s3||s2||sec).append(k)}
-  sec.querySelectorAll('h2,h3').forEach(h=>{const t=ltxt(h);const id=mkid('h',t);h.parentElement.dataset.hid=id;h.parentElement.dataset.hx=t;h.insertAdjacentHTML('beforeend',`<select class="mstat" data-mid="${id}" aria-label="Status of ${esc(t)}">${MCOL.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>`)});
+  sec.querySelectorAll('h2,h3').forEach(h=>{const t=ltxt(h);const id=mkid('h',t);h.parentElement.dataset.hid=id;h.parentElement.dataset.hx=t;h.insertAdjacentHTML('beforeend',mctl(id,t))});
+  sec.querySelectorAll('.qa .qi').forEach(q=>{const sm=q.querySelector('summary');const t=ltxt(sm);const id=mkid('q',t);q.dataset.hid=id;q.dataset.hx=t;q.classList.add('sec','lq');q.insertAdjacentHTML('beforeend',mctl(id,t,1))});
   sec.querySelectorAll('p,li,tbody tr,summary,.box').forEach(el=>{if(el.classList.contains('box')&&el.querySelector('p,li,tr'))return;if(el.closest('.row'))return;const t=ltxt(el);if(!t)return;el.dataset.lid=mkid('l',el.tagName+':'+t);el.classList.add('cml')})});
  applyMarks();document.querySelectorAll('#lnote [data-lid]').forEach(el=>renderCm(el.dataset.lid))}
-function applyMarks(){document.querySelectorAll('#lnote [data-hid]').forEach(w=>{const c=(S.marks[w.dataset.hid]||{}).c||'';w.dataset.c=c;const sel=w.querySelector(':scope>h2>.mstat,:scope>h3>.mstat');if(sel){sel.value=c;sel.dataset.c=c}});
+function applyMarks(){const now=Date.now();document.querySelectorAll('#lnote [data-hid]').forEach(w=>{const m=S.marks[w.dataset.hid];const c=mEff(m);w.dataset.c=c;const box=w.querySelector(':scope>h2>.mctl,:scope>h3>.mctl,:scope>.mctl');if(!box)return;const sel=box.querySelector('.mstat'),du=box.querySelector('.mdur');sel.value=c;sel.dataset.c=c;
+  if(document.activeElement!==du){const on=c&&m.exp;du.hidden=!c;du.classList.toggle('on',!!on);du.title=on?'Status is removed on '+new Date(m.exp).toLocaleString():'Remove this status automatically after…';du.innerHTML=(on?`<option value="cur" selected>⏱ ${leftTxt(m.exp-now)}</option>`:'')+`<option value=""${on?'':' selected'}>${on?'no timer':'⏱'}</option>`+MDUR.map(d=>`<option value="${d}">${d}</option>`).join('')}});
  document.querySelectorAll('#ltabs [data-lt]').forEach(a=>{const w=document.querySelector(`#chap-${a.dataset.lt.toLowerCase()} .l2`);const c=w&&w.dataset.c;a.style.boxShadow=c?`inset 5px 0 0 ${MHEX[c]}`:''});updCmCount()}
-function updCmCount(){const n=Object.values(S.comments).filter(c=>c&&!c.del).length,m=Object.values(S.marks).filter(x=>x&&x.c).length;const el=$('#cmcount');if(el)el.textContent=n||m?`(${n} · ${m})`:''}
+function updCmCount(){const n=Object.values(S.comments).filter(c=>c&&!c.del).length,m=Object.values(S.marks).filter(mEff).length;const el=$('#cmcount');if(el)el.textContent=n||m?`(${n} · ${m})`:''}
 const liveCm=id=>{const c=S.comments[id];return c&&!c.del?c:null};
 function tombCm(id){const o=S.comments[id]||{};S.comments[id]={del:1,t:Date.now(),ch:o.ch,x:o.x}}
 const lineEl=id=>document.querySelector(`#lnote [data-lid="${CSS.escape(id)}"]`);
@@ -1149,7 +1162,11 @@ document.addEventListener('selectionchange',()=>{clearTimeout(selT);selT=setTime
 selBtn.addEventListener('mousedown',e=>e.preventDefault());
 selBtn.addEventListener('click',()=>{if(!selLine)return;const id=selLine,q=selQuote;hideSel();try{window.getSelection().removeAllRanges()}catch(e){}openEditor(id,q)});
 document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!selBtn.hidden)hideSel()});
-$('#lnote').addEventListener('change',e=>{const s=e.target.closest('.mstat');if(!s)return;const id=s.dataset.mid;const w=s.closest('[data-hid]');if(s.value)S.marks[id]={c:s.value,x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,t:Date.now()};else S.marks[id]={c:'',x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,t:Date.now()};save();applyMarks()});
+$('#lnote').addEventListener('change',e=>{const s=e.target.closest('.mstat,.mdur');if(!s)return;const id=s.dataset.mid;const w=s.closest('[data-hid]');const now=Date.now();const old=S.marks[id];const base={x:w.dataset.hx,ch:s.closest('.chap').dataset.ch,q:w.classList.contains('lq')?1:0,t:now};
+ if(s.classList.contains('mstat')){const keep=s.value&&mEff(old)&&old.exp?{exp:old.exp,dur:old.dur}:{};S.marks[id]={...base,c:s.value,...(s.value?keep:{})}}
+ else{if(s.value=='cur'||!mEff(old))return;S.marks[id]={...base,c:old.c,...(s.value?{dur:s.value,exp:durEnd(s.value,now)}:{})};s.blur()}
+ save();applyMarks()});
+setInterval(()=>{if(learnBuilt)applyMarks()},60000);
 $('#lnote').addEventListener('click',e=>{const b=e.target.closest('[data-cmedit],[data-cmdel],[data-cmsave],[data-cmcancel]');
  if(b){e.preventDefault();if(b.dataset.cmedit)openEditor(b.dataset.cmedit);else if(b.dataset.cmdel)delCm(b,b.dataset.cmdel);else if(b.dataset.cmsave){const box=b.closest('.cmt');saveCm(b.dataset.cmsave,box.querySelector('textarea').value,box.dataset.q)}else renderCm(b.dataset.cmcancel);return}});
 function gotoNote(id){pendingLine=id;if(location.hash.toLowerCase()=='#learn')route();else location.hash='learn'}
@@ -1157,10 +1174,10 @@ function revealPending(){if(!pendingLine)return;const id=pendingLine;pendingLine
 function renderComments(){const order=Object.fromEntries(CHIDS.map((c,i)=>[c,i]));order['0']=-1;
  const cms=Object.entries(S.comments).filter(([,c])=>c&&!c.del).sort((a,b)=>(order[a[1].ch]-order[b[1].ch])||(a[1].c0||a[1].t)-(b[1].c0||b[1].t));
  const COL=['red','orange','yellow','blue','gray','green'];const LBL={red:'Red',orange:'Orange',yellow:'Yellow',blue:'Blue',gray:'Gray',green:'Green'};
- const mks=Object.entries(S.marks).filter(([,m])=>m&&m.c).sort((a,b)=>(COL.indexOf(a[1].c)-COL.indexOf(b[1].c))||(order[a[1].ch]-order[b[1].ch]));
+ const mks=Object.entries(S.marks).filter(([,m])=>mEff(m)).sort((a,b)=>(COL.indexOf(a[1].c)-COL.indexOf(b[1].c))||(order[a[1].ch]-order[b[1].ch]));
  const chl=c=>c=='0'?'How to study':'Chapter '+c;
  $('#cmlist').innerHTML=`<h2>Comments <span class="mut" style="font-size:.6em">${cms.length}</span></h2>${cms.length?cms.map(([id,c],i)=>`${i==0||cms[i-1][1].ch!=c.ch?`<h3>${chl(c.ch)}</h3>`:''}<div class="cmitem" data-cid="${esc(id)}"><div class="ex">${esc(c.x||'')}</div>${c.q?`<p class="q">“${esc(c.q)}”</p>`:''}<div class="tx">${esc(c.text)}</div><div class="row" style="margin-top:8px"><span class="small mut">${new Date(c.t).toLocaleString()}</span><button class="chip" data-goto="${esc(id)}">Show in notes</button><button class="chip" data-cpedit="${esc(id)}">Edit</button><button class="chip" data-cpdel="${esc(id)}">Delete</button></div></div>`).join(''):'<p class="mut">No comments yet. In Learn, select any text and click “Comment”.</p>'}
- <h2 style="margin-top:32px">Section marks <span class="mut" style="font-size:.6em">${mks.length}</span></h2>${mks.length?mks.map(([id,m])=>`<div class="mkrow"><span class="dot" style="background:${MHEX[m.c]}"></span><b>${LBL[m.c]}</b><span>${esc(m.x||'')}</span><span class="small mut">${chl(m.ch)}</span><button class="chip" data-goto="${esc(id)}">Show in notes</button></div>`).join(''):'<p class="mut">No sections marked yet. Use the status menu next to a heading in Learn.</p>'}`}
+ <h2 style="margin-top:32px">Status marks <span class="mut" style="font-size:.6em">${mks.length}</span></h2>${mks.length?mks.map(([id,m])=>`<div class="mkrow"><span class="dot" style="background:${MHEX[m.c]}"></span><b>${LBL[m.c]}</b><span>${m.q?'<span class="small mut">Question:</span> ':''}${esc(m.x||'')}</span><span class="small mut">${chl(m.ch)}${m.exp?' · until '+new Date(m.exp).toLocaleString([], {dateStyle:'medium',timeStyle:'short'}):''}</span><button class="chip" data-goto="${esc(id)}">Show in notes</button></div>`).join(''):'<p class="mut">No status marks yet. Use the status menu next to a heading or a self-test question in Learn.</p>'}`}
 $('#cmlist').addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){gotoNote(g.dataset.goto);return}
  const ed=e.target.closest('[data-cpedit]');if(ed){const id=ed.dataset.cpedit;const box=ed.closest('.cmitem');box.querySelector('.tx').innerHTML=`<textarea class="raw" style="width:100%" aria-label="Edit comment">${esc(S.comments[id].text)}</textarea><div class="row" style="margin-top:6px"><button class="pri chip" data-cpsave="${esc(id)}">Save</button><button class="chip" data-cpcancel="1">Cancel</button></div>`;box.querySelector('textarea').focus();return}
  const sv=e.target.closest('[data-cpsave]');if(sv){const id=sv.dataset.cpsave;const t=sv.closest('.cmitem').querySelector('textarea').value.trim();if(t){S.comments[id].text=t;S.comments[id].t=Date.now()}else tombCm(id);save();if(learnBuilt)renderCm(id);updCmCount();renderComments();return}
@@ -1170,7 +1187,7 @@ $('#cmlist').addEventListener('click',e=>{const g=e.target.closest('[data-goto]'
 function renderLearn(sub){
  if(!learnBuilt){const tabs=[['0','How to study'],...CHAPS.map(c=>[c.id,c.id+' · '+c.t])];
   $('#ltabs').innerHTML=tabs.map(([id,t])=>`<a class="btn chip" style="text-decoration:none" href="#learn-${id.toLowerCase()}" data-lt="${id}" aria-pressed="false">${esc(t)}</a>`).join('');
-  $('#lnote').innerHTML=tabs.map(([id])=>{const qs=CQ.filter(c=>c[0]==id);return `<section class="chap" id="chap-${id.toLowerCase()}" data-ch="${id}">${mark(NOTES[id]())}${qs.length?`<h3>Check yourself</h3><div class="qa">${qs.map(c=>`<details><summary>${mark(esc(c[1]))}</summary>${ans(c[2])}</details>`).join('')}</div><div class="row" style="margin-top:18px"><button class="pri" data-revch="${id}">Review chapter ${id} cards</button><button data-drillch="${id}">Drill chapter ${id}</button></div>`:''}</section>`}).join('');
+  $('#lnote').innerHTML=tabs.map(([id])=>{const qs=CQ.filter(c=>c[0]==id);return `<section class="chap" id="chap-${id.toLowerCase()}" data-ch="${id}">${mark(NOTES[id]())}${qs.length?`<h3>Check yourself</h3><div class="qa">${qs.map(c=>`<div class="qi"><details><summary>${mark(esc(c[1]))}</summary>${ans(c[2])}</details></div>`).join('')}</div><div class="row" style="margin-top:18px"><button class="pri" data-revch="${id}">Review chapter ${id} cards</button><button data-drillch="${id}">Drill chapter ${id}</button></div>`:''}</section>`}).join('');
   learnBuilt=true;decorateNotes();
   try{lspy=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){const id=e.target.dataset.ch;document.querySelectorAll('#ltabs [data-lt]').forEach(a=>{const on=a.dataset.lt==id;a.setAttribute('aria-pressed',on);if(on)a.scrollIntoView({block:'nearest',inline:'nearest'})})}},{rootMargin:'-30% 0px -65% 0px'});document.querySelectorAll('.chap').forEach(c=>lspy.observe(c))}catch(e){}}
  const el=sub?document.getElementById('chap-'+sub.toLowerCase()):null;
@@ -1391,7 +1408,7 @@ document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#svdlg').hidden)
 svRefreshUI();
 
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.2.3';
+const VERSION='0.2.4';
 $('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
