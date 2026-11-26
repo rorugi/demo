@@ -260,6 +260,14 @@ textarea{width:100%;min-height:90px}
 .mdot{width:16px;height:16px;border-radius:50%;flex:none;border:2px dashed #c9bfb6;display:inline-block}
 .mdot[data-c=green]{background:#2e9e5b;border:0}.mdot[data-c=yellow]{background:#e9b500;border:0}.mdot[data-c=orange]{background:#f08a24;border:0}.mdot[data-c=red]{background:#d93a2b;border:0}.mdot[data-c=blue]{background:#2f6fdb;border:0}.mdot[data-c=gray]{background:#8f8a86;border:0}
 span.dv{font-size:1.4em;line-height:1}
+.hsearch{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;color:var(--ink)}.hsearch:hover,.hsearch[aria-current=page]{background:var(--sur)}
+.mnav{display:none}
+@media(max-width:600px){nav#nav{order:0;flex-basis:auto}nav#nav a:not([href="#review"]){display:none}.hright{gap:4px}.mnav{display:grid;gap:2px;padding-bottom:8px;margin-bottom:2px;border-bottom:1px solid var(--line)}.mnav a{padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:600;font-size:15px}.mnav a[aria-current=page]{background:var(--red);color:#fff}}
+.sbox{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:14px;padding:4px 14px;background:var(--bg);margin:6px 0 16px;position:sticky;top:76px;z-index:5}.sbox:focus-within{border-color:var(--ink)}.sbox svg{color:var(--mut);flex:none}
+.sbox input{border:0;outline:none;flex:1;min-width:0;font-size:19px;padding:10px 0;background:transparent;box-shadow:none}
+@media(max-width:600px){.sbox{top:68px}}
+.sr{border-bottom:1px solid var(--line);padding:14px 0}.srh{font-size:18px}.srh .dv{font-size:1.5em;color:var(--red)}.sren{margin:4px 0 2px;font-size:16px}.srm{color:var(--mut)}.srm b{color:var(--ink)}.srtag{background:var(--sur);border-radius:10px;padding:1px 8px;color:var(--ink)}
+.srx{margin-top:8px}.srx summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--red)}.srx h4{margin:12px 0 4px;font-size:14px}.srx table{margin:0}.srx td.hl{background:#fff1b8;font-weight:700}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -270,9 +278,11 @@ span.dv{font-size:1.4em;line-height:1}
   <a href="#today">Today</a><a href="#overview">Overview</a><a href="#learn">Learn</a><a href="#review">Review<span class="n" id="navdue">0</span></a><a href="#drill">Drill</a><a href="#exam">Mock exam</a><a href="#ref">Reference</a>
  </nav>
  <div class="hright">
+  <a href="#search" id="hsearch" class="hsearch" aria-label="Search words (press /)" title="Search words (press /)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></a>
   <div class="menuwrap">
    <button type="button" class="burger" id="menubtn" aria-expanded="false" aria-controls="menu" aria-label="Menu: save or load progress"><span></span><span></span><span></span></button>
    <div class="menu" id="menu" hidden>
+    <nav class="mnav" aria-label="Pages"><a href="#today">Today</a><a href="#overview">Overview</a><a href="#learn">Learn</a><a href="#drill">Drill</a><a href="#exam">Mock exam</a><a href="#ref">Reference</a></nav>
     <p class="mh">Your progress</p>
     <p class="small mut" id="sync" role="status" style="margin:0 0 6px">Progress saved on this device</p>
     <button type="button" data-prog="save">Save progress to file</button>
@@ -393,6 +403,11 @@ span.dv{font-size:1.4em;line-height:1}
 </div></section>
 
 <!-- REFERENCE -->
+<section class="view band" id="v-search"><div class="wrap">
+ <h1>Search</h1>
+ <div class="sbox"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input type="search" id="sq" placeholder="deva, devena, gatvā, अश्वः, horse …" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search words"></div>
+ <div id="sres" aria-live="polite"></div>
+</div></section>
 <section class="view band ref" id="v-ref"><div class="wrap">
  <h1>Reference</h1>
  <div class="tabs" id="rtabs"></div>
@@ -418,7 +433,7 @@ span.dv{font-size:1.4em;line-height:1}
  <h3>Your data</h3>
  <p>Progress stays in your browser, syncs to your Claude account on the claude.ai page, can be saved to or loaded from a file in the ☰ menu, and — if you connect one — syncs to your own PHP server. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.2.7</b> — Memory aids: गणेश gaṇeśa for the letters with a detached stroke (ग ण श) and the place order behind y r l v / ś ṣ s, with two new self-test questions. Roomier status and timer menus. Devanāgarī in running text is 40% larger.</li><li><b>0.2.6</b> — Sound grid has a second layout, “By place: all sounds”: vowels, stops, nasals, semivowels and sibilants/h each in the row of their place of articulation. Switch in Learn (Ch 2) or Reference → Sounds; the choice is remembered.</li><li><b>0.2.5</b> — Sleeker status controls: sections use the same small circle as questions; the timer is a round clock icon (dark while a timer runs; hover for the time left). The save status moved from the header into the menu.</li><li><b>0.2.4</b> — Every “Check yourself” question has its own status colour. Any status (sections and questions) can get a timer (1h … 1y): when it runs out, the colour is removed again — a manual reminder. Active marks with their end time are listed on the Comments page.</li><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.2.8</b> — Search (magnifier in the header, or press /): finds every word of Ch 1–10 by IAST, plain Latin, Velthuis, devanāgarī or English, and also any inflected form (devena, gacchanti, gatvā …) with its full declension or conjugation. On phones the header keeps only Review and Search; the other pages are in the menu.</li><li><b>0.2.7</b> — Memory aids: गणेश gaṇeśa for the letters with a detached stroke (ग ण श) and the place order behind y r l v / ś ṣ s, with two new self-test questions. Roomier status and timer menus. Devanāgarī in running text is 40% larger.</li><li><b>0.2.6</b> — Sound grid has a second layout, “By place: all sounds”: vowels, stops, nasals, semivowels and sibilants/h each in the row of their place of articulation. Switch in Learn (Ch 2) or Reference → Sounds; the choice is remembered.</li><li><b>0.2.5</b> — Sleeker status controls: sections use the same small circle as questions; the timer is a round clock icon (dark while a timer runs; hover for the time left). The save status moved from the header into the menu.</li><li><b>0.2.4</b> — Every “Check yourself” question has its own status colour. Any status (sections and questions) can get a timer (1h … 1y): when it runs out, the colour is removed again — a manual reminder. Active marks with their end time are listed on the Comments page.</li><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -928,6 +943,7 @@ let dlNS=null;
  document.addEventListener('click',e=>{if(!mn.hidden&&!e.target.closest('.menuwrap'))setM(false)});
  document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!mn.hidden){setM(false);mb.focus()}});
  $('#cmnav').onclick=()=>{setM(false);location.hash='comments'};
+ mn.addEventListener('click',e=>{if(e.target.closest('.mnav a,#menuset'))setM(false)});
  $('#menuset').onclick=()=>{setM(false);setTimeout(()=>{const d=document.querySelector('#v-today details.box');if(d){d.open=true;d.scrollIntoView({block:'center'})}},60)};}
 function progMsg(m){const a=$('#progmsg'),b=$('#datamsg');if(a)a.textContent=m;if(b)b.textContent=m;toast(m)}
 async function saveProgress(){const data=JSON.stringify(Object.assign({app:'ruppel-sanskrit',savedAt:new Date().toISOString()},S));const fn='ruppel-progress-'+dayKey()+'.json';
@@ -1439,7 +1455,7 @@ document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#svdlg').hidden)
 svRefreshUI();
 
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.2.7';
+const VERSION='0.2.8';
 $('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
@@ -1485,9 +1501,64 @@ $('#ovlist').addEventListener('click',e=>{const b=e.target.closest('[data-nug]')
 
 /* ================= ROUTER ================= */
 function updNav(){const d=dueList(CHIDS).length,nw=Math.min(newLeft(),CARDS.filter(c=>!S.cards[c.id]).length),n=d+nw;const el=$('#navdue');el.textContent=n;el.style.display=n?'':'none';el.title=`${d} due, ${nw} new today — all chapters`}
-function route(){const h=(location.hash||'#today').slice(1).toLowerCase();let v=h.split('-')[0];if(!['today','overview','learn','review','drill','exam','ref','comments'].includes(v))v='today';
+/* ================= SEARCH ================= */
+const DVC={'क':'k','ख':'kh','ग':'g','घ':'gh','ङ':'ṅ','च':'c','छ':'ch','ज':'j','झ':'jh','ञ':'ñ','ट':'ṭ','ठ':'ṭh','ड':'ḍ','ढ':'ḍh','ण':'ṇ','त':'t','थ':'th','द':'d','ध':'dh','न':'n','प':'p','फ':'ph','ब':'b','भ':'bh','म':'m','य':'y','र':'r','ल':'l','व':'v','श':'ś','ष':'ṣ','स':'s','ह':'h','ळ':'ḷ'};
+const DVV={'अ':'a','आ':'ā','इ':'i','ई':'ī','उ':'u','ऊ':'ū','ऋ':'ṛ','ॠ':'ṝ','ऌ':'ḷ','ॡ':'ḹ','ए':'e','ऐ':'ai','ओ':'o','औ':'au'};
+const DVS={'ा':'ā','ि':'i','ी':'ī','ु':'u','ू':'ū','ृ':'ṛ','ॄ':'ṝ','ॢ':'ḷ','ॣ':'ḹ','े':'e','ै':'ai','ो':'o','ौ':'au'};
+function iastOf(s){let o='';const a=[...s.replace(/़/g,'')];for(let i=0;i<a.length;i++){const c=a[i];if(DVC[c]){o+=DVC[c];const n=a[i+1];if(DVS[n]){o+=DVS[n];i++}else if(n=='्')i++;else o+='a'}else if(DVV[c])o+=DVV[c];else if(c=='ं')o+='ṃ';else if(c=='ः')o+='ḥ';else if(c=='ँ')o+='m';else if('ऽ।॥'.includes(c))o+='';else o+=c}return o}
+const fold=s=>String(s).toLowerCase().replace(/sh/g,'ś').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const skey=s=>norm(String(s).replace(/[√\-]/g,''));
+let SIX=null;
+function buildSearch(){const E=[];const rootF=new Set(VOC.filter(v=>v.root).map(v=>v.f));
+ const G={'m.':'m','n.':'n','f.':'f','n./m.':'n'};
+ const addForms=(e,f,lab)=>{(e.forms[f]=e.forms[f]||[]).push(lab)};
+ for(const v of VOC){const e={v,ch:v.ch,en:v.en,info:v.info,keys:[v.sa],forms:{},tab:null,extra:[]};
+  if(v.root){e.kind='verb';e.tag='verb · class '+v.cls;e.keys.push(v.f);if(/ati$/.test(v.f)){e.st=v.f.slice(0,-2);const V={st:e.st};[0,1,2].forEach(p=>[0,1,2].forEach(n=>addForms(e,form(V,p,n),PERS[p]+' person '+NUMF[n])))}
+   const r=v.sa;FORMS8.filter(x=>x[0]==r).forEach(x=>{const l={abs:'absolutive (-tvā)',ta:'ta-participle',inf:'infinitive (-tum)'}[x[1]]||x[1];e.extra.push([x[2],l,x[3]]);addForms(e,x[2],l)});
+   CAUS.filter(x=>x[0]==r).forEach(x=>{e.extra.push([x[1],'causative',x[2]]);addForms(e,x[1],'causative')});
+   CABS.filter(x=>x[0]==r).forEach(x=>{e.extra.push([x[1],'absolutive (-ya)','']);addForms(e,x[1],'absolutive (-ya)')});
+   ZG.filter(x=>x[0]==r).forEach(x=>{e.extra.push([x[1],'zero grade',''],[x[2],'vṛddhi','']) })}
+  else if(G[v.g]){e.kind='noun';const g=G[v.g];const st=v.st?v.sa:g=='f'?v.sa:v.sa.replace(/(aḥ|am)$/,'a');e.gs=[[g,st]];e.tag=v.g.replace('n./m.','n. (also m.)')+' noun';e.keys.push(st)}
+  else if(/^adj|ta-Ptc/.test(v.g||'')){e.kind='adj';const st=v.sa;e.gs=[['m',st],['n',st],['f',st.slice(0,-1)+'ā']];e.tag=v.g.replace('ta-Ptc','ta-participle (adj.)')}
+  else if(v.g=='pron. adj.'){e.kind='ind';e.tag='pronominal adjective';e.note='Declined like a pronoun in some forms (e.g. sarve, sarvasmai) — not drilled before Ch 10.'}
+  else if(v.g=='preverb'){e.kind='ind';e.tag='preverb'}
+  else if(/ati$|oti$/.test(v.sa)){if(rootF.has(v.sa))continue;e.kind='ind';e.tag='verb form · 3rd sg present'}
+  else{e.kind='ind';e.tag='indeclinable'}
+  if(e.gs)e.gs.forEach(([g,st])=>CASES.forEach((c,ci)=>[0,1,2].forEach(n=>addForms(e,decl(st,g,ci,n),c.toLowerCase()+' '+NUMF[n]+(e.kind=='adj'?' '+g+'.':'')))));
+  E.push(e)}
+ for(const N of NOUNS)if(!E.some(e=>e.gs&&e.gs[0][1]==N.s)){const e={v:{sa:N.s,st:1},ch:'5',en:N.en[0],keys:[N.s],forms:{},extra:[],kind:'noun',tag:N.g+'. noun',gs:[[N.g,N.s]]};CASES.forEach((c,ci)=>[0,1,2].forEach(n=>addForms(e,decl(N.s,N.g,ci,n),c.toLowerCase()+' '+NUMF[n])));E.push(e)}
+ for(const e of E){e.k=e.keys.map(skey);e.kf=e.k.map(fold);e.fk=Object.entries(e.forms).map(([f,l])=>[skey(f),fold(skey(f)),f,l]);e.enl=String(e.en).toLowerCase()}
+ return E}
+function searchWords(q){SIX=SIX||buildSearch();q=String(q).trim();if(!q)return [];if(/[ऀ-ॿ]/.test(q))q=iastOf(q);const qn=skey(q),qf=fold(qn);if(!qf)return [];const ql=q.toLowerCase();
+ const out=[];for(const e of SIX){let sc=0,hit=null;
+  e.k.forEach((k,i)=>{const kf=e.kf[i];if(k==qn)sc=Math.max(sc,100);else if(kf==qf)sc=Math.max(sc,92);else if(k.startsWith(qn))sc=Math.max(sc,62);else if(kf.startsWith(qf))sc=Math.max(sc,58);else if(qf.length>=3&&kf.includes(qf))sc=Math.max(sc,22)});
+  for(const [k,kf,f,l] of e.fk){let s=0;if(k==qn)s=85;else if(kf==qf)s=80;else if(qf.length>=4&&kf.startsWith(qf))s=35;if(s>sc||(s&&s==sc&&!hit)){sc=Math.max(sc,s);hit={f,l}}if(s>=80&&!hit)hit={f,l}}
+  if(ql.length>=2){const re=new RegExp('(^|[^a-z])'+ql.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(s|es)?([^a-z]|$)');if(re.test(e.enl))sc=Math.max(sc,50);else if(ql.length>=3&&e.enl.includes(ql))sc=Math.max(sc,28)}
+  if(sc)out.push({e,sc,hit})}
+ return out.sort((a,b)=>b.sc-a.sc||(+a.e.ch||0)-(+b.e.ch||0)).slice(0,60)}
+const fhl=(f,hf)=>`<td${hf&&fold(skey(f))==hf?' class="hl"':''}>${DT(f)}</td>`;
+function srTable(e,hf){let h='';
+ if(e.kind=='verb'&&e.st){const V={st:e.st};h+=`<h4>Present indicative active <span class="mut small">(stem ${DT(e.st+'-')})</span></h4><table><thead><tr><th></th><th>Singular</th><th>Dual</th><th>Plural</th></tr></thead><tbody>${[0,1,2].map(p=>`<tr><th>${PERS[p]}</th>${[0,1,2].map(n=>fhl(form(V,p,n),hf)).join('')}</tr>`).join('')}</tbody></table>`}
+ if(e.extra.length)h+=`<h4>Other forms</h4><table><tbody>${e.extra.map(([f,l,m])=>`<tr><th>${esc(l)}</th>${fhl(f,hf)}<td>${esc(m||'')}</td></tr>`).join('')}</tbody></table>`;
+ if(e.gs)for(const [g,st] of e.gs)h+=`<h4>${e.kind=='adj'?{m:'Masculine',n:'Neuter',f:'Feminine'}[g]:'Declension'} <span class="mut small">(${DT(st+'-')})</span></h4><table><thead><tr><th></th><th>Singular</th><th>Dual</th><th>Plural</th></tr></thead><tbody>${CASES.map((c,ci)=>`<tr><th>${CAB[ci]}</th>${[0,1,2].map(n=>fhl(decl(st,g,ci,n),hf)).join('')}</tr>`).join('')}</tbody></table>`;
+ return h}
+let sqLast='';
+function renderSearch(focus){const i=$('#sq');if(focus!==false)setTimeout(()=>i.focus(),30);doSearch(i.value)}
+function doSearch(q){sqLast=q;const R=searchWords(q),box=$('#sres');
+ if(!q.trim()){box.innerHTML=`<p class="mut">Search all ${(SIX=SIX||buildSearch()).length} words of Ch 1–10 and every form the app knows (declensions, conjugations, participles, absolutives). Type IAST, plain Latin without diacritics, Velthuis, devanāgarī or English. Try: ${['devena','gacchanti','gatvā','अश्वः','sena','horse','√kṛ'].map(x=>`<button type="button" class="chip" data-sq="${esc(x)}">${esc(x)}</button>`).join(' ')}</p>`;return}
+ if(!R.length){box.innerHTML=`<p class="mut">No word found for “${esc(q)}”.</p>`;return}
+ box.innerHTML=`<p class="small mut">${R.length==60?'First 60':R.length} result${R.length==1?'':'s'}</p>`+R.map(({e,hit},i)=>{const v=e.v,hf=hit?fold(skey(hit.f)):'';const has=e.st||e.gs||e.extra.length;const open=!!hit&&i<3;
+  return `<article class="sr"><div class="srh"><span class="dv">${DV(vshow(v))}</span> <i class="tr">${esc(vshow(v))}</i>${v.root?` <span class="mut">· ${DT(v.f)}</span>`:''}</div>
+  <div class="sren">${esc(e.en)}${e.info?` <span class="mut small">· ${mark(esc(e.info))}</span>`:''}</div>
+  <div class="srm small"><span class="srtag">${esc(e.tag)}</span>${e.ch?` <a href="#learn-${e.ch}">Ch ${e.ch}</a>`:''}${hit?` · <b>${DT(hit.f)}</b> = ${esc(uniq(hit.l||[]).join(', '))}`:''}${e.note?` · ${esc(e.note)}`:''}</div>
+  ${has?`<details class="srx"${open?' open':''}><summary>${e.kind=='verb'?'Conjugation & forms':'Declension'}</summary>${srTable(e,hf)}</details>`:''}</article>`}).join('')}
+{let t;document.addEventListener('input',e=>{if(e.target.id!='sq')return;clearTimeout(t);t=setTimeout(()=>doSearch(e.target.value),120)});
+ document.addEventListener('click',e=>{const b=e.target.closest('[data-sq]');if(b){$('#sq').value=b.dataset.sq;doSearch(b.dataset.sq);$('#sq').focus()}});
+ document.addEventListener('keydown',e=>{if(e.key=='/'&&!e.target.matches('input,textarea,select,[contenteditable]')&&!e.ctrlKey&&!e.metaKey){e.preventDefault();location.hash='search';setTimeout(()=>$('#sq').focus(),40)}})}
+
+function route(){const h=(location.hash||'#today').slice(1).toLowerCase();let v=h.split('-')[0];if(!['today','overview','learn','review','drill','exam','ref','comments','search'].includes(v))v='today';
  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id=='v-'+v));
- document.querySelectorAll('#nav a').forEach(a=>a.getAttribute('href')=='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+ document.querySelectorAll('#nav a,.mnav a,#hsearch').forEach(a=>a.getAttribute('href')=='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
  if(v=='today')renderToday();
  if(v=='learn'&&learnBuilt){applyMarks();document.querySelectorAll('#lnote [data-lid]').forEach(el=>renderCm(el.dataset.lid))}
  if(v=='learn'){const sub=h.split('-')[1];renderLearn(sub?CHIDS.find(c=>c.toLowerCase()==sub)||(sub=='0'?'0':null):null)}
@@ -1498,6 +1569,7 @@ function route(){const h=(location.hash||'#today').slice(1).toLowerCase();let v=
  if(v=='drill')renderDrill(false);
  if(v=='exam'&&!ex)renderExamHome();
  if(v=='ref')renderRef();
+ if(v=='search')renderSearch();
  updNav();updCmCount();if(v!='learn')window.scrollTo(0,0)}
 window.addEventListener('hashchange',route);
 // make Velthuis keypad work in converter (no .card/form ancestor)
