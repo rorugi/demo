@@ -3,10 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#b8261a">
+<link rel="manifest" href="ruppel-sanskrit.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="ruppel-icon-32.png">
+<link rel="apple-touch-icon" href="ruppel-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Samskritam">
 <title>Ruppel Sanskrit 1–10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,600;0,800;1,400&family=Tiro+Devanagari+Sanskrit&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('ruppel-theme');if(t=='light'||t=='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 /* VOICE: a focused study companion — calm, exact, encouraging; built for daily use
    IDEA: a palm-leaf manuscript rubricated in vermilion: black ink for text, red for what to learn
@@ -115,7 +122,7 @@ input[type=text],select,textarea{font:inherit;font-size:16px;padding:10px 12px;b
 .qi{border-bottom:1px solid var(--line)}.qa .qi>details{border-bottom:0}
 .mctl .mstat{-webkit-appearance:none;appearance:none;width:26px;height:26px;min-height:26px;padding:0;margin:0;border-radius:50%;color:transparent;background:transparent;border:2px dashed #d6ccc3;cursor:pointer;font-size:13px;flex:none}.mctl .mstat[data-c]{color:transparent}.mctl .mstat[data-c]:not([data-c='']){border:2px solid rgba(0,0,0,.15)}.mctl .mstat:hover,.mctl .mdur:hover{border-color:#8f8a86}
 h2>.mctl,h3>.mctl{margin-left:10px;vertical-align:middle;position:relative;top:-2px}
-.mctl .mdur{-webkit-appearance:none;appearance:none;width:26px;height:26px;min-height:26px;padding:0;margin:0;border-radius:50%;color:transparent;font-size:13px;cursor:pointer;flex:none;border:2px solid #d6ccc3;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238f8a86' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='13.5' r='7.5'/%3E%3Cpath d='M12 10v3.5l2.3 1.8M9.5 3h5'/%3E%3C/svg%3E") center/16px no-repeat}.mctl .mdur.on{border-color:#1d1613;background:#1d1613 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='13.5' r='7.5'/%3E%3Cpath d='M12 10v3.5l2.3 1.8M9.5 3h5'/%3E%3C/svg%3E") center/16px no-repeat}
+.mctl .mdur{-webkit-appearance:none;appearance:none;width:26px;height:26px;min-height:26px;padding:0;margin:0;border-radius:50%;color:var(--mut);font-size:13px;cursor:pointer;flex:none;border:2px solid var(--line);background:var(--bg);display:inline-flex;align-items:center;justify-content:center}.mctl .mdur svg{width:16px;height:16px;display:block}.mctl .mdur.on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
 .mstat{font-size:13px;font-weight:600;min-height:32px;padding:3px 8px;margin-left:8px;vertical-align:middle;border-radius:16px;color:var(--ink);font-family:var(--sans)}
 .mstat[data-c=green]{background:#2e9e5b;color:#fff}.mstat[data-c=yellow]{background:#e9b500;color:#1d1613}.mstat[data-c=orange]{background:#f08a24;color:#1d1613}.mstat[data-c=red]{background:#d93a2b;color:#fff}.mstat[data-c=blue]{background:#2f6fdb;color:#fff}.mstat[data-c=gray]{background:#8f8a86;color:#fff}
 .selcm{position:absolute;z-index:45;transform:translateX(-50%);background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:8px 14px;min-height:40px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.25)}
@@ -252,7 +259,7 @@ textarea{width:100%;min-height:90px}
 .lt.full{grid-template-columns:76px minmax(0,1.35fr) repeat(7,minmax(0,1fr));margin-bottom:8px}.lt.full button .dv{font-size:24px}.lt.full button{min-height:62px}.lt.full .h{font-size:11px;line-height:1.2}
 @media(max-width:600px){.lt.full{grid-template-columns:50px minmax(0,1.3fr) repeat(7,minmax(0,1fr));gap:3px}.lt.full button .dv{font-size:16px}.lt.full button{min-height:50px;padding:4px 0}.lt.full button span:last-child{font-size:11px}.lt.full .h{font-size:9px;padding:2px;hyphens:manual}}
 .mctl .mstat,.mctl .mdur{box-shadow:none;transform:none}
-.mpop{position:absolute;z-index:80;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:6px;min-width:190px;display:grid;gap:1px}
+.mpop{position:absolute;z-index:80;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:6px;min-width:190px;display:grid;gap:1px}
 .mpop .mph{font-size:12px;color:var(--mut);padding:6px 12px 6px;font-weight:600}
 .mpop button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;justify-content:flex-start;border:0;background:none;border-radius:8px;padding:9px 12px;min-height:40px;font-size:15px;font-weight:400;color:var(--ink);box-shadow:none}
 .mpop button:hover,.mpop button:focus-visible{background:color-mix(in srgb,var(--ink) 7%,transparent);outline:none}
@@ -267,7 +274,9 @@ span.dv{font-size:1.4em;line-height:1}
 .sbox input{border:0;outline:none;flex:1;min-width:0;font-size:19px;padding:10px 0;background:transparent;box-shadow:none}
 @media(max-width:600px){.sbox{top:68px}}
 .sr{border-bottom:1px solid var(--line);padding:14px 0}.srh{font-size:18px}.srh .dv{font-size:1.5em;color:var(--red)}.sren{margin:4px 0 2px;font-size:16px}.srm{color:var(--mut)}.srm b{color:var(--ink)}.srtag{background:var(--sur);border-radius:10px;padding:1px 8px;color:var(--ink)}
-.srx{margin-top:8px}.srx summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--red)}.srx h4{margin:12px 0 4px;font-size:14px}.srx table{margin:0}.srx td.hl{background:#fff1b8;font-weight:700}
+.srx{margin-top:8px}.srx summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--red)}.srx h4{margin:12px 0 4px;font-size:14px}.srx table{margin:0}.srx td.hl{background:color-mix(in srgb,var(--yel) 30%,transparent);font-weight:700}
+.themesel{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--sur);padding:4px;border-radius:12px}.menu .themesel button{text-align:center;min-height:36px;padding:4px 6px;font-size:14px;border:0;background:transparent;box-shadow:none;border-radius:9px}.menu .themesel button[aria-pressed=true]{background:var(--bg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.upd{background:var(--sur);border-radius:12px;padding:12px 14px;margin:4px 0 14px}.upd ul{list-style:none;padding:0;margin:8px 0 0}.upd li{padding:3px 0}.upd li b{display:inline-block;min-width:130px}.upd .new{color:var(--ok);font-weight:700}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -283,6 +292,8 @@ span.dv{font-size:1.4em;line-height:1}
    <button type="button" class="burger" id="menubtn" aria-expanded="false" aria-controls="menu" aria-label="Menu: save or load progress"><span></span><span></span><span></span></button>
    <div class="menu" id="menu" hidden>
     <nav class="mnav" aria-label="Pages"><a href="#today">Today</a><a href="#overview">Overview</a><a href="#learn">Learn</a><a href="#drill">Drill</a><a href="#exam">Mock exam</a><a href="#ref">Reference</a></nav>
+    <p class="mh">Appearance</p>
+    <div class="themesel" role="group" aria-label="Colour theme"><button type="button" data-theme-set="auto">System</button><button type="button" data-theme-set="light">Light</button><button type="button" data-theme-set="dark">Dark</button></div>
     <p class="mh">Your progress</p>
     <p class="small mut" id="sync" role="status" style="margin:0 0 6px">Progress saved on this device</p>
     <button type="button" data-prog="save">Save progress to file</button>
@@ -294,6 +305,7 @@ span.dv{font-size:1.4em;line-height:1}
     <button type="button" id="svbtn">Connect own server…</button>
     <a href="#today" id="menuset">Settings &amp; backup as text</a>
     <button type="button" id="cmnav">Comments and marks <span class="mut" id="cmcount"></span></button>
+    <button type="button" id="instbtn" hidden>Install app</button>
     <button type="button" id="aboutbtn">About</button>
    </div>
   </div>
@@ -427,13 +439,16 @@ span.dv{font-size:1.4em;line-height:1}
  <button type="button" class="mclose" id="aboutx" aria-label="Close">×</button>
  <h2 id="abouth">About this tool</h2>
  <p class="mut">Version <b id="ver"></b></p>
+ <div class="upd"><button type="button" id="updbtn">Check for updates</button><ul id="updres" class="small" aria-live="polite"></ul></div>
  <p>A study companion for A. M. Ruppel, <i>The Cambridge Introduction to Sanskrit</i> (Cambridge University Press, 2017), Chapters 1–10. It is meant to get the material into long-term memory and to prepare you for exams on it.</p>
  <h3>What it does</h3>
  <ul><li><b>Learn</b> — the chapters condensed on one page, with exam traps and self-test questions.</li><li><b>Review</b> — flashcards scheduled with <b>FSRS-5</b> (Free Spaced Repetition Scheduler by the open-spaced-repetition project, default parameters). Each card comes back when your predicted recall drops to your target (90% by default; change it in Settings).</li><li><b>Drill</b> — unlimited generated questions, mixed across topics.</li><li><b>Mock exam</b> — timed, auto-marked papers; each one is stored with your progress.</li><li><b>Overview</b> — every knowledge nugget as a circle, so you see where you stand.</li><li><b>Marks and comments</b> — colour any section of the notes by how well you know it, and select any text to comment on it; see them all under ☰ → Comments and marks.</li></ul>
+ <h3>Install as an app</h3>
+ <p id="instinfo">On Android and desktop Chrome/Edge: ☰ menu → <b>Install app</b> (or the install icon in the address bar). On iPhone/iPad (Safari): Share → <b>Add to Home Screen</b>. The app then starts like any other, also offline; your progress stays the same.</p>
  <h3>Your data</h3>
  <p>Progress stays in your browser, syncs to your Claude account on the claude.ai page, can be saved to or loaded from a file in the ☰ menu, and — if you connect one — syncs to your own PHP server. Nothing is sent anywhere else.</p>
  <h3>Changes</h3>
- <ul class="small"><li><b>0.2.8</b> — Search (magnifier in the header, or press /): finds every word of Ch 1–10 by IAST, plain Latin, Velthuis, devanāgarī or English, and also any inflected form (devena, gacchanti, gatvā …) with its full declension or conjugation. On phones the header keeps only Review and Search; the other pages are in the menu.</li><li><b>0.2.7</b> — Memory aids: गणेश gaṇeśa for the letters with a detached stroke (ग ण श) and the place order behind y r l v / ś ṣ s, with two new self-test questions. Roomier status and timer menus. Devanāgarī in running text is 40% larger.</li><li><b>0.2.6</b> — Sound grid has a second layout, “By place: all sounds”: vowels, stops, nasals, semivowels and sibilants/h each in the row of their place of articulation. Switch in Learn (Ch 2) or Reference → Sounds; the choice is remembered.</li><li><b>0.2.5</b> — Sleeker status controls: sections use the same small circle as questions; the timer is a round clock icon (dark while a timer runs; hover for the time left). The save status moved from the header into the menu.</li><li><b>0.2.4</b> — Every “Check yourself” question has its own status colour. Any status (sections and questions) can get a timer (1h … 1y): when it runs out, the colour is removed again — a manual reminder. Active marks with their end time are listed on the Comments page.</li><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
+ <ul class="small"><li><b>0.2.9</b> — Light/dark mode switch in the ☰ menu (System, Light, Dark; remembered on this device). Installable as an app (PWA, works offline). About shows “Check for updates” for rorugi.github.io/demo and act-act-act.com/demo.</li><li><b>0.2.8</b> — Search (magnifier in the header, or press /): finds every word of Ch 1–10 by IAST, plain Latin, Velthuis, devanāgarī or English, and also any inflected form (devena, gacchanti, gatvā …) with its full declension or conjugation. On phones the header keeps only Review and Search; the other pages are in the menu.</li><li><b>0.2.7</b> — Memory aids: गणेश gaṇeśa for the letters with a detached stroke (ग ण श) and the place order behind y r l v / ś ṣ s, with two new self-test questions. Roomier status and timer menus. Devanāgarī in running text is 40% larger.</li><li><b>0.2.6</b> — Sound grid has a second layout, “By place: all sounds”: vowels, stops, nasals, semivowels and sibilants/h each in the row of their place of articulation. Switch in Learn (Ch 2) or Reference → Sounds; the choice is remembered.</li><li><b>0.2.5</b> — Sleeker status controls: sections use the same small circle as questions; the timer is a round clock icon (dark while a timer runs; hover for the time left). The save status moved from the header into the menu.</li><li><b>0.2.4</b> — Every “Check yourself” question has its own status colour. Any status (sections and questions) can get a timer (1h … 1y): when it runs out, the colour is removed again — a manual reminder. Active marks with their end time are listed on the Comments page.</li><li><b>0.2.3</b> — Fix: in Practice, a card still in its learning steps came back again and again after Hard/Good/Easy; it now leaves the session (Again still repeats it).</li><li><b>0.2.2</b> — Self-test answers that list several cases, rules or examples are shown as bullet lists (in Learn and on the concept cards).</li><li><b>0.2.1</b> — Review shows cards that are due in chapters you haven’t selected (the number on “Review” counts all chapters), lets you review them with one click, and shows each chapter’s due count on its button.</li><li><b>0.2.0</b> — Optional sync with your own PHP server (☰ → Own server): log in, and progress, exams, marks and comments are saved there and merged across devices. Deleted comments and cleared marks now also sync.</li><li><b>0.1.3</b> — Every Sanskrit example in notes, self-test answers, quiz questions and explanations now shows devanāgarī next to the transliteration; comments are made by selecting text and clicking “Comment” (no separate mode), and keep the selected words.</li><li><b>0.1.2</b> — Status colours for every chapter and section heading in Learn (shown as a bar on the left); comments on any line of the notes, collected on a Comments page; both saved with your progress.</li><li><b>0.1.1</b> — FSRS-5 scheduling (replaces SM-2; existing cards are converted); full mock exams stored and viewable; Overview page; About dialog with version.</li></ul>
  <p class="small mut">Explanations are condensed and reworded from the book; check details against it. Audio uses a Hindi voice where available and is approximate.</p>
 </div></div>
 <input type="file" id="loadfile" accept=".json,application/json" hidden>
@@ -944,6 +959,8 @@ let dlNS=null;
  document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!mn.hidden){setM(false);mb.focus()}});
  $('#cmnav').onclick=()=>{setM(false);location.hash='comments'};
  mn.addEventListener('click',e=>{if(e.target.closest('.mnav a,#menuset'))setM(false)});
+ const thm=()=>{let t='auto';try{t=localStorage.getItem('ruppel-theme')||'auto'}catch(e){}mn.querySelectorAll('[data-theme-set]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeSet==t))};thm();
+ mn.addEventListener('click',e=>{const b=e.target.closest('[data-theme-set]');if(!b)return;const t=b.dataset.themeSet;try{localStorage.setItem('ruppel-theme',t)}catch(e){}if(t=='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=getComputedStyle(document.body).backgroundColor;thm()});
  $('#menuset').onclick=()=>{setM(false);setTimeout(()=>{const d=document.querySelector('#v-today details.box');if(d){d.open=true;d.scrollIntoView({block:'center'})}},60)};}
 function progMsg(m){const a=$('#progmsg'),b=$('#datamsg');if(a)a.textContent=m;if(b)b.textContent=m;toast(m)}
 async function saveProgress(){const data=JSON.stringify(Object.assign({app:'ruppel-sanskrit',savedAt:new Date().toISOString()},S));const fn='ruppel-progress-'+dayKey()+'.json';
@@ -1157,7 +1174,7 @@ const MDUR=['1h','12h','1d','3d','5d','7d','2w','1m','3m','6m','1y'];
 function durEnd(d,from){const t=new Date(from),n=parseInt(d),u=d.slice(-1);if(u=='h')t.setTime(+t+n*36e5);else if(u=='d')t.setDate(t.getDate()+n);else if(u=='w')t.setDate(t.getDate()+7*n);else if(u=='m')t.setMonth(t.getMonth()+n);else if(u=='y')t.setFullYear(t.getFullYear()+n);return +t}
 const mEff=m=>m&&m.c&&!(m.exp&&m.exp<=Date.now())?m.c:'';
 function leftTxt(ms){const h=ms/36e5;if(ms<3570e3)return Math.max(1,Math.ceil(ms/6e4))+' min';if(h<47.5)return Math.round(h)+' h';const d=Math.round(h/24);return d<60?d+' d':Math.round(d/30.4)+' mo'}
-const mctl=(id,label,q)=>`<span class="mctl"><button type="button" class="mstat" data-mid="${id}" data-c="" aria-haspopup="menu" aria-label="Status of ${esc(label)}" title="${q?'Status of this question':'Status of this section'}"></button><button type="button" class="mdur" data-mid="${id}" aria-haspopup="menu" aria-label="Remove status after" hidden></button></span>`;
+const mctl=(id,label,q)=>`<span class="mctl"><button type="button" class="mstat" data-mid="${id}" data-c="" aria-haspopup="menu" aria-label="Status of ${esc(label)}" title="${q?'Status of this question':'Status of this section'}"></button><button type="button" class="mdur" data-mid="${id}" aria-haspopup="menu" aria-label="Remove status after" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.8M9.5 3h5"/></svg></button></span>`;
 const DURL={'1h':'1 hour','12h':'12 hours','1d':'1 day','3d':'3 days','5d':'5 days','7d':'1 week','2w':'2 weeks','1m':'1 month','3m':'3 months','6m':'6 months','1y':'1 year'};
 function hsh(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
 const ltxt=el=>el.tagName=='TR'?[...el.cells].map(c=>c.textContent.replace(/\s+/g,' ').trim()).filter(Boolean).join(' · '):el.textContent.replace(/\s+/g,' ').trim();
@@ -1455,8 +1472,24 @@ document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#svdlg').hidden)
 svRefreshUI();
 
 /* ================= VERSION / ABOUT ================= */
-const VERSION='0.2.8';
-$('#ver').textContent=VERSION;$('#fver').textContent='Version '+VERSION+'.';
+const VERSION='0.2.9';
+$('#ver').textContent=VERSION;
+/* --- installable app + update check --- */
+{let inst=null;const ib=$('#instbtn');
+ addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst=e;ib.hidden=false});
+ addEventListener('appinstalled',()=>{inst=null;ib.hidden=true;toast('Installed. Open Samskritam from your home screen or app list.')});
+ ib.onclick=async()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');if(!inst)return;inst.prompt();try{await inst.userChoice}catch(e){}inst=null;ib.hidden=true};
+ if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#instinfo').textContent='You are using the installed app. It updates itself when you are online.';
+ if('serviceWorker' in navigator&&(location.protocol=='https:'||location.hostname=='localhost')&&/\/ruppel-sanskrit(\.html)?$/.test(location.pathname))navigator.serviceWorker.register('ruppel-sanskrit-sw.js',{scope:'./ruppel-sanskrit'}).catch(()=>{});
+ const HOSTS=[['rorugi.github.io','https://rorugi.github.io/demo/ruppel-sanskrit.html'],['act-act-act.com','https://act-act-act.com/demo/ruppel-sanskrit.html']];
+ const vcmp=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!=(y[i]||0))return (x[i]||0)-(y[i]||0)}return 0};
+ $('#updbtn').onclick=async()=>{const b=$('#updbtn'),ul=$('#updres');b.disabled=true;ul.innerHTML=HOSTS.map(([h])=>`<li><b>${h}</b> checking…</li>`).join('');
+  const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration('./ruppel-sanskrit').catch(()=>null);if(reg)reg.update().catch(()=>{});
+  const res=await Promise.all(HOSTS.map(async([h,u])=>{try{const ac=new AbortController();setTimeout(()=>ac.abort(),9000);const r=await fetch(u+'?check='+Date.now(),{cache:'no-store',signal:ac.signal});if(!r.ok)return {h,u,err:'not found ('+r.status+')'};const m=(await r.text()).match(/const VERSION='([\d.]+)'/);return m?{h,u,v:m[1]}:{h,u,err:'no version found'}}catch(e){return {h,u,err:'not reachable'}}}));
+  ul.innerHTML=res.map(x=>{const here=location.href.startsWith(x.u);if(x.err)return `<li><b>${x.h}</b> <span class="mut">${x.err}${x.h=='act-act-act.com'&&!here?' (or the server does not allow the check from here)':''}</span></li>`;const c=vcmp(x.v,VERSION);
+   return `<li><b>${x.h}</b> ${x.v} ${c>0?`<span class="new">— newer</span> ${here?'<button type="button" class="chip" data-updnow>Update now</button>':`<a href="${x.u}" target="_blank" rel="noopener">open</a>`}`:c==0?'— same as yours':'<span class="mut">— older than yours</span>'}${here?' <span class="mut">(this site)</span>':''}</li>`}).join('');b.disabled=false};
+ document.addEventListener('click',e=>{if(e.target.closest('[data-updnow]')){e.target.textContent='Restarting…';setTimeout(()=>location.reload(),300)}})}
+$('#fver').textContent='Version '+VERSION+'.';
 {const m=$('#about');const open=()=>{m.hidden=false;$('#aboutx').focus()};const close=()=>{m.hidden=true};
  $('#aboutbtn').onclick=()=>{$('#menu').hidden=true;$('#menubtn').setAttribute('aria-expanded','false');open()};
  $('#aboutx').onclick=close;m.addEventListener('click',e=>{if(e.target===m)close()});document.addEventListener('keydown',e=>{if(e.key=='Escape'&&!m.hidden)close()})}

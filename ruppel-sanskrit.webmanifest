@@ -1,0 +1,17 @@
+{
+  "id": "./ruppel-sanskrit.html",
+  "name": "Samskritam – Ruppel study companion",
+  "short_name": "Samskritam",
+  "description": "Learn Ruppel’s Cambridge Introduction to Sanskrit by heart: notes, FSRS reviews, drills and mock exams.",
+  "start_url": "./ruppel-sanskrit.html#today",
+  "scope": "./ruppel-sanskrit",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#b8261a",
+  "icons": [
+    { "src": "ruppel-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ruppel-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "ruppel-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
