@@ -134,6 +134,21 @@ section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:60px}
 .word-card.crude{border-color:var(--warn-soft)}
 .empty{color:var(--muted);padding:24px 0}
 
+/* Gentilicios */
+.gent{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;max-width:68ch}
+.gent caption{caption-side:top;text-align:left;font-family:var(--display);font-size:1.2rem;padding-bottom:10px}
+.gent th,.gent td{padding:11px 16px;text-align:left;border-top:1px solid var(--line)}
+.gent thead th{border-top:0;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.gent tbody th{font-weight:600}
+.gent td{font-family:var(--display);font-size:1.05rem;overflow-wrap:anywhere}
+@media (max-width:520px){.gent th,.gent td{padding:10px 10px}.gent td{font-size:.98rem}}
+.nicks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}
+.nick{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:8px;align-content:start;min-width:0}
+.nick .word{font-family:var(--display);font-size:1.4rem;line-height:1.2}
+.nick p{font-size:.95rem}
+.sub{font-size:1.35rem}
+.nick .zone{justify-self:start;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+
 footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
 
 
@@ -348,6 +363,7 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
     <a href="#you">Saying “you”</a>
     <a href="#small">Diminutives</a>
     <a href="#regions">Regions</a>
+    <a href="#gentilicios">Gentilicios</a>
     <a href="#words">Vocabulary</a>
   </nav>
 
@@ -604,6 +620,56 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
           <li>Final s aspirated, and even s before vowels</li>
         </ul>
         <div class="tags"><span class="tag">-s [h]</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="gentilicios">
+    <div class="eyebrow">People · where are you from?</div>
+    <h2>What do you call someone from…?</h2>
+    <p class="col">Names for where a person comes from are called <em class="es">gentilicios</em> in Spanish. In everyday Colombian speech you hear both kinds: words for a single city and words for a whole region. Someone from Medellín can say <em class="es">soy medellinense</em> (“I’m from Medellín”) or <em class="es">soy paisa</em> (“I’m from the Paisa region”).</p>
+    <table class="gent">
+      <thead><tr><th scope="col">City</th><th scope="col">Masculine</th><th scope="col">Feminine</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Bogotá</th><td lang="es">bogotano</td><td lang="es">bogotana</td></tr>
+        <tr><th scope="row">Medellín</th><td lang="es">medellinense</td><td lang="es">medellinense</td></tr>
+        <tr><th scope="row">Cali</th><td lang="es">caleño</td><td lang="es">caleña</td></tr>
+        <tr><th scope="row">Barranquilla</th><td lang="es">barranquillero</td><td lang="es">barranquillera</td></tr>
+        <tr><th scope="row">Cartagena</th><td lang="es">cartagenero</td><td lang="es">cartagenera</td></tr>
+        <tr><th scope="row">Santa Marta</th><td lang="es">samario</td><td lang="es">samaria</td></tr>
+        <tr><th scope="row">Bucaramanga</th><td lang="es">bumangués</td><td lang="es">bumanguesa</td></tr>
+        <tr><th scope="row">Pasto</th><td lang="es">pastuso</td><td lang="es">pastusa</td></tr>
+        <tr><th scope="row">Popayán</th><td lang="es">payanés</td><td lang="es">payanesa</td></tr>
+        <tr><th scope="row">Cúcuta</th><td lang="es">cucuteño</td><td lang="es">cucuteña</td></tr>
+      </tbody>
+    </table>
+    <p class="col" style="color:var(--muted);font-size:.95rem">In <em class="es">bumangués</em> and <em class="es">payanés</em> the written accent drops in the feminine form. The stress stays on the same syllable: <em class="es">bumangués</em> → <em class="es">bumanguesa</em>.</p>
+    <h3 class="sub">The words you hear every day</h3>
+    <div class="nicks">
+      <article class="nick">
+        <header><div class="word" lang="es">rolo / rola</div></header>
+        <span class="zone high">Bogotá</span>
+        <p>Colloquial for someone from Bogotá. <em class="es">Soy rola</em> means roughly “I’m from Bogotá”. <em class="es">Cachaco / cachaca</em> is also tied to Bogotá and has a more traditional ring.</p>
+      </article>
+      <article class="nick">
+        <header><div class="word" lang="es">paisa</div></header>
+        <span class="zone high">Antioquia · coffee zone</span>
+        <p>Someone from the cultural region around Antioquia and the coffee zone, which also takes in cities like Manizales and Pereira. The form is the same for both genders: <em class="es">un paisa, una paisa</em>.</p>
+      </article>
+      <article class="nick">
+        <header><div class="word" lang="es">costeño / costeña</div></header>
+        <span class="zone coast">Caribbean coast</span>
+        <p>In Colombia this usually means someone from the Caribbean coast, for example from Barranquilla, Cartagena or Santa Marta.</p>
+      </article>
+      <article class="nick">
+        <header><div class="word" lang="es">llanero / llanera</div></header>
+        <span class="zone plain">Eastern plains</span>
+        <p>Someone from the Llanos Orientales, the wide plains in the east of Colombia, for example in Meta or Casanare.</p>
+      </article>
+      <article class="nick">
+        <header><div class="word" lang="es">opita</div></header>
+        <span class="zone high">Huila · Tolima</span>
+        <p>A regional name heard especially for people from Huila. In a wider sense it can include Tolima too. You say <em class="es">un opita</em> or <em class="es">una opita</em>.</p>
       </article>
     </div>
   </section>
