@@ -41,7 +41,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
 em.es{font-style:italic;color:var(--ink);font-weight:500}
 
 /* Hero */
-header.hero{padding-block:56px 40px;display:grid;gap:20px;border-bottom:1px solid var(--line)}
+header.hero{padding-block:36px 40px;display:grid;gap:20px;border-bottom:1px solid var(--line)}
 .hero h1{font-size:clamp(2.6rem,9vw,5rem);letter-spacing:-.01em}
 .hero h1 span{color:var(--emerald)}
 .hero .lede{font-size:1.15rem;color:var(--muted);max-width:60ch}
@@ -52,13 +52,26 @@ header.hero{padding-block:56px 40px;display:grid;gap:20px;border-bottom:1px soli
 .facts b{font-family:var(--display);font-weight:400;font-size:1.5rem;font-variant-numeric:tabular-nums}
 .facts span{color:var(--muted)}
 
-nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
-  display:flex;gap:4px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;padding-block:8px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-nav.toc a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:999px}
-nav.toc a:hover{background:var(--emerald-soft);color:var(--emerald)}
+.brand{flex:1;min-width:0;font-family:var(--display);font-size:1.15rem;color:var(--ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand span{color:var(--emerald)}
+.sbtn{flex:none;width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer;padding:0}
+.sbtn:hover,.sbtn[aria-expanded="true"]{border-color:var(--emerald);color:var(--emerald)}
+.sbtn svg{width:18px;height:18px}
+.topsearch{flex:1;min-width:0;display:none}
+.topsearch input{width:100%;font:inherit;font-size:1rem;height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink)}
+#sClose{display:none}
+.topbar.searching .brand,.topbar.searching #sOpen{display:none}
+.topbar.searching .topsearch{display:block}
+.topbar.searching #sClose{display:grid}
+.menu{position:absolute;top:calc(100% + 6px);left:0;width:min(100%,320px);display:grid;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14);max-height:calc(100dvh - 90px);overflow-y:auto}
+.menu[hidden]{display:none}
+.menu a{display:block;text-decoration:none;color:var(--ink);font-weight:500;padding:12px 14px;border-radius:8px}
+.menu a:hover,.menu a:focus-visible{background:var(--emerald-soft);color:var(--emerald)}
 
-section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:60px}
+section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:calc(env(safe-area-inset-top,0px) + 58px)}
 .intro{display:grid;gap:14px;color:var(--ink)}
 .intro p+p{margin-top:0}
 
@@ -109,7 +122,7 @@ section{padding-block:56px 8px;display:grid;gap:24px;scroll-margin-top:60px}
 .tag{font-family:var(--mono);font-size:.72rem;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted)}
 
 /* Glossary */
-.gloss-tools{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 50px);z-index:4;background:var(--bg);padding-block:10px}
+.gloss-tools{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 57px);z-index:4;background:var(--bg);padding-block:10px}
 .search{width:100%;font:inherit;font-size:1rem;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .chip{flex:none;font:inherit;font-size:.85rem;font-weight:500;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
@@ -202,7 +215,23 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
 </head>
 <body>
 
-<div class="wrap">
+<div class="wrap" id="top">
+  <div class="topbar" id="toc">
+    <button class="sbtn" id="mOpen" type="button" aria-label="Sections" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <a class="brand" href="#top">Hablar <span>colombiano</span></a>
+    <div class="topsearch" role="search"><input id="qTop" type="search" placeholder="Search Spanish or English…" aria-label="Search vocabulary" autocomplete="off" enterkeyhint="search"></div>
+    <button class="sbtn" id="sOpen" type="button" aria-label="Search vocabulary" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button>
+    <button class="sbtn" id="sClose" type="button" aria-label="Close search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <nav class="menu" id="menu" aria-label="Sections" hidden>
+      <a href="#overview">Overview</a>
+      <a href="#sounds">Pronunciation</a>
+      <a href="#you">Saying “you”</a>
+      <a href="#small">Diminutives</a>
+      <a href="#regions">Regions</a>
+      <a href="#gentilicios">Gentilicios</a>
+      <a href="#words">Vocabulary</a>
+    </nav>
+  </div>
   <header class="hero">
    <div class="hero-text">
     <div class="eyebrow">A field guide to español colombiano</div>
@@ -356,16 +385,6 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
       <figcaption>Department borders and capitals from DANE (2018). Dialect borders are approximate. Tap a dialect to jump to its details.</figcaption>
     </figure>
   </header>
-
-  <nav class="toc" aria-label="Sections">
-    <a href="#overview">Overview</a>
-    <a href="#sounds">Pronunciation</a>
-    <a href="#you">Saying “you”</a>
-    <a href="#small">Diminutives</a>
-    <a href="#regions">Regions</a>
-    <a href="#gentilicios">Gentilicios</a>
-    <a href="#words">Vocabulary</a>
-  </nav>
 
   <section id="overview">
     <div class="eyebrow">Overview</div>
@@ -677,9 +696,8 @@ header.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:cent
   <section id="words">
     <div class="eyebrow">Vocabulary</div>
     <h2>Words you’ll actually hear</h2>
-    <p class="col">Slang travels through telenovelas, comedy and films like Víctor Gaviria’s <em class="es">Rodrigo D: No Futuro</em>. Much of it started in Medellín’s street slang and is now understood nationwide. Every word comes with an example sentence and its translation. Crude and offensive terms are hidden unless you switch them on.</p>
+    <p class="col">Slang travels through telenovelas, comedy and films like Víctor Gaviria’s <em class="es">Rodrigo D: No Futuro</em>. Much of it started in Medellín’s street slang and is now understood nationwide. Every word comes with an example sentence and its translation. Tap the magnifier in the header to search from anywhere. Crude and offensive terms are hidden unless you switch them on.</p>
     <div class="gloss-tools">
-      <input id="q" class="search" type="search" placeholder="Search Spanish or English…" aria-label="Search vocabulary" autocomplete="off">
       <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
       <div class="toolrow">
         <label class="toggle"><input type="checkbox" id="crude"> Show crude &amp; offensive terms</label>
@@ -703,6 +721,12 @@ const W = [
   {w:"¿Qué más?",l:"“what else?”",d:"How are you? A casual greeting, not a real question about more things.",c:"greetings",e:"¡Hola, Juli! ¿Qué más, cómo vas?",t:"Hi Juli! How are you doing?"},
   {w:"porfa",l:"short for por favor",d:"Please.",c:"greetings",e:"Me pasa la sal, porfa.",t:"Pass me the salt, please."},
   {w:"¡Listo!",l:"“ready”",d:"OK, sure, done. Used constantly to agree.",c:"greetings",e:"—Nos vemos a las ocho. —¡Listo!",t:"“See you at eight.” “Sounds good!”"},
+  {w:"a lo bien",l:"“the good way”",d:"Seriously, for real. Stresses that you mean it, or asks if the other person does. Also “properly, the right way”.",c:"greetings",e:"A lo bien, parce, yo no fui.",t:"Seriously, man, it wasn’t me."},
+  {w:"¿en serio?",d:"Really? Seriously? The neutral cousin of a lo bien.",c:"greetings",e:"—Me gané la beca. —¿En serio? ¡Qué bueno!",t:"“I won the scholarship.” “Really? That’s great!”"},
+  {w:"todo bien",l:"“all good”",d:"No worries, it’s all good. Both a question and its answer.",c:"greetings",e:"—Perdón por la demora. —Todo bien, tranquilo.",t:"“Sorry for the delay.” “No worries, it’s fine.”"},
+  {w:"al pelo",l:"“to the hair”",d:"Perfect, just right.",c:"greetings",e:"—¿Te sirve a las tres? —Al pelo.",t:"“Does three work for you?” “Perfect.”"},
+  {w:"de buenas",d:"Lucky. ¡De buenas! means “lucky you”. The opposite is de malas.",c:"greetings",e:"Estuve de buenas, alcancé el último bus.",t:"I was lucky, I caught the last bus."},
+  {w:"ni de riesgos",l:"“not even at risk”",d:"No way, not a chance.",c:"greetings",e:"¿Prestarle plata otra vez? ¡Ni de riesgos!",t:"Lend him money again? No way!"},
   {w:"de una",l:"“at once”",d:"Absolutely, let’s do it right now.",c:"greetings",e:"—¿Vamos por unas polas? —¡De una!",t:"“Shall we go for some beers?” “Totally!”"},
   {w:"¡Hágale, pues!",d:"Go for it! Also “OK, fine” to accept a plan.",c:"greetings",e:"¿Quiere bailar? ¡Hágale, pues!",t:"You want to dance? Go for it, then!",r:"Paisa"},
   {w:"ave María pues",l:"“well, Hail Mary”",d:"An exclamation of surprise.",c:"greetings",e:"¡Ave María pues, qué aguacero tan berraco!",t:"Good grief, what a massive downpour!",r:"Paisa"},
@@ -955,7 +979,26 @@ function render(){
       ${o.r||o.x?`<div class="meta">${o.r?`<span class="reg">${esc(o.r)}</span>`:""}${o.x?`<span class="flag">Crude or offensive</span>`:""}</div>`:""}
     </article>`).join(""):`<p class="empty">No words match. Try another spelling or category.</p>`;
 }
-document.getElementById("q").addEventListener("input",e=>{q=e.target.value;render();});
+const qTop=document.getElementById("qTop"), toc=document.getElementById("toc"), sOpen=document.getElementById("sOpen"), sClose=document.getElementById("sClose");
+qTop.addEventListener("input",e=>{
+  q=e.target.value;
+  if(cat!=="all"){cat="all";[...chips.children].forEach((c,i)=>c.setAttribute("aria-pressed",i===0));}
+  render();toList();
+});
+const toList=()=>{const tools=document.querySelector(".gloss-tools");
+  window.scrollTo({top:Math.max(0,tools.getBoundingClientRect().top+window.scrollY-toc.offsetHeight),behavior:"instant"});};
+const mOpen=document.getElementById("mOpen"), menu=document.getElementById("menu");
+const setMenu=on=>{menu.hidden=!on;mOpen.setAttribute("aria-expanded",on?"true":"false");};
+mOpen.addEventListener("click",()=>{const on=menu.hidden;if(on)closeSearch();setMenu(on);});
+menu.addEventListener("click",e=>{if(e.target.closest("a"))setMenu(false);});
+document.addEventListener("click",e=>{if(!menu.hidden&&!e.target.closest("#menu,#mOpen"))setMenu(false);});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!menu.hidden){setMenu(false);mOpen.focus();}});
+const openSearch=()=>{setMenu(false);toc.classList.add("searching");sOpen.setAttribute("aria-expanded","true");qTop.value=q;qTop.focus();qTop.select();};
+const closeSearch=()=>{toc.classList.remove("searching");sOpen.setAttribute("aria-expanded","false");};
+sOpen.addEventListener("click",openSearch);
+sClose.addEventListener("click",()=>{closeSearch();sOpen.focus();});
+qTop.addEventListener("keydown",e=>{if(e.key==="Escape"){closeSearch();sOpen.focus();}else if(e.key==="Enter"){qTop.blur();}});
+document.addEventListener("keydown",e=>{if(e.key==="/"&&!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){e.preventDefault();openSearch();}});
 crudeBox.addEventListener("change",e=>{showCrude=e.target.checked;try{localStorage.setItem("crude",showCrude?"1":"0");}catch(err){}render();});
 
 document.querySelectorAll(".map .dlabel").forEach(a=>{
